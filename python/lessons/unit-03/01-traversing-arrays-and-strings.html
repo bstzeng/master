@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="比較直接走訪與索引走訪，練習處理相鄰元素及常見邊界。" />
+    <meta name="theme-color" content="#101713" />
+    <title>03.01 陣列與字串走訪｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-03-arrays-and-strings.html">UNIT 03 / LESSON 01</a><p class="eyebrow">Array and String Techniques</p><h1>陣列與字串走訪</h1><p class="lesson-deck">從索引、元素與相鄰關係建立基本功</p><div class="lesson-meta"><span>入門</span><span>20 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>比較直接走訪與索引走訪，練習處理相鄰元素及常見邊界。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>依需求選擇元素走訪或索引走訪</li><li>避免索引超出範圍</li><li>分析一次線性掃描的複雜度</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>先決定走訪時需要什麼</h2><p>陣列與字串都能由左到右讀取；如果只需要元素，就直接迭代，如果還需要位置，則使用 enumerate。先釐清是否會查看前後鄰居，可避免不必要的索引操作。</p><ul><li>只讀取值：for value in values</li><li>同時需要位置和值：for index, value in enumerate(values)</li><li>字串不可變；修改字元通常先轉成 list 或建立新字串</li></ul><figure class="code-block"><figcaption><span>用 enumerate 同時取得索引與元素。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def locate_even(numbers):
+    positions = []
+    for index, value in enumerate(numbers):
+        if value % 2 == 0:
+            positions.append(index)
+    return positions
+
+print(locate_even([7, 4, 9, 2]))  # [1, 3]</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>相鄰比較與邊界</h2><p>比較目前元素與下一個元素時，最後一個位置沒有下一個鄰居，所以迴圈只能走到 len(values) - 2。把有效索引範圍先寫清楚，比在迴圈中捕捉 IndexError 更容易驗證。</p><ul><li>合法索引是 0 到 len(values) - 1</li><li>查看 values[index + 1] 時使用 range(len(values) - 1)</li><li>空序列與單一元素通常需要確認是否仍符合題意</li></ul><figure class="code-block"><figcaption><span>只走訪具有下一個鄰居的位置。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def count_increases(numbers):
+    count = 0
+    for index in range(len(numbers) - 1):
+        if numbers[index + 1] &gt; numbers[index]:
+            count += 1
+    return count
+
+print(count_increases([3, 5, 4, 8]))  # 2</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>線性走訪的成本</h2><p>走訪長度為 n 的序列一次，時間複雜度是 O(n)。範例只使用固定數量的計數變數，額外空間是 O(1)；若收集符合條件的索引，最壞情況會使用 O(n) 空間。</p><ul><li>一次完整掃描通常是 O(n)</li><li>巢狀迴圈不一定都是 O(n²)，要看各層實際走訪範圍</li><li>輸出本身有 n 個項目時，O(n) 輸出空間通常無法避免</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>分析額外空間時，應說明是否把回傳結果的空間計算在內。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>只需元素時直接迭代，需要位置時使用 enumerate。</li><li><span>02</span>存取相鄰元素前，先縮小索引走訪範圍。</li><li><span>03</span>一次線性走訪耗時 O(n)，額外空間取決於是否收集結果。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼比較 values[index] 與 values[index + 1] 時不能走到最後一個索引？</summary><p>最後一個索引再加一會超出序列範圍，因此迴圈應使用 range(len(values) - 1)。</p></details><details><summary>只想把所有元素加總時，需要使用 enumerate 嗎？</summary><p>不需要，直接走訪元素即可，因為計算過程不使用索引。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>寫一個函式，回傳陣列中第一個負數的索引；若不存在則回傳 -1。</li><li>計算字串中相鄰且相同的字元對數，例如 aabcc 有兩對。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-02/08-heapq-and-choosing-structures.html"><span>← 上一課</span><b>heapq 與資料結構選型</b></a><a class="next" href="../unit-03/02-frequency-counting-and-hashing.html"><span>下一課 →</span><b>字元統計與雜湊表</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

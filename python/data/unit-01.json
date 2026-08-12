@@ -1,0 +1,464 @@
+{
+  "number": 1,
+  "phase": 1,
+  "slug": "algorithm-foundations",
+  "title": "演算法基礎",
+  "english": "Algorithm Foundations",
+  "summary": "從生活化的解題流程出發，建立資料結構、演算法與複雜度的基本語言，並學會初步估算 Python 程式的成本。",
+  "goal": "能說明一段解法為何正確、如何隨輸入規模成長，並以 Big O 比較常見 Python 操作、迴圈與簡單遞迴。",
+  "prerequisites": [
+    "能閱讀 Python 變數、條件判斷、迴圈與函式",
+    "知道 list、dict、set 等基本容器的用途",
+    "不需要微積分或資訊工程背景"
+  ],
+  "outcomes": [
+    "區分資料結構、演算法與程式實作",
+    "用測試案例與不變量初步說明解法正確性",
+    "辨認 O(1)、O(log n)、O(n)、O(n log n) 與 O(n²)",
+    "查判 Python 常見容器操作的平均或最壞複雜度",
+    "分析基本迴圈、巢狀迴圈與遞迴的時間及空間成本"
+  ],
+  "lessons": [
+    {
+      "number": 1,
+      "slug": "data-structures-and-algorithms",
+      "title": "資料結構與演算法是什麼",
+      "subtitle": "把資料的擺放方式與處理步驟分開思考",
+      "duration": "18 分鐘",
+      "difficulty": "入門",
+      "summary": "理解資料結構、演算法與 Python 程式碼各自扮演的角色，並練習把需求說成明確的問題。",
+      "objectives": [
+        "說明資料結構與演算法的差異",
+        "辨認問題的輸入、輸出與限制",
+        "理解同一問題可以有多種解法"
+      ],
+      "sections": [
+        {
+          "heading": "資料需要有組織",
+          "paragraphs": [
+            "資料結構（Data Structure）是組織資料的方式，會影響我們能多快新增、刪除、搜尋或依序讀取資料。Python 的 list、dict 與 set 就是不同取捨的資料結構；選擇結構前，應先問最常進行哪一種操作。"
+          ],
+          "bullets": [
+            "list 適合保留順序並用索引存取",
+            "dict 適合用鍵快速找到對應值",
+            "set 適合判斷某個值是否已出現"
+          ]
+        },
+        {
+          "heading": "演算法是一組可執行步驟",
+          "paragraphs": [
+            "演算法（Algorithm）是把輸入轉換成預期輸出的有限步驟，而且每一步都必須清楚到可以執行。食譜像演算法，但程式問題還需要明確界定輸入、輸出與限制，才有辦法檢查答案。"
+          ],
+          "bullets": [
+            "輸入：演算法收到哪些資料",
+            "輸出：完成後必須交出什麼結果",
+            "限制：資料量、資料型態與特殊情況"
+          ],
+          "callout": "Python 程式碼是演算法的一種實作；同一個演算法也能用其他程式語言表達。"
+        },
+        {
+          "heading": "先從可行解法開始比較",
+          "paragraphs": [
+            "尋找名單中的姓名，可以逐筆檢查，也可以先排序後使用二分搜尋。兩者都可能正確，但建置成本、查詢速度與資料是否常變動不同；演算法學習的核心就是看懂這些取捨。"
+          ],
+          "bullets": [
+            "先確認解法能處理所有合法輸入",
+            "再比較執行時間與額外記憶體",
+            "最後考量程式是否容易維護"
+          ]
+        }
+      ],
+      "takeaways": [
+        "資料結構決定資料如何組織與操作",
+        "演算法是從輸入得到輸出的有限明確步驟",
+        "選擇解法時要同時考量限制與常見操作"
+      ],
+      "quiz": [
+        {
+          "question": "用學號查學生資料時，為什麼 dict 通常比 list 更自然？",
+          "answer": "dict 直接表達學號到學生資料的對應，平均情況下也能以 O(1) 查找；list 通常要逐筆比對而需 O(n)。"
+        },
+        {
+          "question": "演算法和 Python 程式碼是同一件事嗎？",
+          "answer": "不是。演算法描述解題步驟，Python 程式碼則是用特定語言實作那些步驟。"
+        }
+      ],
+      "practice": [
+        "為通訊錄列出輸入、輸出、限制，以及最常使用的兩種操作。",
+        "比較用 list 與 set 儲存已看過帳號時，各自適合的情境。"
+      ]
+    },
+    {
+      "number": 2,
+      "slug": "correctness-efficiency-readability",
+      "title": "正確性、效率與可讀性",
+      "subtitle": "好的解法不只是在範例上跑出答案",
+      "duration": "20 分鐘",
+      "difficulty": "入門",
+      "summary": "建立評估演算法的三個角度，學會用規格、邊界測試與簡單不變量檢查正確性。",
+      "objectives": [
+        "區分範例通過與演算法正確",
+        "設計正常、邊界與反例測試",
+        "解釋可讀性與效率之間的合理取捨"
+      ],
+      "sections": [
+        {
+          "heading": "正確性來自完整規格",
+          "paragraphs": [
+            "演算法正確，表示它對每個符合規格的輸入都能產生正確輸出，而不是只通過手邊的兩三個例子。開始寫程式前，先釐清空輸入、重複值、負數與找不到答案時該如何處理。"
+          ],
+          "bullets": [
+            "正常案例確認主要流程",
+            "邊界案例檢查最小值、最大值與空集合",
+            "反例刻意挑戰你暗中使用的假設"
+          ]
+        },
+        {
+          "heading": "用不變量解釋流程",
+          "paragraphs": [
+            "不變量（Invariant）是在演算法某個階段始終成立的敘述，例如掃描前 k 個元素後，best 一直等於其中最大值。確認它在開始時成立、每一步維持成立，並能在結束時推出答案，就得到一個簡潔的正確性說明。"
+          ],
+          "bullets": [
+            "初始化：第一次執行前是否成立",
+            "維持：處理下一筆資料後是否仍成立",
+            "終止：迴圈結束時能否得到目標"
+          ],
+          "code": "def find_max(numbers):\n    if not numbers:\n        raise ValueError(\"numbers 不可為空\")\n\n    best = numbers[0]\n    for value in numbers[1:]:\n        if value > best:\n            best = value\n    return best",
+          "code_caption": "每輪完成後，best 都是目前已看過元素中的最大值。"
+        },
+        {
+          "heading": "效率與可讀性都要符合情境",
+          "paragraphs": [
+            "效率衡量時間與記憶體成本，可讀性則讓人能檢查、修改與維護程式。資料量很小時，清楚的線性解法常比複雜最佳化更實用；資料量很大或程式反覆執行時，效率才可能成為主要限制。"
+          ],
+          "bullets": [
+            "先保證正確，再針對實際瓶頸最佳化",
+            "用清楚名稱與小函式表達意圖",
+            "不要為了省微小成本而隱藏重要邏輯"
+          ]
+        }
+      ],
+      "takeaways": [
+        "通過少數範例不能證明所有輸入都正確",
+        "不變量可以說明迴圈為何得到正確答案",
+        "效率與可讀性的取捨取決於資料量及使用情境"
+      ],
+      "quiz": [
+        {
+          "question": "搜尋測試只包含『找到目標』的案例，還缺少哪個重要類別？",
+          "answer": "至少缺少『找不到目標』，也應檢查空資料、第一個或最後一個位置，以及重複值等邊界案例。"
+        },
+        {
+          "question": "find_max 迴圈的不變量是什麼？",
+          "answer": "每輪完成後，best 是目前已掃描元素中的最大值；最後所有元素都已掃描，因此 best 是全體最大值。"
+        }
+      ],
+      "practice": [
+        "為回傳 list 最小值的函式寫出一個迴圈不變量與三類測試。",
+        "找一段自己寫過的程式，指出一項改善可讀性但不改變演算法的修改。"
+      ]
+    },
+    {
+      "number": 3,
+      "slug": "time-and-space-complexity",
+      "title": "時間與空間複雜度",
+      "subtitle": "用輸入規模描述成本如何成長",
+      "duration": "22 分鐘",
+      "difficulty": "入門",
+      "summary": "學會定義輸入規模、計數主要操作，並分辨執行時間與額外空間。",
+      "objectives": [
+        "為問題選擇合理的輸入規模 n",
+        "以操作次數而非秒數描述成長",
+        "區分輸入本身與輔助空間"
+      ],
+      "sections": [
+        {
+          "heading": "先定義輸入規模",
+          "paragraphs": [
+            "複雜度（Complexity）描述成本如何隨輸入規模成長，而 n 的意義必須依問題說清楚。對 list 搜尋，n 通常是元素數量；對文字處理，n 可能是字元數；圖問題則常同時使用頂點數 V 與邊數 E。"
+          ],
+          "bullets": [
+            "n 不是固定代表某一種資料",
+            "同一問題可能需要兩個以上的規模參數",
+            "先定義規模，複雜度敘述才有意義"
+          ]
+        },
+        {
+          "heading": "時間複雜度計算主要操作",
+          "paragraphs": [
+            "實際秒數會受到電腦、Python 版本與當時負載影響，因此分析時通常計算主要操作執行幾次。線性搜尋最壞情況要比較 n 次，所以時間成本隨 n 成正比，記為 O(n)。"
+          ],
+          "bullets": [
+            "關注輸入變大時的成長趨勢",
+            "最壞情況可提供較穩健的上限",
+            "平均情況必須說明對輸入分布的假設"
+          ],
+          "code": "def contains(numbers, target):\n    for value in numbers:\n        if value == target:\n            return True\n    return False",
+          "code_caption": "最壞情況檢查全部 n 個元素，時間 O(n)，額外空間 O(1)。"
+        },
+        {
+          "heading": "空間複雜度看額外記憶體",
+          "paragraphs": [
+            "空間複雜度衡量演算法需要多少記憶體，分析時常特別標示輔助空間（Auxiliary Space），也就是不計輸入本身的額外用量。只使用幾個變數是 O(1)，建立與輸入同長的新 list 則是 O(n)；遞迴呼叫堆疊也算空間。"
+          ],
+          "bullets": [
+            "原地處理通常能降低輔助空間",
+            "複製切片會配置新的 list",
+            "時間與空間有時可以互相交換"
+          ]
+        }
+      ],
+      "takeaways": [
+        "複雜度分析前必須定義輸入規模",
+        "時間複雜度以主要操作次數描述成長",
+        "輔助空間包含新容器與遞迴呼叫堆疊"
+      ],
+      "quiz": [
+        {
+          "question": "處理一個 n 列、m 欄表格時，輸入規模只寫 n 是否足夠？",
+          "answer": "通常不足，應以 n 與 m 描述；若逐格處理，時間通常是 O(nm)。"
+        },
+        {
+          "question": "函式建立 numbers[:] 後再走訪副本，額外空間是多少？",
+          "answer": "切片建立 n 個元素的新 list，因此額外空間是 O(n)。"
+        }
+      ],
+      "practice": [
+        "為計算字串中母音數量的函式定義 n，並寫出時間與空間複雜度。",
+        "比較直接反轉 list 與建立反轉副本時，輔助空間可能有何不同。"
+      ]
+    },
+    {
+      "number": 4,
+      "slug": "big-o-growth-rates",
+      "title": "Big O 與常見成長等級",
+      "subtitle": "忽略次要細節，專注輸入變大後的趨勢",
+      "duration": "25 分鐘",
+      "difficulty": "入門",
+      "summary": "理解 Big O 是漸近上界，並能比較常數、對數、線性、線性對數、平方與指數成長。",
+      "objectives": [
+        "用簡化規則求得常見 Big O",
+        "依成長速度排列複雜度",
+        "根據資料量判斷解法是否可能可行"
+      ],
+      "sections": [
+        {
+          "heading": "Big O 描述成長上界",
+          "paragraphs": [
+            "Big O 表示當輸入很大時，成本不會比某個成長等級更快，常用來描述最壞情況。像 3n + 20 在 n 變大後由 n 主導，因此寫成 O(n)；Big O 不等於精確執行時間，也不代表常數永遠不重要。"
+          ],
+          "bullets": [
+            "忽略固定常數：O(3n) 簡化為 O(n)",
+            "保留最高階項：O(n² + n) 簡化為 O(n²)",
+            "不同輸入參數不能隨意合併：O(n + m) 應保留"
+          ]
+        },
+        {
+          "heading": "認識常見成長速度",
+          "paragraphs": [
+            "O(1) 不隨 n 增加，O(log n) 每一步大幅縮小問題，O(n) 逐筆處理，O(n log n) 常見於有效率排序，而 O(n²) 常來自比較所有配對。O(2ⁿ) 會隨 n 快速爆增，通常只能處理很小的輸入。"
+          ],
+          "bullets": [
+            "較慢成長通常較能承受大型資料",
+            "log 的底數在 Big O 中通常省略",
+            "同一成長等級的實際速度仍可能不同"
+          ],
+          "table": {
+            "headers": [
+              "Big O",
+              "直覺",
+              "典型例子"
+            ],
+            "rows": [
+              ["O(1)", "固定步驟", "依索引讀取 list"],
+              ["O(log n)", "每步縮小一半", "已排序資料的二分搜尋"],
+              ["O(n)", "逐筆看一次", "線性搜尋"],
+              ["O(n log n)", "分層且每層處理 n 筆", "合併排序"],
+              ["O(n²)", "處理所有配對", "雙層完整迴圈"],
+              ["O(2ⁿ)", "每項都有選或不選", "暴力列舉子集合"]
+            ]
+          }
+        },
+        {
+          "heading": "從限制反推可行解法",
+          "paragraphs": [
+            "若 n 只有 20，指數解法有時仍能嘗試；若 n 接近十萬，通常要尋找 O(n) 或 O(n log n) 解法。這只是初步篩選，實際可行性還受常數、記憶體、語言與執行環境影響。"
+          ],
+          "bullets": [
+            "先讀資料範圍，再設計演算法",
+            "小輸入可以優先選簡單可靠的解法",
+            "大型輸入應特別警覺巢狀完整走訪"
+          ]
+        }
+      ],
+      "takeaways": [
+        "Big O 著重輸入很大時的主導成長項",
+        "O(1) 到 O(2ⁿ) 的可擴展性差異非常大",
+        "輸入限制能幫助排除不可能及時完成的解法"
+      ],
+      "quiz": [
+        {
+          "question": "5n² + 100n + 8 的 Big O 是什麼？",
+          "answer": "是 O(n²)，因為忽略常數後，n² 是 n 變大時的最高階主導項。"
+        },
+        {
+          "question": "兩段依序執行、各走訪 n 筆資料的迴圈，為什麼是 O(n) 而非 O(n²)？",
+          "answer": "操作數是 n + n = 2n，忽略常數後為 O(n)；只有兩個完整迴圈互相巢狀時通常才是 O(n²)。"
+        }
+      ],
+      "practice": [
+        "將 O(n²)、O(1)、O(n log n)、O(log n)、O(n) 依成長速度由慢到快排序。",
+        "判斷列舉長度 n list 中所有索引配對的時間複雜度，並說明理由。"
+      ]
+    },
+    {
+      "number": 5,
+      "slug": "python-operation-complexity",
+      "title": "Python 常見操作複雜度",
+      "subtitle": "相同語法看起來簡短，背後成本可能完全不同",
+      "duration": "25 分鐘",
+      "difficulty": "入門",
+      "summary": "掌握 list、dict、set、字串與 deque 的代表性操作成本，並知道平均 O(1) 仍有前提。",
+      "objectives": [
+        "辨認 Python 內建容器常見操作的複雜度",
+        "解釋 list 頭尾操作成本不同的原因",
+        "正確描述 dict 與 set 的平均查找成本"
+      ],
+      "sections": [
+        {
+          "heading": "list 的索引快，搬移可能慢",
+          "paragraphs": [
+            "Python list 是動態陣列，依索引讀寫通常是 O(1)，走訪與搜尋是 O(n)。尾端 append 平均為攤銷 O(1)，但在開頭 insert 或 pop 會搬移其餘元素，因此是 O(n)。"
+          ],
+          "bullets": [
+            "items[i]：O(1)",
+            "target in items：O(n)",
+            "items.append(value)：攤銷 O(1)",
+            "items.insert(0, value)：O(n)"
+          ]
+        },
+        {
+          "heading": "dict 與 set 依賴雜湊",
+          "paragraphs": [
+            "dict 與 set 使用雜湊表（Hash Table），查找、加入與刪除在平均情況通常是 O(1)。碰撞、擴充與惡劣輸入會影響成本，所以嚴謹表達應註明平均 O(1)、最壞 O(n)，也要記得鍵或元素必須可雜湊。"
+          ],
+          "bullets": [
+            "key in mapping：平均 O(1)",
+            "value in values_set：平均 O(1)",
+            "key in mapping.keys() 通常不需先建立新容器",
+            "直接搜尋 mapping 的值仍可能是 O(n)"
+          ],
+          "callout": "平均 O(1) 不表示每一次操作時間完全相同，而是長期平均不隨元素數量線性增加。"
+        },
+        {
+          "heading": "短語法也可能建立新資料",
+          "paragraphs": [
+            "list 切片、字串切片與串接通常會依結果長度建立新物件，因此不能只看程式碼行數判斷成本。需要頻繁從佇列左端取值時，可使用 collections.deque 的 popleft 平均 O(1)，避免 list.pop(0) 的 O(n) 搬移。"
+          ],
+          "bullets": [
+            "items[a:b]：時間與空間皆約 O(k)",
+            "text_a + text_b：依結果長度配置新字串",
+            "list.pop(0)：O(n)",
+            "deque.popleft()：O(1)"
+          ],
+          "code": "from collections import deque\n\nwaiting = deque([\"A\", \"B\", \"C\"])\nnext_person = waiting.popleft()\nwaiting.append(\"D\")",
+          "code_caption": "deque 適合需要在左右兩端頻繁加入或取出的佇列。"
+        }
+      ],
+      "takeaways": [
+        "list 的索引為 O(1)，但頭端插入或刪除為 O(n)",
+        "dict 與 set 的查找通常應描述為平均 O(1)",
+        "切片與不可變字串操作可能配置與結果等長的新物件"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼 list.pop(0) 是 O(n)？",
+          "answer": "刪除第一個元素後，其餘元素的位置需要向前搬移，因此搬移量會隨 list 長度成長。"
+        },
+        {
+          "question": "要反覆判斷帳號是否已出現，list 和 set 通常選哪一個？",
+          "answer": "通常選 set，成員查找平均 O(1)；list 成員查找需要逐筆比對，為 O(n)。"
+        }
+      ],
+      "practice": [
+        "把使用 list.pop(0) 實作的佇列改寫成 deque，並標註兩者成本。",
+        "找出一段含切片的 Python 程式，令 k 為切片長度，分析它的時間與額外空間。"
+      ]
+    },
+    {
+      "number": 6,
+      "slug": "analyzing-loops-and-recursion",
+      "title": "分析迴圈與遞迴",
+      "subtitle": "從執行次數與問題縮小方式讀出複雜度",
+      "duration": "28 分鐘",
+      "difficulty": "入門進階",
+      "summary": "練習分析依序、巢狀與倍增迴圈，以及線性和二分遞迴的時間與呼叫堆疊。",
+      "objectives": [
+        "用相加或相乘分析迴圈",
+        "辨認每次倍增造成的 O(log n)",
+        "根據遞迴分支與縮小幅度估算成本"
+      ],
+      "sections": [
+        {
+          "heading": "依序相加，巢狀通常相乘",
+          "paragraphs": [
+            "兩段各執行 n 次的迴圈依序執行，成本相加為 O(n + n)，簡化成 O(n)。若內層每次都完整執行 n 次，外層也執行 n 次，總次數是 n × n，因此為 O(n²)；但若內層長度不同，應保留如 O(nm) 的參數。"
+          ],
+          "bullets": [
+            "依序區塊：先相加，再保留主導項",
+            "獨立巢狀迴圈：執行次數相乘",
+            "提前 return 會改善部分情況，但最壞情況仍可能走完"
+          ],
+          "code": "def all_pairs(left, right):\n    pairs = []\n    for first in left:\n        for second in right:\n            pairs.append((first, second))\n    return pairs",
+          "code_caption": "若 left 長度為 n、right 長度為 m，時間與輸出空間都是 O(nm)。"
+        },
+        {
+          "heading": "倍增或減半帶來對數",
+          "paragraphs": [
+            "如果控制變數每輪乘以 2，執行 k 輪後約為 2ᵏ；到達 n 所需的 k 約是 log₂n，所以迴圈為 O(log n)。二分搜尋也是每次排除約一半候選範圍，因此具有相同的成長等級。"
+          ],
+          "bullets": [
+            "i += 1 通常對應線性次數",
+            "i *= 2 通常對應對數次數",
+            "對數底數只造成常數倍率，Big O 中可省略"
+          ],
+          "code": "def doubling_steps(limit):\n    value = 1\n    steps = 0\n    while value < limit:\n        value *= 2\n        steps += 1\n    return steps",
+          "code_caption": "limit 為 n 時，迴圈執行約 log₂n 次，時間 O(log n)、空間 O(1)。"
+        },
+        {
+          "heading": "遞迴要看呼叫數與深度",
+          "paragraphs": [
+            "遞迴分析要問每次產生幾個子問題、每個子問題縮小多少，以及每層還做多少工作。單一路徑每次把 n 減 1 通常有 O(n) 次呼叫與 O(n) 堆疊；每次減半通常深度 O(log n)，而每層分成兩個重疊分支則可能接近 O(2ⁿ)。"
+          ],
+          "bullets": [
+            "Base case 必須讓遞迴終止",
+            "時間計入所有呼叫執行的工作",
+            "空間通常至少包含最深呼叫路徑",
+            "尾端呼叫在 Python 中不會自動消除堆疊"
+          ],
+          "code": "def recursive_sum(numbers, index=0):\n    if index == len(numbers):\n        return 0\n    return numbers[index] + recursive_sum(numbers, index + 1)",
+          "code_caption": "共有 n + 1 層呼叫，時間 O(n)，遞迴堆疊空間 O(n)。"
+        }
+      ],
+      "takeaways": [
+        "依序執行的成本相加，完整巢狀走訪的成本通常相乘",
+        "每輪倍增或減半通常形成 O(log n)",
+        "遞迴時間看總呼叫量，空間看最深呼叫路徑"
+      ],
+      "quiz": [
+        {
+          "question": "外層走訪 n 次、內層走訪固定 10 次，Big O 是什麼？",
+          "answer": "是 O(10n)，忽略固定常數後為 O(n)，不是 O(n²)。"
+        },
+        {
+          "question": "單一遞迴每次把 n 除以 2，且每層只做 O(1) 工作，時間與堆疊空間是多少？",
+          "answer": "遞迴深度約為 log₂n，因此時間與呼叫堆疊空間都是 O(log n)。"
+        }
+      ],
+      "practice": [
+        "分析三角形巢狀迴圈：外層 i 從 0 到 n-1，內層執行 i 次；寫出精確加總與 Big O。",
+        "將 recursive_sum 改成迴圈版本，比較兩者的時間與輔助空間。"
+      ]
+    }
+  ]
+}

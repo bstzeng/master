@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="學會定義輸入規模、計數主要操作，並分辨執行時間與額外空間。" />
+    <meta name="theme-color" content="#101713" />
+    <title>01.03 時間與空間複雜度｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-01-algorithm-foundations.html">UNIT 01 / LESSON 03</a><p class="eyebrow">Algorithm Foundations</p><h1>時間與空間複雜度</h1><p class="lesson-deck">用輸入規模描述成本如何成長</p><div class="lesson-meta"><span>入門</span><span>22 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>學會定義輸入規模、計數主要操作，並分辨執行時間與額外空間。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>為問題選擇合理的輸入規模 n</li><li>以操作次數而非秒數描述成長</li><li>區分輸入本身與輔助空間</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>先定義輸入規模</h2><p>複雜度（Complexity）描述成本如何隨輸入規模成長，而 n 的意義必須依問題說清楚。對 list 搜尋，n 通常是元素數量；對文字處理，n 可能是字元數；圖問題則常同時使用頂點數 V 與邊數 E。</p><ul><li>n 不是固定代表某一種資料</li><li>同一問題可能需要兩個以上的規模參數</li><li>先定義規模，複雜度敘述才有意義</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>時間複雜度計算主要操作</h2><p>實際秒數會受到電腦、Python 版本與當時負載影響，因此分析時通常計算主要操作執行幾次。線性搜尋最壞情況要比較 n 次，所以時間成本隨 n 成正比，記為 O(n)。</p><ul><li>關注輸入變大時的成長趨勢</li><li>最壞情況可提供較穩健的上限</li><li>平均情況必須說明對輸入分布的假設</li></ul><figure class="code-block"><figcaption><span>最壞情況檢查全部 n 個元素，時間 O(n)，額外空間 O(1)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def contains(numbers, target):
+    for value in numbers:
+        if value == target:
+            return True
+    return False</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>空間複雜度看額外記憶體</h2><p>空間複雜度衡量演算法需要多少記憶體，分析時常特別標示輔助空間（Auxiliary Space），也就是不計輸入本身的額外用量。只使用幾個變數是 O(1)，建立與輸入同長的新 list 則是 O(n)；遞迴呼叫堆疊也算空間。</p><ul><li>原地處理通常能降低輔助空間</li><li>複製切片會配置新的 list</li><li>時間與空間有時可以互相交換</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>複雜度分析前必須定義輸入規模</li><li><span>02</span>時間複雜度以主要操作次數描述成長</li><li><span>03</span>輔助空間包含新容器與遞迴呼叫堆疊</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>處理一個 n 列、m 欄表格時，輸入規模只寫 n 是否足夠？</summary><p>通常不足，應以 n 與 m 描述；若逐格處理，時間通常是 O(nm)。</p></details><details><summary>函式建立 numbers[:] 後再走訪副本，額外空間是多少？</summary><p>切片建立 n 個元素的新 list，因此額外空間是 O(n)。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>為計算字串中母音數量的函式定義 n，並寫出時間與空間複雜度。</li><li>比較直接反轉 list 與建立反轉副本時，輔助空間可能有何不同。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-01/02-correctness-efficiency-readability.html"><span>← 上一課</span><b>正確性、效率與可讀性</b></a><a class="next" href="../unit-01/04-big-o-growth-rates.html"><span>下一課 →</span><b>Big O 與常見成長等級</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="以 Hash Map 加 Doubly Linked List 實作 LRU，並比較 LFU 所需的頻率分桶。" />
+    <meta name="theme-color" content="#101713" />
+    <title>15.05 LRU Cache 與 LFU Cache｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-15-advanced-data-structures.html">UNIT 15 / LESSON 05</a><p class="eyebrow">Advanced Data Structures</p><h1>LRU Cache 與 LFU Cache</h1><p class="lesson-deck">用索引加順序結構在 O(1) 內淘汰資料</p><div class="lesson-meta"><span>進階</span><span>40 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>以 Hash Map 加 Doubly Linked List 實作 LRU，並比較 LFU 所需的頻率分桶。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明 LRU 的兩種操作需求</li><li>實作 O(1) get/put</li><li>理解 LFU 的額外狀態與平手規則</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>一個結構負責查找，一個負責順序</h2><p>LRU Cache（Least Recently Used）容量滿時淘汰最久未使用項目。dict 讓 key 到節點查找平均 O(1)，Doubly Linked List 讓已知節點能 O(1) 移動或刪除；若只用 list，找鍵或移動通常會退化到 O(n)。</p><ul><li>Hash Map：key → node</li><li>雙向鏈結串列：最近使用順序</li><li>頭端代表最近、尾端代表最久</li><li>虛擬頭尾節點簡化邊界</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>get 與 put 都更新最近性</h2><p>get 命中後把節點移到頭端；put 更新既有值也要移到頭端，新增超過容量時刪除尾端前一節點及 map 紀錄。每個步驟只操作固定數量指標與 dict，因此平均 O(1)，空間 O(capacity)。</p><ul><li>remove 只需節點的 prev/next</li><li>add_front 固定接在 head 後</li><li>淘汰時同時刪 map 與鏈結</li><li>capacity=0 應由介面明確處理</li></ul><figure class="code-block"><figcaption><span>get/put 平均 O(1)，節點數最多為 capacity。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>class Node:
+    def __init__(self, key=None, value=None):
+        self.key, self.value = key, value
+        self.prev = self.next = None
+
+class LRUCache:
+    def __init__(self, capacity):
+        self.capacity, self.nodes = capacity, {}
+        self.head, self.tail = Node(), Node()
+        self.head.next = self.tail; self.tail.prev = self.head
+    def _remove(self, node):
+        node.prev.next = node.next; node.next.prev = node.prev
+    def _front(self, node):
+        node.next = self.head.next; node.prev = self.head
+        self.head.next.prev = node; self.head.next = node
+    def get(self, key):
+        node = self.nodes.get(key)
+        if node is None: return None
+        self._remove(node); self._front(node); return node.value
+    def put(self, key, value):
+        if self.capacity &lt;= 0: return
+        if key in self.nodes:
+            node = self.nodes[key]; node.value = value; self._remove(node)
+        else:
+            node = self.nodes[key] = Node(key, value)
+        self._front(node)
+        if len(self.nodes) &gt; self.capacity:
+            old = self.tail.prev; self._remove(old); del self.nodes[old.key]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>LFU 還要追蹤使用頻率</h2><p>LFU Cache（Least Frequently Used）先淘汰頻率最低項目，頻率相同時常再淘汰其中最久未使用者。要達平均 O(1)，通常使用 key→node、frequency→該頻率的雙向串列，以及 min_frequency；命中時要把節點從 f 桶移到 f+1 桶。</p><ul><li>LRU 只追蹤最近時間順序</li><li>LFU 追蹤頻率及同頻 LRU</li><li>頻率老化政策會影響長期熱門項目</li><li>更精確政策換來更高實作與記憶體成本</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>LRU 以 dict 加雙向鏈結串列同時得到 O(1) 查找與順序調整</li><li><span>02</span>快取更新時資料索引和順序結構必須保持一致</li><li><span>03</span>LFU 需要頻率分桶、min_frequency 與平手淘汰政策</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>LRU 為何使用雙向而非單向鏈結串列？</summary><p>已知節點時要 O(1) 找到前後節點並移除；單向串列仍需搜尋前驅。</p></details><details><summary>LFU 中兩個 key 頻率相同時通常如何淘汰？</summary><p>常以同頻率桶內的 LRU 順序，淘汰其中最久未使用者；介面應明確規定。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>手動追蹤容量 2 的 LRU 執行 put(A)、put(B)、get(A)、put(C) 後內容與順序。</li><li>畫出 LFU 的三張映射/結構，說明一次 get 如何搬移節點。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-15/04-lazy-propagation-and-selection.html"><span>← 上一課</span><b>Lazy Propagation 與 Fenwick 比較</b></a><a class="next" href="../unit-15/06-database-index-trees-and-hash.html"><span>下一課 →</span><b>B-Tree、B+ Tree 與資料庫索引</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

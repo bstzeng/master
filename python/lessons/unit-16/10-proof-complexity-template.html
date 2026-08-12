@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="用不變量與案例拆分說明正確性，整理個人解題模板。" />
+    <meta name="theme-color" content="#101713" />
+    <title>16.10 正確性、複雜度與個人模板｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-16-problem-solving.html">UNIT 16 / LESSON 10</a><p class="eyebrow">Problem Solving and Algorithm Design</p><h1>正確性、複雜度與個人模板</h1><p class="lesson-deck">把解法變成可重複流程</p><div class="lesson-meta"><span>進階</span><span>40 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>用不變量與案例拆分說明正確性，整理個人解題模板。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明正確性</li><li>完整分析複雜度</li><li>建立個人流程</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>正確性說明</h2><p>依演算法選用迴圈不變量、歸納法、交換論證或案例拆分。至少說明初始化成立、每步維持，以及終止時不變量如何推出答案。</p><ul><li>雙指標證明被排除者不可能</li><li>DP 證明轉移涵蓋所有最後一步</li><li>Greedy 證明可交換成所選決策</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>複雜度說明</h2><p>定義 n、V、E 或容量 C，再計算每個狀態或元素被處理幾次。分開報告輸入、額外工作空間、輸出空間與遞迴堆疊。</p><ul><li>巢狀 while 不必然 O(n²)</li><li>排序成本要計入總時間</li><li>平均與最壞雜湊成本要註明</li></ul><figure class="code-block"><figcaption><span>複雜度應對應實際程式階段。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code># 範例說明
+# 時間：建表 O(n) + q 次 O(1) = O(n+q)
+# 空間：prefix 使用 O(n)</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>完整流程與模板</h2><p>固定流程能降低遺漏：讀規格、估量級、寫暴力、找瓶頸、選結構、寫不變量、實作、測試、證明與分析。個人模板應保存骨架與適用條件，而不是無理解地貼程式。</p><ul><li>記錄模式、訊號、限制與反例</li><li>每題完成後寫一段復盤</li><li>定期從空白重寫核心骨架</li></ul><div class="table-wrap"><table><thead><tr><th>階段</th><th>產出</th></tr></thead><tbody><tr><td>分析</td><td>規格、限制、基準解</td></tr><tr><td>設計</td><td>不變量、資料結構、複雜度</td></tr><tr><td>驗證</td><td>測試、證明、復盤</td></tr></tbody></table></div></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>正確性說明需連結不變量與終止答案。</li><li><span>02</span>複雜度要對應輸入尺度與實作細節。</li><li><span>03</span>個人模板應包含適用條件、限制與驗證方法。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>DP 正確性常證明什麼？</summary><p>狀態定義正確，轉移涵蓋所有合法最後一步且 Base Case 成立。</p></details><details><summary>為何模板要記反例？</summary><p>它提醒何時模式失效，避免盲目套用。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>為 Two Sum 寫完整正確性與複雜度說明。</li><li>建立自己的解題檢查表並用一題實際走完流程。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-16/09-debugging-and-readability.html"><span>← 上一課</span><b>除錯、錯誤答案與可讀性</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="以價值密度排序解決可切分背包，並透過交換說明其正確性及與 0/1 背包的差異。" />
+    <meta name="theme-color" content="#101713" />
+    <title>12.05 Fractional Knapsack 分數背包｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-12-greedy.html">UNIT 12 / LESSON 05</a><p class="eyebrow">Greedy Algorithms</p><h1>Fractional Knapsack 分數背包</h1><p class="lesson-deck">物品可切分時，先拿單位重量價值最高者</p><div class="lesson-meta"><span>中階</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>以價值密度排序解決可切分背包，並透過交換說明其正確性及與 0/1 背包的差異。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>計算價值密度</li><li>實作可切分選取</li><li>解釋可切分是正確性的必要條件</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>可切分改變問題結構</h2><p>分數背包（Fractional Knapsack）給定容量與多個重量、價值，允許拿取物品的一部分。每單位重量的價值 value/weight 是共同比較尺度，因此先拿密度最高者能讓每一單位容量帶來最大收益。</p><ul><li>所有重量應為正數</li><li>物品允許切分成任意比例</li><li>目標是容量內最大總價值</li><li>排序鍵是價值密度而非總價值</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>排序後依序裝入</h2><p>將物品按密度降冪，容量足夠時整件拿取，否則只拿 remaining/weight 的比例並結束。排序 O(n log n)、掃描 O(n)，選取紀錄最壞 O(n)；浮點結果要依應用決定誤差與金額型態。</p><ul><li>每個物品最多處理一次</li><li>最後最多只有一件被部分拿取</li><li>容量耗盡即可停止</li></ul><figure class="code-block"><figcaption><span>items 為 (weight, value)；時間 O(n log n)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def fractional_knapsack(items, capacity):
+    ordered = sorted(items, key=lambda x: x[1] / x[0], reverse=True)
+    total = 0.0
+    chosen = []
+    for weight, value in ordered:
+        if capacity == 0: break
+        fraction = min(1.0, capacity / weight)
+        total += value * fraction
+        chosen.append((weight, value, fraction))
+        capacity -= weight * fraction
+    return total, chosen</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>密度交換證明</h2><p>若某最佳解在還有高密度物品可用時，卻拿了等重量的較低密度部分，就把這部分交換成高密度物品；重量不變、價值不減。反覆交換可得到依密度順序拿取的最佳解，但若物品不可切分，等重量交換未必可行，貪心便可能失敗。</p><ul><li>交換單位重量保持容量限制</li><li>高密度替換不降低價值</li><li>可切分性使任意小交換成立</li><li>0/1 Knapsack 通常需要 DP</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>分數背包按 value/weight 降冪選取</li><li><span>02</span>可切分性讓密度交換論證成立</li><li><span>03</span>時間 O(n log n)，但同一規則不保證解決 0/1 背包</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為何不能只按物品總價值由高到低？</summary><p>背包限制的是重量；總價值高的物品可能密度低，占用容量後反而降低總收益。</p></details><details><summary>0/1 背包為何不能直接套密度貪心？</summary><p>物品不可切分，無法用等重量部分交換，高密度物品的整體組合可能輸給其他物品組合。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>對 (重量,價值) 為 (10,60)、(20,100)、(30,120)，容量 50，手算選取比例。</li><li>找一個 0/1 背包反例，使密度貪心得到非最佳答案。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-12/04-jump-game.html"><span>← 上一課</span><b>Jump Game 跳躍遊戲</b></a><a class="next" href="../unit-12/06-huffman-coding.html"><span>下一課 →</span><b>Huffman Coding</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

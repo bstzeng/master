@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="理解多路平衡樹配合儲存頁面的原因，並比較 Hash Index 與 Tree Index 的查詢能力。" />
+    <meta name="theme-color" content="#101713" />
+    <title>15.06 B-Tree、B+ Tree 與資料庫索引｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-15-advanced-data-structures.html">UNIT 15 / LESSON 06</a><p class="eyebrow">Advanced Data Structures</p><h1>B-Tree、B+ Tree 與資料庫索引</h1><p class="lesson-deck">讓每次磁碟讀取取得更多鍵，並支援範圍掃描</p><div class="lesson-meta"><span>進階概念</span><span>35 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>理解多路平衡樹配合儲存頁面的原因，並比較 Hash Index 與 Tree Index 的查詢能力。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明多路樹降低高度的原因</li><li>區分 B-Tree 與 B+ Tree</li><li>依等值或範圍查詢選索引</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>多路節點配合頁面 I/O</h2><p>B-Tree 是平衡多路搜尋樹，一個節點保存許多排序鍵與孩子，使分支因子遠大於二元樹。資料庫與檔案系統把節點設計成接近一個儲存頁面，讓一次較昂貴的 I/O 載入大量鍵並降低整棵樹高度。</p><ul><li>所有葉位於相同深度</li><li>節點滿時分裂、過少時合併或借鍵</li><li>搜尋成本常以頁面 I/O 次數衡量</li><li>高度約為 O(log_b n)，b 是高分支因子</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>B+ Tree 把資料集中在葉層</h2><p>B-Tree 的內部與葉節點都可保存資料紀錄；B+ Tree 通常讓內部節點只保存導引鍵，實際資料或指標集中在葉節點，葉節點再以鏈結串起。較小的內部項目提高分支因子，而葉鏈結讓範圍查詢能從起點順序掃描。</p><ul><li>內部節點主要負責導航</li><li>葉節點保存所有搜尋鍵資料</li><li>葉層鏈結適合 ORDER BY 與範圍掃描</li><li>實際資料庫格式依產品而異</li></ul></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>Hash Index 與 Tree Index 各有所長</h2><p>Hash Index 依雜湊值定位桶，適合完整鍵等值查詢，平均很快但不保留鍵順序；B+ Tree 類 Tree Index 的等值查詢多一段樹走訪，卻支援 &lt;、&gt;、BETWEEN、排序與前綴範圍。複合索引是否可用還受欄位順序與查詢規劃器影響。</p><ul><li>等值查詢：Hash 或 Tree 都可能適合</li><li>範圍與有序輸出：Tree Index</li><li>低選擇性欄位建索引未必有利</li><li>索引會增加寫入與儲存成本</li></ul><div class="table-wrap"><table><thead><tr><th>能力</th><th>Hash Index</th><th>B+ Tree Index</th></tr></thead><tbody><tr><td>完整鍵等值</td><td>擅長</td><td>擅長</td></tr><tr><td>範圍查詢</td><td>通常不適合</td><td>擅長</td></tr><tr><td>維持鍵順序</td><td>否</td><td>是</td></tr><tr><td>更新代價</td><td>需維護桶</td><td>需維護平衡與頁面</td></tr></tbody></table></div></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>B-Tree 以高分支因子降低昂貴頁面存取次數</li><li><span>02</span>B+ Tree 的葉層鏈結使範圍與有序掃描有效率</li><li><span>03</span>Hash Index 偏向等值，Tree Index 支援等值、範圍與排序</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>B+ Tree 為何比二元搜尋樹更適合磁碟索引？</summary><p>每個頁面可保存許多鍵與孩子，分支因子高、樹較矮，因此搜尋需要的頁面 I/O 較少。</p></details><details><summary>查詢 WHERE age BETWEEN 20 AND 30，Hash Index 和 B+ Tree 通常選哪個？</summary><p>通常選 B+ Tree，因為它保留鍵順序並能從下界開始連續掃描範圍。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>為使用者 email 等值登入與 created_at 月份報表分別選索引類型。</li><li>說明在寫入非常頻繁的表上增加五個索引可能帶來的代價。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-15/05-lru-and-lfu-cache.html"><span>← 上一課</span><b>LRU Cache 與 LFU Cache</b></a><a class="next" href="../unit-15/07-bloom-filter.html"><span>下一課 →</span><b>Bloom Filter 與 False Positive</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

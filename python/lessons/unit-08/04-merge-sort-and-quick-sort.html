@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="以兩種經典排序比較分治步驟、複雜度與資料分割品質。" />
+    <meta name="theme-color" content="#101713" />
+    <title>08.04 Merge Sort 與 Quick Sort 分治案例｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-08-recursion-divide-backtracking.html">UNIT 08 / LESSON 04</a><p class="eyebrow">Recursion, Divide and Conquer, and Backtracking</p><h1>Merge Sort 與 Quick Sort 分治案例</h1><p class="lesson-deck">比較先切後合併與先分割後遞迴</p><div class="lesson-meta"><span>基礎</span><span>35 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>以兩種經典排序比較分治步驟、複雜度與資料分割品質。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明 Merge Sort 的合併流程</li><li>說明 Quick Sort 的 pivot 分割</li><li>比較兩者時間與空間特性</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>Merge Sort：先排兩半再合併</h2><p>合併排序（Merge Sort）把陣列切半，遞迴排序左右兩半，再用雙指標線性合併。Base Case 是長度小於等於一，因為這樣的陣列已經有序。</p><ul><li>Divide：以 middle 切成兩半</li><li>Conquer：遞迴排序 left 與 right</li><li>Combine：每次取兩側目前較小值</li></ul><figure class="code-block"><figcaption><span>每層合併總共處理 n 個元素，共約 log n 層。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def merge_sort(numbers):
+    if len(numbers) &lt;= 1:
+        return numbers[:]
+    middle = len(numbers) // 2
+    left = merge_sort(numbers[:middle])
+    right = merge_sort(numbers[middle:])
+
+    merged = []
+    i = j = 0
+    while i &lt; len(left) and j &lt; len(right):
+        if left[i] &lt;= right[j]:
+            merged.append(left[i]); i += 1
+        else:
+            merged.append(right[j]); j += 1
+    return merged + left[i:] + right[j:]</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Quick Sort：pivot 決定分割</h2><p>快速排序（Quick Sort）選一個 pivot，把其餘元素分成小於等於與大於 pivot 的兩側，再遞迴排序。分割若大致平衡會有良好表現，若每次都極度不平衡，遞迴深度可能增長到 n。</p><ul><li>Partition 是 Quick Sort 的核心工作</li><li>pivot 選擇影響分割是否平衡</li><li>下列教學版建立新陣列，易讀但不是原地排序</li></ul><figure class="code-block"><figcaption><span>equal 能一次收集重複 pivot，避免它們持續進入子問題。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def quick_sort(numbers):
+    if len(numbers) &lt;= 1:
+        return numbers[:]
+    pivot = numbers[len(numbers) // 2]
+    lower = [value for value in numbers if value &lt; pivot]
+    equal = [value for value in numbers if value == pivot]
+    higher = [value for value in numbers if value &gt; pivot]
+    return quick_sort(lower) + equal + quick_sort(higher)
+
+print(quick_sort([5, 2, 8, 2, 1]))  # [1, 2, 2, 5, 8]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>複雜度比較</h2><p>Merge Sort 無論輸入順序，時間都是 O(n log n)，但合併通常需 O(n) 額外空間。Quick Sort 平均 O(n log n)、最壞 O(n²)；教學版也使用 O(n) 級新陣列，而原地版本主要使用遞迴堆疊。</p><ul><li>Merge Sort 的合併穩定且分割固定平衡</li><li>Quick Sort 的效能取決於 pivot 與分割品質</li><li>同名演算法的不同實作可能有不同空間成本</li></ul><div class="table-wrap"><table><thead><tr><th>演算法</th><th>平均時間</th><th>最壞時間</th><th>本例額外空間</th></tr></thead><tbody><tr><td>Merge Sort</td><td>O(n log n)</td><td>O(n log n)</td><td>O(n) 級合併資料</td></tr><tr><td>Quick Sort</td><td>O(n log n)</td><td>O(n²)</td><td>O(n) 級分割資料</td></tr></tbody></table></div></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Merge Sort 的關鍵是線性合併兩個已排序子陣列。</li><li><span>02</span>Quick Sort 的關鍵是 pivot 分割，分割品質影響遞迴深度。</li><li><span>03</span>比較演算法時要同時說明時間、額外空間與具體實作。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>Merge Sort 為什麼能保證 O(n log n) 時間？</summary><p>每次固定切半形成約 log n 層，而每層合併所有元素的總工作量是 O(n)。</p></details><details><summary>Quick Sort 何時可能退化成 O(n²)？</summary><p>當 pivot 反覆造成極不平衡分割，例如一側接近 n-1、另一側接近 0 時，會有約 n 層且每層做線性分割。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>逐步合併 [2, 7] 與 [1, 5, 8]，記錄兩個指標的位置。</li><li>為 quick_sort 改用隨機 pivot，並說明它改善的是預期表現而非最壞上界。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-08/03-divide-and-conquer.html"><span>← 上一課</span><b>Divide and Conquer 分治法</b></a><a class="next" href="../unit-08/05-backtracking-framework.html"><span>下一課 →</span><b>Backtracking 回溯框架</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

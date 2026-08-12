@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="使用 heapq 建立最小堆積與優先佇列，並以操作成本與資料語意完成容器選型。" />
+    <meta name="theme-color" content="#101713" />
+    <title>02.08 heapq 與資料結構選型｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-02-python-builtins.html">UNIT 02 / LESSON 08</a><p class="eyebrow">Python Built-in Data Structures</p><h1>heapq 與資料結構選型</h1><p class="lesson-deck">維護最高優先項目並完成整體比較</p><div class="lesson-meta"><span>入門</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>使用 heapq 建立最小堆積與優先佇列，並以操作成本與資料語意完成容器選型。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>使用 heappush、heappop 與 heapify</li><li>解釋 Heap 與排序 List 的差異</li><li>用決策表為實際問題選擇容器</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>最小堆積與優先佇列</h2><p>Heap（堆積）讓最小元素保持在索引 0，適合每次取出目前最高優先權項目，而不必維持全部資料有序。Python 的 heapq 操作一般 List，heappush 與 heappop 都是 O(log n)，查看 heap[0] 是 O(1)。</p><ul><li>heapq 預設是 Min Heap（最小堆積）</li><li>heappush：加入並維持堆積，O(log n)</li><li>heappop：取出最小項目，O(log n)</li><li>堆積陣列不是完整排序結果</li></ul><figure class="code-block"><figcaption><span>Tuple 先比較優先值，因此數字最小的任務先被取出。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>import heapq
+
+tasks = []
+heapq.heappush(tasks, (2, &quot;回信&quot;))
+heapq.heappush(tasks, (1, &quot;處理故障&quot;))
+heapq.heappush(tasks, (3, &quot;整理文件&quot;))
+priority, task = heapq.heappop(tasks)
+print(priority, task)</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>建堆、最大堆與 Top K</h2><p>heapify 能在 O(n) 時間把現有 List 轉成堆積，比逐一加入的 O(n log n) 更適合批次資料。需要最大優先值時可依 Python 版本使用最大堆 API，或在相容寫法中存負數；維護大小為 k 的 Heap 可在 O(n log k) 找出 Top K。</p><ul><li>heapq.heapify(items)：O(n)</li><li>反轉數值正負可模擬 Max Heap</li><li>heapreplace／heappushpop 可合併替換步驟</li><li>全部排序通常 O(n log n)，只取 Top K 可用 O(n log k)</li></ul><figure class="code-block"><figcaption><span>使用 nlargest 取得少量最大值，不必手寫完整排序。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>import heapq
+
+scores = [72, 91, 85, 99, 88]
+top_three = heapq.nlargest(3, scores)
+print(top_three)  # [99, 91, 88]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>用操作需求完成選型</h2><p>選資料結構時，不只比較 Big O，也要看資料語意、可讀性與最常發生的操作。先選最直接表達需求的結構，再以實際輸入規模檢查瓶頸；若需要完整有序結果就排序，若只反覆取得最小值才使用 Heap。</p><ul><li>順序與索引：List／Tuple／String</li><li>鍵值查找：Dictionary；唯一成員：Set</li><li>兩端進出：deque；反覆取最小優先：Heap</li><li>複雜度相同時，選語意更清楚、介面更簡單者</li></ul><div class="table-wrap"><table><thead><tr><th>結構</th><th>最適合</th><th>核心成本</th></tr></thead><tbody><tr><td>List</td><td>動態有序資料、索引</td><td>索引 O(1)，中間增刪 O(n)</td></tr><tr><td>Tuple</td><td>固定紀錄、複合鍵</td><td>索引 O(1)，不可變</td></tr><tr><td>Dictionary</td><td>鍵到值的對應</td><td>查找／更新平均 O(1)</td></tr><tr><td>Set</td><td>唯一性、成員測試</td><td>查找／加入平均 O(1)</td></tr><tr><td>String</td><td>不可變文字</td><td>走訪 O(n)，大量串接用 join</td></tr><tr><td>deque</td><td>Queue 與雙端操作</td><td>兩端增刪 O(1)</td></tr><tr><td>Heap</td><td>動態最小值、優先佇列</td><td>查看 O(1)，增刪 O(log n)</td></tr></tbody></table></div><figure class="code-block"><figcaption><span>用簡化決策函式練習把需求對應到資料結構。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def choose_structure(need_key_lookup, need_unique, need_queue):
+    if need_key_lookup:
+        return &quot;Dictionary&quot;
+    if need_unique:
+        return &quot;Set&quot;
+    if need_queue:
+        return &quot;deque&quot;
+    return &quot;List&quot;
+
+print(choose_structure(False, False, True))</code></pre></figure><aside class="concept-callout"><b>KEY IDEA</b><p>Heap 只保證根節點最小，不保證直接走訪時由小到大。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>heapq 以 O(log n) 加入或取出最小項目，查看最小值為 O(1)</li><li><span>02</span>只需 Top K 或動態優先項目時，Heap 通常比反覆完整排序合適</li><li><span>03</span>選型同時考慮資料語意、常用操作、複雜度與可讀性</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>直接印出 Heap 內部 List，會得到完整排序嗎？</summary><p>不會；Heap 只維持父節點不大於子節點等局部規則，僅能保證索引 0 是最小值。</p></details><details><summary>任務會持續加入，且每次都要取出最小期限，該選排序 List 還是 Heap？</summary><p>選 Heap；每次加入與取出為 O(log n)，不必在每次更新後重新維持完整排序。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>使用 heapq 依照截止時間處理五項任務，若時間相同再依名稱排序。</li><li>為通訊錄、瀏覽紀錄、待辦優先權與不重複關鍵字各選資料結構並分析主要操作成本。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-02/07-stack-queue-and-deque.html"><span>← 上一課</span><b>Stack、Queue 與 deque</b></a><a class="next" href="../unit-03/01-traversing-arrays-and-strings.html"><span>下一課 →</span><b>陣列與字串走訪</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

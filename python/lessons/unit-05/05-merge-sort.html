@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="以分治與合併實作穩定的 O(n log n) 排序，理解額外空間成本。" />
+    <meta name="theme-color" content="#101713" />
+    <title>05.05 Merge Sort 合併排序｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-05-sorting.html">UNIT 05 / LESSON 05</a><p class="eyebrow">Sorting Algorithms</p><h1>Merge Sort 合併排序</h1><p class="lesson-deck">分割問題，再線性合併兩個有序結果</p><div class="lesson-meta"><span>中階</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>以分治與合併實作穩定的 O(n log n) 排序，理解額外空間成本。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>描述分割與合併流程</li><li>實作穩定合併排序</li><li>推導 O(n log n) 時間</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>把大問題分成兩半</h2><p>合併排序（Merge Sort）使用分治法：把序列分成兩半，分別排序後再合併。當序列長度小於二時本身已有序，這就是遞迴的 base case。</p><ul><li>Divide：切成左右兩半</li><li>Conquer：遞迴排序兩半</li><li>Combine：合併兩個有序序列</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>雙指標線性合併</h2><p>合併時比較左右目前最小值，取較小者放入結果，某側用完後接上另一側剩餘元素。相等時先取左側，可保留原本跨越兩半的相對順序，因此整體穩定。</p><ul><li>左右指標只向前移動</li><li>一次合併 O(n)</li><li>相等時取左側維持穩定</li></ul><figure class="code-block"><figcaption><span>回傳新的穩定排序結果；此直覺版本使用切片與額外 list。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def merge_sort(items):
+    if len(items) &lt; 2:
+        return items[:]
+    middle = len(items) // 2
+    left = merge_sort(items[:middle])
+    right = merge_sort(items[middle:])
+    merged = []
+    i = j = 0
+    while i &lt; len(left) and j &lt; len(right):
+        if left[i] &lt;= right[j]:
+            merged.append(left[i]); i += 1
+        else:
+            merged.append(right[j]); j += 1
+    return merged + left[i:] + right[j:]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>每層 O(n)，共有 O(log n) 層</h2><p>問題每次減半，所以遞迴深度 O(log n)；同一層的所有合併合計處理 n 個元素，因此最好、平均與最壞時間都是 O(n log n)。典型陣列實作需 O(n) 額外空間，不屬於原地排序。</p><ul><li>所有情況時間 O(n log n)</li><li>主要額外空間 O(n)</li><li>穩定但通常非原地</li><li>適合需要可預測最壞時間的情境</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>合併排序以分治將問題反覆減半</li><li><span>02</span>線性合併與相等時取左側使排序穩定</li><li><span>03</span>時間固定 O(n log n)，代價是 O(n) 額外空間</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>合併排序為什麼不是 O(n²)？</summary><p>遞迴只有 O(log n) 層，而每層所有合併合計 O(n)，相乘為 O(n log n)。</p></details><details><summary>合併時相等元素先取右側可能造成什麼結果？</summary><p>右半元素可能越過原先位於左半的相同鍵元素，使排序不穩定。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>手動合併 [2, 5, 8] 與 [1, 5, 7]，記錄雙指標變化。</li><li>改寫 merge_sort 接受 key 函式，注意不要反覆昂貴地計算鍵。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-05/04-insertion-sort.html"><span>← 上一課</span><b>Insertion Sort 插入排序</b></a><a class="next" href="../unit-05/06-quick-sort.html"><span>下一課 →</span><b>Quick Sort 快速排序</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

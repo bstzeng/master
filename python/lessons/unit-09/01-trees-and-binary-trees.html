@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="建立根、父子、葉節點、子樹與二元樹的共同術語，並以節點類別建立範例。" />
+    <meta name="theme-color" content="#101713" />
+    <title>09.01 樹與 Binary Tree 二元樹｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-09-trees.html">UNIT 09 / LESSON 01</a><p class="eyebrow">Tree Data Structures</p><h1>樹與 Binary Tree 二元樹</h1><p class="lesson-deck">用節點和邊表達有層次的資料</p><div class="lesson-meta"><span>入門</span><span>24 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>建立根、父子、葉節點、子樹與二元樹的共同術語，並以節點類別建立範例。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>辨認樹的基本組成</li><li>區分一般樹與二元樹</li><li>用 Python 節點表示二元樹</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>樹描述階層與分支</h2><p>樹（Tree）由節點（Node）與連接節點的邊（Edge）構成，從唯一根節點向下形成階層。除根以外，每個節點恰有一個父節點；沒有子節點的是葉節點，而從某節點往下的完整部分稱為子樹。</p><ul><li>根節點沒有父節點</li><li>兄弟節點共享同一父節點</li><li>路徑是由邊連接的一串節點</li><li>含 V 個節點的樹有 V - 1 條邊</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>二元樹限制每個節點的孩子數</h2><p>二元樹（Binary Tree）的每個節點最多有左、右兩個孩子，左右位置具有區別；它不保證排序，也不保證每層填滿。滿二元樹、完全二元樹與二元搜尋樹是額外性質，不能只因為有兩個孩子就混為一談。</p><ul><li>每個節點可有零、一或兩個孩子</li><li>左子樹與右子樹不可任意互換</li><li>二元樹不等於 Binary Search Tree</li><li>完全二元樹適合用陣列緊密儲存</li></ul></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>以參照連接節點</h2><p>最直覺的 Python 表示法讓每個節點保存值與左右孩子參照；整棵樹只需保留 root。這種結構適合形狀不規則的樹，但若要從孩子回到父親，就需額外保存 parent 或由走訪過程記錄路徑。</p><ul><li>None 表示該方向沒有孩子</li><li>建立節點是 O(1)</li><li>存取已知節點的左右孩子是 O(1)</li></ul><figure class="code-block"><figcaption><span>root 的值是 8，左孩子為 3，右孩子為 10。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>class TreeNode:
+    def __init__(self, value, left=None, right=None):
+        self.value = value
+        self.left = left
+        self.right = right
+
+root = TreeNode(8, TreeNode(3), TreeNode(10))</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>樹用節點與邊表示單一根開始的階層</li><li><span>02</span>二元樹只限制左右孩子數，不自動具有排序性</li><li><span>03</span>參照式節點適合表示形狀不規則的二元樹</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>二元樹每個節點都必須有兩個孩子嗎？</summary><p>不必；二元樹只規定最多兩個孩子，也可以有一個或沒有孩子。</p></details><details><summary>有 12 個節點且連通無環的樹有幾條邊？</summary><p>有 11 條邊，因為含 V 個節點的樹恰有 V - 1 條邊。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>畫出公司組織、檔案目錄各五個節點，標示根、父子與葉節點。</li><li>用 TreeNode 建立三層二元樹，刻意讓部分節點只有一個孩子。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-08/08-n-queens-maze-and-pruning.html"><span>← 上一課</span><b>N-Queens、迷宮與剪枝</b></a><a class="next" href="../unit-09/02-dfs-tree-traversals.html"><span>下一課 →</span><b>DFS 前序、中序與後序走訪</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

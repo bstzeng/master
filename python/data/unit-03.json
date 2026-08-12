@@ -1,0 +1,556 @@
+{
+  "number": 3,
+  "phase": 1,
+  "slug": "arrays-and-strings",
+  "title": "陣列與字串技巧",
+  "english": "Array and String Techniques",
+  "summary": "從線性走訪開始，學會利用索引、雜湊、雙指標、滑動視窗、前綴和與差分陣列，處理常見的陣列及字串問題。",
+  "goal": "能從題目的查詢方式與限制辨認常見模式，選擇適當技巧，並寫出可解釋複雜度的 Python 解法。",
+  "prerequisites": [
+    "會使用 Python 的 list、str、dict 與 set",
+    "理解索引、迴圈、函式與條件判斷",
+    "知道時間複雜度 O(1)、O(n) 與 O(n²) 的意義"
+  ],
+  "outcomes": [
+    "能安全走訪陣列與字串，並處理索引邊界",
+    "能使用雜湊表統計字元或快速查找互補值",
+    "能辨認雙指標與滑動視窗的適用情境",
+    "能以最長不重複子字串說明動態視窗的維護方式",
+    "能使用前綴和回答區間查詢，並用差分陣列處理批次區間更新"
+  ],
+  "lessons": [
+    {
+      "number": 1,
+      "slug": "traversing-arrays-and-strings",
+      "title": "陣列與字串走訪",
+      "subtitle": "從索引、元素與相鄰關係建立基本功",
+      "duration": "20 分鐘",
+      "difficulty": "入門",
+      "summary": "比較直接走訪與索引走訪，練習處理相鄰元素及常見邊界。",
+      "objectives": [
+        "依需求選擇元素走訪或索引走訪",
+        "避免索引超出範圍",
+        "分析一次線性掃描的複雜度"
+      ],
+      "sections": [
+        {
+          "heading": "先決定走訪時需要什麼",
+          "paragraphs": [
+            "陣列與字串都能由左到右讀取；如果只需要元素，就直接迭代，如果還需要位置，則使用 enumerate。先釐清是否會查看前後鄰居，可避免不必要的索引操作。"
+          ],
+          "bullets": [
+            "只讀取值：for value in values",
+            "同時需要位置和值：for index, value in enumerate(values)",
+            "字串不可變；修改字元通常先轉成 list 或建立新字串"
+          ],
+          "code": "def locate_even(numbers):\n    positions = []\n    for index, value in enumerate(numbers):\n        if value % 2 == 0:\n            positions.append(index)\n    return positions\n\nprint(locate_even([7, 4, 9, 2]))  # [1, 3]",
+          "code_caption": "用 enumerate 同時取得索引與元素。"
+        },
+        {
+          "heading": "相鄰比較與邊界",
+          "paragraphs": [
+            "比較目前元素與下一個元素時，最後一個位置沒有下一個鄰居，所以迴圈只能走到 len(values) - 2。把有效索引範圍先寫清楚，比在迴圈中捕捉 IndexError 更容易驗證。"
+          ],
+          "bullets": [
+            "合法索引是 0 到 len(values) - 1",
+            "查看 values[index + 1] 時使用 range(len(values) - 1)",
+            "空序列與單一元素通常需要確認是否仍符合題意"
+          ],
+          "code": "def count_increases(numbers):\n    count = 0\n    for index in range(len(numbers) - 1):\n        if numbers[index + 1] > numbers[index]:\n            count += 1\n    return count\n\nprint(count_increases([3, 5, 4, 8]))  # 2",
+          "code_caption": "只走訪具有下一個鄰居的位置。"
+        },
+        {
+          "heading": "線性走訪的成本",
+          "paragraphs": [
+            "走訪長度為 n 的序列一次，時間複雜度是 O(n)。範例只使用固定數量的計數變數，額外空間是 O(1)；若收集符合條件的索引，最壞情況會使用 O(n) 空間。"
+          ],
+          "bullets": [
+            "一次完整掃描通常是 O(n)",
+            "巢狀迴圈不一定都是 O(n²)，要看各層實際走訪範圍",
+            "輸出本身有 n 個項目時，O(n) 輸出空間通常無法避免"
+          ],
+          "callout": "分析額外空間時，應說明是否把回傳結果的空間計算在內。"
+        }
+      ],
+      "takeaways": [
+        "只需元素時直接迭代，需要位置時使用 enumerate。",
+        "存取相鄰元素前，先縮小索引走訪範圍。",
+        "一次線性走訪耗時 O(n)，額外空間取決於是否收集結果。"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼比較 values[index] 與 values[index + 1] 時不能走到最後一個索引？",
+          "answer": "最後一個索引再加一會超出序列範圍，因此迴圈應使用 range(len(values) - 1)。"
+        },
+        {
+          "question": "只想把所有元素加總時，需要使用 enumerate 嗎？",
+          "answer": "不需要，直接走訪元素即可，因為計算過程不使用索引。"
+        }
+      ],
+      "practice": [
+        "寫一個函式，回傳陣列中第一個負數的索引；若不存在則回傳 -1。",
+        "計算字串中相鄰且相同的字元對數，例如 aabcc 有兩對。"
+      ]
+    },
+    {
+      "number": 2,
+      "slug": "frequency-counting-and-hashing",
+      "title": "字元統計與雜湊表",
+      "subtitle": "把重複搜尋改成一次統計與快速查找",
+      "duration": "25 分鐘",
+      "difficulty": "入門",
+      "summary": "使用 dictionary 與 set 建立頻率表，解決字元計數與異位詞判斷。",
+      "objectives": [
+        "以 dictionary 建立頻率表",
+        "區分 set 與 dictionary 的用途",
+        "以雜湊降低重複搜尋成本"
+      ],
+      "sections": [
+        {
+          "heading": "頻率表保留出現次數",
+          "paragraphs": [
+            "雜湊表（Hash Table）能把字元或數值當作鍵，並將出現次數保存為值。走訪資料一次就能完成統計，之後不必為每個項目重新掃描整段資料。"
+          ],
+          "bullets": [
+            "dictionary 適合保存「項目 → 次數」",
+            "dict.get(key, 0) 能處理第一次出現的鍵",
+            "set 只回答是否存在，不保存出現幾次"
+          ],
+          "code": "def character_counts(text):\n    counts = {}\n    for character in text:\n        counts[character] = counts.get(character, 0) + 1\n    return counts\n\nprint(character_counts(\"banana\"))\n# {'b': 1, 'a': 3, 'n': 2}",
+          "code_caption": "每讀到一個字元，就更新它在字典中的次數。"
+        },
+        {
+          "heading": "經典題型：判斷異位詞",
+          "paragraphs": [
+            "兩個字串若由完全相同的字元與次數組成，就是異位詞（Anagram）。先排除長度不同的情況，再比較兩份頻率表，便能直接表達問題條件。"
+          ],
+          "bullets": [
+            "字元順序不同不影響結果",
+            "字元種類相同但次數不同，仍不是異位詞",
+            "是否忽略大小寫或空白，應由題目明確決定"
+          ],
+          "code": "def are_anagrams(first, second):\n    if len(first) != len(second):\n        return False\n\n    counts = {}\n    for character in first:\n        counts[character] = counts.get(character, 0) + 1\n    for character in second:\n        if character not in counts:\n            return False\n        counts[character] -= 1\n        if counts[character] < 0:\n            return False\n    return True\n\nprint(are_anagrams(\"listen\", \"silent\"))  # True",
+          "code_caption": "第二次走訪扣除次數，遇到不存在或不足的字元就提早結束。"
+        },
+        {
+          "heading": "效率與雜湊限制",
+          "paragraphs": [
+            "設兩字串總長度為 n，建立與核對頻率表的平均時間是 O(n)，空間是 O(k)，其中 k 是不同字元數。dictionary 的查找平均為 O(1)，但這是雜湊表的平均表現，不代表所有情況都保證固定時間。"
+          ],
+          "bullets": [
+            "有限字元集下，k 有固定上限",
+            "一般 Unicode 文字中，k 最多可隨 n 成長",
+            "排序解異位詞通常需要 O(n log n) 時間"
+          ],
+          "callout": "看到大量「是否存在」或「出現幾次」的查詢時，先考慮 set 或 dictionary。"
+        }
+      ],
+      "takeaways": [
+        "dictionary 保存次數，set 保存是否出現。",
+        "頻率表能把多次線性搜尋改為一次統計。",
+        "雜湊解法平均耗時 O(n)，空間取決於不同鍵的數量。"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼 set 不適合直接判斷 aab 與 abb 是否為異位詞？",
+          "answer": "兩者的 set 都是 {a, b}，但 set 沒有保存每個字元的次數。"
+        },
+        {
+          "question": "頻率表中 k 代表什麼？",
+          "answer": "k 代表不同鍵的數量，例如字串中不同字元的種類數，也就是雜湊表最多需要保存的項目數。"
+        }
+      ],
+      "practice": [
+        "找出字串中第一個只出現一次的字元索引。",
+        "給定兩個整數陣列，判斷它們是否擁有完全相同的元素頻率。"
+      ]
+    },
+    {
+      "number": 3,
+      "slug": "two-pointers",
+      "title": "Two Pointers 雙指標",
+      "subtitle": "利用資料順序協調兩個索引",
+      "duration": "25 分鐘",
+      "difficulty": "基礎",
+      "summary": "理解左右夾逼與同向移動，並以已排序陣列配對和為例。",
+      "objectives": [
+        "辨認雙指標的兩種常見移動方式",
+        "利用排序性排除不可能答案",
+        "說明雙指標為何只需線性時間"
+      ],
+      "sections": [
+        {
+          "heading": "兩個索引如何合作",
+          "paragraphs": [
+            "雙指標（Two Pointers）同時維護兩個位置，常見形式是從左右兩端向中間靠近，或讓快慢指標同向前進。它適合能依目前結果決定要移動哪一側的問題，而不是單純把兩層迴圈換成兩個變數。"
+          ],
+          "bullets": [
+            "左右夾逼：回文、已排序陣列配對",
+            "同向指標：原地去重、篩選元素",
+            "移動規則必須保證不會漏掉可能答案"
+          ],
+          "code": "def is_palindrome(text):\n    left, right = 0, len(text) - 1\n    while left < right:\n        if text[left] != text[right]:\n            return False\n        left += 1\n        right -= 1\n    return True\n\nprint(is_palindrome(\"level\"))  # True",
+          "code_caption": "左右字元相同才繼續向中央靠近。"
+        },
+        {
+          "heading": "已排序陣列的配對和",
+          "paragraphs": [
+            "在遞增陣列中，左右值相加若太小，移動左指標才能讓總和變大；若太大，則移動右指標讓總和變小。排序提供了可預測的方向，因此一次移動就能安全排除一批組合。"
+          ],
+          "bullets": [
+            "總和等於目標：回傳答案",
+            "總和小於目標：left 向右",
+            "總和大於目標：right 向左"
+          ],
+          "code": "def pair_sum_sorted(numbers, target):\n    left, right = 0, len(numbers) - 1\n    while left < right:\n        current = numbers[left] + numbers[right]\n        if current == target:\n            return [left, right]\n        if current < target:\n            left += 1\n        else:\n            right -= 1\n    return []\n\nprint(pair_sum_sorted([1, 3, 4, 7, 10], 11))  # [0, 4]",
+          "code_caption": "範例回傳原本已排序陣列中的兩個索引。"
+        },
+        {
+          "heading": "正確性與複雜度",
+          "paragraphs": [
+            "兩個指標最多各移動 n 次，總移動次數仍與 n 成正比，所以時間是 O(n)，額外空間是 O(1)。若輸入尚未排序而先進行排序，整體時間會成為 O(n log n)，並且要注意排序後索引可能改變。"
+          ],
+          "bullets": [
+            "每次迴圈至少移動一個指標，避免無限迴圈",
+            "先確認題目是否允許排序或已保證有序",
+            "需要原索引時，不可忽略排序造成的位置變化"
+          ],
+          "callout": "雙指標的核心不是「有兩個指標」，而是能根據單調關係排除答案。"
+        }
+      ],
+      "takeaways": [
+        "雙指標可左右夾逼，也可同向移動。",
+        "已排序資料讓配對和能依總和大小決定移動方向。",
+        "指標各自單向移動時，整體通常是 O(n)。"
+      ],
+      "quiz": [
+        {
+          "question": "已排序陣列的左右總和小於目標時，為什麼要移動左指標？",
+          "answer": "右端已是目前最大可選值；若連它相加都太小，保留較小的左值不可能達標，因此必須換成更大的左值。"
+        },
+        {
+          "question": "未排序陣列先排序再用雙指標，時間複雜度是多少？",
+          "answer": "排序需 O(n log n)，雙指標需 O(n)，因此整體是 O(n log n)。"
+        }
+      ],
+      "practice": [
+        "忽略大小寫與非英數字元，判斷一句文字是否為回文。",
+        "在已排序陣列中找出與目標值最接近的兩數總和。"
+      ]
+    },
+    {
+      "number": 4,
+      "slug": "two-sum-with-hash-map",
+      "title": "經典題型：Two Sum",
+      "subtitle": "用互補值把 O(n²) 降為平均 O(n)",
+      "duration": "25 分鐘",
+      "difficulty": "基礎",
+      "summary": "從暴力配對推導出雜湊表解法，並處理索引與重複值。",
+      "objectives": [
+        "說明暴力解法的重複工作",
+        "以雜湊表查找互補值",
+        "正確處理相同數值與索引限制"
+      ],
+      "sections": [
+        {
+          "heading": "從所有配對開始思考",
+          "paragraphs": [
+            "Two Sum 要找出兩個不同索引，使其數值總和等於 target。暴力法為每個位置檢查後方所有位置，概念直接但會產生約 n² 個配對。"
+          ],
+          "bullets": [
+            "同一個元素不能使用兩次",
+            "題目通常要求回傳索引，而非數值",
+            "暴力解法時間 O(n²)、額外空間 O(1)"
+          ],
+          "code": "def two_sum_brute_force(numbers, target):\n    for first in range(len(numbers)):\n        for second in range(first + 1, len(numbers)):\n            if numbers[first] + numbers[second] == target:\n                return [first, second]\n    return []",
+          "code_caption": "second 從 first + 1 開始，避免重複配對與使用同一索引。"
+        },
+        {
+          "heading": "儲存看過的數值",
+          "paragraphs": [
+            "走到目前數值 value 時，需要的互補值是 target - value。若互補值已在 seen 中，就找到一對答案；否則把目前數值與索引記錄起來，供後面的元素查找。"
+          ],
+          "bullets": [
+            "seen 的鍵是數值，值是先前索引",
+            "先查找再寫入，確保使用兩個不同索引",
+            "重複數值可正常處理，例如 [3, 3] 與 target 6"
+          ],
+          "code": "def two_sum(numbers, target):\n    seen = {}\n    for index, value in enumerate(numbers):\n        complement = target - value\n        if complement in seen:\n            return [seen[complement], index]\n        seen[value] = index\n    return []\n\nprint(two_sum([2, 7, 11, 15], 9))  # [0, 1]\nprint(two_sum([3, 3], 6))           # [0, 1]",
+          "code_caption": "只保存已經走訪過的位置，答案的第一個索引必定早於第二個。"
+        },
+        {
+          "heading": "時間換空間",
+          "paragraphs": [
+            "雜湊表平均 O(1) 查找讓整體平均時間降為 O(n)，最壞需保存 n 個項目，因此額外空間是 O(n)。這是典型的空間換時間：使用更多記憶體，避免重複掃描。"
+          ],
+          "bullets": [
+            "若輸入保證恰有一組答案，可找到後立即回傳",
+            "若需全部配對，資料結構與重複值處理方式要重新設計",
+            "已排序輸入也可用雙指標，以 O(1) 額外空間求解"
+          ],
+          "callout": "修改題目輸出要求時，不要直接假設同一份 Two Sum 程式仍然正確。"
+        }
+      ],
+      "takeaways": [
+        "Two Sum 的關鍵查詢是 target - value 是否曾經出現。",
+        "先查找再記錄可避免重複使用同一索引。",
+        "雜湊解法平均時間 O(n)、額外空間 O(n)。"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼不能先把目前值寫入 seen，再查找互補值？",
+          "answer": "當目前值剛好等於自己的互補值時，可能錯誤地使用同一索引兩次；先查找可確保互補值來自先前位置。"
+        },
+        {
+          "question": "雜湊表解法相較暴力法付出什麼代價？",
+          "answer": "額外使用最多 O(n) 空間保存已看過的數值與索引，以換取平均 O(n) 時間。"
+        }
+      ],
+      "practice": [
+        "修改 Two Sum，使找不到答案時回傳 None，並補上空陣列與單元素測試。",
+        "給定已排序陣列，改用雙指標完成 Two Sum，並比較空間複雜度。"
+      ]
+    },
+    {
+      "number": 5,
+      "slug": "sliding-window",
+      "title": "Sliding Window 滑動視窗",
+      "subtitle": "重用相鄰區間的計算結果",
+      "duration": "30 分鐘",
+      "difficulty": "基礎",
+      "summary": "從固定長度視窗理解增量更新，再延伸到可伸縮的動態視窗。",
+      "objectives": [
+        "辨認連續區間問題",
+        "維護固定長度視窗的統計值",
+        "理解動態視窗的擴張與收縮條件"
+      ],
+      "sections": [
+        {
+          "heading": "相鄰區間只差兩個元素",
+          "paragraphs": [
+            "滑動視窗（Sliding Window）處理連續子陣列或子字串。固定長度 k 的視窗向右移一步時，只要扣除離開的元素並加入新元素，不必重新加總整個區間。"
+          ],
+          "bullets": [
+            "視窗代表目前正在考慮的連續範圍",
+            "先建立第一個視窗，再逐步向右更新",
+            "k 必須符合 1 ≤ k ≤ 序列長度"
+          ],
+          "code": "def maximum_window_sum(numbers, k):\n    if k <= 0 or k > len(numbers):\n        raise ValueError(\"k 必須介於 1 與陣列長度之間\")\n\n    window_sum = sum(numbers[:k])\n    best = window_sum\n    for right in range(k, len(numbers)):\n        window_sum += numbers[right]\n        window_sum -= numbers[right - k]\n        best = max(best, window_sum)\n    return best\n\nprint(maximum_window_sum([2, 1, 5, 1, 3, 2], 3))  # 9",
+          "code_caption": "每次滑動只更新進入與離開視窗的兩個元素。"
+        },
+        {
+          "heading": "動態視窗會依條件收縮",
+          "paragraphs": [
+            "視窗長度不固定時，通常讓 right 負責擴張，當視窗違反條件，再移動 left 直到恢復有效。能否使用此模式取決於條件是否具有可預測性，例如正整數總和過大時，移除左端元素一定不會讓總和更大。"
+          ],
+          "bullets": [
+            "right 加入新元素並更新狀態",
+            "while 條件不成立時移動 left",
+            "每次狀態改變都要同步更新計數或總和"
+          ],
+          "code": "def shortest_subarray_at_least(numbers, target):\n    left = 0\n    window_sum = 0\n    best = len(numbers) + 1\n    for right, value in enumerate(numbers):\n        window_sum += value\n        while window_sum >= target:\n            best = min(best, right - left + 1)\n            window_sum -= numbers[left]\n            left += 1\n    return 0 if best == len(numbers) + 1 else best\n\nprint(shortest_subarray_at_least([2, 3, 1, 2, 4, 3], 7))  # 2",
+          "code_caption": "此解法假設陣列元素皆為正整數，才能安全地依總和收縮。"
+        },
+        {
+          "heading": "判斷適用性與複雜度",
+          "paragraphs": [
+            "雖然動態視窗中有 for 與 while，left 和 right 都只會向右移動至多 n 次，所以時間是 O(n)，額外空間依維護狀態而定。若資料含負數，總和不再隨擴張或收縮保持單調，上述最短區間解法便可能失效。"
+          ],
+          "bullets": [
+            "題目需關注連續區間，而非任意挑選元素",
+            "固定視窗通常維護加入與移除的差異",
+            "動態視窗必須有明確且安全的收縮規則"
+          ],
+          "callout": "看到巢狀 while 不要立刻判定 O(n²)；應計算每個指標總共移動幾次。"
+        }
+      ],
+      "takeaways": [
+        "滑動視窗重用相鄰連續區間的計算結果。",
+        "固定視窗移除左端並加入右端，動態視窗則依條件收縮。",
+        "兩個邊界都只單向移動時，總時間通常是 O(n)。"
+      ],
+      "quiz": [
+        {
+          "question": "固定長度 k 的視窗右移時，總和要如何更新？",
+          "answer": "加入新的右端元素，並扣除剛離開視窗的左端元素。"
+        },
+        {
+          "question": "為什麼最短總和視窗範例要求元素皆為正整數？",
+          "answer": "正數讓擴張不會減少總和、收縮不會增加總和，因此能依總和大小安全決定移動方向。"
+        }
+      ],
+      "practice": [
+        "求長度為 k 的連續子陣列最大平均值。",
+        "在只含正整數的陣列中，求總和不超過 target 的最長連續區間。"
+      ]
+    },
+    {
+      "number": 6,
+      "slug": "longest-substring-without-repeating",
+      "title": "經典題型：最長不重複子字串",
+      "subtitle": "用索引表快速跳過重複字元",
+      "duration": "30 分鐘",
+      "difficulty": "基礎",
+      "summary": "以經典字串題整合動態滑動視窗、雜湊表與邊界更新。",
+      "objectives": [
+        "定義不含重複字元的有效視窗",
+        "使用最後出現索引調整左邊界",
+        "避免左邊界向後倒退"
+      ],
+      "sections": [
+        {
+          "heading": "視窗不變量",
+          "paragraphs": [
+            "這題要求最長的連續子字串，因此可用視窗 [left, right] 表示目前答案候選。整個過程必須維持「視窗內沒有重複字元」這個不變量（Invariant），每次加入新字元後再修正左邊界。"
+          ],
+          "bullets": [
+            "子字串必須連續，子序列則不一定",
+            "right 逐字加入目前字元",
+            "視窗有效後才更新最佳長度"
+          ],
+          "code": "def longest_unique_length_with_set(text):\n    left = 0\n    window = set()\n    best = 0\n    for right, character in enumerate(text):\n        while character in window:\n            window.remove(text[left])\n            left += 1\n        window.add(character)\n        best = max(best, right - left + 1)\n    return best",
+          "code_caption": "set 版本逐一移除左端字元，直到新字元不再重複。"
+        },
+        {
+          "heading": "記住最後出現位置",
+          "paragraphs": [
+            "若記錄每個字元最後出現的索引，遇到重複時可讓 left 直接跳到舊位置的下一格。left 必須取目前值與跳轉位置的最大值，否則較早的重複紀錄可能讓視窗倒退。"
+          ],
+          "bullets": [
+            "last_seen 保存「字元 → 最後索引」",
+            "更新式為 left = max(left, last_seen[character] + 1)",
+            "每輪最後都要覆寫目前字元的最後索引"
+          ],
+          "code": "def longest_unique_substring(text):\n    left = 0\n    last_seen = {}\n    best_start = 0\n    best_length = 0\n\n    for right, character in enumerate(text):\n        if character in last_seen:\n            left = max(left, last_seen[character] + 1)\n        last_seen[character] = right\n        length = right - left + 1\n        if length > best_length:\n            best_start = left\n            best_length = length\n\n    return text[best_start:best_start + best_length]\n\nprint(longest_unique_substring(\"abcabcbb\"))  # abc",
+          "code_caption": "除了長度，也保存最佳起點，最後回傳實際子字串。"
+        },
+        {
+          "heading": "測試邊界與成本",
+          "paragraphs": [
+            "每個字元只被 right 處理一次，雜湊查找平均 O(1)，因此平均時間是 O(n)；last_seen 最多保存 k 個不同字元，空間是 O(k)。空字串應回傳空字串，而全相同字元的答案長度為一。"
+          ],
+          "bullets": [
+            "測試空字串、單字元與全不重複字串",
+            "用 abba 驗證 left 不會因舊紀錄倒退",
+            "若只回傳長度，無須保存 best_start"
+          ],
+          "callout": "在 abba 的最後一個 a，舊 a 已在目前視窗外；max 能保護目前左邊界。"
+        }
+      ],
+      "takeaways": [
+        "目前視窗必須始終保持沒有重複字元。",
+        "最後出現索引能讓左邊界直接跳轉。",
+        "left 只能向右移動，更新時必須使用 max。"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼 left 要寫成 max(left, last_seen[character] + 1)？",
+          "answer": "字元的舊位置可能已在目前視窗左側，直接賦值會讓 left 倒退並把重複字元重新納入視窗。"
+        },
+        {
+          "question": "最長不重複子字串解法的額外空間 O(k) 中，k 是什麼？",
+          "answer": "k 是輸入中不同字元的數量，因為 last_seen 至多為每種字元保存一筆索引。"
+        }
+      ],
+      "practice": [
+        "修改函式，同時回傳最長不重複子字串及其起始索引。",
+        "求最多允許兩種不同字元的最長子字串。"
+      ]
+    },
+    {
+      "number": 7,
+      "slug": "prefix-sums-and-difference-arrays",
+      "title": "Prefix Sum 與差分陣列",
+      "subtitle": "用預處理加速區間查詢與批次更新",
+      "duration": "35 分鐘",
+      "difficulty": "基礎",
+      "summary": "學習以一次 O(n) 預處理換取 O(1) 區間和查詢，並以差分陣列快速記錄多次區間加值。",
+      "objectives": [
+        "建立含前導零的前綴和",
+        "以兩個前綴值回答閉區間總和",
+        "使用差分陣列合併多次區間更新"
+      ],
+      "sections": [
+        {
+          "heading": "Prefix Sum 前綴和",
+          "paragraphs": [
+            "前綴和（Prefix Sum）先累積從開頭到各位置的總和，適合原陣列不變但需要多次區間查詢的情境。建立長度 n + 1 且 prefix[0] = 0 的陣列，可讓區間公式統一而不必特判左邊界。"
+          ],
+          "bullets": [
+            "prefix[i] 代表原陣列前 i 個元素總和",
+            "閉區間 [left, right] 的和是 prefix[right + 1] - prefix[left]",
+            "建立成本 O(n)，每次查詢 O(1)"
+          ],
+          "code": "def build_prefix_sum(numbers):\n    prefix = [0]\n    for value in numbers:\n        prefix.append(prefix[-1] + value)\n    return prefix\n\ndef range_sum(prefix, left, right):\n    return prefix[right + 1] - prefix[left]\n\nnumbers = [3, 1, 4, 1, 5]\nprefix = build_prefix_sum(numbers)\nprint(range_sum(prefix, 1, 3))  # 1 + 4 + 1 = 6",
+          "code_caption": "用 right + 1 對應「前 right + 1 個元素」。"
+        },
+        {
+          "heading": "Difference Array 差分陣列",
+          "paragraphs": [
+            "差分陣列（Difference Array）適合對多個閉區間 [left, right] 加上同一數值。每次更新只在 left 記錄開始變化，並在 right + 1 記錄取消變化；全部更新完成後做一次累積，就能還原最終陣列。"
+          ],
+          "bullets": [
+            "difference[left] += amount",
+            "若 right + 1 仍在範圍內，difference[right + 1] -= amount",
+            "累積 difference 得到每個位置的總加值"
+          ],
+          "code": "def apply_range_additions(length, updates):\n    difference = [0] * (length + 1)\n    for left, right, amount in updates:\n        difference[left] += amount\n        difference[right + 1] -= amount\n\n    result = [0] * length\n    running = 0\n    for index in range(length):\n        running += difference[index]\n        result[index] = running\n    return result\n\nupdates = [(1, 3, 2), (2, 4, 3)]\nprint(apply_range_additions(5, updates))  # [0, 2, 5, 5, 3]",
+          "code_caption": "多次區間加值先記錄端點，最後才一次展開結果。"
+        },
+        {
+          "heading": "選擇預處理方向",
+          "paragraphs": [
+            "前綴和解決「多次讀取區間總和」，差分陣列解決「多次寫入區間增量後再取得結果」。若有 n 個元素、q 次操作，直接逐區間處理最壞可達 O(nq)，而這兩種方法通常能把總成本降為 O(n + q)。"
+          ],
+          "bullets": [
+            "原陣列頻繁單點修改時，靜態前綴和不再方便",
+            "差分更新期間不適合立即查詢任意區間的最終值",
+            "區間是閉區間或半開區間必須從一開始統一"
+          ],
+          "table": {
+            "headers": [
+              "技巧",
+              "主要用途",
+              "預處理／還原",
+              "單次操作"
+            ],
+            "rows": [
+              [
+                "前綴和",
+                "靜態區間和查詢",
+                "O(n)",
+                "查詢 O(1)"
+              ],
+              [
+                "差分陣列",
+                "批次區間加值",
+                "還原 O(n)",
+                "更新 O(1)"
+              ]
+            ]
+          },
+          "callout": "公式錯誤多半來自區間定義不一致；建議把 [left, right] 是否包含端點寫在函式說明中。"
+        }
+      ],
+      "takeaways": [
+        "前綴和以 O(n) 預處理換取 O(1) 區間和查詢。",
+        "前導零讓閉區間公式統一為 prefix[right + 1] - prefix[left]。",
+        "差分陣列以端點標記，把 q 次區間更新與還原控制在 O(q + n)。"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼 prefix 陣列通常比原陣列多一格？",
+          "answer": "prefix[0] 可表示零個元素的總和，使從索引 0 開始的區間也能使用相同減法公式。"
+        },
+        {
+          "question": "對閉區間 [left, right] 加 amount，為什麼要在 right + 1 扣回 amount？",
+          "answer": "扣回代表加值效果從 right 的下一個位置起停止，累積差分時便只影響指定閉區間。"
+        }
+      ],
+      "practice": [
+        "建立前綴和並回答多筆區間平均值查詢。",
+        "給定多段日期與訪客增量，用差分陣列計算每天的總訪客數。"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="從資料是否有順序、是否重複、是否需要快速查找與是否會改動出發，學會使用 Python 常見容器及標準函式庫工具。" />
+    <meta name="theme-color" content="#101713" />
+    <title>單元 02｜Python 內建資料結構｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../styles.css" />
+    <script src="../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../index.html">課程總覽</a>
+        <a class="is-active" href="../phase-1.html">第一階段</a>
+        <a class="" href="../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <section class="unit-hero">
+        <div><a class="breadcrumb" href="../phase-1.html">PHASE 01 / UNIT 02</a><p class="eyebrow">Python Built-in Data Structures</p><h1>Python 內建資料結構</h1><p class="hero-intro">從資料是否有順序、是否重複、是否需要快速查找與是否會改動出發，學會使用 Python 常見容器及標準函式庫工具。</p><a class="primary-button" href="#lessons">查看 8 堂課 <span>↓</span></a></div>
+        <aside><span>UNIT</span><strong>02</strong><p>能依問題需求選擇 List、Tuple、Dictionary、Set、String、deque 或 heap，並說明主要操作的時間與空間成本。</p></aside>
+      </section>
+      <section class="unit-info"><div><p class="section-index">BEFORE YOU START</p><h2>先備知識</h2><ul><li>會使用變數、條件判斷與迴圈</li><li>能閱讀函式呼叫與基本 Python 3 語法</li></ul></div><div><p class="section-index">AFTER THIS UNIT</p><h2>完成後你能夠</h2><ul><li>區分可變與不可變物件，避免別名與複製造成的錯誤</li><li>正確操作 Python 常用內建容器並估算主要操作複雜度</li><li>使用 collections.deque 實作 Stack 與 Queue</li><li>使用 heapq 建立最小堆積與優先佇列</li><li>依順序、唯一性、查找與更新需求選擇資料結構</li></ul></div></section>
+      <section class="lesson-section" id="lessons"><div class="section-head"><div><p class="section-index">LESSON LIST</p><h2>本單元課程</h2></div><p>建議依序閱讀；每一課約 15–25 分鐘，讀完後先回答理解題，再挑一題延伸練習。</p></div><div class="lesson-list">
+        <article class="lesson-row">
+          <span>01</span>
+          <div><p>入門 · 20 分鐘</p><h3>容器、參照與可變性</h3><b>先理解資料怎麼被保存與改動</b></div>
+          <a href="../lessons/unit-02/01-containers-and-mutability.html" aria-label="開始課程：容器、參照與可變性">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>02</span>
+          <div><p>入門 · 25 分鐘</p><h3>List：有順序的可變序列</h3><b>掌握索引、更新與動態陣列成本</b></div>
+          <a href="../lessons/unit-02/02-lists.html" aria-label="開始課程：List：有順序的可變序列">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>03</span>
+          <div><p>入門 · 20 分鐘</p><h3>Tuple：固定且可表意的序列</h3><b>用不可變序列表達一筆完整資料</b></div>
+          <a href="../lessons/unit-02/03-tuples.html" aria-label="開始課程：Tuple：固定且可表意的序列">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>04</span>
+          <div><p>入門 · 25 分鐘</p><h3>Dictionary：鍵與值的快速對應</h3><b>用雜湊表建立可讀又高效的查找</b></div>
+          <a href="../lessons/unit-02/04-dictionaries.html" aria-label="開始課程：Dictionary：鍵與值的快速對應">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>05</span>
+          <div><p>入門 · 20 分鐘</p><h3>Set：唯一元素與集合運算</h3><b>快速判斷存在、去重與比較群組</b></div>
+          <a href="../lessons/unit-02/05-sets.html" aria-label="開始課程：Set：唯一元素與集合運算">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>06</span>
+          <div><p>入門 · 25 分鐘</p><h3>String：不可變的文字序列</h3><b>以序列觀念處理文字與避免低效串接</b></div>
+          <a href="../lessons/unit-02/06-strings.html" aria-label="開始課程：String：不可變的文字序列">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>07</span>
+          <div><p>入門 · 25 分鐘</p><h3>Stack、Queue 與 deque</h3><b>依進出順序選擇正確的 Python 實作</b></div>
+          <a href="../lessons/unit-02/07-stack-queue-and-deque.html" aria-label="開始課程：Stack、Queue 與 deque">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>08</span>
+          <div><p>入門 · 30 分鐘</p><h3>heapq 與資料結構選型</h3><b>維護最高優先項目並完成整體比較</b></div>
+          <a href="../lessons/unit-02/08-heapq-and-choosing-structures.html" aria-label="開始課程：heapq 與資料結構選型">開始閱讀 →</a>
+        </article></div></section>
+      <nav class="bottom-nav"><a href="../phase-1.html">← 返回第 1 階段大綱</a><a href="../index.html">完整學習地圖 ↑</a></nav></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

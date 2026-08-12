@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="理解左右夾逼與同向移動，並以已排序陣列配對和為例。" />
+    <meta name="theme-color" content="#101713" />
+    <title>03.03 Two Pointers 雙指標｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-03-arrays-and-strings.html">UNIT 03 / LESSON 03</a><p class="eyebrow">Array and String Techniques</p><h1>Two Pointers 雙指標</h1><p class="lesson-deck">利用資料順序協調兩個索引</p><div class="lesson-meta"><span>基礎</span><span>25 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>理解左右夾逼與同向移動，並以已排序陣列配對和為例。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>辨認雙指標的兩種常見移動方式</li><li>利用排序性排除不可能答案</li><li>說明雙指標為何只需線性時間</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>兩個索引如何合作</h2><p>雙指標（Two Pointers）同時維護兩個位置，常見形式是從左右兩端向中間靠近，或讓快慢指標同向前進。它適合能依目前結果決定要移動哪一側的問題，而不是單純把兩層迴圈換成兩個變數。</p><ul><li>左右夾逼：回文、已排序陣列配對</li><li>同向指標：原地去重、篩選元素</li><li>移動規則必須保證不會漏掉可能答案</li></ul><figure class="code-block"><figcaption><span>左右字元相同才繼續向中央靠近。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def is_palindrome(text):
+    left, right = 0, len(text) - 1
+    while left &lt; right:
+        if text[left] != text[right]:
+            return False
+        left += 1
+        right -= 1
+    return True
+
+print(is_palindrome(&quot;level&quot;))  # True</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>已排序陣列的配對和</h2><p>在遞增陣列中，左右值相加若太小，移動左指標才能讓總和變大；若太大，則移動右指標讓總和變小。排序提供了可預測的方向，因此一次移動就能安全排除一批組合。</p><ul><li>總和等於目標：回傳答案</li><li>總和小於目標：left 向右</li><li>總和大於目標：right 向左</li></ul><figure class="code-block"><figcaption><span>範例回傳原本已排序陣列中的兩個索引。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def pair_sum_sorted(numbers, target):
+    left, right = 0, len(numbers) - 1
+    while left &lt; right:
+        current = numbers[left] + numbers[right]
+        if current == target:
+            return [left, right]
+        if current &lt; target:
+            left += 1
+        else:
+            right -= 1
+    return []
+
+print(pair_sum_sorted([1, 3, 4, 7, 10], 11))  # [0, 4]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>正確性與複雜度</h2><p>兩個指標最多各移動 n 次，總移動次數仍與 n 成正比，所以時間是 O(n)，額外空間是 O(1)。若輸入尚未排序而先進行排序，整體時間會成為 O(n log n)，並且要注意排序後索引可能改變。</p><ul><li>每次迴圈至少移動一個指標，避免無限迴圈</li><li>先確認題目是否允許排序或已保證有序</li><li>需要原索引時，不可忽略排序造成的位置變化</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>雙指標的核心不是「有兩個指標」，而是能根據單調關係排除答案。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>雙指標可左右夾逼，也可同向移動。</li><li><span>02</span>已排序資料讓配對和能依總和大小決定移動方向。</li><li><span>03</span>指標各自單向移動時，整體通常是 O(n)。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>已排序陣列的左右總和小於目標時，為什麼要移動左指標？</summary><p>右端已是目前最大可選值；若連它相加都太小，保留較小的左值不可能達標，因此必須換成更大的左值。</p></details><details><summary>未排序陣列先排序再用雙指標，時間複雜度是多少？</summary><p>排序需 O(n log n)，雙指標需 O(n)，因此整體是 O(n log n)。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>忽略大小寫與非英數字元，判斷一句文字是否為回文。</li><li>在已排序陣列中找出與目標值最接近的兩數總和。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-03/02-frequency-counting-and-hashing.html"><span>← 上一課</span><b>字元統計與雜湊表</b></a><a class="next" href="../unit-03/04-two-sum-with-hash-map.html"><span>下一課 →</span><b>經典題型：Two Sum</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

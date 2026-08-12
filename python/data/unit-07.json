@@ -1,0 +1,696 @@
+{
+  "number": 7,
+  "phase": 1,
+  "slug": "stack-queue-heap",
+  "title": "Stack、Queue 與 Heap",
+  "english": "Stacks, Queues, and Heaps",
+  "summary": "從元素進出的順序出發，學習 Stack、Queue、Priority Queue、Heap，以及能在線性時間解題的單調結構。",
+  "goal": "能辨認後進先出、先進先出、依優先權取出與滑動區間問題，選用合適結構並分析操作複雜度。",
+  "prerequisites": [
+    "熟悉 Python List、Tuple 與 Dictionary",
+    "會使用 collections.deque 與基本迴圈",
+    "理解 Big O 與攤銷複雜度"
+  ],
+  "outcomes": [
+    "使用 List 或 deque 實作 Stack 與 Queue",
+    "以 Stack 解決括號配對與巢狀結構問題",
+    "以 heapq 實作 Priority Queue、Min Heap 與 Max Heap",
+    "使用 Heap 解決 Top K 題型",
+    "辨認並實作 Monotonic Stack 與 Monotonic Queue"
+  ],
+  "lessons": [
+    {
+      "number": 1,
+      "slug": "stack-lifo",
+      "title": "Stack：後進先出的解題模型",
+      "subtitle": "從基本操作到常見使用時機",
+      "duration": "25 分鐘",
+      "difficulty": "入門",
+      "summary": "理解 Stack 的 LIFO 規則，以 Python List 建立操作介面，並追蹤每一步狀態。",
+      "objectives": [
+        "說明 LIFO 與 Stack 的核心操作",
+        "以 List 實作 push、pop 與 peek",
+        "辨認適合 Stack 的問題特徵"
+      ],
+      "sections": [
+        {
+          "heading": "LIFO 與操作介面",
+          "paragraphs": [
+            "Stack（堆疊）遵守後進先出（Last In, First Out，LIFO）：最後放入的元素最先離開。它只開放頂端操作，因此很適合記錄尚未完成、需要依相反順序處理的工作。"
+          ],
+          "bullets": [
+            "push：把元素放到頂端",
+            "pop：移除並回傳頂端元素",
+            "peek：查看頂端但不移除",
+            "is_empty：確認是否還有元素"
+          ],
+          "code": "stack = []\nstack.append(\"第一步\")\nstack.append(\"第二步\")\nprint(stack[-1])       # 第二步\nprint(stack.pop())     # 第二步\nprint(bool(stack))     # True",
+          "code_caption": "Python List 的尾端正好提供 Stack 所需操作。"
+        },
+        {
+          "heading": "Python 實作與複雜度",
+          "paragraphs": [
+            "List 的 append 與尾端 pop 都是攤銷 O(1)，查看 stack[-1] 也是 O(1)，因此通常不必另外建立 Stack 類別。Stack 保存 n 個元素時需要 O(n) 空間，而 pop 前必須先處理空堆疊情況。"
+          ],
+          "bullets": [
+            "append(value)：攤銷 O(1)",
+            "pop()：O(1)",
+            "stack[-1]：O(1)",
+            "不要用 insert(0) 或 pop(0) 當作 Stack 頂端"
+          ],
+          "code": "def reverse_items(items):\n    stack = list(items)\n    result = []\n    while stack:\n        result.append(stack.pop())\n    return result\n\nprint(reverse_items([1, 2, 3]))  # [3, 2, 1]",
+          "code_caption": "每個元素進出一次，時間 O(n)，額外空間 O(n)。"
+        },
+        {
+          "heading": "辨認 Stack 題型",
+          "paragraphs": [
+            "當問題出現巢狀結構、復原最近操作、反向處理或深度優先探索時，可以先考慮 Stack。解題時要明確寫出 Stack 裡每個元素代表什麼，以及何時推入、何時彈出。"
+          ],
+          "bullets": [
+            "編輯器 Undo：先復原最近動作",
+            "函式呼叫：最近呼叫先返回",
+            "DFS：保存尚待探索的節點",
+            "運算式解析：保存未配對符號或運算子"
+          ],
+          "table": {
+            "headers": ["問題訊號", "Stack 中保存"],
+            "rows": [
+              ["最近一項優先", "操作或值"],
+              ["巢狀結構", "尚未結束的開頭"],
+              ["反向輸出", "依正向讀入的元素"]
+            ]
+          },
+          "callout": "只要能清楚描述 Stack 元素的意義，演算法通常就已完成一半。"
+        }
+      ],
+      "takeaways": [
+        "Stack 遵守 LIFO，只有頂端需要被操作",
+        "List 的 append、pop 與頂端查看皆可在 O(1) 完成",
+        "最近一項優先、巢狀或反向處理是常見 Stack 訊號"
+      ],
+      "quiz": [
+        {
+          "question": "依序 push A、B、C 後連續 pop 兩次，取出順序為何？",
+          "answer": "先 C 再 B，因為 Stack 遵守後進先出。"
+        },
+        {
+          "question": "為何用 List 尾端作為 Stack 頂端？",
+          "answer": "尾端 append 與 pop 都是 O(1) 或攤銷 O(1)；若使用開頭，元素位移會使操作成為 O(n)。"
+        }
+      ],
+      "practice": [
+        "使用 Stack 反轉一個單字清單，並寫出時間與空間複雜度。",
+        "設計瀏覽器上一頁功能，說明兩個 Stack 分別保存什麼。"
+      ]
+    },
+    {
+      "number": 2,
+      "slug": "balanced-parentheses",
+      "title": "經典題型：括號配對",
+      "subtitle": "用 Stack 驗證巢狀結構",
+      "duration": "25 分鐘",
+      "difficulty": "入門",
+      "summary": "從單一括號擴充到多種括號，建立以 Stack 處理巢狀配對的標準模板。",
+      "objectives": [
+        "解釋括號配對為何需要 Stack",
+        "正確處理不同括號種類與錯誤邊界",
+        "分析一次走訪解法的成本"
+      ],
+      "sections": [
+        {
+          "heading": "最近開啟者必須先關閉",
+          "paragraphs": [
+            "合法巢狀括號具有 LIFO 性質：最近讀到但尚未關閉的左括號，必須由下一個右括號先配對。讀到左括號時推入 Stack，讀到右括號時與頂端比較，正好符合這個規則。"
+          ],
+          "bullets": [
+            "左括號代表尚未完成的結構",
+            "右括號只能關閉 Stack 頂端",
+            "右括號出現時 Stack 為空，立即失敗",
+            "掃描結束後 Stack 必須為空"
+          ],
+          "code": "def valid_round_parentheses(text):\n    balance = 0\n    for character in text:\n        if character == \"(\":\n            balance += 1\n        elif character == \")\":\n            balance -= 1\n            if balance < 0:\n                return False\n    return balance == 0",
+          "code_caption": "只有一種括號時可用計數；多種類型則需要 Stack 保留種類。"
+        },
+        {
+          "heading": "多種類括號模板",
+          "paragraphs": [
+            "可用 Dictionary 把右括號映射到預期左括號，讓判斷規則集中而容易擴充。每個符號最多被推入與彈出一次，所以長度 n 的字串可在 O(n) 時間處理，最壞需要 O(n) Stack 空間。"
+          ],
+          "bullets": [
+            "mapping 保存右括號到左括號的關係",
+            "頂端不相符時立即回傳 False",
+            "走訪時間 O(n)",
+            "全為左括號時額外空間 O(n)"
+          ],
+          "code": "def is_balanced(text):\n    expected_open = {\")\": \"(\", \"]\": \"[\", \"}\": \"{\"}\n    stack = []\n    for character in text:\n        if character in expected_open.values():\n            stack.append(character)\n        elif character in expected_open:\n            if not stack or stack.pop() != expected_open[character]:\n                return False\n    return not stack\n\nprint(is_balanced(\"{[()]}\"))  # True",
+          "code_caption": "多種括號的通用 Stack 寫法。"
+        },
+        {
+          "heading": "邊界條件與延伸",
+          "paragraphs": [
+            "常見錯誤是只比較左右括號數量，卻忽略順序與種類；例如 ([)] 數量相同但巢狀關係錯誤。相同模板還能解析 HTML 標籤、計算巢狀深度，或找出未配對符號的位置。"
+          ],
+          "bullets": [
+            "空字串通常視為合法",
+            "測試提早出現的右括號",
+            "測試種類交錯與掃描後仍有左括號",
+            "需要位置時可在 Stack 保存 (符號, 索引)"
+          ],
+          "table": {
+            "headers": ["輸入", "結果", "原因"],
+            "rows": [
+              ["{[]}", "合法", "種類與順序皆正確"],
+              ["([)]", "不合法", "右括號與頂端種類不符"],
+              ["(()", "不合法", "掃描後仍有未關閉項目"],
+              ["][", "不合法", "右括號出現時 Stack 為空"]
+            ]
+          }
+        }
+      ],
+      "takeaways": [
+        "括號配對的核心是最近開啟的結構必須最先關閉",
+        "多種括號以 Stack 配合映射表可在 O(n) 時間完成",
+        "右括號時先檢查空 Stack，結束時再檢查 Stack 是否清空"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼只計算左右括號數量不足以判斷合法？",
+          "answer": "數量不能保證關閉順序與種類，例如 ([)] 的數量相等但配對順序錯誤。"
+        },
+        {
+          "question": "括號字串全部是左括號時，空間複雜度是多少？",
+          "answer": "O(n)，因為所有左括號都會留在 Stack 中。"
+        }
+      ],
+      "practice": [
+        "修改演算法，回傳第一個未配對括號的索引，而不只回傳布林值。",
+        "計算合法括號字串的最大巢狀深度。"
+      ]
+    },
+    {
+      "number": 3,
+      "slug": "queue-and-deque",
+      "title": "Queue 與 deque：先進先出",
+      "subtitle": "用雙端佇列避免線性位移",
+      "duration": "25 分鐘",
+      "difficulty": "入門",
+      "summary": "理解 FIFO 規則，以 collections.deque 實作 Queue 與雙端操作。",
+      "objectives": [
+        "說明 FIFO 與 Queue 的核心操作",
+        "使用 deque 實作入隊與出隊",
+        "比較 List 與 deque 的操作成本"
+      ],
+      "sections": [
+        {
+          "heading": "FIFO 與排隊模型",
+          "paragraphs": [
+            "Queue（佇列）遵守先進先出（First In, First Out，FIFO），最早加入的元素最先離開。它適合公平排程、訊息緩衝，以及依距離層級探索的廣度優先搜尋。"
+          ],
+          "bullets": [
+            "enqueue：從尾端加入",
+            "dequeue：從前端取出",
+            "front：查看下一個項目",
+            "同一層工作依進入順序處理"
+          ],
+          "code": "from collections import deque\n\nqueue = deque([\"Amy\", \"Bo\"])\nqueue.append(\"Chen\")\nprint(queue[0])          # Amy\nprint(queue.popleft())   # Amy",
+          "code_caption": "deque 的 append 與 popleft 直接表達 Queue 操作。"
+        },
+        {
+          "heading": "為何使用 deque",
+          "paragraphs": [
+            "List 的 pop(0) 會讓其餘元素前移，單次成本 O(n)；deque 專為兩端操作設計，append、appendleft、pop 與 popleft 都是 O(1)。保存 n 個待處理元素需要 O(n) 空間，但 deque 不適合頻繁存取中間索引。"
+          ],
+          "bullets": [
+            "list.append：攤銷 O(1)",
+            "list.pop(0)：O(n)",
+            "deque.append／popleft：O(1)",
+            "隨機索引需求高時仍選 List"
+          ],
+          "code": "from collections import deque\n\ndef process_all(tasks):\n    queue = deque(tasks)\n    order = []\n    while queue:\n        order.append(queue.popleft())\n    return order\n\nprint(process_all([\"A\", \"B\", \"C\"]))",
+          "code_caption": "每項工作入隊與出隊一次，總時間 O(n)。"
+        },
+        {
+          "heading": "雙端操作與固定視窗",
+          "paragraphs": [
+            "deque 是 Double-ended Queue，可在左右兩端常數時間增刪，因而也能實作 Stack 或固定長度緩衝區。設定 maxlen 後，加入新元素超過容量時會自動淘汰另一端最舊資料。"
+          ],
+          "bullets": [
+            "appendleft 適合插入緊急工作",
+            "rotate 可循環移動元素",
+            "maxlen 適合最近 N 筆紀錄",
+            "雙端搜尋或中間刪除仍可能是 O(n)"
+          ],
+          "code": "from collections import deque\n\nrecent = deque(maxlen=3)\nfor value in [10, 20, 30, 40]:\n    recent.append(value)\nprint(list(recent))  # [20, 30, 40]",
+          "code_caption": "固定長度 deque 自動保存最近三筆資料。",
+          "table": {
+            "headers": ["需求", "結構", "成本"],
+            "rows": [
+              ["尾端 Stack", "List 或 deque", "O(1)"],
+              ["FIFO Queue", "deque", "兩端 O(1)"],
+              ["依索引存取", "List", "O(1)"]
+            ]
+          }
+        }
+      ],
+      "takeaways": [
+        "Queue 遵守 FIFO，最早加入的元素最先離開",
+        "deque 讓 Queue 的入隊與出隊都在 O(1) 完成",
+        "deque 擅長兩端增刪，List 擅長隨機索引"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼 List 不適合大量使用 pop(0)？",
+          "answer": "每次都要搬動其餘元素，單次為 O(n)，多次出隊可能累積成 O(n²)。"
+        },
+        {
+          "question": "deque(maxlen=3) 已滿時再 append 會發生什麼？",
+          "answer": "新元素從右端加入，最左端最舊元素會被自動淘汰。"
+        }
+      ],
+      "practice": [
+        "以 deque 模擬一般與緊急兩種入隊方式的服務櫃台。",
+        "建立只保存最近五次搜尋關鍵字的紀錄。"
+      ]
+    },
+    {
+      "number": 4,
+      "slug": "priority-queue",
+      "title": "Priority Queue：依優先權取出",
+      "subtitle": "讓重要工作先處理，而非最早工作先處理",
+      "duration": "30 分鐘",
+      "difficulty": "基礎",
+      "summary": "以 heapq 實作 Priority Queue，處理相同優先權、穩定順序與可比較性問題。",
+      "objectives": [
+        "區分一般 Queue 與 Priority Queue",
+        "使用 Tuple 建立優先權項目",
+        "處理優先權相同與物件不可比較的情況"
+      ],
+      "sections": [
+        {
+          "heading": "優先權改變取出規則",
+          "paragraphs": [
+            "Priority Queue（優先佇列）不是依到達時間，而是每次取出目前優先權最高的項目。Python 的 heapq 是最小堆積，所以通常用較小數字代表較高優先權，查看下一項 O(1)，加入與取出 O(log n)。"
+          ],
+          "bullets": [
+            "一般 Queue：依到達順序",
+            "Priority Queue：依優先值",
+            "heappush：O(log n)",
+            "heappop：O(log n)"
+          ],
+          "code": "import heapq\n\ntasks = []\nheapq.heappush(tasks, (2, \"回覆郵件\"))\nheapq.heappush(tasks, (1, \"修復服務\"))\nheapq.heappush(tasks, (3, \"整理文件\"))\nprint(heapq.heappop(tasks))  # (1, '修復服務')",
+          "code_caption": "Tuple 先比較第一欄，因此最小優先值先取出。"
+        },
+        {
+          "heading": "穩定順序與 tie-breaker",
+          "paragraphs": [
+            "當兩項優先權相同時，Tuple 會繼續比較下一欄；若工作物件不可互相比較，會發生 TypeError。加入遞增序號作為 tie-breaker，既能避免比較工作物件，也能讓同優先權項目依進入順序取出。"
+          ],
+          "bullets": [
+            "項目格式：(priority, sequence, task)",
+            "sequence 永不重複，因此 task 不需互相比較",
+            "較小 sequence 代表較早加入",
+            "可用 itertools.count 產生序號"
+          ],
+          "code": "import heapq\nfrom itertools import count\n\nsequence = count()\nqueue = []\nheapq.heappush(queue, (1, next(sequence), {\"name\": \"A\"}))\nheapq.heappush(queue, (1, next(sequence), {\"name\": \"B\"}))\n_, _, task = heapq.heappop(queue)\nprint(task)  # {'name': 'A'}",
+          "code_caption": "序號同時提供穩定順序與可比較欄位。"
+        },
+        {
+          "heading": "限制與使用情境",
+          "paragraphs": [
+            "heapq 適合持續加入並反覆取出最高優先項目，但不擅長搜尋、刪除任意工作或直接更新既有優先權。排程、Dijkstra 最短路徑與事件模擬常用 Priority Queue；需要取消或更新時，常採延遲刪除並在彈出時忽略失效項目。"
+          ],
+          "bullets": [
+            "查看 heap[0] 不會移除，O(1)",
+            "搜尋任意項目為 O(n)",
+            "內部 List 不是完整排序",
+            "n 次推入與取出總計 O(n log n)"
+          ],
+          "table": {
+            "headers": ["結構", "下一項依據", "加入／取出"],
+            "rows": [
+              ["Queue", "最早到達", "O(1)／O(1)"],
+              ["Priority Queue", "最小優先值", "O(log n)／O(log n)"],
+              ["排序 List", "完整順序", "至少一端更新可能 O(n)"]
+            ]
+          },
+          "callout": "Priority Queue 保證下一個取出的項目，不保證整個容器隨時完整排序。"
+        }
+      ],
+      "takeaways": [
+        "Priority Queue 每次取出目前最高優先權，而非最早到達項目",
+        "heapq 以較小值先出，加入與取出皆為 O(log n)",
+        "遞增序號能穩定處理相同優先權與不可比較工作"
+      ],
+      "quiz": [
+        {
+          "question": "為何 (priority, task) 在 priority 相同時可能出錯？",
+          "answer": "Tuple 會繼續比較 task；若 task 是 Dictionary 等不可排序物件，就會拋出 TypeError。"
+        },
+        {
+          "question": "Priority Queue 與一般 Queue 的主要差異為何？",
+          "answer": "一般 Queue 依 FIFO 取出，Priority Queue 依目前最高優先權取出。"
+        }
+      ],
+      "practice": [
+        "建立醫院檢傷 Priority Queue，同級病患依到達順序處理。",
+        "模擬事件時間軸，以事件發生時間作為優先值逐項取出。"
+      ]
+    },
+    {
+      "number": 5,
+      "slug": "min-and-max-heaps",
+      "title": "Min Heap 與 Max Heap",
+      "subtitle": "理解堆積規則、建堆與 Python 慣例",
+      "duration": "30 分鐘",
+      "difficulty": "基礎",
+      "summary": "理解 Heap 的陣列表示與局部順序，以 heapq 建立 Min Heap，並掌握 Max Heap 的相容寫法。",
+      "objectives": [
+        "說明 Heap 的局部順序與陣列索引",
+        "使用 heapify、heappush 與 heappop",
+        "以負值慣例實作 Max Heap"
+      ],
+      "sections": [
+        {
+          "heading": "完全二元樹與局部順序",
+          "paragraphs": [
+            "Binary Heap（堆積）通常以 List 表示完全二元樹；Min Heap 保證每個父節點不大於子節點，因此根節點是全域最小值。這只是局部順序，走訪底層 List 不會得到由小到大的完整排序。"
+          ],
+          "bullets": [
+            "索引 i 的左子節點為 2i + 1",
+            "右子節點為 2i + 2",
+            "父節點為 (i - 1) // 2",
+            "根節點 heap[0] 是最小值"
+          ],
+          "code": "heap = [2, 5, 4, 9, 8, 7]\nfor parent in range(len(heap) // 2):\n    left = 2 * parent + 1\n    right = left + 1\n    print(parent, left, right if right < len(heap) else None)",
+          "code_caption": "Heap 不需 Node 物件，也能用索引找到親子關係。"
+        },
+        {
+          "heading": "heapify 與核心操作",
+          "paragraphs": [
+            "heapq.heapify 可在 O(n) 時間把既有 List 原地轉成 Min Heap，比逐一 heappush 的 O(n log n) 更適合批次建立。取出 n 次可得到排序結果，但總成本仍為 O(n log n)，而且會清空 Heap。"
+          ],
+          "bullets": [
+            "heapify：O(n)",
+            "heappush／heappop：O(log n)",
+            "heap[0]：O(1)",
+            "heappushpop 可在一次調整中加入後取出"
+          ],
+          "code": "import heapq\n\nvalues = [8, 3, 6, 1, 5]\nheapq.heapify(values)\nordered = []\nwhile values:\n    ordered.append(heapq.heappop(values))\nprint(ordered)  # [1, 3, 5, 6, 8]",
+          "code_caption": "建堆 O(n)，依序取完 O(n log n)。"
+        },
+        {
+          "heading": "Max Heap 的 heapq 慣例",
+          "paragraphs": [
+            "經典 Python heapq 介面以 Min Heap 為主，跨版本最常見的 Max Heap 慣例是存入負數，取出後再取負號還原；Tuple 時只反轉作為優先權的數值欄位。部分新版 Python 提供名稱帶 _max 的 API，但教材與面試程式通常仍使用負值寫法以保持相容。"
+          ],
+          "bullets": [
+            "push 原值 x 時存 -x",
+            "pop 得到 negated 後回傳 -negated",
+            "零與負數仍可正確處理",
+            "不要忘記只反轉優先值，不要破壞附帶資料"
+          ],
+          "code": "import heapq\n\nmax_heap = []\nfor value in [4, 9, 2, 7]:\n    heapq.heappush(max_heap, -value)\nmaximum = -heapq.heappop(max_heap)\nprint(maximum)  # 9",
+          "code_caption": "以負值搭配 Min Heap 取得目前最大值。",
+          "table": {
+            "headers": ["結構", "根節點", "heapq 相容寫法"],
+            "rows": [
+              ["Min Heap", "最小值", "直接存原值"],
+              ["Max Heap", "最大值", "數值取負後存入"]
+            ]
+          }
+        }
+      ],
+      "takeaways": [
+        "Heap 只維持親子局部順序，底層 List 不是完整排序",
+        "heapify 為 O(n)，查看根 O(1)，加入與取出 O(log n)",
+        "跨版本 Max Heap 常以負值搭配 heapq 實作"
+      ],
+      "quiz": [
+        {
+          "question": "為何 heapify 是 O(n)，不是直覺的 O(n log n)？",
+          "answer": "自底向上建堆時，多數靠近葉節點的元素只需很少調整，所有調整高度加總可證明為 O(n)。"
+        },
+        {
+          "question": "Max Heap 存入原值 12 時，負值慣例實際存什麼？取出後如何還原？",
+          "answer": "存 -12；heappop 得到 -12 後再取負號還原成 12。"
+        }
+      ],
+      "practice": [
+        "將一組數字 heapify，逐步畫出每次 heappop 後的 List。",
+        "以負值 Max Heap 持續取得遊戲排行榜目前最高分。"
+      ]
+    },
+    {
+      "number": 6,
+      "slug": "top-k-with-heaps",
+      "title": "Top K：只保留真正需要的候選",
+      "subtitle": "以固定大小 Heap 避免完整排序",
+      "duration": "30 分鐘",
+      "difficulty": "基礎",
+      "summary": "使用大小為 k 的 Heap 找出最大或最小的 k 個項目，並比較排序與 Heap 解法。",
+      "objectives": [
+        "說明 Top K 為何適合固定大小 Heap",
+        "實作找出最大的 k 個元素",
+        "比較 O(n log n) 與 O(n log k) 解法"
+      ],
+      "sections": [
+        {
+          "heading": "Top K 的保留策略",
+          "paragraphs": [
+            "若只要 n 筆資料中最大的 k 筆，不必把全部資料排序；維護大小最多為 k 的 Min Heap，根節點就是目前候選中最小者。新值較大時替換根，最後留下的正是全域最大 k 筆。"
+          ],
+          "bullets": [
+            "求最大 K 個：維護大小 k 的 Min Heap",
+            "求最小 K 個：維護大小 k 的 Max Heap",
+            "根節點是候選集合的淘汰門檻",
+            "k 必須先確認不為負數"
+          ],
+          "code": "import heapq\n\ndef largest_k(values, k):\n    if k <= 0:\n        return []\n    heap = []\n    for value in values:\n        if len(heap) < k:\n            heapq.heappush(heap, value)\n        elif value > heap[0]:\n            heapq.heapreplace(heap, value)\n    return sorted(heap, reverse=True)\n\nprint(largest_k([7, 2, 9, 4, 8], 3))  # [9, 8, 7]",
+          "code_caption": "Heap 永遠只保存目前最大的三個候選。"
+        },
+        {
+          "heading": "複雜度與資料流優勢",
+          "paragraphs": [
+            "每個元素最多觸發一次 O(log k) 的 Heap 操作，因此掃描成本 O(n log k)，額外空間 O(k)；最後若要排序 k 筆，再加 O(k log k)。當 k 遠小於 n 或資料以串流到達時，這比完整排序 O(n log n) 更有吸引力。"
+          ],
+          "bullets": [
+            "完整排序：O(n log n)、通常保存 O(n)",
+            "固定 Heap：O(n log k)、額外 O(k)",
+            "資料可一筆一筆處理，不需先全部載入",
+            "k 接近 n 時排序可能更簡單"
+          ],
+          "table": {
+            "headers": ["方法", "時間", "額外保留", "適用"],
+            "rows": [
+              ["sorted", "O(n log n)", "完整結果", "需要全部排名"],
+              ["大小 k Heap", "O(n log k)", "O(k)", "只需要少量 Top K"],
+              ["heapq.nlargest", "依實作選策略", "由函式處理", "程式簡潔優先"]
+            ]
+          }
+        },
+        {
+          "heading": "帶資料的 Top K 與邊界",
+          "paragraphs": [
+            "真實問題通常依某欄位排名，可把 (score, sequence, item) 放入 Heap，避免同分時比較不可排序物件。還要定義 k 大於資料量、同分是否全收，以及結果需不需要再排序，這些都是題目契約的一部分。"
+          ],
+          "bullets": [
+            "k = 0 回傳空結果",
+            "k 大於 n 時通常回傳全部資料",
+            "同分規則需明確指定",
+            "Heap 內容不是排名順序，輸出前可能需 sorted"
+          ],
+          "code": "import heapq\n\ndef top_students(records, k):\n    candidates = []\n    for sequence, record in enumerate(records):\n        entry = (record[\"score\"], -sequence, record[\"name\"])\n        if len(candidates) < k:\n            heapq.heappush(candidates, entry)\n        elif entry > candidates[0]:\n            heapq.heapreplace(candidates, entry)\n    return sorted(candidates, reverse=True)\n\nrecords = [{\"name\": \"Amy\", \"score\": 90}, {\"name\": \"Bo\", \"score\": 85}]\nprint(top_students(records, 1))",
+          "code_caption": "Tuple 將分數與同分規則一起編碼；正式系統應讓規則更具名。",
+          "callout": "先確認要的是第 k 大、最大的 k 個，還是完整排序；三者輸出不同。"
+        }
+      ],
+      "takeaways": [
+        "求最大 K 個時維護大小 k 的 Min Heap，以根作為淘汰門檻",
+        "固定大小 Heap 可將成本降為 O(n log k)，空間為 O(k)",
+        "輸出順序、同分規則與 k 的邊界必須明確處理"
+      ],
+      "quiz": [
+        {
+          "question": "找最大的 k 個數，為何使用 Min Heap 而不是 Max Heap？",
+          "answer": "需要快速找到候選中最小、最該被淘汰的值；Min Heap 的根正好在 O(1) 提供此門檻。"
+        },
+        {
+          "question": "n = 一百萬、k = 10 時，Heap 解法的主要優勢是什麼？",
+          "answer": "只保留 10 個候選並以 O(n log 10) 處理，不需保存或完整排序全部一百萬筆。"
+        }
+      ],
+      "practice": [
+        "實作 smallest_k，使用負值 Max Heap 並輸出由小到大結果。",
+        "持續讀入網站瀏覽數，隨時維護前五名文章。"
+      ]
+    },
+    {
+      "number": 7,
+      "slug": "monotonic-stack",
+      "title": "Monotonic Stack：尋找下一個更大元素",
+      "subtitle": "丟棄不可能再成為答案的候選",
+      "duration": "35 分鐘",
+      "difficulty": "進階",
+      "summary": "理解單調堆疊的不變量，以一次走訪解決下一個更大元素與跨度問題。",
+      "objectives": [
+        "維護 Monotonic Stack 的單調不變量",
+        "實作 Next Greater Element",
+        "以攤銷分析證明總時間 O(n)"
+      ],
+      "sections": [
+        {
+          "heading": "單調不變量與候選",
+          "paragraphs": [
+            "Monotonic Stack（單調堆疊）讓 Stack 中的值保持遞增或遞減，只保留仍可能成為未來答案的候選。新元素破壞單調性時，持續 pop 並同時為被移除元素確定答案。"
+          ],
+          "bullets": [
+            "找下一個更大值：常維護遞減 Stack",
+            "找下一個更小值：常維護遞增 Stack",
+            "Stack 通常保存索引，方便算距離",
+            "相等值是否 pop 取決於題目是嚴格大於或大於等於"
+          ],
+          "code": "values = [2, 1, 4, 3]\nstack = []\nfor index, value in enumerate(values):\n    while stack and values[stack[-1]] < value:\n        previous = stack.pop()\n        print(values[previous], \"的下一個更大值是\", value)\n    stack.append(index)",
+          "code_caption": "Stack 內索引對應的值維持由底到頂遞減。"
+        },
+        {
+          "heading": "Next Greater Element 模板",
+          "paragraphs": [
+            "先以預設值 -1 表示尚未找到答案，再由左到右掃描；當目前值大於 Stack 頂端的值，就能確定頂端的下一個更大元素。掃描結束仍留在 Stack 的索引，代表右側沒有更大值。"
+          ],
+          "bullets": [
+            "答案陣列先填 -1",
+            "while 負責解決已找到答案的舊候選",
+            "append 保存目前索引等待未來",
+            "若求距離，寫成 current_index - previous_index"
+          ],
+          "code": "def next_greater(values):\n    answers = [-1] * len(values)\n    stack = []\n    for index, value in enumerate(values):\n        while stack and values[stack[-1]] < value:\n            previous = stack.pop()\n            answers[previous] = value\n        stack.append(index)\n    return answers\n\nprint(next_greater([2, 1, 4, 3]))  # [4, 4, -1, -1]",
+          "code_caption": "每個索引入 Stack 一次，找到答案後離開一次。"
+        },
+        {
+          "heading": "攤銷 O(n) 與常見變形",
+          "paragraphs": [
+            "雖然程式有巢狀 while，但每個索引最多 push 一次、pop 一次，所有迭代加總為 O(n)，額外空間 O(n)。每日溫度、股票跨度與直方圖最大矩形都建立在同一種候選淘汰思維上。"
+          ],
+          "bullets": [
+            "不要把巢狀迴圈直接判為 O(n²)",
+            "向左找可反向掃描或調整 Stack 意義",
+            "循環陣列可模擬走訪 2n 次",
+            "先寫清楚 Stack 由底到頂的單調方向"
+          ],
+          "table": {
+            "headers": ["題型", "Stack 保存", "pop 條件"],
+            "rows": [
+              ["下一個嚴格更大", "尚未解決的遞減索引", "舊值 < 新值"],
+              ["下一個嚴格更小", "尚未解決的遞增索引", "舊值 > 新值"],
+              ["距離問題", "索引", "條件成立後相減"]
+            ]
+          },
+          "callout": "單調結構最重要的不是背模板，而是說明被 pop 的候選為何永遠不再需要。"
+        }
+      ],
+      "takeaways": [
+        "Monotonic Stack 以單調不變量保留仍可能成為答案的候選",
+        "每個元素最多進出一次，因此總時間為 O(n)",
+        "保存索引能同時取得值、位置與距離"
+      ],
+      "quiz": [
+        {
+          "question": "Next Greater Element 為何常保存索引而非只保存值？",
+          "answer": "索引可定位答案欄位、讀回原值，並能計算與下一個更大值之間的距離。"
+        },
+        {
+          "question": "演算法有 for 包 while，為何仍是 O(n)？",
+          "answer": "每個索引整體只會 push 一次、pop 一次，while 的總執行次數不超過 n。"
+        }
+      ],
+      "practice": [
+        "回傳每一天要等幾天才會遇到更高溫，沒有則回傳 0。",
+        "修改模板，找出每個元素右側第一個嚴格更小元素。"
+      ]
+    },
+    {
+      "number": 8,
+      "slug": "monotonic-queue-sliding-maximum",
+      "title": "Monotonic Queue 與滑動區間最大值",
+      "subtitle": "在線性時間維護視窗內的最佳候選",
+      "duration": "40 分鐘",
+      "difficulty": "進階",
+      "summary": "以遞減 deque 維護滑動視窗候選，實作 Sliding Window Maximum 並完成攤銷分析。",
+      "objectives": [
+        "說明 Monotonic Queue 的候選淘汰規則",
+        "實作滑動區間最大值",
+        "比較暴力、Heap 與 deque 解法"
+      ],
+      "sections": [
+        {
+          "heading": "視窗最大值的兩種淘汰",
+          "paragraphs": [
+            "Monotonic Queue（單調佇列）通常以 deque 保存索引，並讓對應值由前到後遞減，因此最前端永遠是目前最大值。移動視窗時要淘汰兩類候選：已離開左邊界的索引，以及被較新且不小的值支配的尾端索引。"
+          ],
+          "bullets": [
+            "左端：移除已不在視窗的索引",
+            "右端：移除值小於等於目前值的候選",
+            "隊首：目前視窗最大值索引",
+            "保存索引才能判斷是否過期"
+          ],
+          "code": "from collections import deque\n\nvalues = [1, 3, 2]\ncandidates = deque()\nfor index, value in enumerate(values):\n    while candidates and values[candidates[-1]] <= value:\n        candidates.pop()\n    candidates.append(index)\n    print(list(candidates))",
+          "code_caption": "候選索引的對應值由隊首到隊尾嚴格遞減。"
+        },
+        {
+          "heading": "Sliding Window Maximum",
+          "paragraphs": [
+            "對每個右端索引，先移除過期隊首，再從尾端移除不可能成為未來最大值的候選，最後加入目前索引。當視窗形成後，values[deque[0]] 就是答案；每個索引最多加入與移除一次，因此時間 O(n)、空間 O(k)。"
+          ],
+          "bullets": [
+            "過期條件：index - candidates[0] >= k",
+            "形成第一個視窗：index >= k - 1",
+            "每個索引最多進出 deque 一次",
+            "k 必須介於 1 與資料長度之間"
+          ],
+          "code": "from collections import deque\n\ndef sliding_maximum(values, k):\n    if not 1 <= k <= len(values):\n        raise ValueError(\"k 必須介於 1 與資料長度之間\")\n    candidates = deque()\n    answers = []\n    for index, value in enumerate(values):\n        while candidates and index - candidates[0] >= k:\n            candidates.popleft()\n        while candidates and values[candidates[-1]] <= value:\n            candidates.pop()\n        candidates.append(index)\n        if index >= k - 1:\n            answers.append(values[candidates[0]])\n    return answers\n\nprint(sliding_maximum([1, 3, -1, -3, 5, 3, 6, 7], 3))\n# [3, 3, 5, 5, 6, 7]",
+          "code_caption": "遞減 deque 在線性時間內產生每個長度 k 視窗的最大值。"
+        },
+        {
+          "heading": "方法比較與延伸",
+          "paragraphs": [
+            "每個視窗重新 max 需要 O(nk)；Heap 可用索引搭配延遲刪除做到 O(n log n) 或 O(n log k) 的變形；Monotonic Queue 利用滑動順序達到 O(n)。求視窗最小值時反轉尾端比較方向，同樣保存尚未過期且可能成為答案的候選。"
+          ],
+          "bullets": [
+            "暴力法最直覺，適合驗證小案例",
+            "Heap 適合一般動態優先值，但過期刪除較複雜",
+            "Monotonic Queue 專長固定方向滑動視窗",
+            "求最小值時維護遞增 deque"
+          ],
+          "table": {
+            "headers": ["方法", "時間", "空間", "重點"],
+            "rows": [
+              ["每窗 max", "O(nk)", "O(1)", "簡單但重複掃描"],
+              ["Heap", "約 O(n log n) 或 O(n log k)", "O(n) 或 O(k)", "需處理過期項目"],
+              ["Monotonic Queue", "O(n)", "O(k)", "利用視窗單向移動"]
+            ]
+          },
+          "callout": "尾端候選被較新且更大的值淘汰，是因為新值會更晚離開視窗，又不比舊值差。"
+        }
+      ],
+      "takeaways": [
+        "Monotonic Queue 以 deque 同時維持有效範圍與單調候選",
+        "隊首是視窗最佳值，每個索引最多進出一次，總時間 O(n)",
+        "滑動最大值維護遞減 deque，滑動最小值維護遞增 deque"
+      ],
+      "quiz": [
+        {
+          "question": "為何 Monotonic Queue 必須保存索引？",
+          "answer": "除了比較對應值，還要用索引判斷候選是否已離開視窗左邊界。"
+        },
+        {
+          "question": "當新值大於舊的隊尾值時，為何舊隊尾可永久移除？",
+          "answer": "新值更大且位置更靠右，會比舊值更晚離開未來視窗，因此舊值不可能再成為最大值。"
+        }
+      ],
+      "practice": [
+        "修改程式，回傳每個長度 k 視窗的最小值。",
+        "以暴力法與 Monotonic Queue 處理同一組資料，逐窗比較答案並分析成本。"
+      ]
+    }
+  ]
+}

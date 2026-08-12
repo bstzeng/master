@@ -1,0 +1,119 @@
+{
+  "number": 16, "phase": 2, "slug": "problem-solving", "title": "綜合解題與演算法設計", "english": "Problem Solving and Algorithm Design",
+  "summary": "整合限制分析、基準解、演算法選型、測試、除錯、正確性與複雜度，建立完整解題流程。",
+  "goal": "面對陌生問題時，能從規格推導可行解法，驗證正確性並清楚說明取捨。",
+  "prerequisites": ["完成前十五個單元", "熟悉 Big O 與 Python 資料結構", "能閱讀常見演算法程式"],
+  "outcomes": ["能由輸入限制推測可接受複雜度", "能從 Brute Force 找到瓶頸並選型", "能設計測試、除錯並證明正確性", "能整理可理解而非盲背的個人模板"],
+  "lessons": [
+    {
+      "number": 1, "slug": "constraints-to-complexity", "title": "讀題與從限制推複雜度", "subtitle": "先讀規格，再選工具", "duration": "25 分鐘", "difficulty": "基礎", "summary": "把輸入、輸出、限制與資料性質轉為演算法需求。", "objectives": ["摘錄規格", "估計運算量", "辨認隱含性質"],
+      "sections": [
+        {"heading": "重寫問題契約", "paragraphs": ["先用自己的話寫出輸入、輸出與合法條件，可避免解錯問題。特別標記是否有序、可重複、可修改與答案是否唯一。"], "bullets": ["區分索引與數值", "確認空輸入及無解輸出", "辨認連續區間或任意子集合"]},
+        {"heading": "由 n 估算上限", "paragraphs": ["把複雜度換成粗略操作數：n=10⁵ 時 O(n²) 通常不可行，而 n≤20 可能允許 O(2ⁿ)。這是篩選候選方法，不是硬性時間保證。"], "bullets": ["小 n 可考慮回溯", "大 n 常需 O(n) 或 O(n log n)", "同時檢查記憶體限制"], "code": "def operation_estimates(n):\n    return {'linear': n, 'n_log_n': n * max(1, n.bit_length()), 'quadratic': n * n}\nprint(operation_estimates(100_000))", "code_caption": "用量級比較候選解法。"},
+        {"heading": "限制也是提示", "paragraphs": ["正數、已排序、無環或值域很小，都可能啟用特定技巧。選型前把每項推論寫成「因為限制 X，所以可用 Y」。"], "bullets": ["已排序可能用二分或雙指標", "無權圖最短邊數用 BFS", "小值域可能用計數陣列"], "callout": "不要使用題目沒有保證的性質。"}
+      ],
+      "takeaways": ["先明確輸入輸出與邊界。", "用 n 排除不可行量級。", "資料性質是演算法選型依據。"],
+      "quiz": [{"question": "n=10⁵ 為何通常不選 O(n²)？", "answer": "約 10¹⁰ 次工作，多數時限無法承受。"}, {"question": "已排序為何重要？", "answer": "它提供單調順序，可安全排除搜尋範圍。"}],
+      "practice": ["為三組不同 n 列出可能複雜度。", "從一題規格整理輸入、輸出、性質與邊界。"]
+    },
+    {
+      "number": 2, "slug": "brute-force-and-bottlenecks", "title": "Brute Force 與瓶頸", "subtitle": "先建立正確基準，再消除重複工作", "duration": "30 分鐘", "difficulty": "基礎", "summary": "以配對和展示基準解、量測與瓶頸定位。", "objectives": ["寫出基準解", "定位昂貴操作", "提出可驗證優化"],
+      "sections": [
+        {"heading": "Brute Force 是規格模型", "paragraphs": ["暴力法直接枚舉所有合法候選，常最容易驗證。它可產生小輸入正解，作為優化版的測試 oracle。"], "bullets": ["先求正確再求快", "明確列出候選空間", "保留小型基準版本"], "code": "def two_sum_brute(a, target):\n    return any(a[i]+a[j]==target for i in range(len(a)) for j in range(i+1,len(a)))", "code_caption": "枚舉 O(n²) 配對。"},
+        {"heading": "找最內層重複", "paragraphs": ["檢查巢狀迴圈、重複排序、重算區間和與線性 membership。Two Sum 的瓶頸是為每個值重找互補值。"], "bullets": ["問哪些答案曾算過", "問查找能否由 O(n) 降為 O(1)", "問是否可增量維護"]},
+        {"heading": "一次只改一個瓶頸", "paragraphs": ["以 set 保存已見值後，Two Sum 平均降為 O(n)，代價是 O(n) 空間。優化後仍用暴力版交叉驗證隨機小案例。"], "bullets": ["記錄改變前後複雜度", "確認語意與輸出未改變", "空間換時間要明說"], "code": "def two_sum(a,target):\n    seen=set()\n    for x in a:\n        if target-x in seen: return True\n        seen.add(x)\n    return False", "code_caption": "平均 O(n) 時間、O(n) 空間。"}
+      ],
+      "takeaways": ["暴力法提供正確性基準。", "瓶頸常是重複計算或慢查找。", "優化後應與基準解交叉測試。"],
+      "quiz": [{"question": "為何不立即刪掉暴力版？", "answer": "它可驗證優化版的小輸入結果。"}, {"question": "Two Sum 優化代價？", "answer": "使用 O(n) 額外雜湊空間。"}],
+      "practice": ["為區間和寫暴力版與前綴和版。", "找出三層迴圈中真正隨 n 成長的工作。"]
+    },
+    {
+      "number": 3, "slug": "preprocess-sort-hash", "title": "預處理、空間換時間、排序與 Hashing", "subtitle": "先整理資料，再大量回答", "duration": "30 分鐘", "difficulty": "基礎", "summary": "比較前綴和、排序與雜湊三種常見優化。", "objectives": ["辨認重複查詢", "評估排序成本", "選擇雜湊結構"],
+      "sections": [
+        {"heading": "預處理攤提成本", "paragraphs": ["q 次區間和若每次掃描會到 O(nq)，先建 prefix 後總成本 O(n+q)。適合資料少更新、查詢很多。"], "bullets": ["先付 O(n) 建表", "單次查詢降為 O(1)", "更新頻繁時需換結構"], "code": "prefix=[0]\nfor x in data: prefix.append(prefix[-1]+x)\ndef range_sum(l,r): return prefix[r+1]-prefix[l]", "code_caption": "區間採閉區間 [l,r]。"},
+        {"heading": "排序創造順序", "paragraphs": ["排序 O(n log n) 後，可能使用雙指標、合併區間或二分搜尋。若需要原索引，可排序 (value,index) 而不是只排值。"], "bullets": ["確認允許修改或使用副本", "一次排序可服務多次查詢", "排序不是免費步驟"]},
+        {"heading": "Hashing 快速存在性", "paragraphs": ["set 適合存在性，dict 適合鍵到計數或位置。平均 O(1) 查找換取 O(n) 空間，且不保證排序順序。"], "bullets": ["去重用 set", "頻率與索引用 dict", "需要範圍順序時雜湊不一定合適"], "code": "counts={}\nfor x in data: counts[x]=counts.get(x,0)+1", "code_caption": "一次 O(n) 建立頻率表。"}
+      ],
+      "takeaways": ["重複查詢可用預處理攤提。", "排序能創造單調結構。", "set 與 dict 解決不同查詢語意。"],
+      "quiz": [{"question": "何時 prefix 不方便？", "answer": "原資料頻繁更新時需重建或維護。"}, {"question": "需要原索引如何排序？", "answer": "排序 (value,index) 配對。"}],
+      "practice": ["比較 q 次 membership 使用 list 與 set 的總成本。", "設計需保留原索引的排序案例。"]
+    },
+    {
+      "number": 4, "slug": "two-pointers-vs-window", "title": "Two Pointers vs Sliding Window", "subtitle": "看指標是否共同描述連續區間", "duration": "30 分鐘", "difficulty": "基礎", "summary": "依單調排除與視窗不變量區分兩種技巧。", "objectives": ["辨認雙指標", "辨認滑動視窗", "驗證移動規則"],
+      "sections": [
+        {"heading": "雙指標做單調排除", "paragraphs": ["已排序配對和可由左右總和決定移動哪側，每步排除一批答案。核心是移動規則有單調證明。"], "bullets": ["常見左右夾逼", "也可同向快慢指標", "不一定維護區間統計"], "code": "def pair(a,t):\n    l,r=0,len(a)-1\n    while l<r:\n        s=a[l]+a[r]\n        if s==t:return True\n        if s<t:l+=1\n        else:r-=1\n    return False", "code_caption": "已排序時 O(n)。"},
+        {"heading": "視窗維護連續範圍", "paragraphs": ["滑動視窗讓 [left,right] 表示目前連續子陣列或子字串，加入右端並依條件移除左端。重點是維持視窗不變量。"], "bullets": ["固定長度做增量更新", "動態長度依有效條件收縮", "題目必須關注連續範圍"]},
+        {"heading": "用問題語意選型", "paragraphs": ["若兩索引用來比較端點或壓縮資料，多半是雙指標；若共同界定且維護區間狀態，則是滑動視窗。兩者邊界單向移動時通常 O(n)。"], "bullets": ["負數可能破壞總和視窗單調性", "先寫不變量再寫移動", "測試 left 超過 right 的邊界"], "code": "# 視窗長度\nlength = right - left + 1", "code_caption": "閉區間視窗的統一長度公式。"}
+      ],
+      "takeaways": ["雙指標依單調關係排除。", "滑動視窗維護連續區間狀態。", "移動規則必須證明不漏解。"],
+      "quiz": [{"question": "最長不重複子字串是哪類？", "answer": "動態滑動視窗，維護無重複區間。"}, {"question": "負數為何可能破壞總和視窗？", "answer": "加入或移除後總和不再單調變化。"}],
+      "practice": ["各找一題雙指標與滑動視窗並寫不變量。", "說明已排序 Two Sum 每次移動為何安全。"]
+    },
+    {
+      "number": 5, "slug": "dfs-bfs-union-find", "title": "DFS、BFS 與 Union-Find 選型", "subtitle": "路徑、距離或只問連通", "duration": "30 分鐘", "difficulty": "基礎", "summary": "依輸出需求選擇圖演算法。", "objectives": ["比較三種工具", "處理多元件", "辨認不適用情境"],
+      "sections": [
+        {"heading": "DFS 探索結構", "paragraphs": ["DFS 適合可達性、列舉路徑、回溯與結構判斷。它深入優先，不保證未加權最短路徑。"], "bullets": ["使用 Stack 或遞迴", "圖需 visited", "時間 O(V+E)"], "code": "def reachable(g,s):\n    seen={s}; stack=[s]\n    while stack:\n        for v in g[stack.pop()]:\n            if v not in seen: seen.add(v); stack.append(v)\n    return seen", "code_caption": "回傳起點可達集合。"},
+        {"heading": "BFS 求層級距離", "paragraphs": ["BFS 依邊數由近到遠，適合未加權最短路徑與擴散時間。加權邊則需依權重改用 Dijkstra 等方法。"], "bullets": ["使用 deque", "入列時標記", "可由多起點同時開始"]},
+        {"heading": "Union-Find 只維護群組", "paragraphs": ["Union-Find 適合邊逐步加入時的連通查詢與無向環偵測，近似常數攤銷操作。它無法還原路徑，也不擅長刪邊。"], "bullets": ["只問兩點是否同集合", "需要實際路徑改用搜尋", "多元件 DFS/BFS 要從每個未訪點啟動"], "table": {"headers": ["需求", "選擇"], "rows": [["深度探索", "DFS"], ["未加權最短", "BFS"], ["動態連通", "Union-Find"]]}}
+      ],
+      "takeaways": ["DFS 適合深入探索與結構。", "BFS 適合未加權最短距離。", "Union-Find 適合只問動態連通。"],
+      "quiz": [{"question": "要回傳最短路徑為何不選 Union-Find？", "answer": "它只保存集合代表元，不保存實際路徑。"}, {"question": "DFS 從一點開始會漏什麼？", "answer": "會漏掉其他不連通元件。"}],
+      "practice": ["為社群分群需求選型並解釋。", "比較迷宮可達性與最短步數的選擇。"]
+    },
+    {
+      "number": 6, "slug": "greedy-vs-dp", "title": "Greedy vs DP 選型", "subtitle": "局部決定能否安全固定", "duration": "30 分鐘", "difficulty": "進階", "summary": "用硬幣與區間案例比較貪心證明與 DP 狀態。", "objectives": ["辨認貪心需求", "找反例", "改建 DP"],
+      "sections": [
+        {"heading": "Greedy 固定當下選擇", "paragraphs": ["貪心每步選看似最佳且不回頭，必須證明存在交換性或貪心選擇性。區間排程選最早結束者可留下最大後續空間。"], "bullets": ["速度通常快且狀態少", "局部合理不等於全域正確", "先嘗試交換論證"]},
+        {"heading": "反例是快速檢查", "paragraphs": ["硬幣 [1,3,4] 湊 6 時，先拿 4 得三枚，而 3+3 只需兩枚，推翻最大面額貪心。小型窮舉很適合找反例。"], "bullets": ["測非典型與邊界組合", "反例只需一個", "失敗後找重疊子問題"], "code": "def greedy_coins(amount):\n    used=0\n    for coin in (4,3,1):\n        used,amount=used+amount//coin,amount%coin\n    return used\nprint(greedy_coins(6))  # 3", "code_caption": "此幣制下貪心不是最佳。"},
+        {"heading": "DP 保留多條可能", "paragraphs": ["若當下選擇會影響未來且無法安全固定，DP 以狀態保存不同子問題最佳值。代價通常是更多時間與空間。"], "bullets": ["Greedy 需正確性證明", "DP 需重疊子問題與最佳子結構", "先問能否不可逆地丟棄其他選擇"], "table": {"headers": ["方法", "核心問題"], "rows": [["Greedy", "局部選擇可安全固定嗎？"], ["DP", "需保存哪些子問題答案？"]]}}
+      ],
+      "takeaways": ["Greedy 必須證明局部選擇安全。", "小型反例可快速推翻錯誤貪心。", "無法固定選擇時考慮 DP 狀態。"],
+      "quiz": [{"question": "一個反例能否推翻貪心？", "answer": "能，演算法宣稱對所有合法輸入正確。"}, {"question": "DP 一定比 Greedy 好嗎？", "answer": "不是；若貪心可證明正確，通常更省資源。"}],
+      "practice": ["為最大面額硬幣策略再找一個反例。", "比較活動選擇用 Greedy 與 DP 的狀態。"]
+    },
+    {
+      "number": 7, "slug": "binary-search-on-answer", "title": "Binary Search on Answer", "subtitle": "在單調可行性上搜尋最佳答案", "duration": "35 分鐘", "difficulty": "進階", "summary": "把最佳化問題轉為單調判定函式。", "objectives": ["定義搜尋範圍", "建立 monotonic predicate", "處理邊界模板"],
+      "sections": [
+        {"heading": "搜尋的不是陣列", "paragraphs": ["若答案 x 的可行性具有單調性，就能在答案範圍二分。例如運送容量愈大愈可行，可尋找第一個可行容量。"], "bullets": ["先定義 feasible(x)", "證明 False…False,True…True", "找清楚下界與上界"]},
+        {"heading": "第一個可行模板", "paragraphs": ["維持閉區間 [low,high]，可行時保留 mid 並向左，不可行時向右。迴圈結束的 low 是第一個可行值。"], "bullets": ["mid=(low+high)//2", "feasible(mid) 時 high=mid", "否則 low=mid+1"], "code": "def first_feasible(low,high,feasible):\n    while low<high:\n        mid=(low+high)//2\n        if feasible(mid): high=mid\n        else: low=mid+1\n    return low", "code_caption": "判定 q 次時總成本 O(q log(range))。"},
+        {"heading": "驗證單調與上界", "paragraphs": ["若 feasible 不是單調，二分會丟掉可能答案；若 high 不保證可行，回傳值也無意義。用最小、最大與相鄰邊界測試 off-by-one。"], "bullets": ["先 assert feasible(high)", "測答案等於 low 或 high", "整數與浮點二分終止條件不同"], "callout": "二分前先寫出可行性序列的形狀。"}
+      ],
+      "takeaways": ["答案二分依賴單調 predicate。", "搜尋範圍必須包住答案。", "總成本是判定成本乘二分次數。"],
+      "quiz": [{"question": "high 不可行有何問題？", "answer": "區間可能根本不含答案。"}, {"question": "什麼情況不能答案二分？", "answer": "可行性隨 x 非單調變化時。"}],
+      "practice": ["求最小可在 D 天運完貨物的容量。", "為平方根整數下界設計 feasible。"]
+    },
+    {
+      "number": 8, "slug": "boundaries-and-tests", "title": "邊界條件與測試案例", "subtitle": "用分類與性質捕捉錯誤", "duration": "30 分鐘", "difficulty": "基礎", "summary": "建立範例、邊界、反例與性質測試。", "objectives": ["分類輸入", "設計最小反例", "使用 oracle 測試"],
+      "sections": [
+        {"heading": "測試分類", "paragraphs": ["至少覆蓋正常、最小、最大、空、單元素、重複、已排序與反序。不是每題都適用，但應逐項判斷。"], "bullets": ["索引題測第一與最後位置", "數值題測零與負數", "圖題測孤立點與不連通"]},
+        {"heading": "針對不變量造案例", "paragraphs": ["每個演算法都有脆弱假設，例如視窗單調、二分邊界或 DP 初值。測試應直接攻擊這些假設，而非只增加隨機資料量。"], "bullets": ["abba 測視窗左界不倒退", "全負數測 Kadane 初值", "兩元素測二分相鄰邊界"], "code": "assert max_subarray([-5]) == -5\nassert longest_unique('abba') == 2", "code_caption": "小案例更容易定位不變量破壞。"},
+        {"heading": "Oracle 與性質", "paragraphs": ["小輸入可用暴力法作 oracle，隨機產生案例比較答案。沒有唯一輸出時，改驗證必要性質，例如拓樸序中每條邊方向都正確。"], "bullets": ["固定亂數種子便於重現", "比較結果前先統一順序語意", "測試失敗要保存最小案例"], "code": "for case in small_cases:\n    assert optimized(case) == brute_force(case)", "code_caption": "差分測試同時檢查兩種實作。"}
+      ],
+      "takeaways": ["測試要涵蓋輸入類別與演算法假設。", "小型反例比大型隨機資料容易除錯。", "暴力 oracle 與性質驗證都很實用。"],
+      "quiz": [{"question": "為何只測官方範例不足？", "answer": "它通常未覆蓋所有邊界與錯誤假設。"}, {"question": "輸出不唯一如何測？", "answer": "驗證輸出滿足規格性質，而非固定內容。"}],
+      "practice": ["為二分搜尋列出六個邊界案例。", "用暴力法交叉測試一個滑動視窗解。"]
+    },
+    {
+      "number": 9, "slug": "debugging-and-readability", "title": "除錯、錯誤答案與可讀性", "subtitle": "縮小差異，檢查狀態與不變量", "duration": "30 分鐘", "difficulty": "基礎", "summary": "建立可重現、可追蹤、可修正的除錯流程。", "objectives": ["縮小失敗案例", "追蹤狀態", "改善程式表達"],
+      "sections": [
+        {"heading": "先重現再猜原因", "paragraphs": ["記錄確切輸入、預期與實際輸出，將案例縮到仍失敗的最小版本。錯誤類別常是規格誤讀、邊界、狀態更新順序或資料結構選錯。"], "bullets": ["一次只改一項", "確認失敗可穩定重現", "區分例外、超時與 Wrong Answer"]},
+        {"heading": "印出有意義狀態", "paragraphs": ["不要只印所有變數；選擇能檢查不變量的 left/right、queue、dp 列或 visited。把追蹤包在 debug 開關，修正後可關閉。"], "bullets": ["比較更新前後", "標記迴圈與輸入位置", "assert 可立即指出不變量破壞"], "code": "def trace_window(left,right,state,debug=False):\n    if debug: print({'left':left,'right':right,'state':state})", "code_caption": "結構化輸出比零散 print 易比較。"},
+        {"heading": "可讀性降低缺陷", "paragraphs": ["使用表達角色的命名、小函式與一致區間定義，讓程式接近正確性說明。避免壓縮成難以驗證的一行，也不要過早抽象。"], "bullets": ["complement 比 temp 更清楚", "註解解釋為什麼而非重述程式", "分離建表、求解與重建答案"], "code": "complement = target - value\nif complement in seen: return seen[complement], index", "code_caption": "命名直接表達 Two Sum 邏輯。"}
+      ],
+      "takeaways": ["先取得最小可重現案例。", "追蹤能驗證不變量的狀態。", "清楚命名與分層能降低錯誤。"],
+      "quiz": [{"question": "為何縮小失敗案例？", "answer": "可減少干擾並暴露真正觸發條件。"}, {"question": "好註解應解釋什麼？", "answer": "決策原因、限制或不直覺的不變量。"}],
+      "practice": ["將一段模糊變數名稱重構為角色名稱。", "為 off-by-one 錯誤設計狀態追蹤。"]
+    },
+    {
+      "number": 10, "slug": "proof-complexity-template", "title": "正確性、複雜度與個人模板", "subtitle": "把解法變成可重複流程", "duration": "40 分鐘", "difficulty": "進階", "summary": "用不變量與案例拆分說明正確性，整理個人解題模板。", "objectives": ["說明正確性", "完整分析複雜度", "建立個人流程"],
+      "sections": [
+        {"heading": "正確性說明", "paragraphs": ["依演算法選用迴圈不變量、歸納法、交換論證或案例拆分。至少說明初始化成立、每步維持，以及終止時不變量如何推出答案。"], "bullets": ["雙指標證明被排除者不可能", "DP 證明轉移涵蓋所有最後一步", "Greedy 證明可交換成所選決策"]},
+        {"heading": "複雜度說明", "paragraphs": ["定義 n、V、E 或容量 C，再計算每個狀態或元素被處理幾次。分開報告輸入、額外工作空間、輸出空間與遞迴堆疊。"], "bullets": ["巢狀 while 不必然 O(n²)", "排序成本要計入總時間", "平均與最壞雜湊成本要註明"], "code": "# 範例說明\n# 時間：建表 O(n) + q 次 O(1) = O(n+q)\n# 空間：prefix 使用 O(n)", "code_caption": "複雜度應對應實際程式階段。"},
+        {"heading": "完整流程與模板", "paragraphs": ["固定流程能降低遺漏：讀規格、估量級、寫暴力、找瓶頸、選結構、寫不變量、實作、測試、證明與分析。個人模板應保存骨架與適用條件，而不是無理解地貼程式。"], "bullets": ["記錄模式、訊號、限制與反例", "每題完成後寫一段復盤", "定期從空白重寫核心骨架"], "table": {"headers": ["階段", "產出"], "rows": [["分析", "規格、限制、基準解"], ["設計", "不變量、資料結構、複雜度"], ["驗證", "測試、證明、復盤"]]}}
+      ],
+      "takeaways": ["正確性說明需連結不變量與終止答案。", "複雜度要對應輸入尺度與實作細節。", "個人模板應包含適用條件、限制與驗證方法。"],
+      "quiz": [{"question": "DP 正確性常證明什麼？", "answer": "狀態定義正確，轉移涵蓋所有合法最後一步且 Base Case 成立。"}, {"question": "為何模板要記反例？", "answer": "它提醒何時模式失效，避免盲目套用。"}],
+      "practice": ["為 Two Sum 寫完整正確性與複雜度說明。", "建立自己的解題檢查表並用一題實際走完流程。"]
+    }
+  ]
+}

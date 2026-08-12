@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="用回文子序列介紹區間 DP，最後整理完整設計與驗證流程。" />
+    <meta name="theme-color" content="#101713" />
+    <title>13.12 回文、Interval DP 與統一解題框架｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-13-dynamic-programming.html">UNIT 13 / LESSON 12</a><p class="eyebrow">Dynamic Programming</p><h1>回文、Interval DP 與統一解題框架</h1><p class="lesson-deck">以區間長度安排依賴</p><div class="lesson-meta"><span>進階</span><span>45 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>用回文子序列介紹區間 DP，最後整理完整設計與驗證流程。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>定義區間狀態</li><li>依區間長度填表</li><li>套用 DP 統一框架</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>Longest Palindromic Subsequence</h2><p>dp[left][right] 是閉區間內最長回文子序列長度。兩端相同就包住內區間加二，否則捨棄其中一端取最大。</p><ul><li>單字元區間 Base Case 為 1</li><li>依區間長度由短到長</li><li>時間與空間 O(n²)</li></ul><figure class="code-block"><figcaption><span>內區間必須先完成，所以長度遞增。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def longest_palindrome_subsequence(text):
+    n=len(text); dp=[[0]*n for _ in range(n)]
+    for i in range(n): dp[i][i]=1
+    for length in range(2,n+1):
+        for left in range(n-length+1):
+            right=left+length-1
+            dp[left][right]=dp[left+1][right-1]+2 if text[left]==text[right] else max(dp[left+1][right],dp[left][right-1])
+    return 0 if n==0 else dp[0][n-1]</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Interval DP</h2><p>區間 DP 以 [left,right] 為狀態，常枚舉分割點或比較兩端選擇。計算順序通常是區間長度遞增，因轉移依賴更短區間。</p><ul><li>State：某區間的最佳值或方案數</li><li>Transition：端點決策或 split</li><li>常見成本 O(n²) 狀態乘 O(n) 分割，即 O(n³)</li></ul><div class="table-wrap"><table><thead><tr><th>步驟</th><th>檢查</th></tr></thead><tbody><tr><td>區間</td><td>閉區間或半開區間？</td></tr><tr><td>Base</td><td>空區間／單點？</td></tr><tr><td>順序</td><td>短區間是否先完成？</td></tr></tbody></table></div></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>DP 統一解題框架</h2><p>先寫暴力選擇，再依重複參數定義 state；接著列 transition、base、順序與答案位置，最後才做空間優化。用小輸入手算表格並檢查空、單一、不可達與極端案例。</p><ul><li>1 定義狀態與索引範圍；2 寫轉移與 Base</li><li>3 決定順序與答案；4 算狀態數×轉移成本</li><li>5 驗證後才壓縮空間或重建路徑</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>空間優化是最後一步；先保留清楚表格以驗證正確性。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>區間 DP 常依更短區間，應按長度填表。</li><li><span>02</span>狀態數乘每狀態轉移成本可估算時間。</li><li><span>03</span>統一框架是 state、transition、base、order、answer、complexity。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>區間 DP 為何不能任意由 left 小到大、right 小到大？</summary><p>該順序可能在內區間尚未完成前就讀取它；應依實際依賴安排。</p></details><details><summary>DP 何時做空間優化較安全？</summary><p>完整狀態與轉移已驗證正確，且確認未來只依賴有限舊狀態後。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>實作最長回文子字串的布林區間 DP。</li><li>挑一題依框架完整寫出 state、transition、base、order、answer 與複雜度。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-13/11-longest-increasing-subsequence.html"><span>← 上一課</span><b>LIS：O(n²) 與 O(n log n)</b></a><a class="next" href="../unit-14/01-naive-string-matching.html"><span>下一課 →</span><b>字串匹配與暴力搜尋</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

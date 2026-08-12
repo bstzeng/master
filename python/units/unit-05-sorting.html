@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="從排序規格與 Python 內建工具開始，實作經典比較排序與計數排序，理解穩定性、原地操作和時間空間取捨。" />
+    <meta name="theme-color" content="#101713" />
+    <title>單元 05｜排序演算法｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../styles.css" />
+    <script src="../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../index.html">課程總覽</a>
+        <a class="is-active" href="../phase-1.html">第一階段</a>
+        <a class="" href="../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <section class="unit-hero">
+        <div><a class="breadcrumb" href="../phase-1.html">PHASE 01 / UNIT 05</a><p class="eyebrow">Sorting Algorithms</p><h1>排序演算法</h1><p class="hero-intro">從排序規格與 Python 內建工具開始，實作經典比較排序與計數排序，理解穩定性、原地操作和時間空間取捨。</p><a class="primary-button" href="#lessons">查看 8 堂課 <span>↓</span></a></div>
+        <aside><span>UNIT</span><strong>05</strong><p>能根據資料規模、分布、記憶體與穩定性需求選擇排序方法，並正確使用 Python 的 key 設計排序規則。</p></aside>
+      </section>
+      <section class="unit-info"><div><p class="section-index">BEFORE YOU START</p><h2>先備知識</h2><ul><li>能閱讀 Python list、函式、迴圈與切片</li><li>理解 Big O、時間與空間複雜度</li><li>知道陣列索引與遞迴的基本概念</li></ul></div><div><p class="section-index">AFTER THIS UNIT</p><h2>完成後你能夠</h2><ul><li>使用 sorted、list.sort 與 key 表達多欄位排序</li><li>實作 Bubble、Selection、Insertion、Merge、Quick、Heap 與 Counting Sort</li><li>判斷排序是否穩定、是否原地操作</li><li>比較最好、平均與最壞時間及額外空間</li><li>依資料特性選擇合適方法而非只背名稱</li></ul></div></section>
+      <section class="lesson-section" id="lessons"><div class="section-head"><div><p class="section-index">LESSON LIST</p><h2>本單元課程</h2></div><p>建議依序閱讀；每一課約 15–25 分鐘，讀完後先回答理解題，再挑一題延伸練習。</p></div><div class="lesson-list">
+        <article class="lesson-row">
+          <span>01</span>
+          <div><p>入門 · 25 分鐘</p><h3>排序基本觀念與 Python sorted</h3><b>先說清楚順序規則，再選擇工具</b></div>
+          <a href="../lessons/unit-05/01-sorting-concepts-and-python.html" aria-label="開始課程：排序基本觀念與 Python sorted">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>02</span>
+          <div><p>入門 · 22 分鐘</p><h3>Bubble Sort 氣泡排序</h3><b>反覆交換相鄰逆序元素</b></div>
+          <a href="../lessons/unit-05/02-bubble-sort.html" aria-label="開始課程：Bubble Sort 氣泡排序">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>03</span>
+          <div><p>入門 · 20 分鐘</p><h3>Selection Sort 選擇排序</h3><b>每輪選出最小值放到下一個位置</b></div>
+          <a href="../lessons/unit-05/03-selection-sort.html" aria-label="開始課程：Selection Sort 選擇排序">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>04</span>
+          <div><p>入門 · 23 分鐘</p><h3>Insertion Sort 插入排序</h3><b>把下一張牌插入已排序前綴</b></div>
+          <a href="../lessons/unit-05/04-insertion-sort.html" aria-label="開始課程：Insertion Sort 插入排序">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>05</span>
+          <div><p>中階 · 30 分鐘</p><h3>Merge Sort 合併排序</h3><b>分割問題，再線性合併兩個有序結果</b></div>
+          <a href="../lessons/unit-05/05-merge-sort.html" aria-label="開始課程：Merge Sort 合併排序">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>06</span>
+          <div><p>中階 · 30 分鐘</p><h3>Quick Sort 快速排序</h3><b>用 pivot 分割，小的放左、大的放右</b></div>
+          <a href="../lessons/unit-05/06-quick-sort.html" aria-label="開始課程：Quick Sort 快速排序">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>07</span>
+          <div><p>中階 · 35 分鐘</p><h3>Heap Sort 與 Counting Sort</h3><b>一個靠比較保證上界，一個利用有限整數範圍</b></div>
+          <a href="../lessons/unit-05/07-heap-and-counting-sort.html" aria-label="開始課程：Heap Sort 與 Counting Sort">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>08</span>
+          <div><p>中階 · 28 分鐘</p><h3>排序演算法總比較</h3><b>根據輸入與需求選方法，而不是尋找唯一冠軍</b></div>
+          <a href="../lessons/unit-05/08-sorting-comparison.html" aria-label="開始課程：排序演算法總比較">開始閱讀 →</a>
+        </article></div></section>
+      <nav class="bottom-nav"><a href="../phase-1.html">← 返回第 1 階段大綱</a><a href="../index.html">完整學習地圖 ↑</a></nav></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

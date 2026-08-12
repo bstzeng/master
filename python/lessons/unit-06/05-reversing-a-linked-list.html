@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="以 previous、current 與 next_node 迭代反轉單向鏈結串列。" />
+    <meta name="theme-color" content="#101713" />
+    <title>06.05 反轉鏈結串列｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-06-linked-lists.html">UNIT 06 / LESSON 05</a><p class="eyebrow">Linked Lists</p><h1>反轉鏈結串列</h1><p class="lesson-deck">以三個參照逐條翻轉箭頭</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>以 previous、current 與 next_node 迭代反轉單向鏈結串列。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明反轉時為何要先保存下一站</li><li>實作迭代反轉</li><li>追蹤反轉過程中的不變量與複雜度</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>斷開前先保存下一站</h2><p>反轉要把每條 A → B 改成 A ← B，但改寫 current.next 之前必須先把原下一站存入 next_node。否則後半段串列會失去可達參照，無法繼續處理。</p><ul><li>previous：已反轉區段的開頭</li><li>current：本輪要翻轉箭頭的節點</li><li>next_node：尚未反轉區段的下一站</li></ul><figure class="code-block"><figcaption><span>迴圈結束時 current 為 None，previous 指向新的 head。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def reverse_list(head):
+    previous = None
+    current = head
+    while current is not None:
+        next_node = current.next
+        current.next = previous
+        previous = current
+        current = next_node
+    return previous</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>逐輪閱讀指標圖</h2><p>以 10 → 20 → 30 為例，第一輪先保存 20，再把 10.next 指向 None；此時已反轉區是 10 → None，未處理區仍從 20 開始。每輪完成後，previous 與 current 一起向原串列右方移動。</p><ul><li>開始：previous=None，current=[10] → [20] → [30]</li><li>第一輪後：previous=[10] → None，current=[20] → [30]</li><li>結束：previous=[30] → [20] → [10] → None</li></ul><figure class="code-block"><figcaption><span>反轉會改變入口，因此呼叫端要用回傳值更新 head。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>head = build_linked_list([10, 20, 30])
+head = reverse_list(head)
+print(to_list(head))  # [30, 20, 10]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>不變量與成本</h2><p>每輪開始時，previous 指向已完整反轉的前段，current 指向尚未處理的第一個節點，這是不變量。每個節點只處理一次，時間 O(n)，並只使用三個參照，額外空間 O(1)。</p><ul><li>空串列反轉後仍為 None</li><li>單一節點的 next 仍為 None</li><li>遞迴版本時間也是 O(n)，但呼叫堆疊需 O(n) 空間</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>反轉最常見的錯誤是先改 current.next，才嘗試取得原本的下一站。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>改寫 current.next 前，必須先保存 next_node。</li><li><span>02</span>previous 是已反轉區入口，最後會成為新 head。</li><li><span>03</span>迭代反轉時間 O(n)、額外空間 O(1)。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>反轉迴圈中，next_node = current.next 為什麼必須排在 current.next = previous 前？</summary><p>後者會覆寫通往未處理節點的唯一連結；先保存 next_node 才能繼續走訪原串列。</p></details><details><summary>迴圈結束時為什麼回傳 previous，而不是 current？</summary><p>current 已走過原尾端而成為 None，previous 才指向反轉後的第一個節點。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>在紙上逐輪追蹤 1 → 2 → 3 → 4 的 previous、current 與 next_node。</li><li>實作一個回傳新 head 的遞迴反轉版本，並說明其空間複雜度。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-06/04-doubly-linked-lists.html"><span>← 上一課</span><b>雙向鏈結串列</b></a><a class="next" href="../unit-06/06-fast-and-slow-pointers.html"><span>下一課 →</span><b>快慢指標</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

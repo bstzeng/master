@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="建立支援點更新和區間聚合的 Segment Tree，理解 O(log n) 查詢來自少量完整覆蓋節點。" />
+    <meta name="theme-color" content="#101713" />
+    <title>15.03 Segment Tree 線段樹｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-15-advanced-data-structures.html">UNIT 15 / LESSON 03</a><p class="eyebrow">Advanced Data Structures</p><h1>Segment Tree 線段樹</h1><p class="lesson-deck">用二元分割保存每個區間的聚合結果</p><div class="lesson-meta"><span>進階</span><span>38 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>建立支援點更新和區間聚合的 Segment Tree，理解 O(log n) 查詢來自少量完整覆蓋節點。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明節點區間與合併函式</li><li>實作迭代區間和線段樹</li><li>分析建置、更新與查詢成本</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>每個節點摘要一段資料</h2><p>Segment Tree 將整個陣列區間反覆切半，葉節點代表單一元素，內部節點保存左右孩子聚合結果。只要 combine 具有結合性，就能用於 sum、min、max 或 gcd；不同聚合還需要正確的單位元素。</p><ul><li>根代表完整區間</li><li>孩子代表左右半區間</li><li>combine 例如加法或 min</li><li>樹高 O(log n)、空間 O(n)</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>迭代式陣列配置</h2><p>將 n 個葉放在 tree[n:2n]，父節點 i 保存 tree[2i] 與 tree[2i+1] 的和。點更新從葉一路重算祖先；半開區間查詢遇到落單邊界就納入結果，再把 left、right 同時移到父層。</p><ul><li>建置 O(n)</li><li>點更新 O(log n)</li><li>區間查詢 O(log n)</li><li>此版本聚合為加法</li></ul><figure class="code-block"><figcaption><span>支援半開區間 [left,right) 的點更新與區間和。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>class SegmentTree:
+    def __init__(self, numbers):
+        self.n = len(numbers)
+        self.tree = [0] * (2 * self.n)
+        self.tree[self.n:] = numbers
+        for index in range(self.n - 1, 0, -1):
+            self.tree[index] = self.tree[2 * index] + self.tree[2 * index + 1]
+
+    def set(self, index, value):
+        index += self.n
+        self.tree[index] = value
+        while index &gt; 1:
+            index //= 2
+            self.tree[index] = self.tree[2 * index] + self.tree[2 * index + 1]
+
+    def range_sum(self, left, right):
+        left += self.n; right += self.n; total = 0
+        while left &lt; right:
+            if left % 2: total += self.tree[left]; left += 1
+            if right % 2: right -= 1; total += self.tree[right]
+            left //= 2; right //= 2
+        return total</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>彈性來自可替換的聚合</h2><p>把加法改成 min 時，未被選取區段的單位元素應是正無限大，而非 0；若要同時保存最大值與出現次數，節點可存 tuple 並自訂 combine。Segment Tree 比 Fenwick 程式複雜、常數較大，但能處理更多無法以前綴相減的聚合。</p><ul><li>單位元素必須符合 combine</li><li>節點可以保存多欄摘要</li><li>查詢只合併 O(log n) 個完整區段</li><li>複雜區間更新需要 Lazy Propagation</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Segment Tree 的節點保存對應區間聚合</li><li><span>02</span>建置 O(n)，點更新與區間查詢 O(log n)</li><li><span>03</span>它比 Fenwick 更彈性，但實作與常數成本較高</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>把區間和改成區間最小值時，為何空結果不能回傳 0？</summary><p>0 可能小於實際元素而污染 min；單位元素應是正無限大，使 min(x,∞)=x。</p></details><details><summary>Segment Tree 為何能在 O(log n) 查一段，而不是走訪每個葉？</summary><p>查詢區間可拆成少量完整覆蓋的樹節點，每層最多處理固定數量邊界節點。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>將 SegmentTree 改為區間 minimum，調整建置、更新、查詢與單位元素。</li><li>設計節點 tuple，讓查詢同時回傳區間最大值與其出現次數。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-15/02-fenwick-tree.html"><span>← 上一課</span><b>Fenwick Tree 樹狀陣列</b></a><a class="next" href="../unit-15/04-lazy-propagation-and-selection.html"><span>下一課 →</span><b>Lazy Propagation 與 Fenwick 比較</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

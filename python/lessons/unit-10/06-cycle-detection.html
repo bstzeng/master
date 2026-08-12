@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="比較有向與無向圖的環定義，實作兩種 DFS 偵測方式。" />
+    <meta name="theme-color" content="#101713" />
+    <title>10.06 Cycle Detection 環偵測｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-10-graph-basics.html">UNIT 10 / LESSON 06</a><p class="eyebrow">Graph Fundamentals</p><h1>Cycle Detection 環偵測</h1><p class="lesson-deck">無向圖追蹤 parent，有向圖追蹤目前路徑</p><div class="lesson-meta"><span>基礎</span><span>35 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>比較有向與無向圖的環定義，實作兩種 DFS 偵測方式。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>以 parent 偵測無向環</li><li>以三色狀態偵測有向環</li><li>說明兩種方法不能混用</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>無向圖：排除走回 parent</h2><p>無向邊會在鄰接表出現兩個方向，所以從 u 走到 v 後，v 看見已訪的 u 並不代表成環。DFS 必須攜帶 parent；遇到已訪鄰居且它不是 parent，才表示存在另一條路形成環。</p><ul><li>未訪鄰居：遞迴並把目前頂點當 parent</li><li>鄰居等於 parent：忽略原路返回</li><li>已訪且不是 parent：找到無向環</li></ul><figure class="code-block"><figcaption><span>外層涵蓋所有不連通元件。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def has_cycle_undirected(graph):
+    visited = set()
+    def dfs(vertex, parent):
+        visited.add(vertex)
+        for neighbor in graph[vertex]:
+            if neighbor not in visited:
+                if dfs(neighbor, vertex): return True
+            elif neighbor != parent:
+                return True
+        return False
+    return any(start not in visited and dfs(start, None) for start in graph)</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>有向圖：回到目前路徑才是環</h2><p>有向 DFS 中，指向任何已訪頂點不一定成環；只有指向目前遞迴路徑上的頂點，才形成回邊。可用 0 未訪、1 探索中、2 已完成的三色狀態區分。</p><ul><li>state=1：頂點仍在目前 Call Stack</li><li>遇到 state=1 鄰居：找到有向環</li><li>探索所有鄰居後設為 state=2</li></ul><figure class="code-block"><figcaption><span>已完成頂點 state=2 不在目前路徑中，不構成回邊。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def has_cycle_directed(graph):
+    state = {vertex: 0 for vertex in graph}
+    def dfs(vertex):
+        state[vertex] = 1
+        for neighbor in graph[vertex]:
+            if state[neighbor] == 1: return True
+            if state[neighbor] == 0 and dfs(neighbor): return True
+        state[vertex] = 2
+        return False
+    return any(state[v] == 0 and dfs(v) for v in graph)</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>成本與適用界線</h2><p>兩種 DFS 在鄰接表下都以 O(V+E) 時間與 O(V) 空間完成。parent 規則專用於無向邊的對稱表示，三色規則則反映有向圖的遞迴路徑，套錯模型會誤判。</p><ul><li>自環 u→u 會立即形成環</li><li>平行無向邊是否形成長度二的環取決於圖定義</li><li>若要回傳實際環，可保存 parent 並在發現時重建</li></ul><div class="table-wrap"><table><thead><tr><th>圖類型</th><th>需追蹤資訊</th><th>成環訊號</th></tr></thead><tbody><tr><td>無向</td><td>parent + visited</td><td>已訪鄰居不是 parent</td></tr><tr><td>有向</td><td>三色 state</td><td>邊指向探索中頂點</td></tr></tbody></table></div></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>無向圖需排除回到 parent 的反向邊。</li><li><span>02</span>有向圖只有回到目前遞迴路徑才構成環。</li><li><span>03</span>兩種 DFS 偵測皆為 O(V+E) 時間、O(V) 空間。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>無向 DFS 遇到已訪的 parent 為什麼不能判定成環？</summary><p>那只是同一條無向邊在反方向的鄰接紀錄，代表沿原路返回。</p></details><details><summary>有向 DFS 遇到 state=2 的鄰居為什麼不代表環？</summary><p>該鄰居的探索已完成且不在目前遞迴路徑中，這條邊不會回到自己的祖先。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>修改無向環偵測，回傳一條形成環的邊。</li><li>為有向圖三色 DFS 印出狀態變化，追蹤一張含環小圖。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-10/05-connected-components.html"><span>← 上一課</span><b>Connected Components 連通元件</b></a><a class="next" href="../unit-10/07-topological-sort.html"><span>下一課 →</span><b>Topological Sort 拓樸排序</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,304 @@
+{
+  "number": 12,
+  "phase": 2,
+  "slug": "greedy",
+  "title": "Greedy 貪心演算法",
+  "english": "Greedy Algorithms",
+  "summary": "學習以局部選擇逐步建構答案，透過區間、跳躍、背包、編碼與硬幣案例，辨認何時貪心正確、何時會失敗。",
+  "goal": "能提出貪心規則、實作並分析演算法，還能以交換論證或反例說明局部最佳是否能導向全域最佳。",
+  "prerequisites": [
+    "能使用 Python 排序、list、dict 與 heapq",
+    "理解 Big O、區間與基本圖樹概念",
+    "能閱讀簡單的正確性論證與反例"
+  ],
+  "outcomes": [
+    "辨認具有貪心選擇性質與最佳子結構的問題",
+    "解決經典區間排程、Jump Game 與分數背包",
+    "理解 Huffman Coding 如何以局部合併得到最佳前綴碼",
+    "主動尋找硬幣等問題中的反例",
+    "用交換論證說明正確性並區分 Greedy 與 DP"
+  ],
+  "lessons": [
+    {
+      "number": 1,
+      "slug": "greedy-core-and-recognition",
+      "title": "貪心核心與題型辨認",
+      "subtitle": "每一步做局部選擇，但必須證明不會失去最佳答案",
+      "duration": "28 分鐘",
+      "difficulty": "中階",
+      "summary": "建立 Greedy 的共同語言，區分候選、規則、可行性與目標，並用反例檢查策略。",
+      "objectives": ["說明貪心演算法的核心", "拆解候選、規則與可行性", "辨認需要證明的關鍵假設"],
+      "sections": [
+        {
+          "heading": "局部最佳不是看到最大就拿",
+          "paragraphs": ["貪心演算法（Greedy Algorithm）依固定規則逐步選擇，選完通常不回頭修改。『局部最佳』必須針對目標精確定義，例如區間排程不是選最短活動，而是選最早結束活動，以保留最大的未來選擇空間。"],
+          "bullets": ["每步從目前可行候選中選擇", "選擇通常不可撤銷", "規則要直接連結全域目標", "排序常用來安排選擇順序"]
+        },
+        {
+          "heading": "兩個正確性支柱",
+          "paragraphs": ["典型貪心問題具有貪心選擇性質：至少有一個最佳答案包含目前選擇；也具有最佳子結構：做完選擇後，剩餘部分仍是同型問題。兩者都要由題目結構推導，不能只因為範例成功就假設成立。"],
+          "bullets": ["Greedy-choice property：安全選擇可出現在最佳解", "Optimal substructure：剩餘最佳解可組成全域最佳", "交換論證可證明安全選擇", "反例可推翻過度直覺的規則"]
+        },
+        {
+          "heading": "一個可重複的解題流程",
+          "paragraphs": ["先寫清楚目標函式與可行限制，再提出局部選擇規則，最後嘗試證明或刻意找小反例。實作常是排序 O(n log n) 加一次掃描 O(n)，但複雜度必須依實際資料結構與判斷成本計算。"],
+          "bullets": ["定義候選、限制與要最大化或最小化的量", "提出規則並追蹤選擇後剩餘問題", "用窮舉小輸入對照以尋找反例", "證明失敗時改評估 DP、搜尋或其他方法"],
+          "callout": "貪心程式通常短，困難的是證明規則安全，而不是把迴圈寫出來。"
+        }
+      ],
+      "takeaways": ["貪心依固定規則做不可撤銷的局部選擇", "正確策略需要貪心選擇性質與最佳子結構", "提出規則後必須證明或主動尋找反例"],
+      "quiz": [
+        {"question": "『每次選數值最大者』是否就是貪心演算法的通用定義？", "answer": "不是。局部選擇規則依全域目標而定，可能選最早結束、最小成本或最高比率，且必須證明安全。"},
+        {"question": "一個策略通過十個測試，是否足以證明貪心正確？", "answer": "不足。測試只能提高信心，仍需涵蓋所有合法輸入的論證；一個反例則足以推翻策略。"}
+      ],
+      "practice": ["為『用最少會議室安排全部會議』列出候選、限制與目標，但先不選演算法。", "挑一個自己直覺想到的貪心規則，窮舉五個以下元素的小輸入尋找反例。"]
+    },
+    {
+      "number": 2,
+      "slug": "activity-selection",
+      "title": "活動選擇與區間排程",
+      "subtitle": "選最早結束的相容活動，為未來保留空間",
+      "duration": "30 分鐘",
+      "difficulty": "中階",
+      "summary": "解決單一資源下最大化不重疊活動數量，並以交換直覺說明最早結束規則。",
+      "objectives": ["定義區間相容性", "實作最早結束策略", "說明交換論證與複雜度"],
+      "sections": [
+        {
+          "heading": "目標是活動數量，不是總時長",
+          "paragraphs": ["活動選擇問題給定多個開始與結束時間，要在單一資源上選最多個互不重疊活動。本課把區間視為半開 [start, end)，所以新活動 start >= 前一活動 end 即相容；若題目端點規則不同，判斷式也要改。"],
+          "bullets": ["候選是所有活動", "限制是選中區間不得重疊", "目標是最大化活動個數", "半開區間允許一個結束時另一個開始"]
+        },
+        {
+          "heading": "依結束時間排序後掃描",
+          "paragraphs": ["先按結束時間升冪，遇到與目前選擇相容的活動就加入，並更新 last_end。最早結束的活動占用未來時間最少；排序 O(n log n)，掃描 O(n)，結果另需 O(n) 空間。"],
+          "bullets": ["排序鍵是 end 而非 duration", "第一次相容活動直接選", "只需記錄上次選擇的結束時間"],
+          "code": "def select_activities(activities):\n    chosen = []\n    last_end = float(\"-inf\")\n    for start, end in sorted(activities, key=lambda item: item[1]):\n        if start >= last_end:\n            chosen.append((start, end))\n            last_end = end\n    return chosen",
+          "code_caption": "時間 O(n log n)，輸出以外工作空間依排序實作而定。"
+        },
+        {
+          "heading": "為什麼最早結束是安全的",
+          "paragraphs": ["取任一最佳方案的第一個活動；若它不是全體最早結束者，就用最早結束活動替換它。替換後不會更晚結束，因此原方案後續所有活動仍相容，活動數量不減；所以至少有一個最佳方案包含貪心首選，剩餘區間再套用同樣推論。"],
+          "bullets": ["交換不破壞可行性", "交換不減少活動數", "選擇後只保留開始時間不早於結束點的活動", "若活動有不同價值，此規則不再保證最佳"]
+        }
+      ],
+      "takeaways": ["最大化活動數量時應選最早結束的相容區間", "排序主導時間為 O(n log n)", "交換論證顯示貪心首選能取代最佳解首項而不變差"],
+      "quiz": [
+        {"question": "選持續時間最短的活動，能保證選到最多活動嗎？", "answer": "不能。短活動可能位於中間而阻擋前後兩個相容活動；正確規則是最早結束。"},
+        {"question": "若目標改成最大總收益，最早結束策略仍正確嗎？", "answer": "不一定。高收益長活動可能優於多個低收益活動，通常要用加權區間排程 DP。"}
+      ],
+      "practice": ["手動安排 [(1,4),(3,5),(0,6),(5,7),(8,9),(5,9)] 並追蹤 last_end。", "找一組反例證明『最早開始』不保證選到最多活動。"]
+    },
+    {
+      "number": 3,
+      "slug": "merge-intervals",
+      "title": "區間合併",
+      "subtitle": "排序後只需和目前合併區間比較",
+      "duration": "27 分鐘",
+      "difficulty": "中階",
+      "summary": "將重疊區間合併成互斥結果，理解排序如何把全域關係轉成局部決策。",
+      "objectives": ["定義區間重疊規則", "實作排序後線性合併", "說明不變量與複雜度"],
+      "sections": [
+        {
+          "heading": "排序讓可能重疊者相鄰",
+          "paragraphs": ["區間合併要把所有相交區間合成覆蓋相同範圍的互不重疊區間。按 start 升冪後，若下一段連目前合併區間都接不上，它也不可能和更早已完成的區間重疊，因此只需比較結果尾端。"],
+          "bullets": ["先定義端點接觸是否算重疊", "排序鍵使用 start", "結果始終保持有序且互不重疊"]
+        },
+        {
+          "heading": "重疊就延伸，分離就封存",
+          "paragraphs": ["若 start <= merged[-1][1]，兩區間重疊，將尾端 end 更新為兩者最大值；否則加入新的獨立區間。下例複製每個區間，避免修改呼叫端原有的內層 list。"],
+          "bullets": ["空輸入直接回傳空結果", "重疊時不新增結果數量", "分離時上一段已不會再被後續改變"],
+          "code": "def merge_intervals(intervals):\n    if not intervals:\n        return []\n    ordered = sorted(intervals, key=lambda item: item[0])\n    merged = [list(ordered[0])]\n    for start, end in ordered[1:]:\n        if start <= merged[-1][1]:\n            merged[-1][1] = max(merged[-1][1], end)\n        else:\n            merged.append([start, end])\n    return merged",
+          "code_caption": "時間 O(n log n)，結果空間最壞 O(n)。"
+        },
+        {
+          "heading": "不變量保證沒有漏合併",
+          "paragraphs": ["每輪開始時，merged 已正確合併所有處理過的區間，且尾端是唯一仍可能與下一區間重疊者。依 start 排序使更早結果的 end 不可能跨過尾端而單獨碰到下一段，因此局部比較足夠維持不變量。"],
+          "bullets": ["排序成本 O(n log n) 主導", "掃描本身 O(n)", "若輸入已按 start 排序可降為 O(n)", "半開區間若端點接觸不算重疊，條件改用 start < end"]
+        }
+      ],
+      "takeaways": ["依開始時間排序後，只需比較目前結果尾端", "每輪選擇是延伸尾端或封存後新增", "總時間 O(n log n)，已排序輸入可 O(n) 掃描"],
+      "quiz": [
+        {"question": "為什麼合併時新 end 要取 max(current_end, end)？", "answer": "下一區間可能完全被目前區間包含；直接指定 end 反而可能縮短已覆蓋範圍。"},
+        {"question": "若區間是半開 [start,end)，[1,3) 與 [3,5) 是否重疊？", "answer": "不重疊；此規格下應用 start < current_end 判斷，而不是 <=。"}
+      ],
+      "practice": ["手動合併 [(8,10),(1,4),(2,3),(9,12)]，記錄每輪 merged。", "擴充程式，先驗證每個區間 start <= end，不合法時拋出例外。"]
+    },
+    {
+      "number": 4,
+      "slug": "jump-game",
+      "title": "Jump Game 跳躍遊戲",
+      "subtitle": "不用保存每條路，只追蹤目前能到達的最遠位置",
+      "duration": "28 分鐘",
+      "difficulty": "中階",
+      "summary": "以最遠可達邊界解決是否能到終點，並用前綴可達不變量證明線性貪心正確。",
+      "objectives": ["建立 farthest 狀態", "實作 O(n) 可達性判斷", "用不變量說明提前失敗"],
+      "sections": [
+        {
+          "heading": "問題只問能否到達",
+          "paragraphs": ["給定非負整數 jumps，每格數值是從該位置最多能向右跳幾步，目標是判斷能否到最後一格。因為只問可達性，不必記住實際選了哪個落點；在目前可達位置中，保留最遠可達邊界已涵蓋所有較短選擇。"],
+          "bullets": ["輸入值必須非負", "狀態是前綴能延伸到的最遠索引", "較近的可達位置不會提供邊界外的額外資訊"]
+        },
+        {
+          "heading": "掃描可達前綴",
+          "paragraphs": ["走到 index 時，若 index > farthest，表示目前可達前綴已結束而此格無法站上，立即回傳 False；否則用 index + jump 更新最遠位置。只掃描一次，時間 O(n)、額外空間 O(1)。"],
+          "bullets": ["先確認目前位置可達", "farthest 只增不減", "到達最後索引後可提前成功"],
+          "code": "def can_reach_end(jumps):\n    farthest = 0\n    last = len(jumps) - 1\n    for index, jump in enumerate(jumps):\n        if index > farthest:\n            return False\n        farthest = max(farthest, index + jump)\n        if farthest >= last:\n            return True\n    return len(jumps) == 0",
+          "code_caption": "非空輸入判斷能否到最後一格；本介面把空輸入視為已完成。"
+        },
+        {
+          "heading": "最遠邊界是完整摘要",
+          "paragraphs": ["處理完索引 i 後，不變量是 farthest 等於所有已處理且可達位置能延伸出的最大索引。若下一個 index 超過它，任何先前跳法都不可能跨過缺口；若它覆蓋終點，則一定存在一連串可達位置支持這個延伸。"],
+          "bullets": ["不變量摘要所有已探索選擇", "無需回溯每一條跳躍路徑", "局部更新不會丟失更遠可能性", "若要求最少跳數，需要增加層級邊界狀態"]
+        }
+      ],
+      "takeaways": ["可達性問題只需保存目前最遠可達索引", "超過 farthest 的第一個索引證明存在無法跨越的缺口", "一次掃描得到 O(n) 時間與 O(1) 空間"],
+      "quiz": [
+        {"question": "[3,2,1,0,4] 為何無法到終點？", "answer": "前三格最遠只能到索引 3，而索引 3 的跳躍為 0，farthest 無法覆蓋索引 4。"},
+        {"question": "每次真的跳到能到達最遠的位置，和只維護 farthest 完全相同嗎？", "answer": "不一定。程式沒有承諾實際落點，只摘要所有可達位置的最大覆蓋，避免過早固定路徑。"}
+      ],
+      "practice": ["手動追蹤 [2,3,1,1,4] 每個索引的 farthest。", "擴充演算法計算到終點的最少跳數，使用 current_end 與 next_end 表示層級。"]
+    },
+    {
+      "number": 5,
+      "slug": "fractional-knapsack",
+      "title": "Fractional Knapsack 分數背包",
+      "subtitle": "物品可切分時，先拿單位重量價值最高者",
+      "duration": "30 分鐘",
+      "difficulty": "中階",
+      "summary": "以價值密度排序解決可切分背包，並透過交換說明其正確性及與 0/1 背包的差異。",
+      "objectives": ["計算價值密度", "實作可切分選取", "解釋可切分是正確性的必要條件"],
+      "sections": [
+        {
+          "heading": "可切分改變問題結構",
+          "paragraphs": ["分數背包（Fractional Knapsack）給定容量與多個重量、價值，允許拿取物品的一部分。每單位重量的價值 value/weight 是共同比較尺度，因此先拿密度最高者能讓每一單位容量帶來最大收益。"],
+          "bullets": ["所有重量應為正數", "物品允許切分成任意比例", "目標是容量內最大總價值", "排序鍵是價值密度而非總價值"]
+        },
+        {
+          "heading": "排序後依序裝入",
+          "paragraphs": ["將物品按密度降冪，容量足夠時整件拿取，否則只拿 remaining/weight 的比例並結束。排序 O(n log n)、掃描 O(n)，選取紀錄最壞 O(n)；浮點結果要依應用決定誤差與金額型態。"],
+          "bullets": ["每個物品最多處理一次", "最後最多只有一件被部分拿取", "容量耗盡即可停止"],
+          "code": "def fractional_knapsack(items, capacity):\n    ordered = sorted(items, key=lambda x: x[1] / x[0], reverse=True)\n    total = 0.0\n    chosen = []\n    for weight, value in ordered:\n        if capacity == 0: break\n        fraction = min(1.0, capacity / weight)\n        total += value * fraction\n        chosen.append((weight, value, fraction))\n        capacity -= weight * fraction\n    return total, chosen",
+          "code_caption": "items 為 (weight, value)；時間 O(n log n)。"
+        },
+        {
+          "heading": "密度交換證明",
+          "paragraphs": ["若某最佳解在還有高密度物品可用時，卻拿了等重量的較低密度部分，就把這部分交換成高密度物品；重量不變、價值不減。反覆交換可得到依密度順序拿取的最佳解，但若物品不可切分，等重量交換未必可行，貪心便可能失敗。"],
+          "bullets": ["交換單位重量保持容量限制", "高密度替換不降低價值", "可切分性使任意小交換成立", "0/1 Knapsack 通常需要 DP"]
+        }
+      ],
+      "takeaways": ["分數背包按 value/weight 降冪選取", "可切分性讓密度交換論證成立", "時間 O(n log n)，但同一規則不保證解決 0/1 背包"],
+      "quiz": [
+        {"question": "為何不能只按物品總價值由高到低？", "answer": "背包限制的是重量；總價值高的物品可能密度低，占用容量後反而降低總收益。"},
+        {"question": "0/1 背包為何不能直接套密度貪心？", "answer": "物品不可切分，無法用等重量部分交換，高密度物品的整體組合可能輸給其他物品組合。"}
+      ],
+      "practice": ["對 (重量,價值) 為 (10,60)、(20,100)、(30,120)，容量 50，手算選取比例。", "找一個 0/1 背包反例，使密度貪心得到非最佳答案。"]
+    },
+    {
+      "number": 6,
+      "slug": "huffman-coding",
+      "title": "Huffman Coding",
+      "subtitle": "反覆合併最低頻率，建立最短加權前綴碼",
+      "duration": "35 分鐘",
+      "difficulty": "中階",
+      "summary": "使用最小堆建立 Huffman Tree，理解前綴碼、加權路徑長度與貪心合併。",
+      "objectives": ["說明前綴碼與頻率目標", "以 heapq 建立 Huffman Tree", "理解最低頻率合併的正確性直覺"],
+      "sections": [
+        {
+          "heading": "高頻符號應使用短碼",
+          "paragraphs": ["Huffman Coding 要為每個符號建立無歧義的二進位前綴碼，使頻率乘碼長的總和最小。前綴碼要求任何完整碼都不是另一碼的前綴，因此從編碼樹根沿 0、1 邊走到葉節點即可唯一解碼。"],
+          "bullets": ["符號放在葉節點", "左、右邊可分別標示 0、1", "目標是最小化加權碼長", "編碼形狀可能不唯一但最佳成本相同"]
+        },
+        {
+          "heading": "最小堆反覆取兩個最低頻率",
+          "paragraphs": ["把每個符號當成單節點樹放入最小堆，每次取出頻率最低的兩棵樹，合成頻率總和的新樹再放回，直到只剩根。counter 用來在頻率相同時提供可比較的第二欄，避免 Python 比較節點物件。"],
+          "bullets": ["初始化 heapify 為 O(n)", "執行 n - 1 次合併", "每次 pop 與 push 為 O(log n)", "總時間 O(n log n)、樹空間 O(n)"],
+          "code": "import heapq\nfrom itertools import count\n\ndef build_huffman(frequencies):\n    serial = count()\n    heap = [(freq, next(serial), symbol) for symbol, freq in frequencies.items()]\n    heapq.heapify(heap)\n    while len(heap) > 1:\n        left_freq, _, left = heapq.heappop(heap)\n        right_freq, _, right = heapq.heappop(heap)\n        node = (left, right)\n        heapq.heappush(heap, (left_freq + right_freq, next(serial), node))\n    return heap[0][2] if heap else None",
+          "code_caption": "回傳由 tuple 表示的 Huffman Tree；單一符號的碼長政策需由介面另訂。"
+        },
+        {
+          "heading": "最低頻率可成為最深兄弟",
+          "paragraphs": ["在某個最佳前綴碼樹中，可以把最低頻率的兩個符號安排為最深的一對兄弟而不增加成本；合併它們後，問題縮成少一個符號的同型問題。這提供貪心選擇與最佳子結構，展開合併節點便得到原問題最佳樹。"],
+          "bullets": ["低頻符號承擔較長路徑較便宜", "兄弟合併把共同前綴視為一個新符號", "交換只會讓加權成本不增", "Huffman 最佳化碼長，不包含檔頭等實務開銷"]
+        }
+      ],
+      "takeaways": ["Huffman Tree 產生無歧義的前綴碼", "反覆合併兩個最低頻率可用最小堆有效實作", "最低頻率兄弟性質與縮約問題支撐貪心正確性"],
+      "quiz": [
+        {"question": "為什麼高頻符號通常應靠近根？", "answer": "靠近根代表碼較短，高頻率乘上較短長度能降低總加權碼長。"},
+        {"question": "建樹時為何使用最小堆而不是每輪重新排序？", "answer": "最小堆可用 O(log n) 取出與放回極小值，使總時間 O(n log n)，避免反覆完整排序的額外成本。"}
+      ],
+      "practice": ["為頻率 A:5、B:9、C:12、D:13、E:16、F:45 手動記錄每次合併。", "走訪 build_huffman 的結果，為左邊加 0、右邊加 1，產生 symbol 到 code 的映射。"]
+    },
+    {
+      "number": 7,
+      "slug": "coin-change-traps",
+      "title": "硬幣陷阱與反例",
+      "subtitle": "優先拿最大硬幣有時成功，有時會錯得很自然",
+      "duration": "28 分鐘",
+      "difficulty": "中階",
+      "summary": "以硬幣找零練習區分特定幣制與一般問題，建立系統化尋找反例的習慣。",
+      "objectives": ["實作最大面額優先策略", "找出非標準幣制反例", "理解正確性不能由常見幣制外推"],
+      "sections": [
+        {
+          "heading": "最大硬幣優先是候選策略",
+          "paragraphs": ["最少硬幣找零的直覺是每次拿不超過剩餘金額的最大面額。這在某些規範幣制（Canonical Coin System）正確，但面額只是任意正整數時不保證最佳；因此它是要驗證的策略，不是問題定義附帶的定理。"],
+          "bullets": ["面額先由大到小排序", "每步盡量取目前最大面額", "可能得到可行但非最少硬幣解", "某些金額也可能根本無法組成"]
+        },
+        {
+          "heading": "簡短程式也可能回答錯目標",
+          "paragraphs": ["下例用 divmod 一次取得某面額可拿數量與餘數，時間主要是排序 O(m log m)，m 為面額數。它能快速產生貪心解，但回傳 None 只代表這條貪心路徑失敗，未必代表不存在其他組合。"],
+          "bullets": ["局部規則是最大面額優先", "輸出前要確認 remainder 為 0", "演算法速度快不等於答案最佳"],
+          "code": "def greedy_change(coins, amount):\n    used = []\n    for coin in sorted(coins, reverse=True):\n        count, amount = divmod(amount, coin)\n        used.extend([coin] * count)\n    return used if amount == 0 else None",
+          "code_caption": "時間 O(m log m + c)，c 為輸出硬幣數；一般幣制不保證最少。"
+        },
+        {
+          "heading": "一個小反例推翻通用主張",
+          "paragraphs": ["面額 [1,3,4]、金額 6 時，貪心先拿 4，再拿兩個 1，共三枚；最佳解是 3 + 3，只需兩枚。要找反例，可先窮舉小金額，比較貪心與 BFS 或 DP 的最佳數量，特別測試大面額略高於多個中面額組合的情形。"],
+          "bullets": ["一個反例足以否定所有輸入皆正確", "不要從 [1,5,10,25] 的成功直接外推", "有限測試不能取代證明", "一般最少硬幣可用 DP 求解"]
+        }
+      ],
+      "takeaways": ["最大面額優先只在某些幣制保證最佳", "可行解、貪心解與最佳解是不同概念", "小規模窮舉對照是尋找反例的有效方法"],
+      "quiz": [
+        {"question": "[1,3,4] 湊 6 時，貪心和最佳解分別用幾枚？", "answer": "貪心用 4+1+1 共三枚；最佳用 3+3 共兩枚。"},
+        {"question": "greedy_change 回傳 None，能證明該金額無法用硬幣組成嗎？", "answer": "不能。它只證明最大面額優先的這條路失敗，其他組合仍可能成功。"}
+      ],
+      "practice": ["列舉面額 [1,3,4] 的金額 1 到 12，比較貪心與最佳硬幣數。", "設計一組不含面額 1 的幣制，使貪心失敗但存在可行組合。"]
+    },
+    {
+      "number": 8,
+      "slug": "exchange-arguments-and-greedy-vs-dp",
+      "title": "交換論證與 Greedy vs DP",
+      "subtitle": "用證明與狀態需求決定是否能放心不回頭",
+      "duration": "35 分鐘",
+      "difficulty": "中階",
+      "summary": "整理交換論證模板，比較貪心與動態規劃，建立面對陌生最佳化問題的決策流程。",
+      "objectives": ["寫出交換論證骨架", "辨認 Greedy 與 DP 的狀態差異", "根據反例與證明選擇方法"],
+      "sections": [
+        {
+          "heading": "交換論證把最佳解拉向貪心解",
+          "paragraphs": ["交換論證先取一個最佳解 O，找出它和貪心解 G 的第一個不同選擇，再證明能把 O 的選擇換成 G 的選擇而不破壞可行性、也不讓目標變差。反覆交換後得到包含所有貪心選擇的最佳解，便證明 G 也是最佳。"],
+          "bullets": ["先明確定義任意最佳解 O", "找第一個分歧位置", "證明交換後仍可行且不變差", "對剩餘子問題重複推論"]
+        },
+        {
+          "heading": "Greedy 只保留一條路，DP 保留必要狀態",
+          "paragraphs": ["Greedy 認為某個局部選擇安全，因此丟棄其他候選，通常更快且空間較少；Dynamic Programming（DP）在無法安全丟棄時，依狀態保留多個子問題最佳值。是否存在重疊子問題不是貪心證明，關鍵仍是其他選擇能否被安全支配。"],
+          "bullets": ["Greedy：不可撤銷地保留單一方向", "DP：保存多個狀態以比較未來組合", "能證明安全選擇時優先 Greedy", "局部選擇互相影響且無交換性時考慮 DP"],
+          "table": {
+            "headers": ["問題", "典型方法", "關鍵理由"],
+            "rows": [["最多不重疊活動", "Greedy", "最早結束可安全交換"], ["分數背包", "Greedy", "物品可做等重量交換"], ["0/1 背包", "DP", "不可切分使局部密度不安全"], ["一般最少硬幣", "DP", "最大面額優先可能有反例"]]
+          }
+        },
+        {
+          "heading": "陌生問題的決策清單",
+          "paragraphs": ["先寫暴力或小型窮舉當作答案對照，再提出能排除候選的貪心規則；若找到反例，就識別必須保存哪些資訊形成 DP 狀態。若交換論證成功，仍要分析排序、Heap 或資料結構成本，而不是只看最後一趟掃描。"],
+          "bullets": ["用小輸入驗證候選規則", "說出選擇後被永久丟棄的方案", "嘗試交換、領先或不變量證明", "記錄時間、空間與輸入前提"]
+        }
+      ],
+      "takeaways": ["交換論證透過不變差的替換證明貪心選擇安全", "Greedy 丟棄替代路徑，DP 則保存足以比較未來的狀態", "先找反例再求證明，能避免把直覺誤當定理"],
+      "quiz": [
+        {"question": "交換論證只證明交換後仍可行，是否已足夠？", "answer": "不足，還必須證明目標值不會變差，才能保證交換後仍是最佳解。"},
+        {"question": "什麼跡象表示可能需要 DP 而非 Greedy？", "answer": "局部最好選擇會影響後續組合、找得到反例，且無法安全丟棄其他候選時，通常需用狀態保存多種可能。"}
+      ],
+      "practice": ["為活動選擇寫出完整四步交換論證，不只描述直覺。", "選一題最佳化問題，列出 Greedy 會丟棄的資訊與 DP 可能需要保存的狀態。"]
+    }
+  ]
+}

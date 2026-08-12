@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="練習頭端與中間位置的插入刪除，並用 dummy node 統一邊界。" />
+    <meta name="theme-color" content="#101713" />
+    <title>06.03 插入與刪除｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-06-linked-lists.html">UNIT 06 / LESSON 03</a><p class="eyebrow">Linked Lists</p><h1>插入與刪除</h1><p class="lesson-deck">先保存需要的參照，再重新接線</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>練習頭端與中間位置的插入刪除，並用 dummy node 統一邊界。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>正確安排插入時的接線順序</li><li>以 previous 略過待刪節點</li><li>使用 dummy node 簡化刪除 head 的特例</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>插入：先接後段，再接前段</h2><p>在 node 後插入 new_node 時，必須先讓 new_node.next 保存原本後繼，再把 node.next 改指向 new_node。若先覆寫 node.next，原本的後半段就可能失去可達路徑。</p><ul><li>插入前：[A] → [B]</li><li>第一步：[new] → [B]</li><li>第二步：[A] → [new] → [B]</li></ul><figure class="code-block"><figcaption><span>已知前一個節點時，中間插入只改動兩條連結。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def insert_after(node, value):
+    if node is None:
+        raise ValueError(&quot;插入位置不能是 None&quot;)
+    new_node = Node(value)
+    new_node.next = node.next
+    node.next = new_node
+    return new_node
+
+head = build_linked_list([10, 30])
+insert_after(head, 20)
+print(to_list(head))  # [10, 20, 30]</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>刪除：讓前一站略過目標</h2><p>刪除 current 的本質，是讓 previous.next 直接指向 current.next。搜尋待刪節點時需同時保留 previous；如果目標就是 head，則必須更新 head 本身。</p><ul><li>刪除前：[previous] → [current] → [next]</li><li>接線後：[previous] ─────────→ [next]</li><li>刪除 head 時，新 head 是舊 head.next</li></ul><figure class="code-block"><figcaption><span>函式回傳可能已改變的 head，呼叫端必須接住回傳值。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def delete_first(head, target):
+    if head is not None and head.value == target:
+        return head.next
+
+    previous = head
+    current = head.next if head is not None else None
+    while current is not None:
+        if current.value == target:
+            previous.next = current.next
+            return head
+        previous = current
+        current = current.next
+    return head</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>Dummy Node 統一頭端特例</h2><p>虛擬節點（Dummy Node）放在真正 head 前方，讓每個待刪節點都擁有 previous，因此不必另外處理刪除第一個節點。已知插入或刪除位置時接線是 O(1)，但若要先搜尋位置，整體仍是 O(n)。</p><ul><li>文字圖：[dummy] → [head] → ...</li><li>刪除完成後回傳 dummy.next，而不是 dummy</li><li>dummy 的 value 通常不參與資料語意</li></ul><figure class="code-block"><figcaption><span>即使 current 是原 head，它也有 dummy 作為 previous。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def delete_first_with_dummy(head, target):
+    dummy = Node(None, head)
+    previous = dummy
+    current = head
+    while current is not None:
+        if current.value == target:
+            previous.next = current.next
+            break
+        previous = current
+        current = current.next
+    return dummy.next</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>插入前先保存並接上原本後繼，避免斷鏈。</li><li><span>02</span>刪除節點是讓前一個節點略過它。</li><li><span>03</span>dummy node 能把 head 的邊界操作轉成一般接線。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼插入時要先執行 new_node.next = node.next？</summary><p>這一步先保存原本後繼；若先改 node.next，可能失去通往後半段串列的參照。</p></details><details><summary>使用 dummy node 刪除後，為什麼回傳 dummy.next？</summary><p>dummy 只是輔助節點，真正串列的第一個節點位於 dummy.next，而且刪除原 head 後這個位置會自動更新。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>實作 prepend(head, value)，在頭端插入節點並回傳新 head。</li><li>使用 dummy node 刪除串列中所有等於 target 的節點。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-06/02-traversal-and-search.html"><span>← 上一課</span><b>走訪與搜尋</b></a><a class="next" href="../unit-06/04-doubly-linked-lists.html"><span>下一課 →</span><b>雙向鏈結串列</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="認識遞迴問題、終止條件與呼叫堆疊，並以階乘建立基本結構。" />
+    <meta name="theme-color" content="#101713" />
+    <title>08.01 遞迴結構、Base Case 與 Call Stack｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-08-recursion-divide-backtracking.html">UNIT 08 / LESSON 01</a><p class="eyebrow">Recursion, Divide and Conquer, and Backtracking</p><h1>遞迴結構、Base Case 與 Call Stack</h1><p class="lesson-deck">讓函式處理較小版本的同一問題</p><div class="lesson-meta"><span>入門</span><span>25 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>認識遞迴問題、終止條件與呼叫堆疊，並以階乘建立基本結構。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>辨認遞迴案例與 Base Case</li><li>說明問題規模如何縮小</li><li>理解 Call Stack 保存的執行狀態</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>遞迴的兩個必要部分</h2><p>遞迴（Recursion）讓函式呼叫自己，去處理規模更小但形式相同的問題。每個遞迴函式都要有直接回答的終止條件（Base Case），以及確實朝終止條件前進的遞迴案例。</p><ul><li>Base Case：不再呼叫自己，直接回傳</li><li>Recursive Case：把問題縮小後再次呼叫</li><li>若規模沒有縮小，可能無限遞迴</li></ul><figure class="code-block"><figcaption><span>number 每次減一，最後一定到達 1 或 0。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def factorial(number):
+    if number &lt; 0:
+        raise ValueError(&quot;階乘只定義於非負整數&quot;)
+    if number &lt;= 1:
+        return 1
+    return number * factorial(number - 1)
+
+print(factorial(5))  # 120</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Call Stack 保存尚未完成的工作</h2><p>函式每次呼叫自己，Python 都會在呼叫堆疊（Call Stack）新增一個框架，保存參數與尚未執行的乘法。到達 Base Case 後，框架才由最深層開始依相反順序回傳。</p><ul><li>向下呼叫：factorial(3) 等待 3 × factorial(2)</li><li>最深層：factorial(1) 直接回傳 1</li><li>向上回傳：1 → 2 × 1 → 3 × 2</li></ul><figure class="code-block"><figcaption><span>遞迴呼叫前後的輸出，呈現向下進入與反向返回的順序。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def countdown(number):
+    if number == 0:
+        print(&quot;完成&quot;)
+        return
+    print(&quot;進入&quot;, number)
+    countdown(number - 1)
+    print(&quot;返回&quot;, number)
+
+countdown(3)</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>終止、深度與限制</h2><p>factorial(n) 共有約 n 層呼叫，因此時間 O(n)，Call Stack 額外空間也是 O(n)。Python 有遞迴深度限制，所以非常深的線性遞迴通常適合改寫成迴圈。</p><ul><li>遞迴深度是同時存在的堆疊框架數</li><li>Base Case 正確不代表輸入一定能到達它</li><li>選擇遞迴前要同時評估可讀性與堆疊空間</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>遞迴不是自動更快；它主要讓具有自我相似結構的解法更容易表達。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>遞迴必須有 Base Case，且每次呼叫都要縮小問題。</li><li><span>02</span>Call Stack 保存尚未完成的函式狀態，並以後進先出順序返回。</li><li><span>03</span>線性遞迴常同時需要 O(n) 時間與 O(n) 堆疊空間。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>只有 Base Case，為什麼遞迴函式仍可能不終止？</summary><p>若遞迴參數沒有朝 Base Case 前進，例如數值反而愈來愈大，就永遠無法到達終止條件。</p></details><details><summary>factorial(5) 的 Call Stack 額外空間為什麼是 O(n)？</summary><p>最深時需同時保留從 factorial(5) 到 Base Case 的約 n 個呼叫框架。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>用遞迴計算 1 到 n 的總和，並處理 n=0。</li><li>預測 countdown(3) 的完整輸出順序，再實際執行核對。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-07/08-monotonic-queue-sliding-maximum.html"><span>← 上一課</span><b>Monotonic Queue 與滑動區間最大值</b></a><a class="next" href="../unit-08/02-tracing-and-complexity.html"><span>下一課 →</span><b>遞迴追蹤與複雜度</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

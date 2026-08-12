@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="使用外層迴圈配合 DFS 或 BFS，計算無向圖中的連通群組。" />
+    <meta name="theme-color" content="#101713" />
+    <title>10.05 Connected Components 連通元件｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-10-graph-basics.html">UNIT 10 / LESSON 05</a><p class="eyebrow">Graph Fundamentals</p><h1>Connected Components 連通元件</h1><p class="lesson-deck">從每個未訪頂點啟動一次完整走訪</p><div class="lesson-meta"><span>基礎</span><span>25 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>使用外層迴圈配合 DFS 或 BFS，計算無向圖中的連通群組。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>定義連通元件</li><li>計數並標記每個元件</li><li>處理孤立頂點</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>一次走訪覆蓋一個元件</h2><p>無向圖的連通元件（Connected Component）是內部任兩點互相可達的最大頂點集合。從一個未訪頂點開始 DFS 或 BFS，會恰好標記它所在的整個元件。</p><ul><li>已訪頂點不再啟動新走訪</li><li>每次從未訪頂點啟動，元件數加一</li><li>沒有邊的孤立頂點本身也是一個元件</li></ul><figure class="code-block"><figcaption><span>外層找新元件入口，內層走完整個元件。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def count_components(graph):
+    visited = set()
+    count = 0
+    for start in graph:
+        if start in visited:
+            continue
+        count += 1
+        stack = [start]
+        visited.add(start)
+        while stack:
+            vertex = stack.pop()
+            for neighbor in graph[vertex]:
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    stack.append(neighbor)
+    return count</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>標籤比只有計數更實用</h2><p>若替每個頂點保存 component_id，之後可在 O(1) 判斷兩點是否屬於同一元件。標記方式是在一次 DFS 中，將所有發現頂點寫入相同編號。</p><ul><li>component_of[vertex] = component_id</li><li>同編號代表存在無向路徑</li><li>元件清單也可用 list 收集各群組頂點</li></ul><figure class="code-block"><figcaption><span>字典同時扮演 visited 與元件標籤。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def label_components(graph):
+    component_of = {}
+    component_id = 0
+    for start in graph:
+        if start in component_of:
+            continue
+        stack = [start]
+        component_of[start] = component_id
+        while stack:
+            vertex = stack.pop()
+            for neighbor in graph[vertex]:
+                if neighbor not in component_of:
+                    component_of[neighbor] = component_id
+                    stack.append(neighbor)
+        component_id += 1
+    return component_of</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>方向差異與成本</h2><p>鄰接表下，掃描所有頂點與邊的總時間是 O(V+E)，標記與走訪空間 O(V)。有向圖的「強連通」要求雙向可達，不能直接套用此無向版本，需要另外的強連通元件演算法。</p><ul><li>輸入必須把孤立頂點也列為 graph 的鍵</li><li>多次啟動走訪不會重複處理已訪頂點</li><li>本課元件定義限無向圖</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>只有邊清單而沒有完整頂點清單時，孤立頂點會消失，元件數也會算錯。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>每次從未訪頂點啟動走訪，就找到一個新連通元件。</li><li><span>02</span>孤立頂點也必須計為一個元件。</li><li><span>03</span>無向元件計數時間 O(V+E)，不可直接當成有向強連通解法。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼外層迴圈要遍歷所有頂點？</summary><p>只從一個起點走訪無法到達其他元件；外層迴圈才能為每個未訪區域啟動搜尋。</p></details><details><summary>一個沒有任何邊的頂點算連通元件嗎？</summary><p>算，它本身構成只含一個頂點的最大連通集合。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>回傳無向圖中最大連通元件的頂點數。</li><li>輸出每個元件的頂點清單，並為孤立頂點加入測試。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-10/04-breadth-first-search.html"><span>← 上一課</span><b>Breadth-First Search BFS</b></a><a class="next" href="../unit-10/06-cycle-detection.html"><span>下一課 →</span><b>Cycle Detection 環偵測</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

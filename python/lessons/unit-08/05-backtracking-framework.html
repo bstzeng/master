@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="建立狀態空間樹與選擇、遞迴、撤銷的通用回溯骨架。" />
+    <meta name="theme-color" content="#101713" />
+    <title>08.05 Backtracking 回溯框架｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-08-recursion-divide-backtracking.html">UNIT 08 / LESSON 05</a><p class="eyebrow">Recursion, Divide and Conquer, and Backtracking</p><h1>Backtracking 回溯框架</h1><p class="lesson-deck">做選擇、深入探索，再撤銷選擇</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>建立狀態空間樹與選擇、遞迴、撤銷的通用回溯骨架。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>描述回溯搜尋的狀態與選項</li><li>正確撤銷共享狀態</li><li>區分產生答案與判斷存在性</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>回溯是受限制的深度優先探索</h2><p>回溯法（Backtracking）在狀態空間樹中逐步建立候選答案，每層選一個決定並深入。走到完整答案就記錄；發現不可能成功或探索完成時，退回上一層改試其他選項。</p><ul><li>狀態：目前已做的選擇</li><li>選項：此狀態下可以採取的下一步</li><li>完成條件與無效條件決定何時停止深入</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>回溯通常探索組合空間，最壞時間可能是指數級；它的價值在於系統化且可剪枝。</p></aside></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>選擇、遞迴、撤銷</h2><p>若多層遞迴共用同一個 path，加入選項後必須在子呼叫返回時撤銷，讓下一個分支看到原本狀態。這個對稱結構常寫成 append、backtrack、pop。</p><ul><li>Choose：path.append(choice)</li><li>Explore：backtrack(...)</li><li>Unchoose：path.pop()</li></ul><figure class="code-block"><figcaption><span>記錄答案時使用 path.copy()，避免所有結果指向同一個可變 list。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def all_binary_choices(length):
+    results = []
+    path = []
+
+    def backtrack():
+        if len(path) == length:
+            results.append(path.copy())
+            return
+        for choice in (0, 1):
+            path.append(choice)
+            backtrack()
+            path.pop()
+
+    backtrack()
+    return results</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>設計介面與複雜度</h2><p>若要列出所有答案，回溯必須走訪所有可行葉節點；若只問是否存在，找到第一個答案就可傳回 True 提早結束。二元選擇深度 n 最多有 O(2ⁿ) 狀態，堆疊與 path 深度為 O(n)，輸出空間另計。</p><ul><li>列舉問題的時間至少與答案數量成正比</li><li>存在性搜尋可用布林回傳值提前停止</li><li>複製 path 的成本也要納入產生所有答案的時間</li></ul><figure class="code-block"><figcaption><span>or 具有短路特性，找到答案後不再探索另一分支。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def has_binary_target(length, target_sum):
+    def backtrack(depth, current_sum):
+        if current_sum &gt; target_sum:
+            return False
+        if depth == length:
+            return current_sum == target_sum
+        return (
+            backtrack(depth + 1, current_sum)
+            or backtrack(depth + 1, current_sum + 1)
+        )
+    return backtrack(0, 0)</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>回溯在狀態空間樹中以深度優先方式試探選項。</li><li><span>02</span>共享 path 時，選擇與撤銷必須成對。</li><li><span>03</span>列舉所有答案與只判斷是否存在，停止策略不同。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼 results.append(path) 常會造成錯誤？</summary><p>它保存同一個可變 list 的參照，後續 append 或 pop 會改動已保存結果；應加入 path.copy()。</p></details><details><summary>回溯中的撤銷步驟有什麼目的？</summary><p>它恢復進入本分支前的狀態，確保下一個選項不會受到上一個分支殘留選擇影響。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>產生長度 n、只含 A 或 B 的所有字串。</li><li>修改二元選擇回溯，只保留恰好含 k 個 1 的答案。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-08/04-merge-sort-and-quick-sort.html"><span>← 上一課</span><b>Merge Sort 與 Quick Sort 分治案例</b></a><a class="next" href="../unit-08/06-subsets.html"><span>下一課 →</span><b>子集合</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

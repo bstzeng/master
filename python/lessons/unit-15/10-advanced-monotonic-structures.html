@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="以單調堆疊解下一個較大值，以單調佇列解滑動視窗最大值，理解攤銷 O(n)。" />
+    <meta name="theme-color" content="#101713" />
+    <title>15.10 Monotonic Stack 與 Queue 進階｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-15-advanced-data-structures.html">UNIT 15 / LESSON 10</a><p class="eyebrow">Advanced Data Structures</p><h1>Monotonic Stack 與 Queue 進階</h1><p class="lesson-deck">及時移除再也不可能成為答案的候選</p><div class="lesson-meta"><span>進階</span><span>36 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>以單調堆疊解下一個較大值，以單調佇列解滑動視窗最大值，理解攤銷 O(n)。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>建立單調候選不變量</li><li>實作 Next Greater 與 Sliding Window Maximum</li><li>以進出次數分析攤銷成本</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>單調堆疊等待未來答案</h2><p>Monotonic Stack 保存尚未找到下一個較大值的索引，並讓其對應值由棧底到棧頂遞減。新值較大時，棧頂的第一個較大值已確定並可彈出；每個索引只入棧、出棧各一次，所以整體 O(n) 而非巢狀表象的 O(n²)。</p><ul><li>保存索引可計算距離或回填答案</li><li>彈出條件決定嚴格或非嚴格比較</li><li>未被彈出者答案維持預設</li><li>適合 Next Greater、每日溫度與柱狀圖</li></ul><figure class="code-block"><figcaption><span>每個索引最多 push/pop 一次，時間 O(n)、空間 O(n)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def next_greater(numbers):
+    answer = [-1] * len(numbers)
+    stack = []
+    for index, value in enumerate(numbers):
+        while stack and numbers[stack[-1]] &lt; value:
+            answer[stack.pop()] = value
+        stack.append(index)
+    return answer</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>單調佇列維持視窗最大候選</h2><p>滑動視窗最大值需要同時移除過期索引與較小的尾端候選。deque 中索引由舊到新、對應值由大到小，因此隊首永遠是目前最大值；新值進入時，被它壓過且更舊的較小值永遠不可能再成為最大值，可安全刪除。</p><ul><li>先移除 index-k 以前的過期索引</li><li>尾端移除小於等於新值者</li><li>隊首是當前視窗最大值</li><li>每個索引最多進出一次</li></ul><figure class="code-block"><figcaption><span>時間 O(n)、工作空間 O(k)、輸出空間 O(n-k+1)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>from collections import deque
+
+def sliding_window_max(numbers, k):
+    if k &lt;= 0 or k &gt; len(numbers): return []
+    queue, result = deque(), []
+    for index, value in enumerate(numbers):
+        while queue and queue[0] &lt;= index - k: queue.popleft()
+        while queue and numbers[queue[-1]] &lt;= value: queue.pop()
+        queue.append(index)
+        if index &gt;= k - 1: result.append(numbers[queue[0]])
+    return result</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>正確性來自支配關係</h2><p>單調結構能快，是因為新候選能永久支配某些舊候選：它更晚過期且數值不小，因此舊候選不可能在未來勝出。若問題的比較規則不具有這種支配關係，強行維持單調會丟失答案；實作時也要先決定相等值保留新或舊索引。</p><ul><li>Stack 處理單方向最近關係</li><li>Queue 處理移動視窗極值</li><li>while 總次數以每元素出棧一次做攤銷分析</li><li>相等值政策影響索引與距離答案</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>單調結構只保存仍可能成為未來答案的候選</li><li><span>02</span>每個元素最多進出一次，使看似巢狀流程總時間 O(n)</li><li><span>03</span>Monotonic Stack 適合最近較大/小，Queue 適合滑動視窗極值</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>sliding_window_max 為何可以刪除尾端較小且更舊的值？</summary><p>新值不小於它又更晚離開視窗，只要舊值仍在，新值也在且更適合當最大值，因此舊值永不會勝出。</p></details><details><summary>程式中有 for 加 while，為什麼仍是 O(n)？</summary><p>每個索引只入結構一次且最多被彈出一次，所有 while 迭代合計 O(n)，是攤銷分析。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>修改 next_greater，使答案回傳距離而非數值。</li><li>把 sliding_window_max 改成滑動視窗最小值，列出比較符號要如何變更。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-15/09-advanced-dsu-and-sparse-table.html"><span>← 上一課</span><b>DSU 進階與 Sparse Table</b></a><a class="next" href="../unit-16/01-constraints-to-complexity.html"><span>下一課 →</span><b>讀題與從限制推複雜度</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

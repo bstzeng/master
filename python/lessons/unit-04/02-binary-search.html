@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="理解二分搜尋的必要條件與閉區間模板，實作在已排序資料中尋找任一相符位置。" />
+    <meta name="theme-color" content="#101713" />
+    <title>04.02 Binary Search 二分搜尋｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-04-searching.html">UNIT 04 / LESSON 02</a><p class="eyebrow">Searching Algorithms</p><h1>Binary Search 二分搜尋</h1><p class="lesson-deck">利用排序，每次排除一半候選範圍</p><div class="lesson-meta"><span>入門</span><span>24 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>理解二分搜尋的必要條件與閉區間模板，實作在已排序資料中尋找任一相符位置。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明排序為何能支持二分搜尋</li><li>實作閉區間二分搜尋</li><li>分析 O(log n) 的由來</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>排序讓我們安全排除資料</h2><p>二分搜尋（Binary Search）查看候選區間的中間值；若目標更小，就能排除中間值與右半邊，反之則排除左半邊。這個推論依賴資料已按相同比較規則排序，否則被排除的區域仍可能藏著答案。</p><ul><li>輸入必須能依索引存取且已排序</li><li>每輪比較中間元素</li><li>每輪將候選數量縮小約一半</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>閉區間模板</h2><p>若 left 與 right 都代表仍可能包含答案的位置，搜尋區間就是閉區間 [left, right]，因此條件使用 left &lt;= right。檢查 middle 後必須排除它，所以分別更新為 right = middle - 1 或 left = middle + 1。</p><ul><li>初始 left = 0、right = len(items) - 1</li><li>區間非空的條件是 left &lt;= right</li><li>每輪更新都讓候選區間嚴格縮小</li></ul><figure class="code-block"><figcaption><span>在遞增排序的 items 中回傳任一相符索引；找不到回傳 -1。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def binary_search(items, target):
+    left, right = 0, len(items) - 1
+
+    while left &lt;= right:
+        middle = (left + right) // 2
+        if items[middle] == target:
+            return middle
+        if items[middle] &lt; target:
+            left = middle + 1
+        else:
+            right = middle - 1
+
+    return -1</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>為什麼是 O(log n)</h2><p>候選數量從 n 依序變成 n/2、n/4，直到剩下一筆，最多約需 log₂n 輪。每輪只做常數次比較與索引操作，所以時間 O(log n)，迴圈版本只使用三個索引變數，額外空間 O(1)。</p><ul><li>資料量加倍通常只多一輪</li><li>時間 O(log n)</li><li>迭代版本額外空間 O(1)</li><li>排序本身的成本要依使用情境另行計入</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>二分搜尋的排除規則依賴資料已排序</li><li><span>02</span>閉區間模板使用 left &lt;= right 並排除已檢查的 middle</li><li><span>03</span>每輪減半使時間複雜度成為 O(log n)</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>閉區間 [left, right] 在什麼條件下已經沒有候選值？</summary><p>當 left &gt; right 時區間為空，因此迴圈條件應是 left &lt;= right。</p></details><details><summary>為一份未排序資料先排序再二分，只查詢一次一定比線性搜尋快嗎？</summary><p>不一定。排序通常需 O(n log n)，只查一次可能比 O(n) 線性搜尋更貴；若排序結果可供許多次查詢，才較可能值得。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>手動追蹤在 [2, 5, 8, 12, 16] 中搜尋 12 時 left、middle、right 的變化。</li><li>為 binary_search 撰寫找到第一格、最後格、中間值與不存在目標的測試。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-04/01-linear-search.html"><span>← 上一課</span><b>Linear Search 線性搜尋</b></a><a class="next" href="../unit-04/03-binary-search-boundaries.html"><span>下一課 →</span><b>二分搜尋的邊界處理</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

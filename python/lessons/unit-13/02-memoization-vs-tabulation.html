@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="比較記憶化搜尋與表格法的流程及取捨。" />
+    <meta name="theme-color" content="#101713" />
+    <title>13.02 Memoization 與 Tabulation｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-13-dynamic-programming.html">UNIT 13 / LESSON 02</a><p class="eyebrow">Dynamic Programming</p><h1>Memoization 與 Tabulation</h1><p class="lesson-deck">自頂向下與自底向上</p><div class="lesson-meta"><span>入門</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>比較記憶化搜尋與表格法的流程及取捨。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>實作 memoization</li><li>實作 tabulation</li><li>比較兩者空間與可達狀態</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>Memoization 記憶化</h2><p>記憶化保留原遞迴結構，在進入狀態時先查 cache。它只計算實際可達狀態，但仍使用 Call Stack。</p><ul><li>快取鍵必須完整描述狀態</li><li>先查 cache，再展開子問題</li></ul><figure class="code-block"><figcaption><span>時間 O(n)、cache 與堆疊空間 O(n)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>from functools import lru_cache
+
+def fib_memo(n):
+    @lru_cache(None)
+    def solve(k):
+        if k &lt;= 1: return k
+        return solve(k - 1) + solve(k - 2)
+    return solve(n)</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Tabulation 表格法</h2><p>表格法從已知 Base Case 開始，依依賴順序填出較大狀態。它沒有遞迴深度問題，通常更容易做空間優化。</p><ul><li>先初始化最小狀態</li><li>迴圈順序必須先算依賴項</li></ul><figure class="code-block"><figcaption><span>時間 O(n)、空間 O(n)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def fib_table(n):
+    if n &lt;= 1: return n
+    dp = [0] * (n + 1)
+    dp[1] = 1
+    for k in range(2, n + 1):
+        dp[k] = dp[k - 1] + dp[k - 2]
+    return dp[n]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>選擇與滾動優化</h2><p>若每個狀態只依賴前兩項，就不必保留整張表，可用兩個變數將空間降為 O(1)。需要重建解或查看所有狀態時，則保留表格。</p><ul><li>記憶化適合狀態稀疏或轉移複雜</li><li>表格法適合順序清楚且重視常數成本</li><li>空間優化前先確認未來依賴</li></ul><figure class="code-block"><figcaption><span>時間 O(n)、額外空間 O(1)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def fib_rolling(n):
+    previous, current = 0, 1
+    for _ in range(n):
+        previous, current = current, previous + current
+    return previous</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Memoization 自頂向下，只算可達狀態。</li><li><span>02</span>Tabulation 自底向上，避免遞迴堆疊。</li><li><span>03</span>只依賴少數前態時可使用滾動變數。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>記憶化已用 cache，為何空間仍可能 O(n)？</summary><p>除 cache 外，最深遞迴仍保留 O(n) 個呼叫框架。</p></details><details><summary>何時不宜刪除完整 dp 表？</summary><p>需要重建選擇路徑或後續查詢所有狀態時。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>將遞迴爬樓梯改成 lru_cache。</li><li>把只依賴前三項的 DP 優化為三個變數。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-13/01-dp-foundations.html"><span>← 上一課</span><b>DP 核心：重疊子問題與最佳子結構</b></a><a class="next" href="../unit-13/03-state-transition-order.html"><span>下一課 →</span><b>State、Transition、Base Case 與順序</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

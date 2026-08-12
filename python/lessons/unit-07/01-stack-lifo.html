@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="理解 Stack 的 LIFO 規則，以 Python List 建立操作介面，並追蹤每一步狀態。" />
+    <meta name="theme-color" content="#101713" />
+    <title>07.01 Stack：後進先出的解題模型｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-07-stack-queue-heap.html">UNIT 07 / LESSON 01</a><p class="eyebrow">Stacks, Queues, and Heaps</p><h1>Stack：後進先出的解題模型</h1><p class="lesson-deck">從基本操作到常見使用時機</p><div class="lesson-meta"><span>入門</span><span>25 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>理解 Stack 的 LIFO 規則，以 Python List 建立操作介面，並追蹤每一步狀態。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明 LIFO 與 Stack 的核心操作</li><li>以 List 實作 push、pop 與 peek</li><li>辨認適合 Stack 的問題特徵</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>LIFO 與操作介面</h2><p>Stack（堆疊）遵守後進先出（Last In, First Out，LIFO）：最後放入的元素最先離開。它只開放頂端操作，因此很適合記錄尚未完成、需要依相反順序處理的工作。</p><ul><li>push：把元素放到頂端</li><li>pop：移除並回傳頂端元素</li><li>peek：查看頂端但不移除</li><li>is_empty：確認是否還有元素</li></ul><figure class="code-block"><figcaption><span>Python List 的尾端正好提供 Stack 所需操作。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>stack = []
+stack.append(&quot;第一步&quot;)
+stack.append(&quot;第二步&quot;)
+print(stack[-1])       # 第二步
+print(stack.pop())     # 第二步
+print(bool(stack))     # True</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Python 實作與複雜度</h2><p>List 的 append 與尾端 pop 都是攤銷 O(1)，查看 stack[-1] 也是 O(1)，因此通常不必另外建立 Stack 類別。Stack 保存 n 個元素時需要 O(n) 空間，而 pop 前必須先處理空堆疊情況。</p><ul><li>append(value)：攤銷 O(1)</li><li>pop()：O(1)</li><li>stack[-1]：O(1)</li><li>不要用 insert(0) 或 pop(0) 當作 Stack 頂端</li></ul><figure class="code-block"><figcaption><span>每個元素進出一次，時間 O(n)，額外空間 O(n)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def reverse_items(items):
+    stack = list(items)
+    result = []
+    while stack:
+        result.append(stack.pop())
+    return result
+
+print(reverse_items([1, 2, 3]))  # [3, 2, 1]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>辨認 Stack 題型</h2><p>當問題出現巢狀結構、復原最近操作、反向處理或深度優先探索時，可以先考慮 Stack。解題時要明確寫出 Stack 裡每個元素代表什麼，以及何時推入、何時彈出。</p><ul><li>編輯器 Undo：先復原最近動作</li><li>函式呼叫：最近呼叫先返回</li><li>DFS：保存尚待探索的節點</li><li>運算式解析：保存未配對符號或運算子</li></ul><div class="table-wrap"><table><thead><tr><th>問題訊號</th><th>Stack 中保存</th></tr></thead><tbody><tr><td>最近一項優先</td><td>操作或值</td></tr><tr><td>巢狀結構</td><td>尚未結束的開頭</td></tr><tr><td>反向輸出</td><td>依正向讀入的元素</td></tr></tbody></table></div><aside class="concept-callout"><b>KEY IDEA</b><p>只要能清楚描述 Stack 元素的意義，演算法通常就已完成一半。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Stack 遵守 LIFO，只有頂端需要被操作</li><li><span>02</span>List 的 append、pop 與頂端查看皆可在 O(1) 完成</li><li><span>03</span>最近一項優先、巢狀或反向處理是常見 Stack 訊號</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>依序 push A、B、C 後連續 pop 兩次，取出順序為何？</summary><p>先 C 再 B，因為 Stack 遵守後進先出。</p></details><details><summary>為何用 List 尾端作為 Stack 頂端？</summary><p>尾端 append 與 pop 都是 O(1) 或攤銷 O(1)；若使用開頭，元素位移會使操作成為 O(n)。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>使用 Stack 反轉一個單字清單，並寫出時間與空間複雜度。</li><li>設計瀏覽器上一頁功能，說明兩個 Stack 分別保存什麼。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-06/07-cycle-detection.html"><span>← 上一課</span><b>環狀鏈結串列偵測</b></a><a class="next" href="../unit-07/02-balanced-parentheses.html"><span>下一課 →</span><b>經典題型：括號配對</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

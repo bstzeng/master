@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="建立分治三步驟，並以最大值問題理解遞迴分割與合併。" />
+    <meta name="theme-color" content="#101713" />
+    <title>08.03 Divide and Conquer 分治法｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-08-recursion-divide-backtracking.html">UNIT 08 / LESSON 03</a><p class="eyebrow">Recursion, Divide and Conquer, and Backtracking</p><h1>Divide and Conquer 分治法</h1><p class="lesson-deck">拆解、求解，再合併互相獨立的子問題</p><div class="lesson-meta"><span>基礎</span><span>25 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>建立分治三步驟，並以最大值問題理解遞迴分割與合併。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>描述 Divide、Conquer、Combine</li><li>設計分治的終止條件</li><li>以遞迴式估算成本</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>分治的三個階段</h2><p>分治法（Divide and Conquer）把原問題拆成較小且形式相同的子問題，分別求解後再合併答案。它適合子問題能相對獨立處理，且合併成本可控制的情境。</p><ul><li>Divide：切分問題範圍</li><li>Conquer：遞迴解子問題，或在小規模直接回答</li><li>Combine：把子答案組成原問題答案</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>遞迴是程式結構；分治是演算法設計策略，兩者不是同義詞。</p></aside></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>案例：分治尋找最大值</h2><p>把區間從中間切成左右兩半，分別取得兩側最大值，再取兩者較大者。單一元素區間可直接回傳該元素，成為清楚的 Base Case。</p><ul><li>區間 [left, right] 在 middle 切開</li><li>左右區間不重疊且合起來覆蓋原範圍</li><li>Combine 只做一次 max 比較</li></ul><figure class="code-block"><figcaption><span>索引界線讓每個元素恰好落入一個 Base Case。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def divide_max(numbers, left, right):
+    if left == right:
+        return numbers[left]
+    middle = (left + right) // 2
+    left_max = divide_max(numbers, left, middle)
+    right_max = divide_max(numbers, middle + 1, right)
+    return max(left_max, right_max)
+
+def maximum(numbers):
+    if not numbers:
+        raise ValueError(&quot;陣列不可為空&quot;)
+    return divide_max(numbers, 0, len(numbers) - 1)
+
+print(maximum([7, 2, 9, 4]))  # 9</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>遞迴式與成本</h2><p>此案例的成本可寫成 T(n)=2T(n/2)+O(1)，整棵遞迴樹共有 O(n) 節點，所以時間 O(n)。每次問題規模減半，樹高 O(log n)，Call Stack 額外空間也是 O(log n)。</p><ul><li>子問題數量與大小寫在遞迴式的遞迴項</li><li>切分與合併工作寫在非遞迴項</li><li>分治不保證更快，仍要計算所有層的總工作</li></ul><div class="table-wrap"><table><thead><tr><th>項目</th><th>最大值分治案例</th></tr></thead><tbody><tr><td>子問題</td><td>兩個大小約 n/2 的區間</td></tr><tr><td>合併</td><td>一次 max，比較 O(1)</td></tr><tr><td>總時間／堆疊</td><td>O(n)／O(log n)</td></tr></tbody></table></div></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>分治依序進行 Divide、Conquer 與 Combine。</li><li><span>02</span>子問題應縮小、覆蓋完整，且有可直接求解的 Base Case。</li><li><span>03</span>用遞迴式描述子問題與合併成本，再計算各層總工作。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>分治法和一般遞迴有什麼差別？</summary><p>遞迴是函式呼叫自己的實作方式；分治則特別強調拆成子問題、各自求解並合併答案的策略。</p></details><details><summary>divide_max 的最大堆疊深度為什麼是 O(log n)？</summary><p>每往下一層，單一路徑上的問題規模約減半，所以經過約 log₂n 層就剩一個元素。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>用分治法同時回傳陣列的最小值與最大值。</li><li>分析 T(n)=2T(n/2)+O(n) 在每一層的工作量與總複雜度。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-08/02-tracing-and-complexity.html"><span>← 上一課</span><b>遞迴追蹤與複雜度</b></a><a class="next" href="../unit-08/04-merge-sort-and-quick-sort.html"><span>下一課 →</span><b>Merge Sort 與 Quick Sort 分治案例</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="使用 dictionary 與 set 建立頻率表，解決字元計數與異位詞判斷。" />
+    <meta name="theme-color" content="#101713" />
+    <title>03.02 字元統計與雜湊表｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-03-arrays-and-strings.html">UNIT 03 / LESSON 02</a><p class="eyebrow">Array and String Techniques</p><h1>字元統計與雜湊表</h1><p class="lesson-deck">把重複搜尋改成一次統計與快速查找</p><div class="lesson-meta"><span>入門</span><span>25 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>使用 dictionary 與 set 建立頻率表，解決字元計數與異位詞判斷。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>以 dictionary 建立頻率表</li><li>區分 set 與 dictionary 的用途</li><li>以雜湊降低重複搜尋成本</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>頻率表保留出現次數</h2><p>雜湊表（Hash Table）能把字元或數值當作鍵，並將出現次數保存為值。走訪資料一次就能完成統計，之後不必為每個項目重新掃描整段資料。</p><ul><li>dictionary 適合保存「項目 → 次數」</li><li>dict.get(key, 0) 能處理第一次出現的鍵</li><li>set 只回答是否存在，不保存出現幾次</li></ul><figure class="code-block"><figcaption><span>每讀到一個字元，就更新它在字典中的次數。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def character_counts(text):
+    counts = {}
+    for character in text:
+        counts[character] = counts.get(character, 0) + 1
+    return counts
+
+print(character_counts(&quot;banana&quot;))
+# {&#x27;b&#x27;: 1, &#x27;a&#x27;: 3, &#x27;n&#x27;: 2}</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>經典題型：判斷異位詞</h2><p>兩個字串若由完全相同的字元與次數組成，就是異位詞（Anagram）。先排除長度不同的情況，再比較兩份頻率表，便能直接表達問題條件。</p><ul><li>字元順序不同不影響結果</li><li>字元種類相同但次數不同，仍不是異位詞</li><li>是否忽略大小寫或空白，應由題目明確決定</li></ul><figure class="code-block"><figcaption><span>第二次走訪扣除次數，遇到不存在或不足的字元就提早結束。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def are_anagrams(first, second):
+    if len(first) != len(second):
+        return False
+
+    counts = {}
+    for character in first:
+        counts[character] = counts.get(character, 0) + 1
+    for character in second:
+        if character not in counts:
+            return False
+        counts[character] -= 1
+        if counts[character] &lt; 0:
+            return False
+    return True
+
+print(are_anagrams(&quot;listen&quot;, &quot;silent&quot;))  # True</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>效率與雜湊限制</h2><p>設兩字串總長度為 n，建立與核對頻率表的平均時間是 O(n)，空間是 O(k)，其中 k 是不同字元數。dictionary 的查找平均為 O(1)，但這是雜湊表的平均表現，不代表所有情況都保證固定時間。</p><ul><li>有限字元集下，k 有固定上限</li><li>一般 Unicode 文字中，k 最多可隨 n 成長</li><li>排序解異位詞通常需要 O(n log n) 時間</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>看到大量「是否存在」或「出現幾次」的查詢時，先考慮 set 或 dictionary。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>dictionary 保存次數，set 保存是否出現。</li><li><span>02</span>頻率表能把多次線性搜尋改為一次統計。</li><li><span>03</span>雜湊解法平均耗時 O(n)，空間取決於不同鍵的數量。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼 set 不適合直接判斷 aab 與 abb 是否為異位詞？</summary><p>兩者的 set 都是 {a, b}，但 set 沒有保存每個字元的次數。</p></details><details><summary>頻率表中 k 代表什麼？</summary><p>k 代表不同鍵的數量，例如字串中不同字元的種類數，也就是雜湊表最多需要保存的項目數。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>找出字串中第一個只出現一次的字元索引。</li><li>給定兩個整數陣列，判斷它們是否擁有完全相同的元素頻率。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-03/01-traversing-arrays-and-strings.html"><span>← 上一課</span><b>陣列與字串走訪</b></a><a class="next" href="../unit-03/03-two-pointers.html"><span>下一課 →</span><b>Two Pointers 雙指標</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="實作 Count-Min Sketch，理解只高估不低估、誤差來源與串流選型。" />
+    <meta name="theme-color" content="#101713" />
+    <title>15.08 Count-Min Sketch｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-15-advanced-data-structures.html">UNIT 15 / LESSON 08</a><p class="eyebrow">Advanced Data Structures</p><h1>Count-Min Sketch</h1><p class="lesson-deck">用多列計數器近似高流量事件頻率</p><div class="lesson-meta"><span>進階</span><span>32 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>實作 Count-Min Sketch，理解只高估不低估、誤差來源與串流選型。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>描述 width 與 depth 的作用</li><li>實作 update 與 estimate</li><li>理解高估保證與限制</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>固定空間摘要巨大鍵空間</h2><p>Count-Min Sketch（CMS）用 depth 列、每列 width 個計數器摘要事件頻率；每次事件在每列各增加一個雜湊位置，查詢取各列計數最小值。它不保存所有鍵，適合網路流量、點擊與日誌串流的近似計數。</p><ul><li>空間 O(depth × width)</li><li>更新與查詢 O(depth)</li><li>不同列使用不同雜湊</li><li>空間不隨不同鍵總數直接成長</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>最小值降低碰撞高估</h2><p>每個計數器包含目標和碰撞鍵的次數，因此不會低於真實頻率，只可能高估；取多列最小值可避開部分碰撞較嚴重的列。width 主要控制誤差幅度，depth 主要降低超出誤差保證的機率。</p><ul><li>標準正增量下 estimate ≥ true count</li><li>碰撞只會增加估計</li><li>更大 width 降低加性誤差</li><li>更大 depth 提高信賴度</li></ul><figure class="code-block"><figcaption><span>假設 count 為非負；更新與查詢 O(depth)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>import hashlib
+
+class CountMinSketch:
+    def __init__(self, width, depth):
+        self.width = width
+        self.table = [[0] * width for _ in range(depth)]
+    def _index(self, value, row):
+        raw = f&quot;{row}:{value}&quot;.encode()
+        return int.from_bytes(hashlib.sha256(raw).digest()[:8], &quot;big&quot;) % self.width
+    def update(self, value, count=1):
+        for row in range(len(self.table)):
+            self.table[row][self._index(value, row)] += count
+    def estimate(self, value):
+        return min(self.table[row][self._index(value, row)] for row in range(len(self.table)))</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>近似頻率不是完整排名答案</h2><p>CMS 適合點查詢某鍵的近似次數，但它未保存鍵本身，不能單獨列出所有 Top K；通常要搭配候選集合或 Heap。需要精確帳務、負增量或刪除時，標準只增 CMS 的保證不再直接適用，應選精確 dict 或其他 Sketch。</p><ul><li>適合允許小幅高估的監控</li><li>不能單獨枚舉鍵</li><li>精確計數使用 dict</li><li>可合併相同尺寸與雜湊設定的 Sketch</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>CMS 以固定二維計數器近似大量鍵頻率</li><li><span>02</span>標準正增量下估計只高估，取多列最小值降低碰撞影響</li><li><span>03</span>它適合串流點查詢，但不能獨自還原鍵或精確 Top K</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為何 estimate 取最小值而不是平均值？</summary><p>每列碰撞只會增加計數；取最小值選擇污染最少的一列，同時維持不低估性。</p></details><details><summary>CMS 能否列出所有出現次數最高的鍵？</summary><p>不能單獨做到，因為它只保存計數器不保存鍵；需搭配候選鍵結構。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>建立小 width 的 CMS，加入多個鍵並比較 estimate 與 dict 真實值。</li><li>設計 CMS 加候選 Heap 的熱門事件流程，說明兩者各保存什麼。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-15/07-bloom-filter.html"><span>← 上一課</span><b>Bloom Filter 與 False Positive</b></a><a class="next" href="../unit-15/09-advanced-dsu-and-sparse-table.html"><span>下一課 →</span><b>DSU 進階與 Sparse Table</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

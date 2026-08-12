@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="學習 Set 的唯一性、成員測試、集合運算與不保證位置順序的特性。" />
+    <meta name="theme-color" content="#101713" />
+    <title>02.05 Set：唯一元素與集合運算｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-02-python-builtins.html">UNIT 02 / LESSON 05</a><p class="eyebrow">Python Built-in Data Structures</p><h1>Set：唯一元素與集合運算</h1><p class="lesson-deck">快速判斷存在、去重與比較群組</p><div class="lesson-meta"><span>入門</span><span>20 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>學習 Set 的唯一性、成員測試、集合運算與不保證位置順序的特性。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>使用 Set 去除重複資料</li><li>以集合運算比較兩群資料</li><li>比較 Set 與 List 的查找成本</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>唯一性與快速成員測試</h2><p>Set（集合）只保存不重複且可雜湊的元素，特別適合回答某值是否已出現。成員測試、加入與刪除平均為 O(1)，相較 List 的 O(n) 線性搜尋更適合大量重複查找。</p><ul><li>元素不重複，沒有索引位置</li><li>in、add、discard 平均 O(1)</li><li>不要依賴 Set 的迭代順序</li></ul><figure class="code-block"><figcaption><span>用 Set 在走訪時偵測重複項目。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>seen = set()
+for student_id in [3, 8, 3, 5]:
+    if student_id in seen:
+        print(&quot;重複：&quot;, student_id)
+    seen.add(student_id)</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>交集、聯集與差集</h2><p>集合運算能直接表達兩群資料之間的關係，比巢狀迴圈更接近問題語意。對大小分別為 n 與 m 的集合，聯集與差集通常與輸入規模線性相關，交集通常可從較小集合開始檢查。</p><ul><li>a | b：聯集，出現在任一集合</li><li>a &amp; b：交集，同時出現</li><li>a - b：差集，只出現在 a</li><li>a ^ b：對稱差集，只出現在其中之一</li></ul><figure class="code-block"><figcaption><span>用交集與差集比較選課名單。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>python_class = {&quot;Amy&quot;, &quot;Bo&quot;, &quot;Chen&quot;}
+math_class = {&quot;Bo&quot;, &quot;Di&quot;}
+print(python_class &amp; math_class)  # {&#x27;Bo&#x27;}
+print(python_class - math_class)  # 只修 Python</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>去重與選型限制</h2><p>set(items) 能在線性平均時間內去重，但結果不保證保留可依賴的位置順序。若要保留第一次出現順序，可利用 Dictionary 鍵唯一且保留插入順序的特性；若元素還要對應資料，直接使用 Dictionary。</p><ul><li>只需唯一性與存在判斷：Set</li><li>需要唯一鍵對應資訊：Dictionary</li><li>需要位置、重複與順序：List</li><li>空集合必須寫 set()，{} 是空 Dictionary</li></ul><figure class="code-block"><figcaption><span>比較一般去重與保留首次出現順序的去重。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>items = [&quot;A&quot;, &quot;B&quot;, &quot;A&quot;, &quot;C&quot;]
+unique_unordered = set(items)
+unique_in_order = list(dict.fromkeys(items))
+print(unique_unordered)
+print(unique_in_order)  # [&#x27;A&#x27;, &#x27;B&#x27;, &#x27;C&#x27;]</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Set 保存唯一且可雜湊的元素，不提供索引</li><li><span>02</span>成員測試、加入與刪除平均 O(1)</li><li><span>03</span>集合運算能清楚表達交集、聯集與差集</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼大量成員測試通常應選 Set 而不是 List？</summary><p>Set 以雜湊表將平均查找降為 O(1)，List 通常要逐項比較而為 O(n)。</p></details><details><summary>如何建立空 Set？</summary><p>使用 set()；字面值 {} 建立的是空 Dictionary。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>給兩份報名名單，找出同時報名、只報第一場與至少報一場的人。</li><li>將含重複標籤的 List 去重，分別實作不要求順序與保留順序的版本。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-02/04-dictionaries.html"><span>← 上一課</span><b>Dictionary：鍵與值的快速對應</b></a><a class="next" href="../unit-02/06-strings.html"><span>下一課 →</span><b>String：不可變的文字序列</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

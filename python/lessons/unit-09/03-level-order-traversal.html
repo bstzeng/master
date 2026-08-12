@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="以 deque 實作二元樹 BFS，按層收集節點並分析寬度空間。" />
+    <meta name="theme-color" content="#101713" />
+    <title>09.03 BFS Level Order 層序走訪｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-09-trees.html">UNIT 09 / LESSON 03</a><p class="eyebrow">Tree Data Structures</p><h1>BFS Level Order 層序走訪</h1><p class="lesson-deck">使用 Queue 由上到下、由左到右探索</p><div class="lesson-meta"><span>入門進階</span><span>26 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>以 deque 實作二元樹 BFS，按層收集節點並分析寬度空間。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>解釋 Queue 與層序的關係</li><li>實作按層分組的 BFS</li><li>比較 BFS 與 DFS 的空間形態</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>Queue 保持先發現先處理</h2><p>層序走訪（Level Order Traversal）是一種廣度優先搜尋（Breadth-First Search, BFS），先處理深度 0，再處理深度 1。把孩子加到佇列尾端、從前端取出，可維持由上到下且同層由左到右的順序。</p><ul><li>Queue 採先進先出</li><li>孩子在父節點處理後入隊</li><li>適合層級、最淺深度與最近節點問題</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>固定本層大小再處理</h2><p>每輪開始時 queue 的長度就是本層節點數，固定這個數量再依序取出，便能把每層放進獨立 list。Python 使用 deque.popleft() 為 O(1)，避免 list.pop(0) 搬移元素的 O(n)。</p><ul><li>空樹直接回傳空 list</li><li>level_size 隔開相鄰層</li><li>只將非 None 孩子入隊</li></ul><figure class="code-block"><figcaption><span>回傳每層的值；時間 O(n)，queue 最多保存 O(w)，w 為最大寬度。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>from collections import deque
+
+def level_order(root):
+    if root is None:
+        return []
+    levels = []
+    queue = deque([root])
+    while queue:
+        level = []
+        for _ in range(len(queue)):
+            node = queue.popleft()
+            level.append(node.value)
+            if node.left: queue.append(node.left)
+            if node.right: queue.append(node.right)
+        levels.append(level)
+    return levels</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>空間由最寬一層決定</h2><p>每個節點入隊與出隊一次，所以時間 O(n)；queue 同時保存的節點最多接近樹的最大寬度 w，額外空間 O(w)，輸出另需 O(n)。平衡樹底層可能很寬，而細長樹的 BFS queue 很小；這與 DFS 的 O(h) 堆疊形成對比。</p><ul><li>處理時間 O(n)</li><li>工作 queue 空間 O(w)</li><li>回傳所有值的輸出空間 O(n)</li><li>選 DFS 或 BFS 時應考慮樹形</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>層序走訪使用 Queue 按深度探索</li><li><span>02</span>固定每輪 queue 長度可把結果按層分組</li><li><span>03</span>BFS 工作空間 O(w)，與 DFS 的 O(h) 不同</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼不能在 for 迴圈中每次重新以目前 len(queue) 決定本層？</summary><p>處理父節點時會加入下一層孩子，使 queue 長度改變；應在一層開始時固定原本長度。</p></details><details><summary>完全二元樹的 BFS queue 最多可能保存多少量級節點？</summary><p>最底層可占全樹約一半節點，因此最大寬度是 O(n)。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>修改 level_order，只回傳每層最大值。</li><li>使用 BFS 找出第一個葉節點所在的最小深度。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-09/02-dfs-tree-traversals.html"><span>← 上一課</span><b>DFS 前序、中序與後序走訪</b></a><a class="next" href="../unit-09/04-height-depth-and-diameter.html"><span>下一課 →</span><b>高度、深度與直徑</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

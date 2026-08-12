@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="建立 Binary Search Tree 規則，實作核心操作並理解高度控制其成本。" />
+    <meta name="theme-color" content="#101713" />
+    <title>09.05 BST 查找、插入與刪除｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-09-trees.html">UNIT 09 / LESSON 05</a><p class="eyebrow">Tree Data Structures</p><h1>BST 查找、插入與刪除</h1><p class="lesson-deck">用排序性沿單一路徑排除子樹</p><div class="lesson-meta"><span>中階</span><span>38 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>建立 Binary Search Tree 規則，實作核心操作並理解高度控制其成本。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明 BST 不變量與重複值政策</li><li>實作查找、插入與刪除</li><li>以樹高 h 分析操作</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>BST 把較小與較大值分開</h2><p>二元搜尋樹（Binary Search Tree, BST）要求每個節點左子樹的鍵都較小、右子樹的鍵都較大，且所有子樹也遵守相同規則。重複鍵要事先決定禁止、固定放一側或在節點內計數，否則操作規格不完整。</p><ul><li>比較一次就能選擇一個子樹</li><li>中序走訪得到排序鍵</li><li>BST 不是自動平衡</li><li>本課程式忽略重複鍵</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>查找與插入沿同一路徑</h2><p>查找由 root 開始，比目前值小就往左、大就往右，命中或遇到 None 結束；插入走相同路徑，在第一個 None 接上新節點。兩者最多經過樹高 h 個節點，時間 O(h)，迭代版本額外空間 O(1)。</p><ul><li>平衡時 h = O(log n)</li><li>退化鏈時 h = O(n)</li><li>插入後仍須維持全域 BST 規則</li></ul><figure class="code-block"><figcaption><span>查找為迭代、插入為遞迴；時間皆為 O(h)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def bst_search(root, target):
+    node = root
+    while node:
+        if target == node.value: return node
+        node = node.left if target &lt; node.value else node.right
+    return None
+
+def bst_insert(root, value):
+    if root is None: return TreeNode(value)
+    if value &lt; root.value:
+        root.left = bst_insert(root.left, value)
+    elif value &gt; root.value:
+        root.right = bst_insert(root.right, value)
+    return root</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>刪除分成三種情況</h2><p>刪除葉節點可直接回傳 None；只有一個孩子時以該孩子取代；有兩個孩子時可用右子樹最小值作為中序後繼，複製其值後再從右子樹刪除它。搜尋與調整都沿少數路徑，時間 O(h)，遞迴堆疊 O(h)。</p><ul><li>零個孩子：移除節點</li><li>一個孩子：提升唯一孩子</li><li>兩個孩子：替換為後繼再刪後繼</li><li>函式必須回傳更新後子樹根</li></ul><figure class="code-block"><figcaption><span>刪除後回傳新的子樹根，讓父節點正確重新連接。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def bst_delete(root, value):
+    if root is None: return None
+    if value &lt; root.value:
+        root.left = bst_delete(root.left, value)
+    elif value &gt; root.value:
+        root.right = bst_delete(root.right, value)
+    else:
+        if root.left is None: return root.right
+        if root.right is None: return root.left
+        successor = root.right
+        while successor.left:
+            successor = successor.left
+        root.value = successor.value
+        root.right = bst_delete(root.right, successor.value)
+    return root</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>BST 以全域左右排序規則排除不可能子樹</li><li><span>02</span>核心操作時間是 O(h)，不是無條件 O(log n)</li><li><span>03</span>刪除兩孩子節點可用中序後繼維持排序性</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>依序插入 1、2、3、4，普通 BST 的高度可能是多少量級？</summary><p>會形成向右的鏈，高度為 O(n)，查找也可能退化成 O(n)。</p></details><details><summary>刪除有兩個孩子的節點時，為何右子樹最小值適合取代它？</summary><p>它大於所有左子樹鍵，又是右子樹中最小者，替換後能維持 BST 排序規則。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>依序插入 8、3、10、1、6、14，再畫出 BST 並寫出中序結果。</li><li>測試刪除葉節點、單一孩子與兩個孩子三種情況。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-09/04-height-depth-and-diameter.html"><span>← 上一課</span><b>高度、深度與直徑</b></a><a class="next" href="../unit-09/06-balanced-trees.html"><span>下一課 →</span><b>平衡樹的基本概念</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

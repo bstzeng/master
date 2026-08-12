@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="把最佳化問題轉為單調判定函式。" />
+    <meta name="theme-color" content="#101713" />
+    <title>16.07 Binary Search on Answer｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-16-problem-solving.html">UNIT 16 / LESSON 07</a><p class="eyebrow">Problem Solving and Algorithm Design</p><h1>Binary Search on Answer</h1><p class="lesson-deck">在單調可行性上搜尋最佳答案</p><div class="lesson-meta"><span>進階</span><span>35 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>把最佳化問題轉為單調判定函式。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>定義搜尋範圍</li><li>建立 monotonic predicate</li><li>處理邊界模板</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>搜尋的不是陣列</h2><p>若答案 x 的可行性具有單調性，就能在答案範圍二分。例如運送容量愈大愈可行，可尋找第一個可行容量。</p><ul><li>先定義 feasible(x)</li><li>證明 False…False,True…True</li><li>找清楚下界與上界</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>第一個可行模板</h2><p>維持閉區間 [low,high]，可行時保留 mid 並向左，不可行時向右。迴圈結束的 low 是第一個可行值。</p><ul><li>mid=(low+high)//2</li><li>feasible(mid) 時 high=mid</li><li>否則 low=mid+1</li></ul><figure class="code-block"><figcaption><span>判定 q 次時總成本 O(q log(range))。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def first_feasible(low,high,feasible):
+    while low&lt;high:
+        mid=(low+high)//2
+        if feasible(mid): high=mid
+        else: low=mid+1
+    return low</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>驗證單調與上界</h2><p>若 feasible 不是單調，二分會丟掉可能答案；若 high 不保證可行，回傳值也無意義。用最小、最大與相鄰邊界測試 off-by-one。</p><ul><li>先 assert feasible(high)</li><li>測答案等於 low 或 high</li><li>整數與浮點二分終止條件不同</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>二分前先寫出可行性序列的形狀。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>答案二分依賴單調 predicate。</li><li><span>02</span>搜尋範圍必須包住答案。</li><li><span>03</span>總成本是判定成本乘二分次數。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>high 不可行有何問題？</summary><p>區間可能根本不含答案。</p></details><details><summary>什麼情況不能答案二分？</summary><p>可行性隨 x 非單調變化時。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>求最小可在 D 天運完貨物的容量。</li><li>為平方根整數下界設計 feasible。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-16/06-greedy-vs-dp.html"><span>← 上一課</span><b>Greedy vs DP 選型</b></a><a class="next" href="../unit-16/08-boundaries-and-tests.html"><span>下一課 →</span><b>邊界條件與測試案例</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

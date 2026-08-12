@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="以硬幣找零練習區分特定幣制與一般問題，建立系統化尋找反例的習慣。" />
+    <meta name="theme-color" content="#101713" />
+    <title>12.07 硬幣陷阱與反例｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-12-greedy.html">UNIT 12 / LESSON 07</a><p class="eyebrow">Greedy Algorithms</p><h1>硬幣陷阱與反例</h1><p class="lesson-deck">優先拿最大硬幣有時成功，有時會錯得很自然</p><div class="lesson-meta"><span>中階</span><span>28 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>以硬幣找零練習區分特定幣制與一般問題，建立系統化尋找反例的習慣。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>實作最大面額優先策略</li><li>找出非標準幣制反例</li><li>理解正確性不能由常見幣制外推</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>最大硬幣優先是候選策略</h2><p>最少硬幣找零的直覺是每次拿不超過剩餘金額的最大面額。這在某些規範幣制（Canonical Coin System）正確，但面額只是任意正整數時不保證最佳；因此它是要驗證的策略，不是問題定義附帶的定理。</p><ul><li>面額先由大到小排序</li><li>每步盡量取目前最大面額</li><li>可能得到可行但非最少硬幣解</li><li>某些金額也可能根本無法組成</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>簡短程式也可能回答錯目標</h2><p>下例用 divmod 一次取得某面額可拿數量與餘數，時間主要是排序 O(m log m)，m 為面額數。它能快速產生貪心解，但回傳 None 只代表這條貪心路徑失敗，未必代表不存在其他組合。</p><ul><li>局部規則是最大面額優先</li><li>輸出前要確認 remainder 為 0</li><li>演算法速度快不等於答案最佳</li></ul><figure class="code-block"><figcaption><span>時間 O(m log m + c)，c 為輸出硬幣數；一般幣制不保證最少。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def greedy_change(coins, amount):
+    used = []
+    for coin in sorted(coins, reverse=True):
+        count, amount = divmod(amount, coin)
+        used.extend([coin] * count)
+    return used if amount == 0 else None</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>一個小反例推翻通用主張</h2><p>面額 [1,3,4]、金額 6 時，貪心先拿 4，再拿兩個 1，共三枚；最佳解是 3 + 3，只需兩枚。要找反例，可先窮舉小金額，比較貪心與 BFS 或 DP 的最佳數量，特別測試大面額略高於多個中面額組合的情形。</p><ul><li>一個反例足以否定所有輸入皆正確</li><li>不要從 [1,5,10,25] 的成功直接外推</li><li>有限測試不能取代證明</li><li>一般最少硬幣可用 DP 求解</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>最大面額優先只在某些幣制保證最佳</li><li><span>02</span>可行解、貪心解與最佳解是不同概念</li><li><span>03</span>小規模窮舉對照是尋找反例的有效方法</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>[1,3,4] 湊 6 時，貪心和最佳解分別用幾枚？</summary><p>貪心用 4+1+1 共三枚；最佳用 3+3 共兩枚。</p></details><details><summary>greedy_change 回傳 None，能證明該金額無法用硬幣組成嗎？</summary><p>不能。它只證明最大面額優先的這條路失敗，其他組合仍可能成功。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>列舉面額 [1,3,4] 的金額 1 到 12，比較貪心與最佳硬幣數。</li><li>設計一組不含面額 1 的幣制，使貪心失敗但存在可行組合。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-12/06-huffman-coding.html"><span>← 上一課</span><b>Huffman Coding</b></a><a class="next" href="../unit-12/08-exchange-arguments-and-greedy-vs-dp.html"><span>下一課 →</span><b>交換論證與 Greedy vs DP</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

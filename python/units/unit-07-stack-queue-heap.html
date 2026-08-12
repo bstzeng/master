@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="從元素進出的順序出發，學習 Stack、Queue、Priority Queue、Heap，以及能在線性時間解題的單調結構。" />
+    <meta name="theme-color" content="#101713" />
+    <title>單元 07｜Stack、Queue 與 Heap｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../styles.css" />
+    <script src="../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../index.html">課程總覽</a>
+        <a class="is-active" href="../phase-1.html">第一階段</a>
+        <a class="" href="../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <section class="unit-hero">
+        <div><a class="breadcrumb" href="../phase-1.html">PHASE 01 / UNIT 07</a><p class="eyebrow">Stacks, Queues, and Heaps</p><h1>Stack、Queue 與 Heap</h1><p class="hero-intro">從元素進出的順序出發，學習 Stack、Queue、Priority Queue、Heap，以及能在線性時間解題的單調結構。</p><a class="primary-button" href="#lessons">查看 8 堂課 <span>↓</span></a></div>
+        <aside><span>UNIT</span><strong>07</strong><p>能辨認後進先出、先進先出、依優先權取出與滑動區間問題，選用合適結構並分析操作複雜度。</p></aside>
+      </section>
+      <section class="unit-info"><div><p class="section-index">BEFORE YOU START</p><h2>先備知識</h2><ul><li>熟悉 Python List、Tuple 與 Dictionary</li><li>會使用 collections.deque 與基本迴圈</li><li>理解 Big O 與攤銷複雜度</li></ul></div><div><p class="section-index">AFTER THIS UNIT</p><h2>完成後你能夠</h2><ul><li>使用 List 或 deque 實作 Stack 與 Queue</li><li>以 Stack 解決括號配對與巢狀結構問題</li><li>以 heapq 實作 Priority Queue、Min Heap 與 Max Heap</li><li>使用 Heap 解決 Top K 題型</li><li>辨認並實作 Monotonic Stack 與 Monotonic Queue</li></ul></div></section>
+      <section class="lesson-section" id="lessons"><div class="section-head"><div><p class="section-index">LESSON LIST</p><h2>本單元課程</h2></div><p>建議依序閱讀；每一課約 15–25 分鐘，讀完後先回答理解題，再挑一題延伸練習。</p></div><div class="lesson-list">
+        <article class="lesson-row">
+          <span>01</span>
+          <div><p>入門 · 25 分鐘</p><h3>Stack：後進先出的解題模型</h3><b>從基本操作到常見使用時機</b></div>
+          <a href="../lessons/unit-07/01-stack-lifo.html" aria-label="開始課程：Stack：後進先出的解題模型">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>02</span>
+          <div><p>入門 · 25 分鐘</p><h3>經典題型：括號配對</h3><b>用 Stack 驗證巢狀結構</b></div>
+          <a href="../lessons/unit-07/02-balanced-parentheses.html" aria-label="開始課程：經典題型：括號配對">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>03</span>
+          <div><p>入門 · 25 分鐘</p><h3>Queue 與 deque：先進先出</h3><b>用雙端佇列避免線性位移</b></div>
+          <a href="../lessons/unit-07/03-queue-and-deque.html" aria-label="開始課程：Queue 與 deque：先進先出">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>04</span>
+          <div><p>基礎 · 30 分鐘</p><h3>Priority Queue：依優先權取出</h3><b>讓重要工作先處理，而非最早工作先處理</b></div>
+          <a href="../lessons/unit-07/04-priority-queue.html" aria-label="開始課程：Priority Queue：依優先權取出">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>05</span>
+          <div><p>基礎 · 30 分鐘</p><h3>Min Heap 與 Max Heap</h3><b>理解堆積規則、建堆與 Python 慣例</b></div>
+          <a href="../lessons/unit-07/05-min-and-max-heaps.html" aria-label="開始課程：Min Heap 與 Max Heap">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>06</span>
+          <div><p>基礎 · 30 分鐘</p><h3>Top K：只保留真正需要的候選</h3><b>以固定大小 Heap 避免完整排序</b></div>
+          <a href="../lessons/unit-07/06-top-k-with-heaps.html" aria-label="開始課程：Top K：只保留真正需要的候選">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>07</span>
+          <div><p>進階 · 35 分鐘</p><h3>Monotonic Stack：尋找下一個更大元素</h3><b>丟棄不可能再成為答案的候選</b></div>
+          <a href="../lessons/unit-07/07-monotonic-stack.html" aria-label="開始課程：Monotonic Stack：尋找下一個更大元素">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>08</span>
+          <div><p>進階 · 40 分鐘</p><h3>Monotonic Queue 與滑動區間最大值</h3><b>在線性時間維護視窗內的最佳候選</b></div>
+          <a href="../lessons/unit-07/08-monotonic-queue-sliding-maximum.html" aria-label="開始課程：Monotonic Queue 與滑動區間最大值">開始閱讀 →</a>
+        </article></div></section>
+      <nav class="bottom-nav"><a href="../phase-1.html">← 返回第 1 階段大綱</a><a href="../index.html">完整學習地圖 ↑</a></nav></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

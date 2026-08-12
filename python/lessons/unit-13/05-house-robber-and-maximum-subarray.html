@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="比較兩種經典一維最佳化狀態。" />
+    <meta name="theme-color" content="#101713" />
+    <title>13.05 House Robber 與 Maximum Subarray｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-13-dynamic-programming.html">UNIT 13 / LESSON 05</a><p class="eyebrow">Dynamic Programming</p><h1>House Robber 與 Maximum Subarray</h1><p class="lesson-deck">選或不選，以及以目前位置結尾</p><div class="lesson-meta"><span>基礎</span><span>35 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>比較兩種經典一維最佳化狀態。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>推導不相鄰選取</li><li>理解 Kadane 狀態</li><li>完成 O(1) 空間優化</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>House Robber</h2><p>令 dp[i] 為前 i 間房可取得的最大金額；最後一間可不偷，或偷並加上前 i-2 間最佳值。兩選項取較大者。</p><ul><li>不偷：dp[i-1]</li><li>偷：dp[i-2]+money</li><li>transition：max(不偷,偷)</li></ul><figure class="code-block"><figcaption><span>時間 O(n)、空間 O(1)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def house_robber(values):
+    two_back = one_back = 0
+    for value in values:
+        two_back, one_back = one_back, max(one_back, two_back + value)
+    return one_back</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Maximum Subarray</h2><p>令 ending_here 為必須以目前元素結尾的最大連續和；要嘛由目前元素重新開始，要嘛延續前一段。全域答案另以 best 保存。</p><ul><li>狀態必須強調「以此結尾」</li><li>轉移：max(value, ending_here+value)</li><li>全負數時不能把初值設為 0</li></ul><figure class="code-block"><figcaption><span>Kadane 演算法時間 O(n)、空間 O(1)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def maximum_subarray(numbers):
+    if not numbers: raise ValueError(&quot;不可為空&quot;)
+    ending_here = best = numbers[0]
+    for value in numbers[1:]:
+        ending_here = max(value, ending_here + value)
+        best = max(best, ending_here)
+    return best</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>狀態語意比較</h2><p>House Robber 的狀態回答前綴整體最佳，Maximum Subarray 則需限制結尾以維持連續性。空間都能壓縮，因為未來只依賴固定數量前態。</p><ul><li>選取限制決定 state 要記什麼</li><li>全域最佳與局部結尾最佳不可混用</li><li>若需回傳索引，額外保存選擇或起點</li></ul><div class="table-wrap"><table><thead><tr><th>題目</th><th>核心狀態</th><th>時間／空間</th></tr></thead><tbody><tr><td>House Robber</td><td>前 i 個最佳</td><td>O(n)/O(1)</td></tr><tr><td>Max Subarray</td><td>以 i 結尾最佳</td><td>O(n)/O(1)</td></tr></tbody></table></div></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>不相鄰選取比較選與不選。</li><li><span>02</span>連續子陣列需定義以目前位置結尾。</li><li><span>03</span>只依賴固定前態時可降至 O(1) 空間。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>Maximum Subarray 為何另需 best？</summary><p>ending_here 只代表目前位置結尾，整體最佳可能早已出現。</p></details><details><summary>House Robber 偷目前房為何加 two_back？</summary><p>相鄰房不能同偷，所以只能接前兩個位置之前的最佳值。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>回傳 House Robber 實際選取的房屋索引。</li><li>修改 Kadane 回傳最佳區間左右端點。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-13/04-fibonacci-and-climbing-stairs.html"><span>← 上一課</span><b>Fibonacci 與 Climbing Stairs</b></a><a class="next" href="../unit-13/06-coin-change-and-word-break.html"><span>下一課 →</span><b>Coin Change 與 Word Break</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

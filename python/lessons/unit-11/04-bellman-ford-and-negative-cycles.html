@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="透過重複鬆弛所有邊處理負權重，並以額外一輪偵測從起點可達的負環。" />
+    <meta name="theme-color" content="#101713" />
+    <title>11.04 Bellman–Ford 與負環偵測｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-11-classic-graph-algorithms.html">UNIT 11 / LESSON 04</a><p class="eyebrow">Classic Graph Algorithms</p><h1>Bellman–Ford 與負環偵測</h1><p class="lesson-deck">允許負邊並辨認沒有有限答案的情況</p><div class="lesson-meta"><span>進階</span><span>40 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>透過重複鬆弛所有邊處理負權重，並以額外一輪偵測從起點可達的負環。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>解釋重複 V - 1 輪鬆弛的理由</li><li>實作 Bellman–Ford 與提早停止</li><li>偵測起點可達的負權重循環</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>負權重與重複鬆弛</h2><p>Bellman–Ford 不貪心固定頂點，而是反覆掃描所有有向邊並鬆弛。若不存在可達負環，任何最短簡單路徑最多含 V - 1 條邊，因此完成 V - 1 輪後，改善資訊必能沿整條路徑傳播到終點。</p><ul><li>邊格式通常為 (source, target, weight)</li><li>distance[start] = 0，其餘無限大</li><li>每輪依序嘗試所有 E 條邊</li><li>可以處理正邊、零權邊與負邊</li></ul><figure class="code-block"><figcaption><span>一輪會把目前可達資訊沿邊向前傳播。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>edges = [
+    (&quot;A&quot;, &quot;B&quot;, 4),
+    (&quot;A&quot;, &quot;C&quot;, 5),
+    (&quot;B&quot;, &quot;C&quot;, -2),
+]
+distance = {&quot;A&quot;: 0, &quot;B&quot;: float(&quot;inf&quot;), &quot;C&quot;: float(&quot;inf&quot;)}
+for source, target, weight in edges:
+    if distance[source] != float(&quot;inf&quot;):
+        distance[target] = min(distance[target], distance[source] + weight)
+print(distance)</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>提早停止與複雜度</h2><p>若某一整輪沒有任何距離更新，後續輪次也不會再改變，可提早結束；最壞仍需 O(VE) 時間，距離與前驅表使用 O(V) 額外空間。相較 Dijkstra 較慢，但換來處理負邊及偵測負環的能力。</p><ul><li>updated 旗標記錄本輪是否改善</li><li>不可達 source 不應拿無限大做鬆弛</li><li>最壞時間 O(VE)</li><li>額外空間 O(V)，若含邊列表則總儲存 O(V + E)</li></ul><figure class="code-block"><figcaption><span>沒有更新時提早停止的 Bellman–Ford 主流程。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def bellman_ford(vertices, edges, start):
+    distance = {vertex: float(&quot;inf&quot;) for vertex in vertices}
+    previous = {vertex: None for vertex in vertices}
+    distance[start] = 0
+
+    for _ in range(len(vertices) - 1):
+        updated = False
+        for source, target, weight in edges:
+            if distance[source] == float(&quot;inf&quot;):
+                continue
+            candidate = distance[source] + weight
+            if candidate &lt; distance[target]:
+                distance[target] = candidate
+                previous[target] = source
+                updated = True
+        if not updated:
+            break
+    return distance, previous</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>第 V 輪與可達負環</h2><p>完成 V - 1 輪後再掃描一次，若仍有可達邊能改善距離，代表存在從起點可達的負權重循環；沿該循環反覆繞行會讓成本無限下降，因此相關頂點沒有有限最短路徑。與起點不連通的負環不會影響該單源查詢。</p><ul><li>額外一輪仍可鬆弛即偵測到負環</li><li>必須確認 source 從起點可達</li><li>負環使最短距離可趨向負無限</li><li>只回傳 False 可能不足，實務上可標記受影響頂點</li></ul><figure class="code-block"><figcaption><span>應在 Bellman–Ford 的 V - 1 輪之後呼叫負環檢查。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def has_reachable_negative_cycle(distance, edges):
+    for source, target, weight in edges:
+        if distance[source] == float(&quot;inf&quot;):
+            continue
+        if distance[source] + weight &lt; distance[target]:
+            return True
+    return False
+
+cycle_edges = [(&quot;A&quot;, &quot;B&quot;, 1), (&quot;B&quot;, &quot;C&quot;, -3), (&quot;C&quot;, &quot;B&quot;, 1)]</code></pre></figure><aside class="concept-callout"><b>KEY IDEA</b><p>負邊不等於負環；只有總權重為負且可重複繞行的循環才讓最短路徑失去有限答案。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Bellman–Ford 以最多 V - 1 輪全邊鬆弛處理負權重</li><li><span>02</span>最壞時間 O(VE)，一輪沒有更新時可以提早停止</li><li><span>03</span>額外一輪仍可改善表示存在從起點可達的負環</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為何 Bellman–Ford 最多需要 V - 1 輪？</summary><p>沒有重複頂點的最短簡單路徑最多含 V - 1 條邊，每輪能讓正確距離至少向前傳播一條邊。</p></details><details><summary>圖中有負環，就一定要對任何起點回報失敗嗎？</summary><p>不一定；單源最短路徑只受從該起點可達的負環影響。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>實作回傳 (distance, previous, has_negative_cycle) 的完整函式。</li><li>設計一張含負邊但沒有負環的圖，手動驗證 Bellman–Ford 結果。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-11/03-heap-optimized-dijkstra.html"><span>← 上一課</span><b>Heap 優化 Dijkstra</b></a><a class="next" href="../unit-11/05-floyd-warshall.html"><span>下一課 →</span><b>Floyd–Warshall：全點對最短路徑</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

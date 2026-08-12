@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="使用 Kahn 演算法與 DFS 後序完成 DAG 拓樸排序，並偵測不可能的依賴環。" />
+    <meta name="theme-color" content="#101713" />
+    <title>10.07 Topological Sort 拓樸排序｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-10-graph-basics.html">UNIT 10 / LESSON 07</a><p class="eyebrow">Graph Fundamentals</p><h1>Topological Sort 拓樸排序</h1><p class="lesson-deck">把先決條件排成合法線性順序</p><div class="lesson-meta"><span>基礎</span><span>35 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>使用 Kahn 演算法與 DFS 後序完成 DAG 拓樸排序，並偵測不可能的依賴環。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>定義 DAG 與拓樸順序</li><li>實作 Kahn 入度法</li><li>理解 DFS 後序法</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>只有 DAG 才有拓樸順序</h2><p>拓樸排序（Topological Sort）將有向圖頂點排成序列，使每條 u→v 都讓 u 出現在 v 前面。只有有向無環圖（DAG）存在拓樸順序，且答案可能不唯一。</p><ul><li>課程先修：先修課排在後續課前</li><li>工作依賴：前置工作先完成</li><li>若存在有向環，環中沒有可先開始的頂點</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>拓樸排序不是把頂點依編號排序，而是滿足所有方向限制。</p></aside></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Kahn 演算法：反覆移除入度零</h2><p>Kahn 演算法先計算每個頂點入度，把所有入度零頂點加入 Queue。每取出一點就視為移除其出邊，降低鄰居入度；新變成零的鄰居即可排入答案。</p><ul><li>入度零表示目前沒有未完成先決條件</li><li>處理 u→v 時執行 indegree[v] -= 1</li><li>答案長度小於 V 表示剩餘頂點位於環中</li></ul><figure class="code-block"><figcaption><span>空結果可表示圖含環；若空圖也是合法輸入，可改回傳額外狀態。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>from collections import deque
+
+def topological_sort(graph):
+    indegree = {v: 0 for v in graph}
+    for source in graph:
+        for target in graph[source]: indegree[target] += 1
+    queue = deque(v for v in graph if indegree[v] == 0)
+    order = []
+    while queue:
+        vertex = queue.popleft(); order.append(vertex)
+        for neighbor in graph[vertex]:
+            indegree[neighbor] -= 1
+            if indegree[neighbor] == 0: queue.append(neighbor)
+    return order if len(order) == len(graph) else []</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>DFS 後序與複雜度</h2><p>另一作法在 DFS 完成頂點所有後繼後才把它加入答案，最後反轉完成順序；同時需用三色狀態偵測環。兩種方法在鄰接表下皆為 O(V+E) 時間、O(V) 額外空間。</p><ul><li>Kahn 適合直接觀察入度與可執行工作</li><li>DFS 法利用完成時間的反序</li><li>需要字典序最小答案時，可將零入度 Queue 改為 min-heap</li></ul><figure class="code-block"><figcaption><span>驗證器檢查每條有向邊的來源是否出現在目的地之前。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def is_valid_topological_order(graph, order):
+    if len(order) != len(graph): return False
+    position = {vertex: index for index, vertex in enumerate(order)}
+    return all(position[u] &lt; position[v] for u in graph for v in graph[u])</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>拓樸排序只適用於 DAG，答案可能不唯一。</li><li><span>02</span>Kahn 演算法反覆處理入度為零的頂點。</li><li><span>03</span>若無法輸出全部 V 個頂點，就表示存在有向環。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>Kahn 演算法最後只輸出 V-2 個頂點代表什麼？</summary><p>剩餘頂點無法降到入度零，表示圖中存在有向環，因此沒有完整拓樸順序。</p></details><details><summary>一張 DAG 可能有兩種正確拓樸順序嗎？</summary><p>可能，當兩個頂點之間沒有依賴限制時，它們的相對順序可互換。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>給定課程先修邊，輸出任一合法修課順序。</li><li>修改 Kahn 演算法使用 heapq，輸出字典序最小的合法順序。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-10/06-cycle-detection.html"><span>← 上一課</span><b>Cycle Detection 環偵測</b></a><a class="next" href="../unit-10/08-union-find.html"><span>下一課 →</span><b>Union-Find 並查集</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

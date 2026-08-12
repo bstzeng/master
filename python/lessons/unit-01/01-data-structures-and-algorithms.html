@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="理解資料結構、演算法與 Python 程式碼各自扮演的角色，並練習把需求說成明確的問題。" />
+    <meta name="theme-color" content="#101713" />
+    <title>01.01 資料結構與演算法是什麼｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-01-algorithm-foundations.html">UNIT 01 / LESSON 01</a><p class="eyebrow">Algorithm Foundations</p><h1>資料結構與演算法是什麼</h1><p class="lesson-deck">把資料的擺放方式與處理步驟分開思考</p><div class="lesson-meta"><span>入門</span><span>18 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>理解資料結構、演算法與 Python 程式碼各自扮演的角色，並練習把需求說成明確的問題。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明資料結構與演算法的差異</li><li>辨認問題的輸入、輸出與限制</li><li>理解同一問題可以有多種解法</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>資料需要有組織</h2><p>資料結構（Data Structure）是組織資料的方式，會影響我們能多快新增、刪除、搜尋或依序讀取資料。Python 的 list、dict 與 set 就是不同取捨的資料結構；選擇結構前，應先問最常進行哪一種操作。</p><ul><li>list 適合保留順序並用索引存取</li><li>dict 適合用鍵快速找到對應值</li><li>set 適合判斷某個值是否已出現</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>演算法是一組可執行步驟</h2><p>演算法（Algorithm）是把輸入轉換成預期輸出的有限步驟，而且每一步都必須清楚到可以執行。食譜像演算法，但程式問題還需要明確界定輸入、輸出與限制，才有辦法檢查答案。</p><ul><li>輸入：演算法收到哪些資料</li><li>輸出：完成後必須交出什麼結果</li><li>限制：資料量、資料型態與特殊情況</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>Python 程式碼是演算法的一種實作；同一個演算法也能用其他程式語言表達。</p></aside></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>先從可行解法開始比較</h2><p>尋找名單中的姓名，可以逐筆檢查，也可以先排序後使用二分搜尋。兩者都可能正確，但建置成本、查詢速度與資料是否常變動不同；演算法學習的核心就是看懂這些取捨。</p><ul><li>先確認解法能處理所有合法輸入</li><li>再比較執行時間與額外記憶體</li><li>最後考量程式是否容易維護</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>資料結構決定資料如何組織與操作</li><li><span>02</span>演算法是從輸入得到輸出的有限明確步驟</li><li><span>03</span>選擇解法時要同時考量限制與常見操作</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>用學號查學生資料時，為什麼 dict 通常比 list 更自然？</summary><p>dict 直接表達學號到學生資料的對應，平均情況下也能以 O(1) 查找；list 通常要逐筆比對而需 O(n)。</p></details><details><summary>演算法和 Python 程式碼是同一件事嗎？</summary><p>不是。演算法描述解題步驟，Python 程式碼則是用特定語言實作那些步驟。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>為通訊錄列出輸入、輸出、限制，以及最常使用的兩種操作。</li><li>比較用 list 與 set 儲存已看過帳號時，各自適合的情境。</li></ol></section>
+        <nav class="lesson-nav"><a class="next" href="../unit-01/02-correctness-efficiency-readability.html"><span>下一課 →</span><b>正確性、效率與可讀性</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

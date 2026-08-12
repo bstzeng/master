@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="理解 AVL Tree 與 Red-Black Tree 如何用旋轉及額外規則維持對數高度。" />
+    <meta name="theme-color" content="#101713" />
+    <title>09.06 平衡樹的基本概念｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-09-trees.html">UNIT 09 / LESSON 06</a><p class="eyebrow">Tree Data Structures</p><h1>平衡樹的基本概念</h1><p class="lesson-deck">限制高度，讓搜尋成本不因插入順序失控</p><div class="lesson-meta"><span>中階</span><span>28 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>理解 AVL Tree 與 Red-Black Tree 如何用旋轉及額外規則維持對數高度。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>解釋平衡與操作成本的關係</li><li>理解旋轉保留 BST 次序</li><li>比較 AVL 與 Red-Black Tree 的取捨</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>平衡的目標是控制高度</h2><p>平衡搜尋樹（Balanced Search Tree）不是要求左右節點數完全相等，而是透過規則讓高度保持 O(log n)。如此查找、插入與刪除即使面對不利順序，也能避免普通 BST 退化成長鏈。</p><ul><li>核心保證是高度 O(log n)</li><li>維護平衡需要額外資訊與調整</li><li>平衡條件依樹種而不同</li><li>不是所有二元樹都需要排序性</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>旋轉改形狀但保留順序</h2><p>左旋與右旋是局部重新連接節點的操作，能降低過高一側，同時保持中序鍵順序不變。AVL Tree 以左右子樹高度差限制平衡，插入或刪除後依失衡形態使用單旋或雙旋。</p><ul><li>旋轉只修改常數個連結</li><li>局部旋轉本身為 O(1)</li><li>更新高度或平衡因子不可遺漏</li><li>LL、RR、LR、RL 對應不同修正</li></ul></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>AVL 與 Red-Black 的取捨</h2><p>AVL Tree 平衡較嚴格，通常查找深度較小，但更新可能需要較多調整；Red-Black Tree 使用顏色與路徑規則維持較寬鬆的 O(log n) 高度，常用於通用有序映射。Python 內建 dict 是雜湊表，並未直接提供這兩種樹。</p><ul><li>AVL：高度控制較嚴格</li><li>Red-Black：更新與查找取折衷</li><li>兩者核心操作最壞 O(log n)</li><li>需要排序鍵、範圍查詢時樹比雜湊表更自然</li></ul><div class="table-wrap"><table><thead><tr><th>結構</th><th>平衡方式</th><th>主要特性</th></tr></thead><tbody><tr><td>普通 BST</td><td>無</td><td>可能退化 O(n)</td></tr><tr><td>AVL Tree</td><td>高度差</td><td>較嚴格平衡</td></tr><tr><td>Red-Black Tree</td><td>顏色與路徑規則</td><td>較少嚴格但仍 O(log n)</td></tr></tbody></table></div></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>平衡樹的重點是將高度限制在 O(log n)</li><li><span>02</span>旋轉能調整局部形狀而不破壞 BST 中序順序</li><li><span>03</span>AVL 與 Red-Black 使用不同規則交換查找高度與更新成本</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>平衡樹是否要求每個節點左右子樹節點數完全相同？</summary><p>不要求；不同平衡樹用不同條件控制高度，目標是避免高度退化。</p></details><details><summary>旋轉為何不破壞 BST 排序？</summary><p>它只改變局部父子關係，並依鍵的大小重新連接，使該區域中序走訪順序保持不變。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>畫出 1、2、3 形成的右斜 BST，再手動畫一次左旋。</li><li>比較需要頻繁範圍查詢與只需精確鍵查找時，平衡樹和 dict 的適用性。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-09/05-binary-search-tree-operations.html"><span>← 上一課</span><b>BST 查找、插入與刪除</b></a><a class="next" href="../unit-09/07-trie.html"><span>下一課 →</span><b>Trie 字典樹</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

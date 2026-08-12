@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="以字元邊建立 Trie，實作新增、完整單字與前綴查詢，分析長度與空間成本。" />
+    <meta name="theme-color" content="#101713" />
+    <title>09.07 Trie 字典樹｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-09-trees.html">UNIT 09 / LESSON 07</a><p class="eyebrow">Tree Data Structures</p><h1>Trie 字典樹</h1><p class="lesson-deck">讓共同前綴共用路徑</p><div class="lesson-meta"><span>中階</span><span>32 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>以字元邊建立 Trie，實作新增、完整單字與前綴查詢，分析長度與空間成本。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明 Trie 的前綴共享</li><li>實作 insert、search 與 starts_with</li><li>比較 Trie 與 set 的適用情境</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>路徑代表前綴</h2><p>Trie 又稱 Prefix Tree，從根沿字元邊走過的路徑代表字串前綴，因此 apple 與 app 共用 a、p、p 節點。節點需要終止標記區分完整單字和單純前綴，否則插入 apple 後會誤認 app 已存在。</p><ul><li>根節點不代表特定字元</li><li>孩子映射由下一字元找到節點</li><li>is_end 標記完整單字</li><li>共同前綴只儲存一次路徑</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>新增與查詢走相同路徑</h2><p>insert 遇到不存在的字元就建立節點；search 走完整個單字後還要檢查 is_end；starts_with 只需確認前綴路徑存在。若字串長度為 L，三者時間皆 O(L)，與 Trie 中總單字數沒有直接線性關係。</p><ul><li>setdefault 可取得或建立孩子</li><li>完整查找需要 is_end</li><li>前綴查找不要求終止標記</li><li>空字串政策應由介面明確定義</li></ul><figure class="code-block"><figcaption><span>字串長度 L 時，新增與查詢時間 O(L)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>class TrieNode:
+    def __init__(self):
+        self.children = {}
+        self.is_end = False
+
+class Trie:
+    def __init__(self): self.root = TrieNode()
+    def insert(self, word):
+        node = self.root
+        for char in word:
+            node = node.children.setdefault(char, TrieNode())
+        node.is_end = True
+    def _walk(self, text):
+        node = self.root
+        for char in text:
+            if char not in node.children: return None
+            node = node.children[char]
+        return node
+    def search(self, word):
+        node = self._walk(word)
+        return node is not None and node.is_end
+    def starts_with(self, prefix):
+        return self._walk(prefix) is not None</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>前綴能力換取節點成本</h2><p>Trie 適合自動完成、字典前綴篩選與逐字搜尋，但每個節點的 dict 會帶來可觀的物件成本。最壞節點數接近所有字串長度總和 S，空間 O(S)；若只需精確成員查找，set 通常更簡單且記憶體常更實用。</p><ul><li>前綴列舉是 Trie 的核心優勢</li><li>空間最壞 O(S)</li><li>字元集與節點表示影響常數成本</li><li>精確查找可先考慮 set</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Trie 讓多個字串共用相同前綴路徑</li><li><span>02</span>is_end 用來區分完整單字與前綴</li><li><span>03</span>操作時間 O(L)，但可能使用接近總字元數的節點空間</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>插入 apple 後，starts_with(&#x27;app&#x27;) 與 search(&#x27;app&#x27;) 各是什麼？</summary><p>starts_with 為 True，search 為 False，除非 app 也曾被完整插入並標記 is_end。</p></details><details><summary>只需判斷完整帳號是否存在，為何 set 可能優於 Trie？</summary><p>set 介面更直接，平均精確查找快，且不需為每個前綴建立節點物件。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>擴充 Trie，列出指定 prefix 下最多 k 個完整單字。</li><li>設計刪除單字流程，思考何時能安全移除不再共用的節點。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-09/06-balanced-trees.html"><span>← 上一課</span><b>平衡樹的基本概念</b></a><a class="next" href="../unit-09/08-heap-as-a-tree.html"><span>下一課 →</span><b>Heap 與樹的關係</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="比較閉區間與半開區間，學會檢查終止條件、更新規則與邊界測試。" />
+    <meta name="theme-color" content="#101713" />
+    <title>04.03 二分搜尋的邊界處理｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-04-searching.html">UNIT 04 / LESSON 03</a><p class="eyebrow">Searching Algorithms</p><h1>二分搜尋的邊界處理</h1><p class="lesson-deck">用區間語意與不變量消除 off-by-one 錯誤</p><div class="lesson-meta"><span>中階</span><span>25 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>比較閉區間與半開區間，學會檢查終止條件、更新規則與邊界測試。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明區間不變量</li><li>一致使用閉區間或半開區間模板</li><li>以系統化測試找出邊界錯誤</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>先決定區間代表什麼</h2><p>二分搜尋常見錯誤不是不懂減半，而是混用不同區間的規則。閉區間 [left, right] 包含兩端；半開區間 [left, right) 不包含 right，兩者的初始值、迴圈條件與更新方式必須成套使用。</p><ul><li>閉區間初始 right = n - 1</li><li>半開區間初始 right = n</li><li>不要從一個模板拿條件、從另一個模板拿更新式</li></ul><div class="table-wrap"><table><thead><tr><th>項目</th><th>閉區間 [left, right]</th><th>半開區間 [left, right)</th></tr></thead><tbody><tr><td>初始值</td><td>0, n - 1</td><td>0, n</td></tr><tr><td>非空條件</td><td>left &lt;= right</td><td>left &lt; right</td></tr><tr><td>排除 middle 後縮右界</td><td>right = middle - 1</td><td>right = middle</td></tr><tr><td>終止時</td><td>left &gt; right</td><td>left == right</td></tr></tbody></table></div></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>不變量是除錯工具</h2><p>可以把不變量寫成『若答案存在，它一定還在目前候選區間』。每次比較後，只排除已證明不可能的部分，並確認區間嚴格縮小；若某條分支仍保留 middle，就要特別確認不會永遠卡在同一位置。</p><ul><li>更新前說明哪一段已不可能有答案</li><li>更新後確認候選範圍變小</li><li>整數除法方向會影響 middle 的位置</li><li>Python 不會整數溢位，但公式仍應保持清楚</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>看到無限迴圈時，先檢查某個分支是否把 left 或 right 留在原值。</p></aside></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>用最小案例壓測邊界</h2><p>空序列、單一元素、兩個元素、目標在最左或最右，最容易暴露 off-by-one 錯誤。含重複值時，基本二分搜尋只保證找到任一相符位置；若需求是第一個或最後一個位置，必須改用下一課的邊界搜尋。</p><ul><li>測試空序列與單一元素</li><li>測試目標小於最小值或大於最大值</li><li>測試兩元素序列的左右位置</li><li>先寫清楚重複值的預期結果</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>二分搜尋的初始值、條件與更新必須符合同一區間語意</li><li><span>02</span>候選區間不變量能指導正確更新並保證終止</li><li><span>03</span>最小與邊界案例是發現 off-by-one 錯誤的有效工具</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>半開區間 [left, right) 為何初始 right 可以等於 len(items)？</summary><p>因為 right 本來就不包含在候選區間內；有效索引仍只到 len(items) - 1。</p></details><details><summary>更新式寫成 left = middle，可能出現什麼問題？</summary><p>若 middle 恰好等於 left，區間不會縮小而可能無限迴圈；除非模板與取中點方式特別設計，通常應排除 middle。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>選擇閉區間或半開區間模板，逐項寫出初始值、條件、左右更新與終止狀態。</li><li>故意將 binary_search 的 right = middle - 1 改成 right = middle，找出一個會卡住或產生錯誤的測試。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-04/02-binary-search.html"><span>← 上一課</span><b>Binary Search 二分搜尋</b></a><a class="next" href="../unit-04/04-lower-and-upper-bound.html"><span>下一課 →</span><b>Lower Bound 與 Upper Bound</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

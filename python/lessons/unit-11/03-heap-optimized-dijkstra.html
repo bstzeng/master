@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="以 heapq 取代線性選最小值，使用延遲刪除處理過期項目，完成常用 Dijkstra 模板。" />
+    <meta name="theme-color" content="#101713" />
+    <title>11.03 Heap 優化 Dijkstra｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-11-classic-graph-algorithms.html">UNIT 11 / LESSON 03</a><p class="eyebrow">Classic Graph Algorithms</p><h1>Heap 優化 Dijkstra</h1><p class="lesson-deck">在稀疏圖上有效率地取得最近頂點</p><div class="lesson-meta"><span>進階</span><span>40 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>以 heapq 取代線性選最小值，使用延遲刪除處理過期項目，完成常用 Dijkstra 模板。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>以 Min Heap 保存暫定距離與頂點</li><li>正確忽略過期的 Heap 項目</li><li>分析 O((V + E) log V) 複雜度</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>Min Heap 取代線性搜尋</h2><p>把 (distance, vertex) 放入 Min Heap，就能以 O(log V) 取得目前暫定距離最小的候選，而非每輪掃描 O(V)。每次鬆弛成功就推入新距離，特別適合 E 遠小於 V² 的稀疏圖。</p><ul><li>Heap 根是最小暫定距離</li><li>起點項目為 (0, start)</li><li>鬆弛成功才 heappush</li><li>頂點若不可互相比較，可加入序號 tie-breaker</li></ul><figure class="code-block"><figcaption><span>Heap 先依距離欄位選出下一個擴張頂點。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>import heapq
+
+frontier = [(0, &quot;A&quot;)]
+heapq.heappush(frontier, (4, &quot;B&quot;))
+heapq.heappush(frontier, (1, &quot;C&quot;))
+print(heapq.heappop(frontier))  # (0, &#x27;A&#x27;)</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>過期項目與延遲刪除</h2><p>heapq 不提供有效率的 decrease-key，所以某頂點距離改善時直接推入新項目，舊項目留到取出時再判斷。若 popped_distance 不等於目前 distance[vertex]，它就是過期候選，可直接 continue。</p><ul><li>同一頂點可能同時有多筆 Heap 項目</li><li>distance 字典保存唯一最新答案</li><li>過期項目不展開鄰居</li><li>這種策略稱為 Lazy Deletion（延遲刪除）</li></ul><figure class="code-block"><figcaption><span>距離不一致代表更短版本已在之後加入 Heap。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>current_distance, vertex = (7, &quot;B&quot;)
+distance = {&quot;B&quot;: 3}
+if current_distance != distance[vertex]:
+    print(&quot;忽略過期項目&quot;)</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>完整模板與複雜度</h2><p>使用鄰接表與二元 Heap 時，每條邊最多觸發一次成功更新並付出對數成本，常寫為 O((V + E) log V) 或 O(E log V)，空間 O(V + E)。負邊仍然禁止；若只查單一終點，可在該終點以最新距離彈出時提早停止。</p><ul><li>適用：非負權重的稀疏圖</li><li>時間：O((V + E) log V)</li><li>空間：O(V + E)，Heap 可能含過期項目</li><li>終點第一次以有效距離 pop 時已確定最短</li></ul><div class="table-wrap"><table><thead><tr><th>版本</th><th>選最小值</th><th>總時間</th><th>較適合</th></tr></thead><tbody><tr><td>線性掃描</td><td>O(V)</td><td>O(V² + E)</td><td>稠密圖或教學</td></tr><tr><td>二元 Heap</td><td>O(log V)</td><td>O((V + E) log V)</td><td>稀疏圖</td></tr></tbody></table></div><figure class="code-block"><figcaption><span>Heap Dijkstra 的標準 Python 3 實作。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>import heapq
+
+def dijkstra(graph, start):
+    distance = {vertex: float(&quot;inf&quot;) for vertex in graph}
+    previous = {vertex: None for vertex in graph}
+    distance[start] = 0
+    heap = [(0, start)]
+
+    while heap:
+        current_distance, current = heapq.heappop(heap)
+        if current_distance != distance[current]:
+            continue
+        for neighbor, weight in graph[current]:
+            if weight &lt; 0:
+                raise ValueError(&quot;Dijkstra 不接受負權重&quot;)
+            candidate = current_distance + weight
+            if candidate &lt; distance[neighbor]:
+                distance[neighbor] = candidate
+                previous[neighbor] = current
+                heapq.heappush(heap, (candidate, neighbor))
+    return distance, previous</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Min Heap 將取得最小暫定距離的成本降為對數時間</li><li><span>02</span>距離改善時推入新項目，取出後以 distance 判斷並忽略過期項目</li><li><span>03</span>Heap Dijkstra 適用非負稀疏圖，時間為 O((V + E) log V)</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為何距離改善時不必從 Heap 中搜尋並刪除舊項目？</summary><p>可直接推入新項目，舊項目取出時以最新 distance 判斷為過期並忽略，避免 O(n) 搜尋。</p></details><details><summary>何時能安全地對單一 target 提早停止？</summary><p>target 以等於 distance[target] 的有效距離從 Heap 彈出時，其最短距離已固定。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>將 O(V²) Dijkstra 改寫為 heapq 版本並比較兩者輸出。</li><li>在模板中加入 target 與路徑重建，回傳最短成本及完整路線。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-11/02-dijkstra-foundations.html"><span>← 上一課</span><b>Dijkstra：以最小暫定距離擴張</b></a><a class="next" href="../unit-11/04-bellman-ford-and-negative-cycles.html"><span>下一課 →</span><b>Bellman–Ford 與負環偵測</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

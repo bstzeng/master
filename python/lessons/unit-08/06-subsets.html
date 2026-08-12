@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="以二元決策樹產生所有子集合，並處理含重複元素的輸入。" />
+    <meta name="theme-color" content="#101713" />
+    <title>08.06 子集合｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-08-recursion-divide-backtracking.html">UNIT 08 / LESSON 06</a><p class="eyebrow">Recursion, Divide and Conquer, and Backtracking</p><h1>子集合</h1><p class="lesson-deck">每個元素都有選與不選兩條分支</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>以二元決策樹產生所有子集合，並處理含重複元素的輸入。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>把子集合建模成選與不選</li><li>寫出索引型回溯</li><li>使用排序與同層跳過完成去重</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>選或不選形成 2ⁿ 個答案</h2><p>對 n 個互異元素，每個元素都可選入或略過，因此共有 2ⁿ 個子集合。回溯的 index 表示目前正在決定哪個元素，走到 index == n 時就完成一個答案。</p><ul><li>左分支：不選 numbers[index]</li><li>右分支：選 numbers[index]</li><li>空集合也是合法子集合</li></ul><figure class="code-block"><figcaption><span>兩條分支完整覆蓋每個元素的選與不選。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def subsets(numbers):
+    results = []
+    path = []
+
+    def backtrack(index):
+        if index == len(numbers):
+            results.append(path.copy())
+            return
+        backtrack(index + 1)
+        path.append(numbers[index])
+        backtrack(index + 1)
+        path.pop()
+
+    backtrack(0)
+    return results
+
+print(subsets([1, 2]))  # [[], [2], [1], [1, 2]]</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>另一種寫法：每個節點都是答案</h2><p>也可在進入每個狀態時立刻保存 path，再從 start 起選擇下一個元素。這種寫法自然產生不同長度的組合，且 start 保證索引只向右前進。</p><ul><li>每個 path 本身就是一個子集合</li><li>下一層從 index + 1 開始，避免重複選同一位置</li><li>輸出順序不同不影響子集合內容正確性</li></ul><figure class="code-block"><figcaption><span>start 寫法之後也能直接延伸到固定長度組合。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def subsets_by_start(numbers):
+    results = []
+    path = []
+    def backtrack(start):
+        results.append(path.copy())
+        for index in range(start, len(numbers)):
+            path.append(numbers[index])
+            backtrack(index + 1)
+            path.pop()
+    backtrack(0)
+    return results</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>重複元素與成本</h2><p>輸入含重複值時，先排序，並在同一層跳過與前一個相同的候選，可避免產生重複子集合。互異元素版本有 2ⁿ 個答案，每次複製最多 n 個元素，因此產生全部結果的時間為 O(n·2ⁿ)，遞迴工作空間 O(n)。</p><ul><li>排序讓相同值相鄰，便於偵測</li><li>條件 index &gt; start 表示只跳過同一層的重複候選</li><li>不能無條件跳過相同值，否則會漏掉 [2, 2] 之類答案</li></ul><figure class="code-block"><figcaption><span>同層去重保留不同選取數量，排除交換相同值造成的重複。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def unique_subsets(numbers):
+    numbers = sorted(numbers)
+    results, path = [], []
+    def backtrack(start):
+        results.append(path.copy())
+        for index in range(start, len(numbers)):
+            if index &gt; start and numbers[index] == numbers[index - 1]:
+                continue
+            path.append(numbers[index])
+            backtrack(index + 1)
+            path.pop()
+    backtrack(0)
+    return results</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>子集合可建模為每個元素選或不選的二元決策。</li><li><span>02</span>start 索引能避免回頭選取並自然產生各種長度。</li><li><span>03</span>排序加同層跳過可處理重複輸入而不漏解。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>n 個互異元素為什麼有 2ⁿ 個子集合？</summary><p>每個元素各有選與不選兩種獨立決定，n 個元素的組合數為 2×2×…×2=2ⁿ。</p></details><details><summary>unique_subsets 為何使用 index &gt; start，而不是 index &gt; 0？</summary><p>只應跳過同一決策層的重複候選；更深層仍可再次選取另一個相同值，形成合法的 [2, 2]。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>產生 [1, 2, 3] 的所有子集合，並依長度分組。</li><li>只產生元素總和不超過 target 的子集合，加入可安全使用的剪枝。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-08/05-backtracking-framework.html"><span>← 上一課</span><b>Backtracking 回溯框架</b></a><a class="next" href="../unit-08/07-permutations-and-combinations.html"><span>下一課 →</span><b>排列與組合</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

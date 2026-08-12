@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="理解 Lazy Propagation 如何避免逐點更新，並以操作需求比較 Prefix、Fenwick 與 Segment Tree。" />
+    <meta name="theme-color" content="#101713" />
+    <title>15.04 Lazy Propagation 與 Fenwick 比較｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-15-advanced-data-structures.html">UNIT 15 / LESSON 04</a><p class="eyebrow">Advanced Data Structures</p><h1>Lazy Propagation 與 Fenwick 比較</h1><p class="lesson-deck">整段更新時先記帳，需要深入時再下推</p><div class="lesson-meta"><span>進階</span><span>34 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>理解 Lazy Propagation 如何避免逐點更新，並以操作需求比較 Prefix、Fenwick 與 Segment Tree。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>解釋延遲標記語意</li><li>讀懂區間加總虛擬碼</li><li>完成三種結構的選型</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>逐點更新會失去線段樹優勢</h2><p>若要把 [left,right) 每個值都加 delta，逐點呼叫 set 需 O(k log n)。Lazy Propagation 在查詢區間完整覆蓋節點時，直接更新該節點摘要並留下 lazy 標記，只有之後部分進入孩子時才把影響下推。</p><ul><li>完整覆蓋時不再深入</li><li>lazy 記錄孩子尚未套用的更新</li><li>部分覆蓋前先 push</li><li>區間更新與查詢可達 O(log n)</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>摘要必須反映整段影響</h2><p>區間加法搭配區間和時，長度 length 的節點總和要增加 delta*length，lazy[node] 再累加 delta。下推時把標記套到兩個孩子並清空父標記；更新規則與聚合不同時，標記的組合方式也要重新設計。</p><ul><li>apply(node,delta)：更新摘要與標記</li><li>push(node)：把標記傳給孩子</li><li>update/query 遇部分覆蓋前先 push</li><li>區間指定值與區間加法的標記不可直接混用</li></ul><figure class="code-block"><figcaption><span>核心虛擬碼；push 必須依孩子區間長度套用並清除 lazy[node]。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def range_add(node, seg_left, seg_right, query_left, query_right, delta):
+    if query_right &lt;= seg_left or seg_right &lt;= query_left:
+        return
+    if query_left &lt;= seg_left and seg_right &lt;= query_right:
+        tree[node] += delta * (seg_right - seg_left)
+        lazy[node] += delta
+        return
+    push(node, seg_left, seg_right)
+    middle = (seg_left + seg_right) // 2
+    range_add(node * 2, seg_left, middle, query_left, query_right, delta)
+    range_add(node * 2 + 1, middle, seg_right, query_left, query_right, delta)
+    tree[node] = tree[node * 2] + tree[node * 2 + 1]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>用最小足夠結構</h2><p>靜態區間和選 Prefix Sum 最簡單；點加與區間和可選 Fenwick；需要 min/max、自訂節點或一般區間更新時選 Segment Tree，區間更新頻繁再加入 Lazy。若只需區間加與點查詢，也可用差分概念的 Fenwick，不能只按名稱決策。</p><ul><li>Prefix：靜態、查詢 O(1)</li><li>Fenwick：精簡、點更新與前綴 O(log n)</li><li>Segment：聚合彈性、常數較大</li><li>Lazy Segment：區間更新強但除錯成本最高</li></ul><div class="table-wrap"><table><thead><tr><th>需求</th><th>建議結構</th><th>代表成本</th></tr></thead><tbody><tr><td>靜態區間和</td><td>Prefix Sum</td><td>查詢 O(1)</td></tr><tr><td>點加＋區間和</td><td>Fenwick</td><td>更新/查詢 O(log n)</td></tr><tr><td>點更新＋區間 min</td><td>Segment Tree</td><td>更新/查詢 O(log n)</td></tr><tr><td>區間加＋區間和</td><td>Lazy Segment Tree</td><td>更新/查詢 O(log n)</td></tr></tbody></table></div></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Lazy 標記把完整覆蓋的區間更新延後到必要時下推</li><li><span>02</span>節點摘要與標記都必須正確反映整段更新</li><li><span>03</span>選型應使用最小足夠結構，避免不必要複雜度</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>區間和節點長度為 8，整段加 3 時 tree[node] 增加多少？</summary><p>增加 3×8=24，因為節點摘要是八個元素的總和。</p></details><details><summary>只需動態點加與區間和，為何 Fenwick 常優於 Lazy Segment Tree？</summary><p>Fenwick 已能以 O(log n) 完成且程式短、常數小；Lazy 的額外彈性在此沒有被使用。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>寫出 push 對左右孩子摘要及 lazy 標記的更新步驟。</li><li>為四種自訂工作負載選 Prefix、Fenwick、Segment 或 Lazy Segment 並說明。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-15/03-segment-tree.html"><span>← 上一課</span><b>Segment Tree 線段樹</b></a><a class="next" href="../unit-15/05-lru-and-lfu-cache.html"><span>下一課 →</span><b>LRU Cache 與 LFU Cache</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

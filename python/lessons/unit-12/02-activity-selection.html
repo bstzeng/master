@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="解決單一資源下最大化不重疊活動數量，並以交換直覺說明最早結束規則。" />
+    <meta name="theme-color" content="#101713" />
+    <title>12.02 活動選擇與區間排程｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-12-greedy.html">UNIT 12 / LESSON 02</a><p class="eyebrow">Greedy Algorithms</p><h1>活動選擇與區間排程</h1><p class="lesson-deck">選最早結束的相容活動，為未來保留空間</p><div class="lesson-meta"><span>中階</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>解決單一資源下最大化不重疊活動數量，並以交換直覺說明最早結束規則。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>定義區間相容性</li><li>實作最早結束策略</li><li>說明交換論證與複雜度</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>目標是活動數量，不是總時長</h2><p>活動選擇問題給定多個開始與結束時間，要在單一資源上選最多個互不重疊活動。本課把區間視為半開 [start, end)，所以新活動 start &gt;= 前一活動 end 即相容；若題目端點規則不同，判斷式也要改。</p><ul><li>候選是所有活動</li><li>限制是選中區間不得重疊</li><li>目標是最大化活動個數</li><li>半開區間允許一個結束時另一個開始</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>依結束時間排序後掃描</h2><p>先按結束時間升冪，遇到與目前選擇相容的活動就加入，並更新 last_end。最早結束的活動占用未來時間最少；排序 O(n log n)，掃描 O(n)，結果另需 O(n) 空間。</p><ul><li>排序鍵是 end 而非 duration</li><li>第一次相容活動直接選</li><li>只需記錄上次選擇的結束時間</li></ul><figure class="code-block"><figcaption><span>時間 O(n log n)，輸出以外工作空間依排序實作而定。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def select_activities(activities):
+    chosen = []
+    last_end = float(&quot;-inf&quot;)
+    for start, end in sorted(activities, key=lambda item: item[1]):
+        if start &gt;= last_end:
+            chosen.append((start, end))
+            last_end = end
+    return chosen</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>為什麼最早結束是安全的</h2><p>取任一最佳方案的第一個活動；若它不是全體最早結束者，就用最早結束活動替換它。替換後不會更晚結束，因此原方案後續所有活動仍相容，活動數量不減；所以至少有一個最佳方案包含貪心首選，剩餘區間再套用同樣推論。</p><ul><li>交換不破壞可行性</li><li>交換不減少活動數</li><li>選擇後只保留開始時間不早於結束點的活動</li><li>若活動有不同價值，此規則不再保證最佳</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>最大化活動數量時應選最早結束的相容區間</li><li><span>02</span>排序主導時間為 O(n log n)</li><li><span>03</span>交換論證顯示貪心首選能取代最佳解首項而不變差</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>選持續時間最短的活動，能保證選到最多活動嗎？</summary><p>不能。短活動可能位於中間而阻擋前後兩個相容活動；正確規則是最早結束。</p></details><details><summary>若目標改成最大總收益，最早結束策略仍正確嗎？</summary><p>不一定。高收益長活動可能優於多個低收益活動，通常要用加權區間排程 DP。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>手動安排 [(1,4),(3,5),(0,6),(5,7),(8,9),(5,9)] 並追蹤 last_end。</li><li>找一組反例證明『最早開始』不保證選到最多活動。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-12/01-greedy-core-and-recognition.html"><span>← 上一課</span><b>貪心核心與題型辨認</b></a><a class="next" href="../unit-12/03-merge-intervals.html"><span>下一課 →</span><b>區間合併</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

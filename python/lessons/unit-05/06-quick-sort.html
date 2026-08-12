@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="理解 pivot 與 partition，實作清楚版本並比較平均效率與最壞退化。" />
+    <meta name="theme-color" content="#101713" />
+    <title>05.06 Quick Sort 快速排序｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-05-sorting.html">UNIT 05 / LESSON 06</a><p class="eyebrow">Sorting Algorithms</p><h1>Quick Sort 快速排序</h1><p class="lesson-deck">用 pivot 分割，小的放左、大的放右</p><div class="lesson-meta"><span>中階</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>理解 pivot 與 partition，實作清楚版本並比較平均效率與最壞退化。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>描述 partition 後的保證</li><li>實作快速排序</li><li>說明 pivot 對複雜度的影響</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>Partition 建立分界</h2><p>快速排序（Quick Sort）選擇一個 pivot，將其餘元素分到較小、相等與較大區域，再遞迴排序兩側。關鍵不是 pivot 一開始在哪裡，而是 partition 後能確保左側不大於它、右側不小於它。</p><ul><li>pivot 是分割基準</li><li>每層 partition 走訪目前子序列</li><li>遞迴只需繼續處理左右區域</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>先用清楚版本理解流程</h2><p>下例建立三個新 list，容易閱讀並能妥善處理大量重複值；它不是原地版本，但相等元素依走訪順序收集，因此可維持此實作的穩定性。常見原地雙指標 partition 節省空間，通常不穩定。</p><ul><li>三向分割避免對相等值反覆遞迴</li><li>此版本配置額外 list</li><li>原地版本的交換會改變相同鍵順序</li></ul><figure class="code-block"><figcaption><span>三向分割的教學版本；回傳新 list，不是原地排序。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def quick_sort(items):
+    if len(items) &lt; 2:
+        return items[:]
+    pivot = items[len(items) // 2]
+    lower = [value for value in items if value &lt; pivot]
+    equal = [value for value in items if value == pivot]
+    higher = [value for value in items if value &gt; pivot]
+    return quick_sort(lower) + equal + quick_sort(higher)</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>平衡分割決定效率</h2><p>若 pivot 常把資料分得接近一半，遞迴深度 O(log n)，平均時間 O(n log n)；若每次只分出一個元素，深度 O(n)，最壞時間 O(n²)。隨機 pivot、三數取中與三向分割能降低退化風險，但不改變理論最壞上界。</p><ul><li>平均時間 O(n log n)</li><li>最壞時間 O(n²)</li><li>典型原地版本平均堆疊 O(log n)</li><li>標準原地版本通常不穩定</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>快速排序以 pivot 將資料分區後遞迴</li><li><span>02</span>分割是否平衡決定遞迴深度</li><li><span>03</span>平均效率良好，但標準原地版本不穩定且最壞 O(n²)</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>快速排序何時會退化成 O(n²)？</summary><p>當 pivot 反覆造成極不平衡分割，例如每次只排除一個元素時，遞迴深度會達 O(n)。</p></details><details><summary>教學程式為何另建 equal 區域？</summary><p>它一次收集所有等於 pivot 的元素，避免大量重複值繼續進入不必要的遞迴。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>比較第一個、中間與隨機 pivot 在已排序輸入上的分割結果。</li><li>實作回傳 lower、equal、higher 的 partition 函式並單獨測試。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-05/05-merge-sort.html"><span>← 上一課</span><b>Merge Sort 合併排序</b></a><a class="next" href="../unit-05/07-heap-and-counting-sort.html"><span>下一課 →</span><b>Heap Sort 與 Counting Sort</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

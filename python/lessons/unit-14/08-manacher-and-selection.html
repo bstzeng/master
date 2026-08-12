@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="理解 Manacher 的轉換字串、鏡像半徑與右邊界，並依精確匹配、前綴及回文需求完成選型。" />
+    <meta name="theme-color" content="#101713" />
+    <title>14.08 Manacher 概念與字串演算法選型｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-14-string-algorithms.html">UNIT 14 / LESSON 08</a><p class="eyebrow">Classic String Algorithms</p><h1>Manacher 概念與字串演算法選型</h1><p class="lesson-deck">重用鏡像半徑，完成整體方法比較</p><div class="lesson-meta"><span>進階</span><span>45 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>理解 Manacher 的轉換字串、鏡像半徑與右邊界，並依精確匹配、前綴及回文需求完成選型。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明統一奇偶回文中心的方法</li><li>理解鏡像半徑如何減少重複擴展</li><li>比較本單元演算法的條件與複雜度</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>分隔符統一奇偶中心</h2><p>Manacher 演算法先在字元間插入分隔符並加上哨兵，使原本奇數與偶數長回文都成為轉換字串中的奇數中心回文。p[i] 記錄以 i 為中心的回文半徑，最大半徑也對應原字串中的最長回文長度。</p><ul><li>例如 &#x27;abba&#x27; 可轉成 &#x27;^#a#b#b#a#$&#x27;</li><li>^ 與 $ 哨兵避免邊界檢查</li><li>每個位置都有單一中心表示</li><li>p[i] 保存可向外延伸的半徑</li></ul><figure class="code-block"><figcaption><span>轉換後不必分開處理奇數與偶數回文。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def transform(text):
+    return &quot;^#&quot; + &quot;#&quot;.join(text) + &quot;#$&quot;
+
+print(transform(&quot;abba&quot;))  # ^#a#b#b#a#$</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>鏡像、中心與最右邊界</h2><p>演算法維護目前已知最靠右回文的 center 與 right；若 i 在 right 內，可用 mirror = 2 * center - i 的半徑作為安全起點，再從尚未確認的位置向外擴展。當 i + p[i] 超過 right，就更新 center 與 right，讓後續中心重用資訊。</p><ul><li>mirror = 2 * center - i</li><li>初值 p[i] = min(right - i, p[mirror])</li><li>再比較轉換字串兩側並擴展</li><li>更新最右回文後保存新的 center、right</li></ul><figure class="code-block"><figcaption><span>鏡像提供已知半徑起點，總擴展工作被限制在線性範圍。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def manacher_longest(text):
+    transformed = &quot;^#&quot; + &quot;#&quot;.join(text) + &quot;#$&quot;
+    radius = [0] * len(transformed)
+    center = right = 0
+    for index in range(1, len(transformed) - 1):
+        mirror = 2 * center - index
+        if index &lt; right:
+            radius[index] = min(right - index, radius[mirror])
+        while transformed[index + 1 + radius[index]] == transformed[index - 1 - radius[index]]:
+            radius[index] += 1
+        if index + radius[index] &gt; right:
+            center, right = index, index + radius[index]
+    best_center = max(range(len(radius)), key=radius.__getitem__)
+    best_length = radius[best_center]
+    start = (best_center - best_length) // 2
+    return text[start:start + best_length]
+
+print(manacher_longest(&quot;cbbd&quot;))  # bb</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>複雜度、限制與總選型</h2><p>Manacher 將最長回文子字串降為 O(n) 時間與 O(n) 空間，但索引轉換與正確性推理較複雜，只有輸入很大或明確需要線性界線時才值得採用。一般應先按問題類型選方法，再在正確性、資料規模與實作成本之間取捨。</p><ul><li>單一精確 Pattern：KMP 或內建搜尋</li><li>雜湊視窗、多 Pattern 指紋：Rabin–Karp</li><li>字典前綴與 Autocomplete：Trie</li><li>最長回文：中心擴展；極大輸入再考慮 Manacher</li></ul><div class="table-wrap"><table><thead><tr><th>方法</th><th>核心用途</th><th>時間</th><th>主要限制</th></tr></thead><tbody><tr><td>暴力匹配</td><td>小型單 Pattern</td><td>O(nm)</td><td>可能重複比較</td></tr><tr><td>KMP</td><td>確定線性精確匹配</td><td>O(n + m)</td><td>需建立 LPS</td></tr><tr><td>Rabin–Karp</td><td>Rolling Hash 匹配</td><td>平均 O(n + m)</td><td>碰撞時需驗證</td></tr><tr><td>Trie</td><td>多單字與前綴</td><td>每次 O(L)</td><td>節點空間較大</td></tr><tr><td>中心擴展</td><td>最長回文子字串</td><td>O(n²)</td><td>大輸入較慢</td></tr><tr><td>Manacher</td><td>線性最長回文</td><td>O(n)</td><td>實作與索引較複雜</td></tr></tbody></table></div><aside class="concept-callout"><b>KEY IDEA</b><p>Manacher 是重要的線性技巧，但多數產品程式與面試情境先寫對中心擴展更有價值。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Manacher 以分隔符統一奇偶中心，並用鏡像半徑重用已知資訊</li><li><span>02</span>最長回文子字串可達 O(n) 時間與 O(n) 空間，但實作較複雜</li><li><span>03</span>字串演算法選型先看匹配數量、前綴需求、碰撞容忍度與回文目標</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>Manacher 為何要插入分隔符？</summary><p>它把奇數與偶數長回文統一成轉換字串中的奇數中心形式，簡化半徑與鏡像處理。</p></details><details><summary>只要在一般短字串中找最長回文，應優先選 Manacher 嗎？</summary><p>通常不必；中心擴展 O(n²) 但空間 O(1)、程式更短且易驗證，輸入極大或要求線性界線時再選 Manacher。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>手動追蹤 &#x27;abba&#x27; 轉換字串中 radius、center 與 right 的變化。</li><li>為搜尋敏感詞、自動完成、文字抄襲片段與最長回文四種需求選演算法並說明限制。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-14/07-palindromes-expansion-and-dp.html"><span>← 上一課</span><b>回文：中心擴展與動態規劃</b></a><a class="next" href="../unit-15/01-range-query-and-prefix-limits.html"><span>下一課 →</span><b>Range Query 與 Prefix Sum 的限制</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="從單一括號擴充到多種括號，建立以 Stack 處理巢狀配對的標準模板。" />
+    <meta name="theme-color" content="#101713" />
+    <title>07.02 經典題型：括號配對｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-07-stack-queue-heap.html">UNIT 07 / LESSON 02</a><p class="eyebrow">Stacks, Queues, and Heaps</p><h1>經典題型：括號配對</h1><p class="lesson-deck">用 Stack 驗證巢狀結構</p><div class="lesson-meta"><span>入門</span><span>25 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>從單一括號擴充到多種括號，建立以 Stack 處理巢狀配對的標準模板。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>解釋括號配對為何需要 Stack</li><li>正確處理不同括號種類與錯誤邊界</li><li>分析一次走訪解法的成本</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>最近開啟者必須先關閉</h2><p>合法巢狀括號具有 LIFO 性質：最近讀到但尚未關閉的左括號，必須由下一個右括號先配對。讀到左括號時推入 Stack，讀到右括號時與頂端比較，正好符合這個規則。</p><ul><li>左括號代表尚未完成的結構</li><li>右括號只能關閉 Stack 頂端</li><li>右括號出現時 Stack 為空，立即失敗</li><li>掃描結束後 Stack 必須為空</li></ul><figure class="code-block"><figcaption><span>只有一種括號時可用計數；多種類型則需要 Stack 保留種類。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def valid_round_parentheses(text):
+    balance = 0
+    for character in text:
+        if character == &quot;(&quot;:
+            balance += 1
+        elif character == &quot;)&quot;:
+            balance -= 1
+            if balance &lt; 0:
+                return False
+    return balance == 0</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>多種類括號模板</h2><p>可用 Dictionary 把右括號映射到預期左括號，讓判斷規則集中而容易擴充。每個符號最多被推入與彈出一次，所以長度 n 的字串可在 O(n) 時間處理，最壞需要 O(n) Stack 空間。</p><ul><li>mapping 保存右括號到左括號的關係</li><li>頂端不相符時立即回傳 False</li><li>走訪時間 O(n)</li><li>全為左括號時額外空間 O(n)</li></ul><figure class="code-block"><figcaption><span>多種括號的通用 Stack 寫法。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def is_balanced(text):
+    expected_open = {&quot;)&quot;: &quot;(&quot;, &quot;]&quot;: &quot;[&quot;, &quot;}&quot;: &quot;{&quot;}
+    stack = []
+    for character in text:
+        if character in expected_open.values():
+            stack.append(character)
+        elif character in expected_open:
+            if not stack or stack.pop() != expected_open[character]:
+                return False
+    return not stack
+
+print(is_balanced(&quot;{[()]}&quot;))  # True</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>邊界條件與延伸</h2><p>常見錯誤是只比較左右括號數量，卻忽略順序與種類；例如 ([)] 數量相同但巢狀關係錯誤。相同模板還能解析 HTML 標籤、計算巢狀深度，或找出未配對符號的位置。</p><ul><li>空字串通常視為合法</li><li>測試提早出現的右括號</li><li>測試種類交錯與掃描後仍有左括號</li><li>需要位置時可在 Stack 保存 (符號, 索引)</li></ul><div class="table-wrap"><table><thead><tr><th>輸入</th><th>結果</th><th>原因</th></tr></thead><tbody><tr><td>{[]}</td><td>合法</td><td>種類與順序皆正確</td></tr><tr><td>([)]</td><td>不合法</td><td>右括號與頂端種類不符</td></tr><tr><td>(()</td><td>不合法</td><td>掃描後仍有未關閉項目</td></tr><tr><td>][</td><td>不合法</td><td>右括號出現時 Stack 為空</td></tr></tbody></table></div></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>括號配對的核心是最近開啟的結構必須最先關閉</li><li><span>02</span>多種括號以 Stack 配合映射表可在 O(n) 時間完成</li><li><span>03</span>右括號時先檢查空 Stack，結束時再檢查 Stack 是否清空</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼只計算左右括號數量不足以判斷合法？</summary><p>數量不能保證關閉順序與種類，例如 ([)] 的數量相等但配對順序錯誤。</p></details><details><summary>括號字串全部是左括號時，空間複雜度是多少？</summary><p>O(n)，因為所有左括號都會留在 Stack 中。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>修改演算法，回傳第一個未配對括號的索引，而不只回傳布林值。</li><li>計算合法括號字串的最大巢狀深度。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-07/01-stack-lifo.html"><span>← 上一課</span><b>Stack：後進先出的解題模型</b></a><a class="next" href="../unit-07/03-queue-and-deque.html"><span>下一課 →</span><b>Queue 與 deque：先進先出</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

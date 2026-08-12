@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="建立物品與容量狀態，理解一維壓縮必須反向更新。" />
+    <meta name="theme-color" content="#101713" />
+    <title>13.09 0/1 Knapsack｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-13-dynamic-programming.html">UNIT 13 / LESSON 09</a><p class="eyebrow">Dynamic Programming</p><h1>0/1 Knapsack</h1><p class="lesson-deck">每件物品最多選一次</p><div class="lesson-meta"><span>進階</span><span>40 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>建立物品與容量狀態，理解一維壓縮必須反向更新。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>推導 0/1 背包</li><li>完成二維與一維轉移</li><li>說明容量反向迴圈</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>選或不選物品</h2><p>dp[i][c] 表示只看前 i 件、容量 c 的最大價值。第 i 件可不選沿用上方，或在容量足夠時選取並加上前 i-1 件的剩餘容量答案。</p><ul><li>不選：dp[i-1][c]</li><li>選：dp[i-1][c-weight]+value</li><li>兩者取 max</li></ul><figure class="code-block"><figcaption><span>時間 O(nC)、空間 O(nC)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def knapsack_2d(weights, values, capacity):
+    n=len(weights); dp=[[0]*(capacity+1) for _ in range(n+1)]
+    for i in range(1,n+1):
+        for c in range(capacity+1):
+            dp[i][c]=dp[i-1][c]
+            if weights[i-1]&lt;=c: dp[i][c]=max(dp[i][c],dp[i-1][c-weights[i-1]]+values[i-1])
+    return dp[n][capacity]</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>一維反向容量</h2><p>壓縮成 dp[c] 後，容量必須由大到小更新，讓 dp[c-weight] 仍代表上一輪、尚未使用目前物品的答案。正向更新會讓同一物品在同輪被重複使用。</p><ul><li>外層逐物品</li><li>內層 c 從 capacity 降到 weight</li><li>空間降為 O(C)</li></ul><figure class="code-block"><figcaption><span>時間 O(nC)、空間 O(C)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def knapsack(weights, values, capacity):
+    dp=[0]*(capacity+1)
+    for weight,value in zip(weights,values):
+        for c in range(capacity,weight-1,-1):
+            dp[c]=max(dp[c],dp[c-weight]+value)
+    return dp[capacity]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>狀態與限制</h2><p>0/1 的名稱表示每件物品只能取零或一次，容量 C 是偽多項式維度。若要重建物品清單，可保留二維表或額外決策資訊。</p><ul><li>容量不是輸入位數而是數值大小</li><li>恰好裝滿時不可達狀態需設為負無限</li><li>價值最大與方案數的聚合不同</li></ul><div class="table-wrap"><table><thead><tr><th>版本</th><th>容量方向</th><th>空間</th></tr></thead><tbody><tr><td>二維</td><td>皆可依前列</td><td>O(nC)</td></tr><tr><td>一維 0/1</td><td>由大到小</td><td>O(C)</td></tr></tbody></table></div></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>0/1 背包比較選與不選目前物品。</li><li><span>02</span>一維壓縮必須反向更新容量。</li><li><span>03</span>重建選項通常需保留更多狀態。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>容量正向更新會發生什麼？</summary><p>本輪新值會再次被讀取，使同一物品可能選多次。</p></details><details><summary>O(nC) 為何稱偽多項式？</summary><p>C 是容量數值，而非表示 C 所需的位元數。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>回傳 0/1 背包選中的物品索引。</li><li>改為價值恰好達標時最小重量。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-13/08-lcs-and-edit-distance.html"><span>← 上一課</span><b>LCS 與 Edit Distance</b></a><a class="next" href="../unit-13/10-complete-knapsack-and-subset-sum.html"><span>下一課 →</span><b>Complete Knapsack、Subset Sum 與 Partition</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

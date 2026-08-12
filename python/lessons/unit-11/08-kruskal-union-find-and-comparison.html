@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="以 Union-Find 判斷安全邊並實作 Kruskal，最後比較本單元所有最短路徑與 MST 演算法。" />
+    <meta name="theme-color" content="#101713" />
+    <title>11.08 Kruskal、Union-Find 與總比較｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-11-classic-graph-algorithms.html">UNIT 11 / LESSON 08</a><p class="eyebrow">Classic Graph Algorithms</p><h1>Kruskal、Union-Find 與總比較</h1><p class="lesson-deck">按邊排序、避免循環並完成選型</p><div class="lesson-meta"><span>進階</span><span>45 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>以 Union-Find 判斷安全邊並實作 Kruskal，最後比較本單元所有最短路徑與 MST 演算法。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>使用 Union-Find 維護連通分量</li><li>實作 Kruskal 並分析 O(E log E)</li><li>依問題條件完成演算法總選型</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>由最輕邊合併分量</h2><p>Kruskal 將所有無向邊依權重由小到大排序，若某邊兩端位於不同連通分量，就接受它並合併分量；若已在同一分量，加入會形成循環，因此跳過。收集 V - 1 條邊即可提早停止。</p><ul><li>全域排序所有邊</li><li>不同分量的最輕邊是安全邊</li><li>同分量邊會形成循環</li><li>不連通時得到 Minimum Spanning Forest</li></ul><figure class="code-block"><figcaption><span>Kruskal 的第一步是將邊依權重排序。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>edges = [(1, &quot;A&quot;, &quot;B&quot;), (2, &quot;B&quot;, &quot;C&quot;), (3, &quot;A&quot;, &quot;C&quot;)]
+for weight, source, target in sorted(edges):
+    print(weight, source, target)</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Union-Find 與完整實作</h2><p>Disjoint Set Union（DSU／Union-Find）以 find 找代表、union 合併集合；路徑壓縮與按大小合併讓單次操作攤銷接近 O(1)，精確為 O(α(V))。Kruskal 的主成本來自排序，因此總時間 O(E log E)，額外空間 O(V)。</p><ul><li>find(u) == find(v) 表示加入會成環</li><li>Path Compression 壓平查找路徑</li><li>Union by Size 將小樹接到大樹</li><li>排序主導總時間 O(E log E)</li></ul><figure class="code-block"><figcaption><span>union 回傳 False 時代表兩端早已連通，該邊必須跳過。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>class UnionFind:
+    def __init__(self, vertices):
+        self.parent = {v: v for v in vertices}
+        self.size = {v: 1 for v in vertices}
+
+    def find(self, vertex):
+        if self.parent[vertex] != vertex:
+            self.parent[vertex] = self.find(self.parent[vertex])
+        return self.parent[vertex]
+
+    def union(self, first, second):
+        root_a, root_b = self.find(first), self.find(second)
+        if root_a == root_b:
+            return False
+        if self.size[root_a] &lt; self.size[root_b]:
+            root_a, root_b = root_b, root_a
+        self.parent[root_b] = root_a
+        self.size[root_a] += self.size[root_b]
+        return True
+
+def kruskal(vertices, edges):
+    groups = UnionFind(vertices)
+    mst_edges = []
+    total = 0
+    for weight, source, target in sorted(edges):
+        if groups.union(source, target):
+            mst_edges.append((source, target, weight))
+            total += weight
+            if len(mst_edges) == len(vertices) - 1:
+                break
+    return mst_edges, total</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>經典圖論演算法總選型</h2><p>先分清目標是路徑距離還是整體連線成本，再依負邊、查詢範圍與圖表示選擇演算法。Kruskal 適合已有邊列表或稀疏圖，Prim 適合鄰接表與連續擴張；Dijkstra、Bellman–Ford、Floyd–Warshall 則回答不同條件下的最短路徑。</p><ul><li>單源非負：Heap Dijkstra</li><li>單源含負邊或需負環檢測：Bellman–Ford</li><li>全點對且 V 不大：Floyd–Warshall</li><li>MST：鄰接表偏 Prim，邊列表偏 Kruskal</li></ul><div class="table-wrap"><table><thead><tr><th>演算法</th><th>問題</th><th>時間</th><th>條件與限制</th></tr></thead><tbody><tr><td>Dijkstra + Heap</td><td>單源最短路徑</td><td>O((V+E) log V)</td><td>不可有負邊</td></tr><tr><td>Bellman–Ford</td><td>單源最短路徑</td><td>O(VE)</td><td>可負邊、可測可達負環</td></tr><tr><td>Floyd–Warshall</td><td>全點對最短路徑</td><td>O(V³)</td><td>O(V²) 空間，可測負環</td></tr><tr><td>Prim + Heap</td><td>MST</td><td>O(E log V)</td><td>無向連通、鄰接表</td></tr><tr><td>Kruskal + DSU</td><td>MST</td><td>O(E log E)</td><td>無向圖、邊列表</td></tr></tbody></table></div><aside class="concept-callout"><b>KEY IDEA</b><p>若題目條件不滿足演算法前提，跑出數字也不代表答案正確；選型檢查必須先於實作。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Kruskal 由小到大檢查邊，以 Union-Find 跳過會形成循環的邊</li><li><span>02</span>排序主導 Kruskal 的 O(E log E)，DSU 操作攤銷接近常數</li><li><span>03</span>先區分最短路徑與 MST，再依負邊、查詢範圍與資料表示選擇演算法</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>Kruskal 為何需要 Union-Find？</summary><p>它要快速判斷邊兩端是否已在同一連通分量；若是，加入該邊就會形成循環。</p></details><details><summary>一張大型稀疏非負圖只問單一起點距離，應選 Floyd–Warshall 嗎？</summary><p>通常不選；Heap Dijkstra 的 O((V+E) log V) 更符合單源與稀疏條件，Floyd–Warshall 會做 O(V³) 的全點對計算。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>用 Kruskal 計算與上一課 Prim 相同圖的 MST，確認總權重一致。</li><li>為六個圖論問題逐一寫出目標、輸入限制、選用演算法與複雜度。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-11/07-prim-algorithm.html"><span>← 上一課</span><b>Prim：從一個頂點擴張 MST</b></a><a class="next" href="../unit-12/01-greedy-core-and-recognition.html"><span>下一課 →</span><b>貪心核心與題型辨認</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

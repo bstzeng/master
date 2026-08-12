@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="比較前綴和、排序與雜湊三種常見優化。" />
+    <meta name="theme-color" content="#101713" />
+    <title>16.03 預處理、空間換時間、排序與 Hashing｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-16-problem-solving.html">UNIT 16 / LESSON 03</a><p class="eyebrow">Problem Solving and Algorithm Design</p><h1>預處理、空間換時間、排序與 Hashing</h1><p class="lesson-deck">先整理資料，再大量回答</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>比較前綴和、排序與雜湊三種常見優化。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>辨認重複查詢</li><li>評估排序成本</li><li>選擇雜湊結構</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>預處理攤提成本</h2><p>q 次區間和若每次掃描會到 O(nq)，先建 prefix 後總成本 O(n+q)。適合資料少更新、查詢很多。</p><ul><li>先付 O(n) 建表</li><li>單次查詢降為 O(1)</li><li>更新頻繁時需換結構</li></ul><figure class="code-block"><figcaption><span>區間採閉區間 [l,r]。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>prefix=[0]
+for x in data: prefix.append(prefix[-1]+x)
+def range_sum(l,r): return prefix[r+1]-prefix[l]</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>排序創造順序</h2><p>排序 O(n log n) 後，可能使用雙指標、合併區間或二分搜尋。若需要原索引，可排序 (value,index) 而不是只排值。</p><ul><li>確認允許修改或使用副本</li><li>一次排序可服務多次查詢</li><li>排序不是免費步驟</li></ul></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>Hashing 快速存在性</h2><p>set 適合存在性，dict 適合鍵到計數或位置。平均 O(1) 查找換取 O(n) 空間，且不保證排序順序。</p><ul><li>去重用 set</li><li>頻率與索引用 dict</li><li>需要範圍順序時雜湊不一定合適</li></ul><figure class="code-block"><figcaption><span>一次 O(n) 建立頻率表。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>counts={}
+for x in data: counts[x]=counts.get(x,0)+1</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>重複查詢可用預處理攤提。</li><li><span>02</span>排序能創造單調結構。</li><li><span>03</span>set 與 dict 解決不同查詢語意。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>何時 prefix 不方便？</summary><p>原資料頻繁更新時需重建或維護。</p></details><details><summary>需要原索引如何排序？</summary><p>排序 (value,index) 配對。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>比較 q 次 membership 使用 list 與 set 的總成本。</li><li>設計需保留原索引的排序案例。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-16/02-brute-force-and-bottlenecks.html"><span>← 上一課</span><b>Brute Force 與瓶頸</b></a><a class="next" href="../unit-16/04-two-pointers-vs-window.html"><span>下一課 →</span><b>Two Pointers vs Sliding Window</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

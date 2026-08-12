@@ -1,0 +1,694 @@
+{
+  "number": 14,
+  "phase": 2,
+  "slug": "string-algorithms",
+  "title": "經典字串演算法",
+  "english": "Classic String Algorithms",
+  "summary": "從暴力匹配的重複比較出發，學習 KMP、Rolling Hash、Trie，以及中心擴展、動態規劃與 Manacher 回文演算法。",
+  "goal": "能依單一模式、多模式、前綴查詢與回文需求，選擇合適的字串演算法並說明正確性、複雜度與碰撞風險。",
+  "prerequisites": [
+    "熟悉 Python String、List、Dictionary 與切片",
+    "理解迴圈、索引、函式與 Big O",
+    "具備基本動態規劃與雜湊概念"
+  ],
+  "outcomes": [
+    "實作暴力字串匹配並找出重複比較",
+    "建立 LPS 表並完成 KMP 搜尋",
+    "以 Rolling Hash 實作 Rabin–Karp 並處理碰撞",
+    "建立 Trie 支援完整單字與前綴查詢",
+    "比較中心擴展、DP 與 Manacher 的回文解法"
+  ],
+  "lessons": [
+    {
+      "number": 1,
+      "slug": "naive-string-matching",
+      "title": "字串匹配與暴力搜尋",
+      "subtitle": "先定義問題，再觀察重複比較",
+      "duration": "30 分鐘",
+      "difficulty": "基礎",
+      "summary": "定義 Text 與 Pattern，以逐位置對齊實作暴力匹配，分析最壞 O(nm) 與邊界條件。",
+      "objectives": [
+        "區分 Text、Pattern 與 Match Index",
+        "實作回傳全部匹配位置的暴力演算法",
+        "分析最壞時間與特殊輸入"
+      ],
+      "sections": [
+        {
+          "heading": "Text、Pattern 與對齊",
+          "paragraphs": [
+            "字串匹配要在長度 n 的 Text（本文）中尋找長度 m 的 Pattern（模式），答案可能是第一個位置、全部位置或是否存在。暴力法把 Pattern 依序對齊 Text 的每個可行起點，再從左到右比較字元。"
+          ],
+          "bullets": [
+            "可行起點為 0 到 n - m",
+            "Python 索引通常回傳零起始位置",
+            "題目要先說明是否允許重疊匹配",
+            "Pattern 比 Text 長時沒有匹配"
+          ],
+          "code": "text = \"banana\"\npattern = \"ana\"\nfor start in range(len(text) - len(pattern) + 1):\n    print(start, text[start:start + len(pattern)])",
+          "code_caption": "依序列出 Pattern 在 Text 上的所有可能對齊位置。"
+        },
+        {
+          "heading": "暴力匹配實作",
+          "paragraphs": [
+            "每個起點最多比較 m 個字元，第一處不同就停止該次對齊；全部相同則記錄起點。若逐字元比較而不建立切片，額外工作空間可維持 O(1)，輸出位置另需 O(k)。"
+          ],
+          "bullets": [
+            "外層枚舉對齊起點",
+            "內層逐字元驗證",
+            "失配時立即 break",
+            "成功匹配後仍只向右移一格即可找重疊結果"
+          ],
+          "code": "def naive_search(text, pattern):\n    if pattern == \"\":\n        return list(range(len(text) + 1))\n    matches = []\n    for start in range(len(text) - len(pattern) + 1):\n        for offset, character in enumerate(pattern):\n            if text[start + offset] != character:\n                break\n        else:\n            matches.append(start)\n    return matches\n\nprint(naive_search(\"banana\", \"ana\"))  # [1, 3]",
+          "code_caption": "for...else 只在內層沒有 break 時記錄完整匹配。"
+        },
+        {
+          "heading": "複雜度與何時足夠",
+          "paragraphs": [
+            "最壞情況每個起點都比較接近 m 次，因此時間 O((n - m + 1)m)，通常簡寫 O(nm)；例如大量相同前綴會造成重複工作。Pattern 很短、資料規模小或只執行少量搜尋時，暴力法簡單可靠，也適合作為進階演算法的測試基準。"
+          ],
+          "bullets": [
+            "最壞時間 O(nm)",
+            "逐字元版本工作空間 O(1)",
+            "平均情況可能因早期失配而更快",
+            "Python 實務可先用 str.find，但學習時要理解底層問題"
+          ],
+          "table": {
+            "headers": ["情境", "暴力法評估"],
+            "rows": [
+              ["小文字、短 Pattern", "通常足夠且清楚"],
+              ["大量重複前綴", "可能反覆比較"],
+              ["要求線性最壞界線", "考慮 KMP"],
+              ["多 Pattern 前綴查詢", "考慮 Trie"]
+            ]
+          }
+        }
+      ],
+      "takeaways": [
+        "暴力匹配逐一嘗試所有對齊起點並逐字元驗證",
+        "最壞時間為 O(nm)，但規模小時簡潔且實用",
+        "空 Pattern、重疊匹配與回傳格式必須先定義"
+      ],
+      "quiz": [
+        {
+          "question": "Text 長 n、Pattern 長 m 時，有多少個完整對齊起點？",
+          "answer": "若 m <= n，共 n - m + 1 個；若 m > n 則為 0 個。"
+        },
+        {
+          "question": "為何 'aaaaa' 搜尋 'aaab' 接近暴力法最壞情況？",
+          "answer": "多數對齊都先匹配很長的共同前綴，直到 Pattern 後段才失配，造成重複比較。"
+        }
+      ],
+      "practice": [
+        "修改 naive_search，使它只回傳第一個匹配位置，找不到回傳 -1。",
+        "為允許重疊與不允許重疊兩種規則，各找出 'aaaa' 中 'aa' 的位置。"
+      ]
+    },
+    {
+      "number": 2,
+      "slug": "prefix-suffix-and-kmp-intuition",
+      "title": "Prefix、Suffix 與 KMP 直覺",
+      "subtitle": "利用已匹配內容決定下一次對齊",
+      "duration": "35 分鐘",
+      "difficulty": "基礎",
+      "summary": "理解 Proper Prefix、Proper Suffix 與 Border，建立 KMP 失配後不回退 Text 指標的直覺。",
+      "objectives": [
+        "定義前綴、後綴與 Proper Border",
+        "找出模式字串的共同前後綴",
+        "解釋 KMP 如何重用已匹配資訊"
+      ],
+      "sections": [
+        {
+          "heading": "前綴、後綴與 Border",
+          "paragraphs": [
+            "Prefix（前綴）從字串開頭取一段，Suffix（後綴）從尾端取一段；Proper Prefix／Suffix 不包含整個字串本身。若某段同時是 Proper Prefix 與 Proper Suffix，就稱為 Border，KMP 會保存最長 Border 的長度。"
+          ],
+          "bullets": [
+            "'ababa' 的 Proper Prefix 包含 'a'、'ab'、'aba'",
+            "Proper Suffix 包含 'a'、'ba'、'aba'",
+            "最長 Border 是 'aba'，長度 3",
+            "Border 可以重疊，不要求是兩段獨立字元"
+          ],
+          "code": "def borders(text):\n    result = []\n    for length in range(1, len(text)):\n        if text[:length] == text[-length:]:\n            result.append(text[:length])\n    return result\n\nprint(borders(\"ababa\"))  # ['a', 'aba']",
+          "code_caption": "暴力列出 Border，協助建立概念；正式 LPS 不會反覆切片。"
+        },
+        {
+          "heading": "失配時仍有可用資訊",
+          "paragraphs": [
+            "若 Pattern 已匹配 j 個字元後失配，已匹配區段的某個後綴可能同時等於 Pattern 前綴，因此不必把 Pattern 完全歸零。把 Pattern 移到最長 Border 對齊的位置，可以保留已知相同部分，Text 指標也不需倒退。"
+          ],
+          "bullets": [
+            "已匹配區段是 pattern[:j]",
+            "尋找其最長 Proper Border",
+            "新 j 等於該 Border 長度",
+            "目前 Text 字元要用較短前綴重新比較"
+          ],
+          "code": "pattern = \"ababaca\"\nmatched = pattern[:5]  # ababa\nfallback = 3          # 最長 Border 是 aba\nprint(matched[-fallback:], pattern[:fallback])",
+          "code_caption": "後綴 'aba' 已知等於 Pattern 前綴，可直接保留三個匹配。"
+        },
+        {
+          "heading": "KMP 的兩個指標",
+          "paragraphs": [
+            "Knuth–Morris–Pratt（KMP）使用 i 指向 Text、j 指向 Pattern；相同時兩者都前進，失配且 j > 0 時只把 j 回退到較短 Border，i 留在原位。每次回退都依預先計算的 LPS 表，因此搜尋階段能維持 O(n)。"
+          ],
+          "bullets": [
+            "匹配：i += 1、j += 1",
+            "失配且 j > 0：j = lps[j - 1]",
+            "失配且 j == 0：i += 1",
+            "j == m 時找到一個完整匹配"
+          ],
+          "table": {
+            "headers": ["情況", "Text 指標 i", "Pattern 指標 j"],
+            "rows": [
+              ["字元相同", "前進", "前進"],
+              ["失配且 j > 0", "不動", "回退到 Border"],
+              ["失配且 j = 0", "前進", "維持 0"],
+              ["完整匹配", "已在下一字元", "可回退找重疊"]
+            ]
+          },
+          "callout": "KMP 的核心不是跳過任意字元，而是只跳過已能由 Border 證明不必重比的對齊。"
+        }
+      ],
+      "takeaways": [
+        "Border 是同時為 Proper Prefix 與 Proper Suffix 的字串",
+        "失配時可保留已匹配區段的最長 Border",
+        "KMP 不回退 Text 指標，而是以 LPS 回退 Pattern 指標"
+      ],
+      "quiz": [
+        {
+          "question": "'abcab' 的最長 Proper Border 是什麼？",
+          "answer": "'ab'，因為它同時是開頭兩字元與結尾兩字元。"
+        },
+        {
+          "question": "KMP 失配且 j > 0 時，為什麼 i 不前進？",
+          "answer": "目前 Text 字元尚未與回退後的新 Pattern 位置比較，它仍可能完成較短前綴的匹配。"
+        }
+      ],
+      "practice": [
+        "列出 'aabaaab' 每個前綴的最長 Border。",
+        "手動模擬 Text 'abababca' 與 Pattern 'ababca' 的 KMP 指標移動。"
+      ]
+    },
+    {
+      "number": 3,
+      "slug": "lps-table",
+      "title": "LPS Table：預先整理回退位置",
+      "subtitle": "在線性時間建立模式字串的自我資訊",
+      "duration": "40 分鐘",
+      "difficulty": "進階",
+      "summary": "定義 LPS 陣列，逐格建立最長 Proper Prefix／Suffix 長度，分析建表的攤銷 O(m)。",
+      "objectives": [
+        "說明 lps[i] 的精確意義",
+        "正確實作匹配、回退與歸零分支",
+        "以指標移動分析 O(m) 建表成本"
+      ],
+      "sections": [
+        {
+          "heading": "LPS 每格代表什麼",
+          "paragraphs": [
+            "LPS（Longest Proper Prefix which is also Suffix）陣列的 lps[i]，表示 pattern[:i + 1] 的最長 Proper Border 長度。lps[0] 必為 0，因為單字元字串沒有非空且不等於自身的 Proper Border。"
+          ],
+          "bullets": [
+            "陣列長度等於 Pattern 長度 m",
+            "值是長度，不是字串或索引",
+            "lps[i] 不會大於 i",
+            "建表只依賴 Pattern 本身"
+          ],
+          "code": "pattern = \"ababaca\"\nlps = [0, 0, 1, 2, 3, 0, 1]\nfor index, length in enumerate(lps):\n    prefix = pattern[:length]\n    suffix = pattern[index - length + 1:index + 1] if length else \"\"\n    print(index, prefix, suffix)",
+          "code_caption": "用前綴與後綴內容檢查每個 LPS 長度。"
+        },
+        {
+          "heading": "匹配、回退與歸零",
+          "paragraphs": [
+            "建表使用 index 探索下一字元、length 表示目前 Border 長度；字元相同時 Border 延長，失配且 length > 0 時回退到 lps[length - 1] 並重新比較，不移動 index。只有 length 已為 0 且仍失配時，才設定 lps[index] = 0 並前進。"
+          ],
+          "bullets": [
+            "相同：length += 1，寫入後 index += 1",
+            "失配且 length > 0：只回退 length",
+            "失配且 length == 0：寫 0 並前進",
+            "回退可能連續發生多次"
+          ],
+          "code": "def build_lps(pattern):\n    lps = [0] * len(pattern)\n    length = 0\n    index = 1\n    while index < len(pattern):\n        if pattern[index] == pattern[length]:\n            length += 1\n            lps[index] = length\n            index += 1\n        elif length > 0:\n            length = lps[length - 1]\n        else:\n            lps[index] = 0\n            index += 1\n    return lps\n\nprint(build_lps(\"ababaca\"))  # [0, 0, 1, 2, 3, 0, 1]",
+          "code_caption": "LPS 建表的標準 Python 3 實作。"
+        },
+        {
+          "heading": "為何建表是 O(m)",
+          "paragraphs": [
+            "雖然失配分支可能讓 length 多次回退，但 index 只會前進到 m，而 length 的增加總量也受 index 前進次數限制，因此所有回退總量為線性。建表時間 O(m)、空間 O(m)，之後可用同一張表搜尋任意 Text。"
+          ],
+          "bullets": [
+            "index 從 1 單調前進到 m",
+            "length 的回退不會低於 0",
+            "巢狀式回退不代表 O(m²)",
+            "同一 Pattern 多次搜尋可重用 LPS"
+          ],
+          "table": {
+            "headers": ["階段", "時間", "空間"],
+            "rows": [
+              ["建立 LPS", "O(m)", "O(m)"],
+              ["以 LPS 搜尋一個 Text", "O(n)", "除輸出外 O(1)"],
+              ["完整 KMP", "O(n + m)", "O(m)"]
+            ]
+          },
+          "callout": "最常見錯誤是失配回退後仍讓 index 前進，這會漏掉較短 Border 的重新比較。"
+        }
+      ],
+      "takeaways": [
+        "lps[i] 是 pattern[:i + 1] 的最長 Proper Border 長度",
+        "失配且 length > 0 時只回退 length，不移動 index",
+        "LPS 可在 O(m) 時間及 O(m) 空間建立"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼 lps[0] 一定是 0？",
+          "answer": "長度一的字串沒有非空且比自身短的前綴與後綴。"
+        },
+        {
+          "question": "建表失配且 length > 0 時，下一步為何不是 length -= 1？",
+          "answer": "應直接跳到較短的已知 Border lps[length - 1]，略過已證明不可能的長度。"
+        }
+      ],
+      "practice": [
+        "手算 Pattern 'aabaacaabaa' 的完整 LPS 陣列，再用程式驗證。",
+        "在 build_lps 中加入追蹤輸出，觀察每次 index 與 length 的變化。"
+      ]
+    },
+    {
+      "number": 4,
+      "slug": "complete-kmp-search",
+      "title": "KMP 完整搜尋流程",
+      "subtitle": "組合 LPS 與雙指標找出所有匹配",
+      "duration": "40 分鐘",
+      "difficulty": "進階",
+      "summary": "整合 LPS 與雙指標搜尋，處理完整匹配後回退、重疊結果及空 Pattern 契約。",
+      "objectives": [
+        "實作回傳全部位置的 KMP",
+        "處理重疊匹配與完整匹配後回退",
+        "說明 O(n + m) 時間界線"
+      ],
+      "sections": [
+        {
+          "heading": "搜尋狀態與三種分支",
+          "paragraphs": [
+            "KMP 搜尋維護 text_index 與 pattern_index；相同時兩者前進，失配且 pattern_index > 0 時依 LPS 回退，否則只前進 Text。這三個分支保證 Text 指標不倒退，Pattern 指標只沿已知 Border 移動。"
+          ],
+          "bullets": [
+            "相同：兩個指標同時加一",
+            "失配且 j > 0：j = lps[j - 1]",
+            "失配且 j == 0：i += 1",
+            "不要在回退分支同時增加 i"
+          ],
+          "code": "text = \"abxabc\"\npattern = \"abc\"\nlps = [0, 0, 0]\ni = j = 0\nwhile i < len(text) and j < len(pattern):\n    if text[i] == pattern[j]:\n        i += 1\n        j += 1\n    elif j > 0:\n        j = lps[j - 1]\n    else:\n        i += 1\nprint(i - j, j)",
+          "code_caption": "Text 指標只向右，Pattern 指標在失配時依 LPS 回退。"
+        },
+        {
+          "heading": "完整實作與重疊匹配",
+          "paragraphs": [
+            "當 pattern_index == m 時，匹配起點為 text_index - m；若要繼續尋找重疊結果，不把 j 歸零，而是設為 lps[j - 1]。空 Pattern 的數學與函式庫契約可能不同，下例明確定義它匹配所有 n + 1 個邊界。"
+          ],
+          "bullets": [
+            "完整匹配位置：i - m",
+            "匹配後回退可保留 Border",
+            "回傳 List 可保存重疊結果",
+            "空 Pattern 行為應在介面中記錄"
+          ],
+          "code": "def build_lps(pattern):\n    lps = [0] * len(pattern)\n    length, index = 0, 1\n    while index < len(pattern):\n        if pattern[index] == pattern[length]:\n            length += 1\n            lps[index] = length\n            index += 1\n        elif length:\n            length = lps[length - 1]\n        else:\n            index += 1\n    return lps\n\ndef kmp_search(text, pattern):\n    if pattern == \"\":\n        return list(range(len(text) + 1))\n    lps = build_lps(pattern)\n    matches = []\n    text_index = pattern_index = 0\n    while text_index < len(text):\n        if text[text_index] == pattern[pattern_index]:\n            text_index += 1\n            pattern_index += 1\n            if pattern_index == len(pattern):\n                matches.append(text_index - len(pattern))\n                pattern_index = lps[pattern_index - 1]\n        elif pattern_index > 0:\n            pattern_index = lps[pattern_index - 1]\n        else:\n            text_index += 1\n    return matches\n\nprint(kmp_search(\"aaaa\", \"aa\"))  # [0, 1, 2]",
+          "code_caption": "完整 KMP 會找出所有包含重疊的匹配。"
+        },
+        {
+          "heading": "複雜度、適用情境與限制",
+          "paragraphs": [
+            "建 LPS 為 O(m)，搜尋為 O(n)，總時間 O(n + m)、額外空間 O(m) 加輸出 O(k)，且沒有雜湊碰撞。KMP 適合要求確定線性最壞界線、Pattern 有重複結構或相同 Pattern 搜尋多個 Text；一次性短字串則未必比內建搜尋更簡單。"
+          ],
+          "bullets": [
+            "確定最壞時間 O(n + m)",
+            "相同 Pattern 可重用 LPS",
+            "精確比較，不存在碰撞",
+            "程式較暴力法複雜，需仔細測試邊界"
+          ],
+          "table": {
+            "headers": ["方法", "最壞時間", "預處理", "風險"],
+            "rows": [
+              ["暴力", "O(nm)", "無", "重複比較"],
+              ["KMP", "O(n + m)", "LPS O(m)", "實作邊界較多"],
+              ["Python str.find", "實作相關", "由執行環境處理", "不展示演算法細節"]
+            ]
+          },
+          "callout": "KMP 的線性保證來自 Text 不回退，以及 Pattern 回退總量受到前進總量限制。"
+        }
+      ],
+      "takeaways": [
+        "KMP 以 LPS 決定失配回退位置，Text 指標不倒退",
+        "完整匹配後回退到 LPS 可繼續尋找重疊結果",
+        "建表加搜尋總時間 O(n + m)，空間 O(m)"
+      ],
+      "quiz": [
+        {
+          "question": "找到完整匹配後，為何不一定把 pattern_index 設為 0？",
+          "answer": "完整 Pattern 的後綴可能也是前綴，回退到 LPS 能保留這段資訊並找到重疊匹配。"
+        },
+        {
+          "question": "KMP 相對 Rabin–Karp 的一項保證是什麼？",
+          "answer": "KMP 直接比較字元並有確定 O(n + m) 最壞時間，不存在雜湊碰撞造成的額外驗證。"
+        }
+      ],
+      "practice": [
+        "修改 kmp_search，只回傳第一個匹配位置並支援提早停止。",
+        "用隨機小字串比較 naive_search 與 kmp_search 的所有輸出是否一致。"
+      ]
+    },
+    {
+      "number": 5,
+      "slug": "rabin-karp-and-rolling-hash",
+      "title": "Rabin–Karp 與 Rolling Hash",
+      "subtitle": "用固定長度視窗快速更新指紋",
+      "duration": "45 分鐘",
+      "difficulty": "進階",
+      "summary": "以多項式雜湊和滑動視窗實作 Rabin–Karp，理解平均線性時間、碰撞驗證與模數選擇。",
+      "objectives": [
+        "解釋 Rolling Hash 如何 O(1) 更新視窗",
+        "實作帶碰撞驗證的 Rabin–Karp",
+        "分析平均與最壞複雜度"
+      ],
+      "sections": [
+        {
+          "heading": "雜湊先篩選候選",
+          "paragraphs": [
+            "Rabin–Karp 把 Pattern 與每個同長 Text 視窗轉成數值指紋，雜湊不同即可確定字串不同，雜湊相同則再逐字元驗證。它把昂貴比較集中在少數候選，但雜湊相同不代表內容必然相同。"
+          ],
+          "bullets": [
+            "Pattern 與視窗長度都為 m",
+            "雜湊不同可立即跳過",
+            "雜湊相同必須驗證原字串",
+            "適合多 Pattern 或需要字串指紋的延伸題型"
+          ],
+          "code": "base = 256\nmodulus = 1_000_000_007\ndef polynomial_hash(text):\n    value = 0\n    for character in text:\n        value = (value * base + ord(character)) % modulus\n    return value\n\nprint(polynomial_hash(\"abc\"))",
+          "code_caption": "多項式雜湊把字元順序編入固定範圍的數值。"
+        },
+        {
+          "heading": "Rolling Hash 更新視窗",
+          "paragraphs": [
+            "視窗右移時，先扣除離開字元對最高位的貢獻，再乘 base 並加上進入字元，全部對 modulus 取餘數。預先算 high = base^(m - 1) mod modulus 後，每次更新只需 O(1)。"
+          ],
+          "bullets": [
+            "移除 outgoing * high",
+            "剩餘內容左移：乘 base",
+            "加入 incoming 的字元碼",
+            "每一步取模避免整數無限成長"
+          ],
+          "code": "def roll_hash(current, outgoing, incoming, high, base, modulus):\n    current = (current - ord(outgoing) * high) % modulus\n    return (current * base + ord(incoming)) % modulus\n\nbase, modulus, length = 256, 1_000_000_007, 3\nhigh = pow(base, length - 1, modulus)",
+          "code_caption": "固定長度視窗可在常數時間更新雜湊值。"
+        },
+        {
+          "heading": "完整搜尋、碰撞與複雜度",
+          "paragraphs": [
+            "計算初始 Pattern 與第一個視窗雜湊需 O(m)，之後掃描視窗平均 O(n)，額外空間 O(1)；若大量碰撞導致每次都驗證 m 個字元，最壞仍為 O(nm)。選大質數模數、雙雜湊可降低碰撞機率，但要求完全正確時仍應保留字串驗證。"
+          ],
+          "bullets": [
+            "平均時間 O(n + m)",
+            "碰撞下最壞 O(nm)",
+            "工作空間 O(1)，輸出另計",
+            "雙雜湊降低風險但不等於數學上零碰撞"
+          ],
+          "code": "def rabin_karp(text, pattern, base=256, modulus=1_000_000_007):\n    n, m = len(text), len(pattern)\n    if m == 0:\n        return list(range(n + 1))\n    if m > n:\n        return []\n    high = pow(base, m - 1, modulus)\n    pattern_hash = window_hash = 0\n    for index in range(m):\n        pattern_hash = (pattern_hash * base + ord(pattern[index])) % modulus\n        window_hash = (window_hash * base + ord(text[index])) % modulus\n    matches = []\n    for start in range(n - m + 1):\n        if window_hash == pattern_hash and text[start:start + m] == pattern:\n            matches.append(start)\n        if start < n - m:\n            window_hash = (window_hash - ord(text[start]) * high) % modulus\n            window_hash = (window_hash * base + ord(text[start + m])) % modulus\n    return matches\n\nprint(rabin_karp(\"banana\", \"ana\"))  # [1, 3]",
+          "code_caption": "雜湊相等後仍以切片驗證，碰撞不會產生錯誤答案。",
+          "callout": "若省略碰撞驗證，演算法可能變成機率正確；教材版本保留驗證以確保答案。"
+        }
+      ],
+      "takeaways": [
+        "Rabin–Karp 先以雜湊篩選候選，雜湊相同後再驗證文字",
+        "Rolling Hash 能在視窗右移時 O(1) 更新指紋",
+        "平均時間 O(n + m)，但碰撞可能使最壞情況回到 O(nm)"
+      ],
+      "quiz": [
+        {
+          "question": "兩個字串雜湊值相同，能直接判定內容相同嗎？",
+          "answer": "不能；有限雜湊範圍必然可能碰撞，要求確定正確時要再比較原字串。"
+        },
+        {
+          "question": "Rolling Hash 比每個視窗重新計算雜湊快在哪裡？",
+          "answer": "它利用前一視窗值，移除一字元並加入一字元，每次右移只需 O(1)，而非 O(m)。"
+        }
+      ],
+      "practice": [
+        "將 Rabin–Karp 改為使用兩組不同模數，只有雙雜湊相同才驗證。",
+        "刻意使用很小的 modulus 找出碰撞案例，確認驗證步驟能避免錯誤匹配。"
+      ]
+    },
+    {
+      "number": 6,
+      "slug": "trie",
+      "title": "Trie：以共同前綴組織單字",
+      "subtitle": "讓搜尋成本取決於查詢長度",
+      "duration": "40 分鐘",
+      "difficulty": "進階",
+      "summary": "建立 Trie 節點、插入、完整單字搜尋與前綴查詢，分析時間、空間與適用情境。",
+      "objectives": [
+        "解釋 Trie 如何共享共同前綴",
+        "實作 insert、search 與 starts_with",
+        "比較 Trie、Set 與排序 List 的選型"
+      ],
+      "sections": [
+        {
+          "heading": "字元邊與終止標記",
+          "paragraphs": [
+            "Trie（字典樹／前綴樹）從根開始，每條邊代表一個字元，具有共同前綴的單字共享同一路徑。節點除了 children 映射，還需 is_word 終止標記，才能區分已插入的完整單字與只是其他單字的前綴。"
+          ],
+          "bullets": [
+            "根節點不代表任何字元",
+            "children 將字元映射到下一節點",
+            "is_word 標記完整單字結尾",
+            "'app' 與 'apple' 共享前三個字元路徑"
+          ],
+          "code": "def make_node():\n    return {\"children\": {}, \"is_word\": False}\n\nroot = make_node()\nroot[\"children\"][\"a\"] = make_node()\nprint(root)",
+          "code_caption": "以巢狀 Dictionary 表示最小 Trie 節點。"
+        },
+        {
+          "heading": "插入、單字搜尋與前綴搜尋",
+          "paragraphs": [
+            "插入與查詢都從根依序走過每個字元，缺少分支時搜尋失敗，插入則建立節點；走完長度 L 的字串需要 O(L)。search 還要檢查 is_word，starts_with 只要整個前綴路徑存在即可。"
+          ],
+          "bullets": [
+            "insert：缺少節點時建立",
+            "search：路徑存在且 is_word 為 True",
+            "starts_with：路徑存在即可",
+            "三種操作時間皆為 O(L)"
+          ],
+          "code": "class Trie:\n    def __init__(self):\n        self.root = {\"children\": {}, \"is_word\": False}\n\n    def insert(self, word):\n        node = self.root\n        for character in word:\n            node = node[\"children\"].setdefault(\n                character, {\"children\": {}, \"is_word\": False}\n            )\n        node[\"is_word\"] = True\n\n    def _walk(self, text):\n        node = self.root\n        for character in text:\n            if character not in node[\"children\"]:\n                return None\n            node = node[\"children\"][character]\n        return node\n\n    def search(self, word):\n        node = self._walk(word)\n        return node is not None and node[\"is_word\"]\n\n    def starts_with(self, prefix):\n        return self._walk(prefix) is not None\n\ntrie = Trie()\ntrie.insert(\"apple\")\nprint(trie.search(\"app\"), trie.starts_with(\"app\"))  # False True",
+          "code_caption": "完整單字查詢與前綴查詢只差終止標記判斷。"
+        },
+        {
+          "heading": "空間成本與選型",
+          "paragraphs": [
+            "Trie 的查詢時間與字串長度相關，不直接隨單字數線性成長，但每個節點的 children 結構可能帶來高常數空間；最壞節點數接近所有字元總量 S，即 O(S)。只問完整單字存在時 Set 更簡單，Autocomplete、前綴列舉或字典剪枝才特別適合 Trie。"
+          ],
+          "bullets": [
+            "建樹時間與最壞空間 O(S)",
+            "完整單字存在判斷：Set 平均 O(L) 且介面簡單",
+            "前綴查詢與自動完成：Trie",
+            "固定小字元集可用陣列 children，以空間換速度"
+          ],
+          "table": {
+            "headers": ["結構", "完整單字查詢", "前綴查詢", "主要代價"],
+            "rows": [
+              ["Set", "平均 O(L)", "需額外掃描", "無前綴結構"],
+              ["排序 List", "O(L log W) 比較量級", "可二分範圍", "更新較慢"],
+              ["Trie", "O(L)", "O(P) 到達前綴節點", "節點空間常數高"]
+            ]
+          },
+          "callout": "Trie 的 O(L) 很漂亮，但資料量小且沒有前綴需求時，Set 往往更實際。"
+        }
+      ],
+      "takeaways": [
+        "Trie 讓具有共同前綴的單字共享字元路徑",
+        "insert、search 與 starts_with 對輸入長度 L 都是 O(L)",
+        "前綴查詢適合 Trie，只查完整單字時 Set 通常更簡單"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼 Trie 節點需要 is_word，而不能只看路徑存在？",
+          "answer": "路徑可能只是較長單字的前綴；is_word 才能標記該位置本身是否為已插入的完整單字。"
+        },
+        {
+          "question": "Trie 一定比 Set 適合單字存在查詢嗎？",
+          "answer": "不一定；只需完整單字存在判斷時 Set 更簡潔，Trie 的優勢主要在前綴操作與共享路徑。"
+        }
+      ],
+      "practice": [
+        "擴充 Trie，列出指定前綴下最多五個完整單字。",
+        "加入 remove 方法，處理刪除單字但保留其他共用前綴。"
+      ]
+    },
+    {
+      "number": 7,
+      "slug": "palindromes-expansion-and-dp",
+      "title": "回文：中心擴展與動態規劃",
+      "subtitle": "利用對稱性找最長回文子字串",
+      "duration": "45 分鐘",
+      "difficulty": "進階",
+      "summary": "區分回文子字串與子序列，以中心擴展及二維 DP 求最長回文子字串。",
+      "objectives": [
+        "區分 Substring 與 Subsequence 回文題型",
+        "實作奇偶中心擴展",
+        "建立回文區間 DP 狀態"
+      ],
+      "sections": [
+        {
+          "heading": "回文與問題邊界",
+          "paragraphs": [
+            "Palindrome（回文）正讀與反讀相同；Substring（子字串）必須連續，Subsequence（子序列）則可跳過字元，兩者不能套用同一解法。單純判斷整串是否回文可用雙指標 O(n)，找最長回文子字串則要探索可能區間。"
+          ],
+          "bullets": [
+            "'racecar' 是回文",
+            "子字串位置連續，子序列不要求連續",
+            "空字串與單字元通常都是回文",
+            "先確認題目要長度、內容或全部位置"
+          ],
+          "code": "def is_palindrome(text):\n    left, right = 0, len(text) - 1\n    while left < right:\n        if text[left] != text[right]:\n            return False\n        left += 1\n        right -= 1\n    return True\n\nprint(is_palindrome(\"level\"))  # True",
+          "code_caption": "雙指標在 O(n) 時間、O(1) 空間判斷整個字串。"
+        },
+        {
+          "heading": "Expand Around Center",
+          "paragraphs": [
+            "每個回文都能由中心向左右擴展；奇數長回文中心是一個字元，偶數長回文中心是兩字元間隙，因此需檢查 2n - 1 個中心。每次擴展最壞 O(n)，總時間 O(n²)、額外空間 O(1)。"
+          ],
+          "bullets": [
+            "奇數中心：(i, i)",
+            "偶數中心：(i, i + 1)",
+            "左右相同就繼續向外",
+            "用最佳起點與長度避免反覆切片"
+          ],
+          "code": "def longest_palindrome_center(text):\n    best_start, best_length = 0, 0\n    def expand(left, right):\n        while left >= 0 and right < len(text) and text[left] == text[right]:\n            left -= 1\n            right += 1\n        return left + 1, right - left - 1\n\n    for center in range(len(text)):\n        for left, right in ((center, center), (center, center + 1)):\n            start, length = expand(left, right)\n            if length > best_length:\n                best_start, best_length = start, length\n    return text[best_start:best_start + best_length]\n\nprint(longest_palindrome_center(\"babad\"))  # bab 或 aba",
+          "code_caption": "同一個 expand 函式同時處理奇數與偶數回文。"
+        },
+        {
+          "heading": "二維 DP 與方法比較",
+          "paragraphs": [
+            "定義 dp[left][right] 表示 text[left:right + 1] 是否回文；兩端相同，且區間長度不超過 3 或內層 dp[left + 1][right - 1] 為真時成立。填表需由短區間到長區間，時間 O(n²)、空間 O(n²)，優勢是能保留所有區間狀態供後續計數或查詢。"
+          ],
+          "bullets": [
+            "狀態：閉區間是否回文",
+            "轉移依賴更短的內層區間",
+            "時間 O(n²)、空間 O(n²)",
+            "只求最長內容時中心擴展更省空間"
+          ],
+          "code": "def longest_palindrome_dp(text):\n    size = len(text)\n    if size == 0:\n        return \"\"\n    dp = [[False] * size for _ in range(size)]\n    best_start, best_length = 0, 1\n    for right in range(size):\n        for left in range(right + 1):\n            if text[left] == text[right] and (right - left <= 2 or dp[left + 1][right - 1]):\n                dp[left][right] = True\n                length = right - left + 1\n                if length > best_length:\n                    best_start, best_length = left, length\n    return text[best_start:best_start + best_length]\n\nprint(longest_palindrome_dp(\"cbbd\"))  # bb",
+          "code_caption": "right 由左到右，確保需要的內層狀態已計算。",
+          "table": {
+            "headers": ["方法", "時間", "空間", "較適合"],
+            "rows": [
+              ["雙指標判斷", "O(n)", "O(1)", "整串是否回文"],
+              ["中心擴展", "O(n²)", "O(1)", "最長回文子字串"],
+              ["區間 DP", "O(n²)", "O(n²)", "需要多個區間狀態"]
+            ]
+          }
+        }
+      ],
+      "takeaways": [
+        "回文子字串必須連續，與回文子序列是不同問題",
+        "中心擴展檢查奇偶中心，時間 O(n²)、空間 O(1)",
+        "區間 DP 保存所有回文區間，時間與空間皆為 O(n²)"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼中心擴展要同時檢查 (i, i) 與 (i, i + 1)？",
+          "answer": "前者處理奇數長回文，後者處理中心在字元間隙的偶數長回文。"
+        },
+        {
+          "question": "只求最長回文子字串時，中心擴展相對 DP 的主要空間優勢是什麼？",
+          "answer": "中心擴展只需常數額外空間，DP 要保存 O(n²) 個區間狀態。"
+        }
+      ],
+      "practice": [
+        "修改中心擴展，計算字串中共有多少個回文子字串。",
+        "用隨機短字串比較中心擴展與 DP 回傳的最長長度是否一致。"
+      ]
+    },
+    {
+      "number": 8,
+      "slug": "manacher-and-selection",
+      "title": "Manacher 概念與字串演算法選型",
+      "subtitle": "重用鏡像半徑，完成整體方法比較",
+      "duration": "45 分鐘",
+      "difficulty": "進階",
+      "summary": "理解 Manacher 的轉換字串、鏡像半徑與右邊界，並依精確匹配、前綴及回文需求完成選型。",
+      "objectives": [
+        "說明統一奇偶回文中心的方法",
+        "理解鏡像半徑如何減少重複擴展",
+        "比較本單元演算法的條件與複雜度"
+      ],
+      "sections": [
+        {
+          "heading": "分隔符統一奇偶中心",
+          "paragraphs": [
+            "Manacher 演算法先在字元間插入分隔符並加上哨兵，使原本奇數與偶數長回文都成為轉換字串中的奇數中心回文。p[i] 記錄以 i 為中心的回文半徑，最大半徑也對應原字串中的最長回文長度。"
+          ],
+          "bullets": [
+            "例如 'abba' 可轉成 '^#a#b#b#a#$'",
+            "^ 與 $ 哨兵避免邊界檢查",
+            "每個位置都有單一中心表示",
+            "p[i] 保存可向外延伸的半徑"
+          ],
+          "code": "def transform(text):\n    return \"^#\" + \"#\".join(text) + \"#$\"\n\nprint(transform(\"abba\"))  # ^#a#b#b#a#$",
+          "code_caption": "轉換後不必分開處理奇數與偶數回文。"
+        },
+        {
+          "heading": "鏡像、中心與最右邊界",
+          "paragraphs": [
+            "演算法維護目前已知最靠右回文的 center 與 right；若 i 在 right 內，可用 mirror = 2 * center - i 的半徑作為安全起點，再從尚未確認的位置向外擴展。當 i + p[i] 超過 right，就更新 center 與 right，讓後續中心重用資訊。"
+          ],
+          "bullets": [
+            "mirror = 2 * center - i",
+            "初值 p[i] = min(right - i, p[mirror])",
+            "再比較轉換字串兩側並擴展",
+            "更新最右回文後保存新的 center、right"
+          ],
+          "code": "def manacher_longest(text):\n    transformed = \"^#\" + \"#\".join(text) + \"#$\"\n    radius = [0] * len(transformed)\n    center = right = 0\n    for index in range(1, len(transformed) - 1):\n        mirror = 2 * center - index\n        if index < right:\n            radius[index] = min(right - index, radius[mirror])\n        while transformed[index + 1 + radius[index]] == transformed[index - 1 - radius[index]]:\n            radius[index] += 1\n        if index + radius[index] > right:\n            center, right = index, index + radius[index]\n    best_center = max(range(len(radius)), key=radius.__getitem__)\n    best_length = radius[best_center]\n    start = (best_center - best_length) // 2\n    return text[start:start + best_length]\n\nprint(manacher_longest(\"cbbd\"))  # bb",
+          "code_caption": "鏡像提供已知半徑起點，總擴展工作被限制在線性範圍。"
+        },
+        {
+          "heading": "複雜度、限制與總選型",
+          "paragraphs": [
+            "Manacher 將最長回文子字串降為 O(n) 時間與 O(n) 空間，但索引轉換與正確性推理較複雜，只有輸入很大或明確需要線性界線時才值得採用。一般應先按問題類型選方法，再在正確性、資料規模與實作成本之間取捨。"
+          ],
+          "bullets": [
+            "單一精確 Pattern：KMP 或內建搜尋",
+            "雜湊視窗、多 Pattern 指紋：Rabin–Karp",
+            "字典前綴與 Autocomplete：Trie",
+            "最長回文：中心擴展；極大輸入再考慮 Manacher"
+          ],
+          "table": {
+            "headers": ["方法", "核心用途", "時間", "主要限制"],
+            "rows": [
+              ["暴力匹配", "小型單 Pattern", "O(nm)", "可能重複比較"],
+              ["KMP", "確定線性精確匹配", "O(n + m)", "需建立 LPS"],
+              ["Rabin–Karp", "Rolling Hash 匹配", "平均 O(n + m)", "碰撞時需驗證"],
+              ["Trie", "多單字與前綴", "每次 O(L)", "節點空間較大"],
+              ["中心擴展", "最長回文子字串", "O(n²)", "大輸入較慢"],
+              ["Manacher", "線性最長回文", "O(n)", "實作與索引較複雜"]
+            ]
+          },
+          "callout": "Manacher 是重要的線性技巧，但多數產品程式與面試情境先寫對中心擴展更有價值。"
+        }
+      ],
+      "takeaways": [
+        "Manacher 以分隔符統一奇偶中心，並用鏡像半徑重用已知資訊",
+        "最長回文子字串可達 O(n) 時間與 O(n) 空間，但實作較複雜",
+        "字串演算法選型先看匹配數量、前綴需求、碰撞容忍度與回文目標"
+      ],
+      "quiz": [
+        {
+          "question": "Manacher 為何要插入分隔符？",
+          "answer": "它把奇數與偶數長回文統一成轉換字串中的奇數中心形式，簡化半徑與鏡像處理。"
+        },
+        {
+          "question": "只要在一般短字串中找最長回文，應優先選 Manacher 嗎？",
+          "answer": "通常不必；中心擴展 O(n²) 但空間 O(1)、程式更短且易驗證，輸入極大或要求線性界線時再選 Manacher。"
+        }
+      ],
+      "practice": [
+        "手動追蹤 'abba' 轉換字串中 radius、center 與 right 的變化。",
+        "為搜尋敏感詞、自動完成、文字抄襲片段與最長回文四種需求選演算法並說明限制。"
+      ]
+    }
+  ]
+}

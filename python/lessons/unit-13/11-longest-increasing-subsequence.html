@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="比較標準 DP 與二分優化的 LIS。" />
+    <meta name="theme-color" content="#101713" />
+    <title>13.11 LIS：O(n²) 與 O(n log n)｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-13-dynamic-programming.html">UNIT 13 / LESSON 11</a><p class="eyebrow">Dynamic Programming</p><h1>LIS：O(n²) 與 O(n log n)</h1><p class="lesson-deck">從結尾狀態到 tails 二分搜尋</p><div class="lesson-meta"><span>進階</span><span>40 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>比較標準 DP 與二分優化的 LIS。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>推導 O(n²) LIS</li><li>理解 tails 語意</li><li>用 bisect 完成 O(n log n)</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>以 i 結尾的 LIS</h2><p>dp[i] 是必須以 numbers[i] 結尾的最長遞增子序列長度。枚舉所有 j&lt;i 且 numbers[j]&lt;numbers[i]，由 dp[j]+1 取最大。</p><ul><li>每個位置至少長度 1</li><li>答案是 max(dp) 而非固定 dp[-1]</li><li>時間 O(n²)、空間 O(n)</li></ul><figure class="code-block"><figcaption><span>狀態的「以 i 結尾」保證可判斷能否接續。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def lis_quadratic(numbers):
+    if not numbers: return 0
+    dp=[1]*len(numbers)
+    for i in range(len(numbers)):
+        for j in range(i):
+            if numbers[j]&lt;numbers[i]: dp[i]=max(dp[i],dp[j]+1)
+    return max(dp)</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>tails 的最小尾值</h2><p>tails[k] 保存長度 k+1 遞增子序列中可得到的最小尾值；尾值愈小，未來愈容易延伸。它不一定是實際 LIS，但 tails 長度就是答案。</p><ul><li>用 lower_bound 找第一個 &gt;= value 的位置</li><li>替換尾值不改變目前最長長度</li><li>value 大於所有尾值時 append</li></ul><figure class="code-block"><figcaption><span>每元素二分 O(log n)，總時間 O(n log n)、空間 O(n)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>from bisect import bisect_left
+
+def lis_length(numbers):
+    tails=[]
+    for value in numbers:
+        index=bisect_left(tails,value)
+        if index==len(tails): tails.append(value)
+        else: tails[index]=value
+    return len(tails)</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>嚴格與非嚴格遞增</h2><p>嚴格遞增使用 bisect_left，遇到相同值會替換而不延長；若允許相等，改用 bisect_right。要重建實際 LIS，需額外保存前驅與每長度代表索引。</p><ul><li>先確認 &lt; 還是 &lt;=</li><li>tails 是壓縮摘要，不直接等於答案序列</li><li>O(n²) 版較容易重建與解釋</li></ul><div class="table-wrap"><table><thead><tr><th>方法</th><th>時間</th><th>空間</th></tr></thead><tbody><tr><td>結尾 DP</td><td>O(n²)</td><td>O(n)</td></tr><tr><td>tails+二分</td><td>O(n log n)</td><td>O(n)</td></tr></tbody></table></div></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>標準 LIS 狀態是以某位置結尾的最佳長度。</li><li><span>02</span>tails 用最小尾值保留最佳延伸機會。</li><li><span>03</span>嚴格與非嚴格遞增需選不同二分邊界。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>答案為何是 max(dp)？</summary><p>最長子序列可能在任何位置結尾，不一定是最後元素。</p></details><details><summary>tails 為何不一定是實際 LIS？</summary><p>替換不同長度的尾值可能來自不相容路徑，它主要保存長度資訊。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>為 O(n²) 版本保存 parent 並重建 LIS。</li><li>改求最長非遞減子序列。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-13/10-complete-knapsack-and-subset-sum.html"><span>← 上一課</span><b>Complete Knapsack、Subset Sum 與 Partition</b></a><a class="next" href="../unit-13/12-palindrome-interval-dp-framework.html"><span>下一課 →</span><b>回文、Interval DP 與統一解題框架</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

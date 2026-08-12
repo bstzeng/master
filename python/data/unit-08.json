@@ -1,0 +1,628 @@
+{
+  "number": 8,
+  "phase": 1,
+  "slug": "recursion-divide-backtracking",
+  "title": "遞迴、分治與回溯",
+  "english": "Recursion, Divide and Conquer, and Backtracking",
+  "summary": "從遞迴的終止條件與呼叫堆疊出發，進入分治法，再以回溯系統化探索子集合、排列組合、N-Queens 與迷宮。",
+  "goal": "能追蹤遞迴呼叫、估算時間與空間，並依問題結構設計分治或回溯解法與有效剪枝。",
+  "prerequisites": [
+    "會定義 Python 函式並理解參數與回傳值",
+    "熟悉 list、set、迴圈與條件判斷",
+    "理解 Big O、樹與深度優先搜尋的基本概念"
+  ],
+  "outcomes": [
+    "能寫出具有明確 Base Case 的遞迴函式",
+    "能畫出遞迴樹與 Call Stack 並分析複雜度",
+    "能用分治法拆解、求解及合併子問題",
+    "能套用選擇、遞迴、撤銷的回溯框架",
+    "能以限制條件與剪枝降低無效搜尋"
+  ],
+  "lessons": [
+    {
+      "number": 1,
+      "slug": "recursion-structure",
+      "title": "遞迴結構、Base Case 與 Call Stack",
+      "subtitle": "讓函式處理較小版本的同一問題",
+      "duration": "25 分鐘",
+      "difficulty": "入門",
+      "summary": "認識遞迴問題、終止條件與呼叫堆疊，並以階乘建立基本結構。",
+      "objectives": [
+        "辨認遞迴案例與 Base Case",
+        "說明問題規模如何縮小",
+        "理解 Call Stack 保存的執行狀態"
+      ],
+      "sections": [
+        {
+          "heading": "遞迴的兩個必要部分",
+          "paragraphs": [
+            "遞迴（Recursion）讓函式呼叫自己，去處理規模更小但形式相同的問題。每個遞迴函式都要有直接回答的終止條件（Base Case），以及確實朝終止條件前進的遞迴案例。"
+          ],
+          "bullets": [
+            "Base Case：不再呼叫自己，直接回傳",
+            "Recursive Case：把問題縮小後再次呼叫",
+            "若規模沒有縮小，可能無限遞迴"
+          ],
+          "code": "def factorial(number):\n    if number < 0:\n        raise ValueError(\"階乘只定義於非負整數\")\n    if number <= 1:\n        return 1\n    return number * factorial(number - 1)\n\nprint(factorial(5))  # 120",
+          "code_caption": "number 每次減一，最後一定到達 1 或 0。"
+        },
+        {
+          "heading": "Call Stack 保存尚未完成的工作",
+          "paragraphs": [
+            "函式每次呼叫自己，Python 都會在呼叫堆疊（Call Stack）新增一個框架，保存參數與尚未執行的乘法。到達 Base Case 後，框架才由最深層開始依相反順序回傳。"
+          ],
+          "bullets": [
+            "向下呼叫：factorial(3) 等待 3 × factorial(2)",
+            "最深層：factorial(1) 直接回傳 1",
+            "向上回傳：1 → 2 × 1 → 3 × 2"
+          ],
+          "code": "def countdown(number):\n    if number == 0:\n        print(\"完成\")\n        return\n    print(\"進入\", number)\n    countdown(number - 1)\n    print(\"返回\", number)\n\ncountdown(3)",
+          "code_caption": "遞迴呼叫前後的輸出，呈現向下進入與反向返回的順序。"
+        },
+        {
+          "heading": "終止、深度與限制",
+          "paragraphs": [
+            "factorial(n) 共有約 n 層呼叫，因此時間 O(n)，Call Stack 額外空間也是 O(n)。Python 有遞迴深度限制，所以非常深的線性遞迴通常適合改寫成迴圈。"
+          ],
+          "bullets": [
+            "遞迴深度是同時存在的堆疊框架數",
+            "Base Case 正確不代表輸入一定能到達它",
+            "選擇遞迴前要同時評估可讀性與堆疊空間"
+          ],
+          "callout": "遞迴不是自動更快；它主要讓具有自我相似結構的解法更容易表達。"
+        }
+      ],
+      "takeaways": [
+        "遞迴必須有 Base Case，且每次呼叫都要縮小問題。",
+        "Call Stack 保存尚未完成的函式狀態，並以後進先出順序返回。",
+        "線性遞迴常同時需要 O(n) 時間與 O(n) 堆疊空間。"
+      ],
+      "quiz": [
+        {
+          "question": "只有 Base Case，為什麼遞迴函式仍可能不終止？",
+          "answer": "若遞迴參數沒有朝 Base Case 前進，例如數值反而愈來愈大，就永遠無法到達終止條件。"
+        },
+        {
+          "question": "factorial(5) 的 Call Stack 額外空間為什麼是 O(n)？",
+          "answer": "最深時需同時保留從 factorial(5) 到 Base Case 的約 n 個呼叫框架。"
+        }
+      ],
+      "practice": [
+        "用遞迴計算 1 到 n 的總和，並處理 n=0。",
+        "預測 countdown(3) 的完整輸出順序，再實際執行核對。"
+      ]
+    },
+    {
+      "number": 2,
+      "slug": "tracing-and-complexity",
+      "title": "遞迴追蹤與複雜度",
+      "subtitle": "用遞迴樹分清呼叫次數與最大深度",
+      "duration": "30 分鐘",
+      "difficulty": "基礎",
+      "summary": "以二元字串和 Fibonacci 比較分支遞迴的時間、堆疊深度與重複子問題。",
+      "objectives": [
+        "手動追蹤分支遞迴",
+        "區分遞迴樹節點數與高度",
+        "辨認重複子問題造成的浪費"
+      ],
+      "sections": [
+        {
+          "heading": "先畫參數，再畫分支",
+          "paragraphs": [
+            "追蹤遞迴時，把每次函式呼叫畫成節點，子呼叫畫成下一層分支。節點總數近似總工作量，從根到最深葉節點的距離則近似同時占用的 Call Stack 深度。"
+          ],
+          "bullets": [
+            "一個呼叫只產生一個子呼叫：通常是鏈狀",
+            "一個呼叫產生兩個子呼叫：可能形成二元樹",
+            "時間看所有節點，堆疊空間看單一路徑高度"
+          ],
+          "code": "def binary_strings(length, prefix=\"\"):\n    if length == 0:\n        return [prefix]\n    return (\n        binary_strings(length - 1, prefix + \"0\")\n        + binary_strings(length - 1, prefix + \"1\")\n    )\n\nprint(binary_strings(2))  # ['00', '01', '10', '11']",
+          "code_caption": "每層分成選 0 與選 1，深度為 length。"
+        },
+        {
+          "heading": "分支數決定成長速度",
+          "paragraphs": [
+            "長度 n 的二元字串共有 2ⁿ 個輸出，因此演算法至少要花 O(2ⁿ) 時間產生它們，最大遞迴深度是 O(n)。回傳的所有字串需大量輸出空間，但若只分析執行堆疊，額外空間仍是 O(n)。"
+          ],
+          "bullets": [
+            "第 0 層 1 個呼叫，第 1 層 2 個，第 n 層 2ⁿ 個",
+            "輸出本身指數成長時，演算法無法是多項式時間",
+            "分析空間時應註明是否包含回傳結果"
+          ],
+          "table": {
+            "headers": ["觀察對象", "二元分支結果"],
+            "rows": [
+              ["呼叫總數", "O(2ⁿ)"],
+              ["最大堆疊深度", "O(n)"],
+              ["輸出數量", "2ⁿ 個"]
+            ]
+          }
+        },
+        {
+          "heading": "重複子問題的警訊",
+          "paragraphs": [
+            "樸素 Fibonacci 會反覆計算相同的 fib(k)，例如 fib(5) 的左右分支都可能再次呼叫 fib(3)。它的時間呈指數成長、堆疊深度 O(n)；之後可用記憶化或動態規劃保存答案。"
+          ],
+          "bullets": [
+            "相同參數反覆出現在遞迴樹中，就是重複子問題",
+            "樸素 fib(n) 時間約 O(2ⁿ)",
+            "不是所有分支遞迴都能或需要用記憶化"
+          ],
+          "code": "def fibonacci(number):\n    if number <= 1:\n        return number\n    return fibonacci(number - 1) + fibonacci(number - 2)\n\nprint(fibonacci(6))  # 8",
+          "code_caption": "程式簡潔，但遞迴樹中存在大量重複呼叫。"
+        }
+      ],
+      "takeaways": [
+        "遞迴樹節點總數對應時間，樹高對應 Call Stack 空間。",
+        "每層固定二元分支且深度 n 時，呼叫數可能是 O(2ⁿ)。",
+        "相同參數重複出現，是考慮記憶化的訊號。"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼二元分支遞迴有 O(2ⁿ) 呼叫，Call Stack 卻不是 O(2ⁿ)？",
+          "answer": "分支會依序執行，堆疊同時只保留一條根到葉的路徑，所以最大深度是 O(n)。"
+        },
+        {
+          "question": "看見兩個遞迴呼叫就一定能斷定時間 O(2ⁿ) 嗎？",
+          "answer": "不能，還要看子問題規模、是否有重疊、是否提早終止，以及每個節點本身的工作量。"
+        }
+      ],
+      "practice": [
+        "畫出 fibonacci(5) 的遞迴樹，圈出重複出現的參數。",
+        "分析遞迴二分搜尋的呼叫數、最大深度與額外空間。"
+      ]
+    },
+    {
+      "number": 3,
+      "slug": "divide-and-conquer",
+      "title": "Divide and Conquer 分治法",
+      "subtitle": "拆解、求解，再合併互相獨立的子問題",
+      "duration": "25 分鐘",
+      "difficulty": "基礎",
+      "summary": "建立分治三步驟，並以最大值問題理解遞迴分割與合併。",
+      "objectives": [
+        "描述 Divide、Conquer、Combine",
+        "設計分治的終止條件",
+        "以遞迴式估算成本"
+      ],
+      "sections": [
+        {
+          "heading": "分治的三個階段",
+          "paragraphs": [
+            "分治法（Divide and Conquer）把原問題拆成較小且形式相同的子問題，分別求解後再合併答案。它適合子問題能相對獨立處理，且合併成本可控制的情境。"
+          ],
+          "bullets": [
+            "Divide：切分問題範圍",
+            "Conquer：遞迴解子問題，或在小規模直接回答",
+            "Combine：把子答案組成原問題答案"
+          ],
+          "callout": "遞迴是程式結構；分治是演算法設計策略，兩者不是同義詞。"
+        },
+        {
+          "heading": "案例：分治尋找最大值",
+          "paragraphs": [
+            "把區間從中間切成左右兩半，分別取得兩側最大值，再取兩者較大者。單一元素區間可直接回傳該元素，成為清楚的 Base Case。"
+          ],
+          "bullets": [
+            "區間 [left, right] 在 middle 切開",
+            "左右區間不重疊且合起來覆蓋原範圍",
+            "Combine 只做一次 max 比較"
+          ],
+          "code": "def divide_max(numbers, left, right):\n    if left == right:\n        return numbers[left]\n    middle = (left + right) // 2\n    left_max = divide_max(numbers, left, middle)\n    right_max = divide_max(numbers, middle + 1, right)\n    return max(left_max, right_max)\n\ndef maximum(numbers):\n    if not numbers:\n        raise ValueError(\"陣列不可為空\")\n    return divide_max(numbers, 0, len(numbers) - 1)\n\nprint(maximum([7, 2, 9, 4]))  # 9",
+          "code_caption": "索引界線讓每個元素恰好落入一個 Base Case。"
+        },
+        {
+          "heading": "遞迴式與成本",
+          "paragraphs": [
+            "此案例的成本可寫成 T(n)=2T(n/2)+O(1)，整棵遞迴樹共有 O(n) 節點，所以時間 O(n)。每次問題規模減半，樹高 O(log n)，Call Stack 額外空間也是 O(log n)。"
+          ],
+          "bullets": [
+            "子問題數量與大小寫在遞迴式的遞迴項",
+            "切分與合併工作寫在非遞迴項",
+            "分治不保證更快，仍要計算所有層的總工作"
+          ],
+          "table": {
+            "headers": ["項目", "最大值分治案例"],
+            "rows": [
+              ["子問題", "兩個大小約 n/2 的區間"],
+              ["合併", "一次 max，比較 O(1)"],
+              ["總時間／堆疊", "O(n)／O(log n)"]
+            ]
+          }
+        }
+      ],
+      "takeaways": [
+        "分治依序進行 Divide、Conquer 與 Combine。",
+        "子問題應縮小、覆蓋完整，且有可直接求解的 Base Case。",
+        "用遞迴式描述子問題與合併成本，再計算各層總工作。"
+      ],
+      "quiz": [
+        {
+          "question": "分治法和一般遞迴有什麼差別？",
+          "answer": "遞迴是函式呼叫自己的實作方式；分治則特別強調拆成子問題、各自求解並合併答案的策略。"
+        },
+        {
+          "question": "divide_max 的最大堆疊深度為什麼是 O(log n)？",
+          "answer": "每往下一層，單一路徑上的問題規模約減半，所以經過約 log₂n 層就剩一個元素。"
+        }
+      ],
+      "practice": [
+        "用分治法同時回傳陣列的最小值與最大值。",
+        "分析 T(n)=2T(n/2)+O(n) 在每一層的工作量與總複雜度。"
+      ]
+    },
+    {
+      "number": 4,
+      "slug": "merge-sort-and-quick-sort",
+      "title": "Merge Sort 與 Quick Sort 分治案例",
+      "subtitle": "比較先切後合併與先分割後遞迴",
+      "duration": "35 分鐘",
+      "difficulty": "基礎",
+      "summary": "以兩種經典排序比較分治步驟、複雜度與資料分割品質。",
+      "objectives": [
+        "說明 Merge Sort 的合併流程",
+        "說明 Quick Sort 的 pivot 分割",
+        "比較兩者時間與空間特性"
+      ],
+      "sections": [
+        {
+          "heading": "Merge Sort：先排兩半再合併",
+          "paragraphs": [
+            "合併排序（Merge Sort）把陣列切半，遞迴排序左右兩半，再用雙指標線性合併。Base Case 是長度小於等於一，因為這樣的陣列已經有序。"
+          ],
+          "bullets": [
+            "Divide：以 middle 切成兩半",
+            "Conquer：遞迴排序 left 與 right",
+            "Combine：每次取兩側目前較小值"
+          ],
+          "code": "def merge_sort(numbers):\n    if len(numbers) <= 1:\n        return numbers[:]\n    middle = len(numbers) // 2\n    left = merge_sort(numbers[:middle])\n    right = merge_sort(numbers[middle:])\n\n    merged = []\n    i = j = 0\n    while i < len(left) and j < len(right):\n        if left[i] <= right[j]:\n            merged.append(left[i]); i += 1\n        else:\n            merged.append(right[j]); j += 1\n    return merged + left[i:] + right[j:]",
+          "code_caption": "每層合併總共處理 n 個元素，共約 log n 層。"
+        },
+        {
+          "heading": "Quick Sort：pivot 決定分割",
+          "paragraphs": [
+            "快速排序（Quick Sort）選一個 pivot，把其餘元素分成小於等於與大於 pivot 的兩側，再遞迴排序。分割若大致平衡會有良好表現，若每次都極度不平衡，遞迴深度可能增長到 n。"
+          ],
+          "bullets": [
+            "Partition 是 Quick Sort 的核心工作",
+            "pivot 選擇影響分割是否平衡",
+            "下列教學版建立新陣列，易讀但不是原地排序"
+          ],
+          "code": "def quick_sort(numbers):\n    if len(numbers) <= 1:\n        return numbers[:]\n    pivot = numbers[len(numbers) // 2]\n    lower = [value for value in numbers if value < pivot]\n    equal = [value for value in numbers if value == pivot]\n    higher = [value for value in numbers if value > pivot]\n    return quick_sort(lower) + equal + quick_sort(higher)\n\nprint(quick_sort([5, 2, 8, 2, 1]))  # [1, 2, 2, 5, 8]",
+          "code_caption": "equal 能一次收集重複 pivot，避免它們持續進入子問題。"
+        },
+        {
+          "heading": "複雜度比較",
+          "paragraphs": [
+            "Merge Sort 無論輸入順序，時間都是 O(n log n)，但合併通常需 O(n) 額外空間。Quick Sort 平均 O(n log n)、最壞 O(n²)；教學版也使用 O(n) 級新陣列，而原地版本主要使用遞迴堆疊。"
+          ],
+          "bullets": [
+            "Merge Sort 的合併穩定且分割固定平衡",
+            "Quick Sort 的效能取決於 pivot 與分割品質",
+            "同名演算法的不同實作可能有不同空間成本"
+          ],
+          "table": {
+            "headers": ["演算法", "平均時間", "最壞時間", "本例額外空間"],
+            "rows": [
+              ["Merge Sort", "O(n log n)", "O(n log n)", "O(n) 級合併資料"],
+              ["Quick Sort", "O(n log n)", "O(n²)", "O(n) 級分割資料"]
+            ]
+          }
+        }
+      ],
+      "takeaways": [
+        "Merge Sort 的關鍵是線性合併兩個已排序子陣列。",
+        "Quick Sort 的關鍵是 pivot 分割，分割品質影響遞迴深度。",
+        "比較演算法時要同時說明時間、額外空間與具體實作。"
+      ],
+      "quiz": [
+        {
+          "question": "Merge Sort 為什麼能保證 O(n log n) 時間？",
+          "answer": "每次固定切半形成約 log n 層，而每層合併所有元素的總工作量是 O(n)。"
+        },
+        {
+          "question": "Quick Sort 何時可能退化成 O(n²)？",
+          "answer": "當 pivot 反覆造成極不平衡分割，例如一側接近 n-1、另一側接近 0 時，會有約 n 層且每層做線性分割。"
+        }
+      ],
+      "practice": [
+        "逐步合併 [2, 7] 與 [1, 5, 8]，記錄兩個指標的位置。",
+        "為 quick_sort 改用隨機 pivot，並說明它改善的是預期表現而非最壞上界。"
+      ]
+    },
+    {
+      "number": 5,
+      "slug": "backtracking-framework",
+      "title": "Backtracking 回溯框架",
+      "subtitle": "做選擇、深入探索，再撤銷選擇",
+      "duration": "30 分鐘",
+      "difficulty": "基礎",
+      "summary": "建立狀態空間樹與選擇、遞迴、撤銷的通用回溯骨架。",
+      "objectives": [
+        "描述回溯搜尋的狀態與選項",
+        "正確撤銷共享狀態",
+        "區分產生答案與判斷存在性"
+      ],
+      "sections": [
+        {
+          "heading": "回溯是受限制的深度優先探索",
+          "paragraphs": [
+            "回溯法（Backtracking）在狀態空間樹中逐步建立候選答案，每層選一個決定並深入。走到完整答案就記錄；發現不可能成功或探索完成時，退回上一層改試其他選項。"
+          ],
+          "bullets": [
+            "狀態：目前已做的選擇",
+            "選項：此狀態下可以採取的下一步",
+            "完成條件與無效條件決定何時停止深入"
+          ],
+          "callout": "回溯通常探索組合空間，最壞時間可能是指數級；它的價值在於系統化且可剪枝。"
+        },
+        {
+          "heading": "選擇、遞迴、撤銷",
+          "paragraphs": [
+            "若多層遞迴共用同一個 path，加入選項後必須在子呼叫返回時撤銷，讓下一個分支看到原本狀態。這個對稱結構常寫成 append、backtrack、pop。"
+          ],
+          "bullets": [
+            "Choose：path.append(choice)",
+            "Explore：backtrack(...)",
+            "Unchoose：path.pop()"
+          ],
+          "code": "def all_binary_choices(length):\n    results = []\n    path = []\n\n    def backtrack():\n        if len(path) == length:\n            results.append(path.copy())\n            return\n        for choice in (0, 1):\n            path.append(choice)\n            backtrack()\n            path.pop()\n\n    backtrack()\n    return results",
+          "code_caption": "記錄答案時使用 path.copy()，避免所有結果指向同一個可變 list。"
+        },
+        {
+          "heading": "設計介面與複雜度",
+          "paragraphs": [
+            "若要列出所有答案，回溯必須走訪所有可行葉節點；若只問是否存在，找到第一個答案就可傳回 True 提早結束。二元選擇深度 n 最多有 O(2ⁿ) 狀態，堆疊與 path 深度為 O(n)，輸出空間另計。"
+          ],
+          "bullets": [
+            "列舉問題的時間至少與答案數量成正比",
+            "存在性搜尋可用布林回傳值提前停止",
+            "複製 path 的成本也要納入產生所有答案的時間"
+          ],
+          "code": "def has_binary_target(length, target_sum):\n    def backtrack(depth, current_sum):\n        if current_sum > target_sum:\n            return False\n        if depth == length:\n            return current_sum == target_sum\n        return (\n            backtrack(depth + 1, current_sum)\n            or backtrack(depth + 1, current_sum + 1)\n        )\n    return backtrack(0, 0)",
+          "code_caption": "or 具有短路特性，找到答案後不再探索另一分支。"
+        }
+      ],
+      "takeaways": [
+        "回溯在狀態空間樹中以深度優先方式試探選項。",
+        "共享 path 時，選擇與撤銷必須成對。",
+        "列舉所有答案與只判斷是否存在，停止策略不同。"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼 results.append(path) 常會造成錯誤？",
+          "answer": "它保存同一個可變 list 的參照，後續 append 或 pop 會改動已保存結果；應加入 path.copy()。"
+        },
+        {
+          "question": "回溯中的撤銷步驟有什麼目的？",
+          "answer": "它恢復進入本分支前的狀態，確保下一個選項不會受到上一個分支殘留選擇影響。"
+        }
+      ],
+      "practice": [
+        "產生長度 n、只含 A 或 B 的所有字串。",
+        "修改二元選擇回溯，只保留恰好含 k 個 1 的答案。"
+      ]
+    },
+    {
+      "number": 6,
+      "slug": "subsets",
+      "title": "子集合",
+      "subtitle": "每個元素都有選與不選兩條分支",
+      "duration": "30 分鐘",
+      "difficulty": "基礎",
+      "summary": "以二元決策樹產生所有子集合，並處理含重複元素的輸入。",
+      "objectives": [
+        "把子集合建模成選與不選",
+        "寫出索引型回溯",
+        "使用排序與同層跳過完成去重"
+      ],
+      "sections": [
+        {
+          "heading": "選或不選形成 2ⁿ 個答案",
+          "paragraphs": [
+            "對 n 個互異元素，每個元素都可選入或略過，因此共有 2ⁿ 個子集合。回溯的 index 表示目前正在決定哪個元素，走到 index == n 時就完成一個答案。"
+          ],
+          "bullets": [
+            "左分支：不選 numbers[index]",
+            "右分支：選 numbers[index]",
+            "空集合也是合法子集合"
+          ],
+          "code": "def subsets(numbers):\n    results = []\n    path = []\n\n    def backtrack(index):\n        if index == len(numbers):\n            results.append(path.copy())\n            return\n        backtrack(index + 1)\n        path.append(numbers[index])\n        backtrack(index + 1)\n        path.pop()\n\n    backtrack(0)\n    return results\n\nprint(subsets([1, 2]))  # [[], [2], [1], [1, 2]]",
+          "code_caption": "兩條分支完整覆蓋每個元素的選與不選。"
+        },
+        {
+          "heading": "另一種寫法：每個節點都是答案",
+          "paragraphs": [
+            "也可在進入每個狀態時立刻保存 path，再從 start 起選擇下一個元素。這種寫法自然產生不同長度的組合，且 start 保證索引只向右前進。"
+          ],
+          "bullets": [
+            "每個 path 本身就是一個子集合",
+            "下一層從 index + 1 開始，避免重複選同一位置",
+            "輸出順序不同不影響子集合內容正確性"
+          ],
+          "code": "def subsets_by_start(numbers):\n    results = []\n    path = []\n    def backtrack(start):\n        results.append(path.copy())\n        for index in range(start, len(numbers)):\n            path.append(numbers[index])\n            backtrack(index + 1)\n            path.pop()\n    backtrack(0)\n    return results",
+          "code_caption": "start 寫法之後也能直接延伸到固定長度組合。"
+        },
+        {
+          "heading": "重複元素與成本",
+          "paragraphs": [
+            "輸入含重複值時，先排序，並在同一層跳過與前一個相同的候選，可避免產生重複子集合。互異元素版本有 2ⁿ 個答案，每次複製最多 n 個元素，因此產生全部結果的時間為 O(n·2ⁿ)，遞迴工作空間 O(n)。"
+          ],
+          "bullets": [
+            "排序讓相同值相鄰，便於偵測",
+            "條件 index > start 表示只跳過同一層的重複候選",
+            "不能無條件跳過相同值，否則會漏掉 [2, 2] 之類答案"
+          ],
+          "code": "def unique_subsets(numbers):\n    numbers = sorted(numbers)\n    results, path = [], []\n    def backtrack(start):\n        results.append(path.copy())\n        for index in range(start, len(numbers)):\n            if index > start and numbers[index] == numbers[index - 1]:\n                continue\n            path.append(numbers[index])\n            backtrack(index + 1)\n            path.pop()\n    backtrack(0)\n    return results",
+          "code_caption": "同層去重保留不同選取數量，排除交換相同值造成的重複。"
+        }
+      ],
+      "takeaways": [
+        "子集合可建模為每個元素選或不選的二元決策。",
+        "start 索引能避免回頭選取並自然產生各種長度。",
+        "排序加同層跳過可處理重複輸入而不漏解。"
+      ],
+      "quiz": [
+        {
+          "question": "n 個互異元素為什麼有 2ⁿ 個子集合？",
+          "answer": "每個元素各有選與不選兩種獨立決定，n 個元素的組合數為 2×2×…×2=2ⁿ。"
+        },
+        {
+          "question": "unique_subsets 為何使用 index > start，而不是 index > 0？",
+          "answer": "只應跳過同一決策層的重複候選；更深層仍可再次選取另一個相同值，形成合法的 [2, 2]。"
+        }
+      ],
+      "practice": [
+        "產生 [1, 2, 3] 的所有子集合，並依長度分組。",
+        "只產生元素總和不超過 target 的子集合，加入可安全使用的剪枝。"
+      ]
+    },
+    {
+      "number": 7,
+      "slug": "permutations-and-combinations",
+      "title": "排列與組合",
+      "subtitle": "分清順序是否重要，再選擇 used 或 start",
+      "duration": "35 分鐘",
+      "difficulty": "基礎",
+      "summary": "比較排列與組合的狀態設計，並用剩餘數量剪去不可能的組合分支。",
+      "objectives": [
+        "區分排列與組合",
+        "以 used 追蹤排列中已選索引",
+        "以 start 產生固定長度組合"
+      ],
+      "sections": [
+        {
+          "heading": "排列：順序不同就是不同答案",
+          "paragraphs": [
+            "排列（Permutation）中 [1, 2] 與 [2, 1] 是不同答案，因此每一層都要考慮所有尚未使用的元素。used[index] 記錄某個輸入位置是否已在目前 path 中，防止同一位置重複使用。"
+          ],
+          "bullets": [
+            "完成條件：len(path) == len(numbers)",
+            "選擇後設 used[index] = True",
+            "撤銷時 pop 並恢復 used[index] = False"
+          ],
+          "code": "def permutations(numbers):\n    results, path = [], []\n    used = [False] * len(numbers)\n    def backtrack():\n        if len(path) == len(numbers):\n            results.append(path.copy())\n            return\n        for index, value in enumerate(numbers):\n            if used[index]:\n                continue\n            used[index] = True\n            path.append(value)\n            backtrack()\n            path.pop()\n            used[index] = False\n    backtrack()\n    return results",
+          "code_caption": "對 n 個互異元素會產生 n! 個排列。"
+        },
+        {
+          "heading": "組合：只保留選了哪些元素",
+          "paragraphs": [
+            "組合（Combination）不區分選取順序，所以選擇下一個元素時只向右走，避免把相同集合以不同順序重複產生。當 path 長度到達 k，就記錄答案並返回。"
+          ],
+          "bullets": [
+            "start 限制下一個可選的最小索引",
+            "選 index 後，下一層從 index + 1 開始",
+            "[1, 2] 會產生，但不再產生 [2, 1]"
+          ],
+          "code": "def combinations(numbers, k):\n    results, path = [], []\n    def backtrack(start):\n        if len(path) == k:\n            results.append(path.copy())\n            return\n        for index in range(start, len(numbers)):\n            path.append(numbers[index])\n            backtrack(index + 1)\n            path.pop()\n    backtrack(0)\n    return results\n\nprint(combinations([1, 2, 3], 2))  # [[1, 2], [1, 3], [2, 3]]",
+          "code_caption": "start 保證索引遞增，因此每個組合只出現一次。"
+        },
+        {
+          "heading": "複雜度與剩餘數量剪枝",
+          "paragraphs": [
+            "互異元素的全排列有 n! 個輸出，複製每個答案後時間可寫成 O(n·n!)；k 組合有 C(n,k) 個輸出，產生結果至少需 O(k·C(n,k))。組合搜尋時若剩餘元素不足以填滿 k，就可提早停止迴圈。"
+          ],
+          "bullets": [
+            "still_needed = k - len(path)",
+            "迴圈最大起點可限制為 len(numbers) - still_needed",
+            "排列與組合的遞迴工作空間分別最多 O(n) 與 O(k)"
+          ],
+          "code": "def combinations_pruned(numbers, k):\n    results, path = [], []\n    def backtrack(start):\n        if len(path) == k:\n            results.append(path.copy()); return\n        needed = k - len(path)\n        last_start = len(numbers) - needed\n        for index in range(start, last_start + 1):\n            path.append(numbers[index])\n            backtrack(index + 1)\n            path.pop()\n    backtrack(0)\n    return results",
+          "code_caption": "剪枝只排除剩餘數量不足的分支，不會漏掉可完成的組合。"
+        }
+      ],
+      "takeaways": [
+        "排列在意順序，常用 used；組合不在意順序，常用 start。",
+        "回溯狀態必須區分輸入位置，尤其當值可能重複時。",
+        "安全剪枝必須能證明被略過的分支不可能完成答案。"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼組合使用 start 後不會產生 [2, 1]？",
+          "answer": "選取索引 2 後只能繼續考慮更右側索引，不能回到索引 1，因此每組元素只依索引遞增順序出現。"
+        },
+        {
+          "question": "全排列的時間為什麼不能低於答案數量 n! 的量級？",
+          "answer": "演算法必須至少輸出 n! 個不同排列，而每個輸出本身還包含 n 個元素。"
+        }
+      ],
+      "practice": [
+        "產生長度為 k 的排列，也就是從 n 個元素選 k 個且順序重要。",
+        "讓排列函式處理含重複值的輸入，使用排序與同層去重避免重複答案。"
+      ]
+    },
+    {
+      "number": 8,
+      "slug": "n-queens-maze-and-pruning",
+      "title": "N-Queens、迷宮與剪枝",
+      "subtitle": "把限制轉成快速檢查，縮小搜尋樹",
+      "duration": "40 分鐘",
+      "difficulty": "進階",
+      "summary": "以 N-Queens 與迷宮整合狀態、合法性檢查、撤銷與剪枝。",
+      "objectives": [
+        "用集合快速檢查皇后衝突",
+        "在迷宮搜尋中標記與撤銷走訪狀態",
+        "判斷剪枝是否安全並分析最壞複雜度"
+      ],
+      "sections": [
+        {
+          "heading": "N-Queens 的限制集合",
+          "paragraphs": [
+            "N-Queens 要在 n×n 棋盤每列放一個皇后，且任兩個不能同欄或同斜線。逐列放置能自動避免同列衝突，再用 columns、row-col 與 row+col 三個集合以平均 O(1) 檢查其餘限制。"
+          ],
+          "bullets": [
+            "columns 保存已占用欄",
+            "row - col 相同表示同一條左上到右下斜線",
+            "row + col 相同表示同一條右上到左下斜線"
+          ],
+          "code": "def solve_n_queens(n):\n    results, positions = [], []\n    columns, diagonal_down, diagonal_up = set(), set(), set()\n    def backtrack(row):\n        if row == n:\n            results.append(positions.copy()); return\n        for col in range(n):\n            if (col in columns or row - col in diagonal_down\n                    or row + col in diagonal_up):\n                continue\n            positions.append(col)\n            columns.add(col); diagonal_down.add(row - col); diagonal_up.add(row + col)\n            backtrack(row + 1)\n            positions.pop()\n            columns.remove(col); diagonal_down.remove(row - col); diagonal_up.remove(row + col)\n    backtrack(0)\n    return results",
+          "code_caption": "positions[row] 是該列皇后的欄位置，集合在返回時完整撤銷。"
+        },
+        {
+          "heading": "迷宮：避免在路徑中繞圈",
+          "paragraphs": [
+            "迷宮可把每個可走格視為狀態，從目前位置嘗試上下左右並遞迴。為避免同一路徑繞圈，進入格子時加入 path_seen，返回時移除；若只需找任一路徑，找到終點即可提早回傳。"
+          ],
+          "bullets": [
+            "越界、牆壁或已在目前路徑中的格子立即剪枝",
+            "選擇：加入位置；撤銷：移除位置",
+            "只判斷可達性時，也可永久標記 visited 避免重複探索"
+          ],
+          "code": "def find_maze_path(grid, start, goal):\n    rows, cols = len(grid), len(grid[0])\n    path, path_seen = [], set()\n    def backtrack(row, col):\n        position = (row, col)\n        if not (0 <= row < rows and 0 <= col < cols): return False\n        if grid[row][col] == 1 or position in path_seen: return False\n        path.append(position); path_seen.add(position)\n        if position == goal: return True\n        for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):\n            if backtrack(row + dr, col + dc): return True\n        path.pop(); path_seen.remove(position)\n        return False\n    return path if backtrack(*start) else []",
+          "code_caption": "grid 中 0 可走、1 是牆；成功時不撤銷，讓 path 保留答案。"
+        },
+        {
+          "heading": "剪枝的正確性與成本",
+          "paragraphs": [
+            "剪枝（Pruning）要用可證明的條件排除不可能成功的分支，例如皇后位置已衝突或迷宮位置已在當前路徑。N-Queens 最壞仍接近 O(n!) 搜尋，迷宮列舉簡單路徑也可能指數成長；集合讓每次合法性檢查更快，但不改變最壞搜尋空間的本質。"
+          ],
+          "bullets": [
+            "可行性剪枝：目前狀態已違反硬性限制",
+            "界線剪枝：剩餘資源不足以完成答案",
+            "最佳化剪枝：目前下界已不可能優於已知答案"
+          ],
+          "callout": "剪枝前要說明「為什麼被剪掉的分支不可能含答案」，不能只因它看起來希望較小。"
+        }
+      ],
+      "takeaways": [
+        "把限制轉成 set，可快速檢查 N-Queens 的欄與斜線衝突。",
+        "迷宮回溯必須管理走訪狀態，避免同一路徑反覆繞圈。",
+        "剪枝改善實際搜尋量，但安全性需要可說明的判斷依據。"
+      ],
+      "quiz": [
+        {
+          "question": "N-Queens 中為什麼不需要另外保存已占用的 row？",
+          "answer": "演算法每一層只處理一個固定 row，並在放置後前進到下一列，因此自然不會在同一列放兩個皇后。"
+        },
+        {
+          "question": "迷宮中 path_seen 何時應該撤銷？",
+          "answer": "若要列舉或保留其他可能路徑，當目前分支失敗返回時應移除該位置；若只做可達性且不需重訪，則可使用永久 visited。"
+        }
+      ],
+      "practice": [
+        "把 N-Queens 的 positions 轉成由 Q 與 . 組成的棋盤字串。",
+        "修改迷宮函式列出所有不重複簡單路徑，並比較永久 visited 為何不再適用。"
+      ]
+    }
+  ]
+}

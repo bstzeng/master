@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="使用 current 指標走訪節點，轉換資料並搜尋第一個符合條件的位置。" />
+    <meta name="theme-color" content="#101713" />
+    <title>06.02 走訪與搜尋｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-06-linked-lists.html">UNIT 06 / LESSON 02</a><p class="eyebrow">Linked Lists</p><h1>走訪與搜尋</h1><p class="lesson-deck">沿著 next 前進，直到找到目標或走到終點</p><div class="lesson-meta"><span>入門</span><span>25 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>使用 current 指標走訪節點，轉換資料並搜尋第一個符合條件的位置。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>寫出不遺失 head 的走訪迴圈</li><li>搜尋指定值並回傳節點</li><li>分析走訪與搜尋的成本</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>current 是移動中的指標</h2><p>走訪時通常保留 head 不動，另以 current 指向目前節點。每輪處理 current.value 後執行 current = current.next，直到 current 變成 None。</p><ul><li>文字圖：current → [10] → [20] → [30] → None</li><li>前進一次後：head 仍指向 [10]，current 改指向 [20]</li><li>while current is not None 可同時處理最後一個節點</li></ul><figure class="code-block"><figcaption><span>用 current 走訪，避免改掉呼叫端仍需使用的 head 參照。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def to_list(head):
+    values = []
+    current = head
+    while current is not None:
+        values.append(current.value)
+        current = current.next
+    return values
+
+head = build_linked_list([10, 20, 30])
+print(to_list(head))  # [10, 20, 30]</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>搜尋第一個符合的節點</h2><p>搜尋時逐節點比較 value，找到後可立即回傳節點參照，走到 None 則代表不存在。回傳節點而不是只有布林值，能讓呼叫端繼續讀取或修改該節點。</p><ul><li>找到目標：return current</li><li>走完整條鏈仍未找到：return None</li><li>有重複值時，此版本回傳第一個符合節點</li></ul><figure class="code-block"><figcaption><span>找到後提早結束，不必繼續走完整條鏈。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def find_node(head, target):
+    current = head
+    while current is not None:
+        if current.value == target:
+            return current
+        current = current.next
+    return None
+
+found = find_node(head, 20)
+print(found.value if found else &quot;找不到&quot;)  # 20</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>終止條件與複雜度</h2><p>含 n 個節點的完整走訪耗時 O(n)，current 只是一個額外參照，所以額外空間是 O(1)。搜尋最好情況在 head 就找到，時間 O(1)；最壞情況則要走到尾端，時間 O(n)。</p><ul><li>忘記更新 current 會造成無限迴圈</li><li>誤寫 while current.next 會漏掉最後一個節點</li><li>空串列時 current 一開始就是 None，迴圈自然不執行</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>走訪骨架是多數鏈結串列演算法的起點，先確認何時處理節點、何時前進。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>保留 head，使用 current 沿 next 逐節點前進。</li><li><span>02</span>搜尋可在找到第一個符合節點時提早回傳。</li><li><span>03</span>完整走訪時間 O(n)，迭代寫法額外空間 O(1)。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼走訪常用 current，而不直接反覆修改 head？</summary><p>current 能移動而保留串列入口；若覆寫唯一的 head 參照，之後可能無法再從開頭存取串列。</p></details><details><summary>while current.next is not None 會漏掉什麼？</summary><p>迴圈會在 current 位於最後一個節點時停止，因此最後一個節點不會被迴圈內容處理。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>寫一個 count_nodes 函式，回傳鏈結串列的節點數量。</li><li>寫一個 find_last 函式，回傳最後一個等於 target 的節點。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-06/01-nodes-and-singly-linked-lists.html"><span>← 上一課</span><b>Node 與單向鏈結串列</b></a><a class="next" href="../unit-06/03-insertion-and-deletion.html"><span>下一課 →</span><b>插入與刪除</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

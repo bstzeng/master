@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="以 heapq 實作 Priority Queue，處理相同優先權、穩定順序與可比較性問題。" />
+    <meta name="theme-color" content="#101713" />
+    <title>07.04 Priority Queue：依優先權取出｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-07-stack-queue-heap.html">UNIT 07 / LESSON 04</a><p class="eyebrow">Stacks, Queues, and Heaps</p><h1>Priority Queue：依優先權取出</h1><p class="lesson-deck">讓重要工作先處理，而非最早工作先處理</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>以 heapq 實作 Priority Queue，處理相同優先權、穩定順序與可比較性問題。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>區分一般 Queue 與 Priority Queue</li><li>使用 Tuple 建立優先權項目</li><li>處理優先權相同與物件不可比較的情況</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>優先權改變取出規則</h2><p>Priority Queue（優先佇列）不是依到達時間，而是每次取出目前優先權最高的項目。Python 的 heapq 是最小堆積，所以通常用較小數字代表較高優先權，查看下一項 O(1)，加入與取出 O(log n)。</p><ul><li>一般 Queue：依到達順序</li><li>Priority Queue：依優先值</li><li>heappush：O(log n)</li><li>heappop：O(log n)</li></ul><figure class="code-block"><figcaption><span>Tuple 先比較第一欄，因此最小優先值先取出。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>import heapq
+
+tasks = []
+heapq.heappush(tasks, (2, &quot;回覆郵件&quot;))
+heapq.heappush(tasks, (1, &quot;修復服務&quot;))
+heapq.heappush(tasks, (3, &quot;整理文件&quot;))
+print(heapq.heappop(tasks))  # (1, &#x27;修復服務&#x27;)</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>穩定順序與 tie-breaker</h2><p>當兩項優先權相同時，Tuple 會繼續比較下一欄；若工作物件不可互相比較，會發生 TypeError。加入遞增序號作為 tie-breaker，既能避免比較工作物件，也能讓同優先權項目依進入順序取出。</p><ul><li>項目格式：(priority, sequence, task)</li><li>sequence 永不重複，因此 task 不需互相比較</li><li>較小 sequence 代表較早加入</li><li>可用 itertools.count 產生序號</li></ul><figure class="code-block"><figcaption><span>序號同時提供穩定順序與可比較欄位。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>import heapq
+from itertools import count
+
+sequence = count()
+queue = []
+heapq.heappush(queue, (1, next(sequence), {&quot;name&quot;: &quot;A&quot;}))
+heapq.heappush(queue, (1, next(sequence), {&quot;name&quot;: &quot;B&quot;}))
+_, _, task = heapq.heappop(queue)
+print(task)  # {&#x27;name&#x27;: &#x27;A&#x27;}</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>限制與使用情境</h2><p>heapq 適合持續加入並反覆取出最高優先項目，但不擅長搜尋、刪除任意工作或直接更新既有優先權。排程、Dijkstra 最短路徑與事件模擬常用 Priority Queue；需要取消或更新時，常採延遲刪除並在彈出時忽略失效項目。</p><ul><li>查看 heap[0] 不會移除，O(1)</li><li>搜尋任意項目為 O(n)</li><li>內部 List 不是完整排序</li><li>n 次推入與取出總計 O(n log n)</li></ul><div class="table-wrap"><table><thead><tr><th>結構</th><th>下一項依據</th><th>加入／取出</th></tr></thead><tbody><tr><td>Queue</td><td>最早到達</td><td>O(1)／O(1)</td></tr><tr><td>Priority Queue</td><td>最小優先值</td><td>O(log n)／O(log n)</td></tr><tr><td>排序 List</td><td>完整順序</td><td>至少一端更新可能 O(n)</td></tr></tbody></table></div><aside class="concept-callout"><b>KEY IDEA</b><p>Priority Queue 保證下一個取出的項目，不保證整個容器隨時完整排序。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Priority Queue 每次取出目前最高優先權，而非最早到達項目</li><li><span>02</span>heapq 以較小值先出，加入與取出皆為 O(log n)</li><li><span>03</span>遞增序號能穩定處理相同優先權與不可比較工作</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為何 (priority, task) 在 priority 相同時可能出錯？</summary><p>Tuple 會繼續比較 task；若 task 是 Dictionary 等不可排序物件，就會拋出 TypeError。</p></details><details><summary>Priority Queue 與一般 Queue 的主要差異為何？</summary><p>一般 Queue 依 FIFO 取出，Priority Queue 依目前最高優先權取出。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>建立醫院檢傷 Priority Queue，同級病患依到達順序處理。</li><li>模擬事件時間軸，以事件發生時間作為優先值逐項取出。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-07/03-queue-and-deque.html"><span>← 上一課</span><b>Queue 與 deque：先進先出</b></a><a class="next" href="../unit-07/05-min-and-max-heaps.html"><span>下一課 →</span><b>Min Heap 與 Max Heap</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

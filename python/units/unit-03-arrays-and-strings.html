@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="從線性走訪開始，學會利用索引、雜湊、雙指標、滑動視窗、前綴和與差分陣列，處理常見的陣列及字串問題。" />
+    <meta name="theme-color" content="#101713" />
+    <title>單元 03｜陣列與字串技巧｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../styles.css" />
+    <script src="../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../index.html">課程總覽</a>
+        <a class="is-active" href="../phase-1.html">第一階段</a>
+        <a class="" href="../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <section class="unit-hero">
+        <div><a class="breadcrumb" href="../phase-1.html">PHASE 01 / UNIT 03</a><p class="eyebrow">Array and String Techniques</p><h1>陣列與字串技巧</h1><p class="hero-intro">從線性走訪開始，學會利用索引、雜湊、雙指標、滑動視窗、前綴和與差分陣列，處理常見的陣列及字串問題。</p><a class="primary-button" href="#lessons">查看 7 堂課 <span>↓</span></a></div>
+        <aside><span>UNIT</span><strong>03</strong><p>能從題目的查詢方式與限制辨認常見模式，選擇適當技巧，並寫出可解釋複雜度的 Python 解法。</p></aside>
+      </section>
+      <section class="unit-info"><div><p class="section-index">BEFORE YOU START</p><h2>先備知識</h2><ul><li>會使用 Python 的 list、str、dict 與 set</li><li>理解索引、迴圈、函式與條件判斷</li><li>知道時間複雜度 O(1)、O(n) 與 O(n²) 的意義</li></ul></div><div><p class="section-index">AFTER THIS UNIT</p><h2>完成後你能夠</h2><ul><li>能安全走訪陣列與字串，並處理索引邊界</li><li>能使用雜湊表統計字元或快速查找互補值</li><li>能辨認雙指標與滑動視窗的適用情境</li><li>能以最長不重複子字串說明動態視窗的維護方式</li><li>能使用前綴和回答區間查詢，並用差分陣列處理批次區間更新</li></ul></div></section>
+      <section class="lesson-section" id="lessons"><div class="section-head"><div><p class="section-index">LESSON LIST</p><h2>本單元課程</h2></div><p>建議依序閱讀；每一課約 15–25 分鐘，讀完後先回答理解題，再挑一題延伸練習。</p></div><div class="lesson-list">
+        <article class="lesson-row">
+          <span>01</span>
+          <div><p>入門 · 20 分鐘</p><h3>陣列與字串走訪</h3><b>從索引、元素與相鄰關係建立基本功</b></div>
+          <a href="../lessons/unit-03/01-traversing-arrays-and-strings.html" aria-label="開始課程：陣列與字串走訪">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>02</span>
+          <div><p>入門 · 25 分鐘</p><h3>字元統計與雜湊表</h3><b>把重複搜尋改成一次統計與快速查找</b></div>
+          <a href="../lessons/unit-03/02-frequency-counting-and-hashing.html" aria-label="開始課程：字元統計與雜湊表">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>03</span>
+          <div><p>基礎 · 25 分鐘</p><h3>Two Pointers 雙指標</h3><b>利用資料順序協調兩個索引</b></div>
+          <a href="../lessons/unit-03/03-two-pointers.html" aria-label="開始課程：Two Pointers 雙指標">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>04</span>
+          <div><p>基礎 · 25 分鐘</p><h3>經典題型：Two Sum</h3><b>用互補值把 O(n²) 降為平均 O(n)</b></div>
+          <a href="../lessons/unit-03/04-two-sum-with-hash-map.html" aria-label="開始課程：經典題型：Two Sum">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>05</span>
+          <div><p>基礎 · 30 分鐘</p><h3>Sliding Window 滑動視窗</h3><b>重用相鄰區間的計算結果</b></div>
+          <a href="../lessons/unit-03/05-sliding-window.html" aria-label="開始課程：Sliding Window 滑動視窗">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>06</span>
+          <div><p>基礎 · 30 分鐘</p><h3>經典題型：最長不重複子字串</h3><b>用索引表快速跳過重複字元</b></div>
+          <a href="../lessons/unit-03/06-longest-substring-without-repeating.html" aria-label="開始課程：經典題型：最長不重複子字串">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>07</span>
+          <div><p>基礎 · 35 分鐘</p><h3>Prefix Sum 與差分陣列</h3><b>用預處理加速區間查詢與批次更新</b></div>
+          <a href="../lessons/unit-03/07-prefix-sums-and-difference-arrays.html" aria-label="開始課程：Prefix Sum 與差分陣列">開始閱讀 →</a>
+        </article></div></section>
+      <nav class="bottom-nav"><a href="../phase-1.html">← 返回第 1 階段大綱</a><a href="../index.html">完整學習地圖 ↑</a></nav></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

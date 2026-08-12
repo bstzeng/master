@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="建立可重複使用的 DP 設計流程。" />
+    <meta name="theme-color" content="#101713" />
+    <title>13.03 State、Transition、Base Case 與順序｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-13-dynamic-programming.html">UNIT 13 / LESSON 03</a><p class="eyebrow">Dynamic Programming</p><h1>State、Transition、Base Case 與順序</h1><p class="lesson-deck">用四個問題設計 DP</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>建立可重複使用的 DP 設計流程。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>精確定義 state</li><li>列出 transition 與 base case</li><li>決定合法計算順序</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>先定義 State</h2><p>State 必須用一句可驗證的話描述，例如 dp[i] 是處理前 i 個元素的最佳值。索引範圍與答案位置也應同時寫清楚。</p><ul><li>狀態要包含影響未來的資訊</li><li>避免讓 dp[i] 同時有兩種意思</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>若無法清楚說明 dp[i]，通常還不能開始寫程式。</p></aside></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>最後一步推導 Transition</h2><p>問答案最後一步可能做了什麼，再把各選擇連到較小狀態。Base Case 提供最小問題答案，也必須涵蓋空輸入。</p><ul><li>取最大、最小或加總取決於題意</li><li>檢查每個轉移索引是否合法</li><li>不可能狀態可初始化為 inf 或 False</li></ul><div class="table-wrap"><table><thead><tr><th>設計項</th><th>問題</th></tr></thead><tbody><tr><td>State</td><td>dp[...] 代表什麼？</td></tr><tr><td>Transition</td><td>最後一步有哪些選擇？</td></tr><tr><td>Base</td><td>最小問題答案？</td></tr></tbody></table></div></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>依賴決定順序</h2><p>表格填寫時，依賴狀態必須先完成；若 dp[i] 依賴較小 i，就由左到右。二維 DP 則要同時檢查列與欄的方向。</p><ul><li>畫依賴箭頭可檢查順序</li><li>空間壓縮可能改變內層迴圈方向</li><li>答案不一定是 dp[-1]</li></ul><figure class="code-block"><figcaption><span>簡例展示前態先於後態計算。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def min_cost(cost):
+    dp = [0] * (len(cost) + 1)
+    for i in range(1, len(dp)):
+        dp[i] = dp[i - 1] + cost[i - 1]
+    return dp[-1]</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>State 定義要包含索引範圍與語意。</li><li><span>02</span>Transition 可由最後一步的所有選擇推導。</li><li><span>03</span>計算順序必須符合依賴方向。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為何不可能狀態常用 infinity？</summary><p>做最小化時它不會錯誤成為較佳候選。</p></details><details><summary>一維壓縮後迴圈方向可能改變嗎？</summary><p>會；方向決定本輪讀到舊狀態或已更新的新狀態。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>為爬樓梯寫出 state、transition、base 與順序。</li><li>找一個答案不位於 dp[-1] 的例子並說明。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-13/02-memoization-vs-tabulation.html"><span>← 上一課</span><b>Memoization 與 Tabulation</b></a><a class="next" href="../unit-13/04-fibonacci-and-climbing-stairs.html"><span>下一課 →</span><b>Fibonacci 與 Climbing Stairs</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="認識節點、head 與 next，並從陣列建立及讀回單向鏈結串列。" />
+    <meta name="theme-color" content="#101713" />
+    <title>06.01 Node 與單向鏈結串列｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-06-linked-lists.html">UNIT 06 / LESSON 01</a><p class="eyebrow">Linked Lists</p><h1>Node 與單向鏈結串列</h1><p class="lesson-deck">用節點參照串起一條資料鏈</p><div class="lesson-meta"><span>入門</span><span>25 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>認識節點、head 與 next，並從陣列建立及讀回單向鏈結串列。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明節點的資料與連結欄位</li><li>以 head 表示串列起點</li><li>從 Python list 建立鏈結串列</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>節點不是索引格子</h2><p>鏈結串列（Linked List）由分散的節點組成，每個節點保存資料以及下一個節點的參照。單向鏈結串列只能沿 next 向前走，最後一個節點的 next 是 None。</p><ul><li>Node(value, next) 可讀成「資料加下一站」</li><li>head 指向第一個節點；空串列的 head 是 None</li><li>文字圖：head → [10] → [20] → [30] → None</li></ul><figure class="code-block"><figcaption><span>變數保存的是節點參照；first.next 指向 second 節點。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>class Node:
+    def __init__(self, value, next_node=None):
+        self.value = value
+        self.next = next_node
+
+first = Node(10)
+second = Node(20)
+first.next = second
+head = first
+
+print(head.value)       # 10
+print(head.next.value)  # 20</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>從陣列建立資料鏈</h2><p>若依輸入順序建立串列，可保留 head 與 tail 兩個參照，每加入一個節點就把舊 tail.next 指向新節點。接線順序可讀成「舊尾端 → 新節點」，再將 tail 移到新節點。</p><ul><li>空串列加入第一個節點時，head 與 tail 都指向它</li><li>後續加入：tail.next = new_node，再更新 tail</li><li>文字圖：[舊 tail] → [new_node]，tail 再移到右側</li></ul><figure class="code-block"><figcaption><span>保留 tail 後，每次尾端加入只需 O(1) 接線時間。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def build_linked_list(values):
+    head = None
+    tail = None
+    for value in values:
+        new_node = Node(value)
+        if head is None:
+            head = new_node
+            tail = new_node
+        else:
+            tail.next = new_node
+            tail = new_node
+    return head
+
+head = build_linked_list([10, 20, 30])</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>與 Python list 的差異</h2><p>建立 n 個節點需要 O(n) 時間與 O(n) 節點空間。鏈結串列無法像 Python list 一樣用索引 O(1) 取得第 i 個元素，但已知插入位置的節點時，接線可在 O(1) 完成。</p><ul><li>鏈結串列的節點不要求在記憶體中連續排列</li><li>取得第 i 個節點要從 head 走訪，時間 O(n)</li><li>每個節點除了資料，也需保存 next 參照</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>Python 的 list 是動態陣列，不是本單元所說的鏈結串列。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>單向節點保存 value 與指向下一站的 next。</li><li><span>02</span>head 是串列入口，None 表示沒有下一個節點。</li><li><span>03</span>鏈結串列擅長接線操作，但不支援常數時間的任意索引。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>空的單向鏈結串列中，head 應該是什麼？</summary><p>head 應為 None，表示目前沒有第一個節點。</p></details><details><summary>為什麼取得鏈結串列第 i 個元素不是 O(1)？</summary><p>節點沒有可直接定位的連續索引，必須從 head 沿 next 逐節點走到目標位置。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>建立 4 → 8 → 15 → None 的單向鏈結串列，並畫出每個變數的指向。</li><li>修改 build_linked_list，使空輸入會明確回傳 None，並測試單一元素。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-05/08-sorting-comparison.html"><span>← 上一課</span><b>排序演算法總比較</b></a><a class="next" href="../unit-06/02-traversal-and-search.html"><span>下一課 →</span><b>走訪與搜尋</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

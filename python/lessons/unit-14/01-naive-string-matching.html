@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="定義 Text 與 Pattern，以逐位置對齊實作暴力匹配，分析最壞 O(nm) 與邊界條件。" />
+    <meta name="theme-color" content="#101713" />
+    <title>14.01 字串匹配與暴力搜尋｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-14-string-algorithms.html">UNIT 14 / LESSON 01</a><p class="eyebrow">Classic String Algorithms</p><h1>字串匹配與暴力搜尋</h1><p class="lesson-deck">先定義問題，再觀察重複比較</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>定義 Text 與 Pattern，以逐位置對齊實作暴力匹配，分析最壞 O(nm) 與邊界條件。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>區分 Text、Pattern 與 Match Index</li><li>實作回傳全部匹配位置的暴力演算法</li><li>分析最壞時間與特殊輸入</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>Text、Pattern 與對齊</h2><p>字串匹配要在長度 n 的 Text（本文）中尋找長度 m 的 Pattern（模式），答案可能是第一個位置、全部位置或是否存在。暴力法把 Pattern 依序對齊 Text 的每個可行起點，再從左到右比較字元。</p><ul><li>可行起點為 0 到 n - m</li><li>Python 索引通常回傳零起始位置</li><li>題目要先說明是否允許重疊匹配</li><li>Pattern 比 Text 長時沒有匹配</li></ul><figure class="code-block"><figcaption><span>依序列出 Pattern 在 Text 上的所有可能對齊位置。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>text = &quot;banana&quot;
+pattern = &quot;ana&quot;
+for start in range(len(text) - len(pattern) + 1):
+    print(start, text[start:start + len(pattern)])</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>暴力匹配實作</h2><p>每個起點最多比較 m 個字元，第一處不同就停止該次對齊；全部相同則記錄起點。若逐字元比較而不建立切片，額外工作空間可維持 O(1)，輸出位置另需 O(k)。</p><ul><li>外層枚舉對齊起點</li><li>內層逐字元驗證</li><li>失配時立即 break</li><li>成功匹配後仍只向右移一格即可找重疊結果</li></ul><figure class="code-block"><figcaption><span>for...else 只在內層沒有 break 時記錄完整匹配。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def naive_search(text, pattern):
+    if pattern == &quot;&quot;:
+        return list(range(len(text) + 1))
+    matches = []
+    for start in range(len(text) - len(pattern) + 1):
+        for offset, character in enumerate(pattern):
+            if text[start + offset] != character:
+                break
+        else:
+            matches.append(start)
+    return matches
+
+print(naive_search(&quot;banana&quot;, &quot;ana&quot;))  # [1, 3]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>複雜度與何時足夠</h2><p>最壞情況每個起點都比較接近 m 次，因此時間 O((n - m + 1)m)，通常簡寫 O(nm)；例如大量相同前綴會造成重複工作。Pattern 很短、資料規模小或只執行少量搜尋時，暴力法簡單可靠，也適合作為進階演算法的測試基準。</p><ul><li>最壞時間 O(nm)</li><li>逐字元版本工作空間 O(1)</li><li>平均情況可能因早期失配而更快</li><li>Python 實務可先用 str.find，但學習時要理解底層問題</li></ul><div class="table-wrap"><table><thead><tr><th>情境</th><th>暴力法評估</th></tr></thead><tbody><tr><td>小文字、短 Pattern</td><td>通常足夠且清楚</td></tr><tr><td>大量重複前綴</td><td>可能反覆比較</td></tr><tr><td>要求線性最壞界線</td><td>考慮 KMP</td></tr><tr><td>多 Pattern 前綴查詢</td><td>考慮 Trie</td></tr></tbody></table></div></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>暴力匹配逐一嘗試所有對齊起點並逐字元驗證</li><li><span>02</span>最壞時間為 O(nm)，但規模小時簡潔且實用</li><li><span>03</span>空 Pattern、重疊匹配與回傳格式必須先定義</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>Text 長 n、Pattern 長 m 時，有多少個完整對齊起點？</summary><p>若 m &lt;= n，共 n - m + 1 個；若 m &gt; n 則為 0 個。</p></details><details><summary>為何 &#x27;aaaaa&#x27; 搜尋 &#x27;aaab&#x27; 接近暴力法最壞情況？</summary><p>多數對齊都先匹配很長的共同前綴，直到 Pattern 後段才失配，造成重複比較。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>修改 naive_search，使它只回傳第一個匹配位置，找不到回傳 -1。</li><li>為允許重疊與不允許重疊兩種規則，各找出 &#x27;aaaa&#x27; 中 &#x27;aa&#x27; 的位置。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-13/12-palindrome-interval-dp-framework.html"><span>← 上一課</span><b>回文、Interval DP 與統一解題框架</b></a><a class="next" href="../unit-14/02-prefix-suffix-and-kmp-intuition.html"><span>下一課 →</span><b>Prefix、Suffix 與 KMP 直覺</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

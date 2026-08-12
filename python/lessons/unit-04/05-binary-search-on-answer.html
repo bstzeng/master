@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="辨認單調可行性，建立判斷函式，並用二分搜尋找到最小可行答案。" />
+    <meta name="theme-color" content="#101713" />
+    <title>04.05 Binary Search on Answer 對答案二分搜尋｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-04-searching.html">UNIT 04 / LESSON 05</a><p class="eyebrow">Searching Algorithms</p><h1>Binary Search on Answer 對答案二分搜尋</h1><p class="lesson-deck">不直接找資料，而是在可行答案中找臨界值</p><div class="lesson-meta"><span>中階</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>辨認單調可行性，建立判斷函式，並用二分搜尋找到最小可行答案。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>辨認答案空間的單調性</li><li>分離可行性判斷與邊界搜尋</li><li>分析答案範圍帶來的對數成本</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>搜尋單調的真假分界</h2><p>對答案二分搜尋（Binary Search on Answer）不是在陣列找 target，而是在一段候選答案中找最小可行或最大可行值。關鍵是可行性具有單調性，例如速度越快越能在期限內完成，真假排列才會形成可搜尋的分界。</p><ul><li>先定義候選答案的上下界</li><li>設計 can_finish(answer) 判斷是否可行</li><li>確認可行性只會從 False 轉 True，或反向一次</li><li>沒有單調性就不能直接使用二分</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>範例：找最低處理速度</h2><p>假設 tasks 記錄每批工作量，每小時以 speed 處理同一批，完成一批所需時間為向上取整 task/speed。若某速度能在 hours_limit 內完成，更高速度也一定可行，因此可搜尋第一個可行速度。</p><ul><li>最低候選速度為 1</li><li>最高只需到 max(tasks)</li><li>每次可行性檢查走訪全部 n 批工作</li></ul><figure class="code-block"><figcaption><span>搜尋第一個可行速度；假設 tasks 非空且 hours_limit 至少等於批次數。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def minimum_speed(tasks, hours_limit):
+    def can_finish(speed):
+        needed = sum((task + speed - 1) // speed for task in tasks)
+        return needed &lt;= hours_limit
+
+    left, right = 1, max(tasks)
+    while left &lt; right:
+        middle = (left + right) // 2
+        if can_finish(middle):
+            right = middle
+        else:
+            left = middle + 1
+    return left</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>複雜度與正確性檢查</h2><p>若候選答案範圍寬度為 R，二分最多檢查 O(log R) 次，而每次 can_finish 花 O(n)，總時間 O(n log R)、額外空間 O(1)。實作前還要驗證上下界涵蓋答案、至少存在一個可行值，並確認判斷函式沒有隱藏的非單調條件。</p><ul><li>總成本 = 判斷成本 × 二分輪數</li><li>邊界答案本身不一定出現在輸入資料中</li><li>以最小可行值測試 left - 1 不可行、left 可行</li><li>不合法或無解輸入要由函式契約處理</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>對答案二分搜尋需要單調的可行性分界</li><li><span>02</span>把判斷函式與搜尋邊界分開能讓邏輯更易驗證</li><li><span>03</span>總時間是一次可行性判斷成本乘上 O(log R)</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>若 can_finish(10) 為 True，但 can_finish(11) 可能變成 False，可以直接找最小可行值嗎？</summary><p>不能直接使用這個二分模板，因為可行性不具 False 到 True 的單調性，排除一半範圍的推論不成立。</p></details><details><summary>候選範圍有一百萬個整數，二分大約需要幾十萬次判斷嗎？</summary><p>不需要，只需約 log₂(1,000,000)，也就是約 20 次判斷。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>設計『在預算內能製作至少 k 件商品』的單調判斷，說明要找最大或最小哪種邊界。</li><li>替 minimum_speed 加入空 tasks、期限不足與單一工作批次的輸入檢查或測試。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-04/04-lower-and-upper-bound.html"><span>← 上一課</span><b>Lower Bound 與 Upper Bound</b></a><a class="next" href="../unit-04/06-depth-first-search.html"><span>下一課 →</span><b>DFS 深度優先搜尋</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

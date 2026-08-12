@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="建立 Trie 節點、插入、完整單字搜尋與前綴查詢，分析時間、空間與適用情境。" />
+    <meta name="theme-color" content="#101713" />
+    <title>14.06 Trie：以共同前綴組織單字｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-14-string-algorithms.html">UNIT 14 / LESSON 06</a><p class="eyebrow">Classic String Algorithms</p><h1>Trie：以共同前綴組織單字</h1><p class="lesson-deck">讓搜尋成本取決於查詢長度</p><div class="lesson-meta"><span>進階</span><span>40 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>建立 Trie 節點、插入、完整單字搜尋與前綴查詢，分析時間、空間與適用情境。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>解釋 Trie 如何共享共同前綴</li><li>實作 insert、search 與 starts_with</li><li>比較 Trie、Set 與排序 List 的選型</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>字元邊與終止標記</h2><p>Trie（字典樹／前綴樹）從根開始，每條邊代表一個字元，具有共同前綴的單字共享同一路徑。節點除了 children 映射，還需 is_word 終止標記，才能區分已插入的完整單字與只是其他單字的前綴。</p><ul><li>根節點不代表任何字元</li><li>children 將字元映射到下一節點</li><li>is_word 標記完整單字結尾</li><li>&#x27;app&#x27; 與 &#x27;apple&#x27; 共享前三個字元路徑</li></ul><figure class="code-block"><figcaption><span>以巢狀 Dictionary 表示最小 Trie 節點。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def make_node():
+    return {&quot;children&quot;: {}, &quot;is_word&quot;: False}
+
+root = make_node()
+root[&quot;children&quot;][&quot;a&quot;] = make_node()
+print(root)</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>插入、單字搜尋與前綴搜尋</h2><p>插入與查詢都從根依序走過每個字元，缺少分支時搜尋失敗，插入則建立節點；走完長度 L 的字串需要 O(L)。search 還要檢查 is_word，starts_with 只要整個前綴路徑存在即可。</p><ul><li>insert：缺少節點時建立</li><li>search：路徑存在且 is_word 為 True</li><li>starts_with：路徑存在即可</li><li>三種操作時間皆為 O(L)</li></ul><figure class="code-block"><figcaption><span>完整單字查詢與前綴查詢只差終止標記判斷。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>class Trie:
+    def __init__(self):
+        self.root = {&quot;children&quot;: {}, &quot;is_word&quot;: False}
+
+    def insert(self, word):
+        node = self.root
+        for character in word:
+            node = node[&quot;children&quot;].setdefault(
+                character, {&quot;children&quot;: {}, &quot;is_word&quot;: False}
+            )
+        node[&quot;is_word&quot;] = True
+
+    def _walk(self, text):
+        node = self.root
+        for character in text:
+            if character not in node[&quot;children&quot;]:
+                return None
+            node = node[&quot;children&quot;][character]
+        return node
+
+    def search(self, word):
+        node = self._walk(word)
+        return node is not None and node[&quot;is_word&quot;]
+
+    def starts_with(self, prefix):
+        return self._walk(prefix) is not None
+
+trie = Trie()
+trie.insert(&quot;apple&quot;)
+print(trie.search(&quot;app&quot;), trie.starts_with(&quot;app&quot;))  # False True</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>空間成本與選型</h2><p>Trie 的查詢時間與字串長度相關，不直接隨單字數線性成長，但每個節點的 children 結構可能帶來高常數空間；最壞節點數接近所有字元總量 S，即 O(S)。只問完整單字存在時 Set 更簡單，Autocomplete、前綴列舉或字典剪枝才特別適合 Trie。</p><ul><li>建樹時間與最壞空間 O(S)</li><li>完整單字存在判斷：Set 平均 O(L) 且介面簡單</li><li>前綴查詢與自動完成：Trie</li><li>固定小字元集可用陣列 children，以空間換速度</li></ul><div class="table-wrap"><table><thead><tr><th>結構</th><th>完整單字查詢</th><th>前綴查詢</th><th>主要代價</th></tr></thead><tbody><tr><td>Set</td><td>平均 O(L)</td><td>需額外掃描</td><td>無前綴結構</td></tr><tr><td>排序 List</td><td>O(L log W) 比較量級</td><td>可二分範圍</td><td>更新較慢</td></tr><tr><td>Trie</td><td>O(L)</td><td>O(P) 到達前綴節點</td><td>節點空間常數高</td></tr></tbody></table></div><aside class="concept-callout"><b>KEY IDEA</b><p>Trie 的 O(L) 很漂亮，但資料量小且沒有前綴需求時，Set 往往更實際。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Trie 讓具有共同前綴的單字共享字元路徑</li><li><span>02</span>insert、search 與 starts_with 對輸入長度 L 都是 O(L)</li><li><span>03</span>前綴查詢適合 Trie，只查完整單字時 Set 通常更簡單</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼 Trie 節點需要 is_word，而不能只看路徑存在？</summary><p>路徑可能只是較長單字的前綴；is_word 才能標記該位置本身是否為已插入的完整單字。</p></details><details><summary>Trie 一定比 Set 適合單字存在查詢嗎？</summary><p>不一定；只需完整單字存在判斷時 Set 更簡潔，Trie 的優勢主要在前綴操作與共享路徑。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>擴充 Trie，列出指定前綴下最多五個完整單字。</li><li>加入 remove 方法，處理刪除單字但保留其他共用前綴。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-14/05-rabin-karp-and-rolling-hash.html"><span>← 上一課</span><b>Rabin–Karp 與 Rolling Hash</b></a><a class="next" href="../unit-14/07-palindromes-expansion-and-dp.html"><span>下一課 →</span><b>回文：中心擴展與動態規劃</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

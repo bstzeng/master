@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="練習分析依序、巢狀與倍增迴圈，以及線性和二分遞迴的時間與呼叫堆疊。" />
+    <meta name="theme-color" content="#101713" />
+    <title>01.06 分析迴圈與遞迴｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-01-algorithm-foundations.html">UNIT 01 / LESSON 06</a><p class="eyebrow">Algorithm Foundations</p><h1>分析迴圈與遞迴</h1><p class="lesson-deck">從執行次數與問題縮小方式讀出複雜度</p><div class="lesson-meta"><span>入門進階</span><span>28 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>練習分析依序、巢狀與倍增迴圈，以及線性和二分遞迴的時間與呼叫堆疊。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>用相加或相乘分析迴圈</li><li>辨認每次倍增造成的 O(log n)</li><li>根據遞迴分支與縮小幅度估算成本</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>依序相加，巢狀通常相乘</h2><p>兩段各執行 n 次的迴圈依序執行，成本相加為 O(n + n)，簡化成 O(n)。若內層每次都完整執行 n 次，外層也執行 n 次，總次數是 n × n，因此為 O(n²)；但若內層長度不同，應保留如 O(nm) 的參數。</p><ul><li>依序區塊：先相加，再保留主導項</li><li>獨立巢狀迴圈：執行次數相乘</li><li>提前 return 會改善部分情況，但最壞情況仍可能走完</li></ul><figure class="code-block"><figcaption><span>若 left 長度為 n、right 長度為 m，時間與輸出空間都是 O(nm)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def all_pairs(left, right):
+    pairs = []
+    for first in left:
+        for second in right:
+            pairs.append((first, second))
+    return pairs</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>倍增或減半帶來對數</h2><p>如果控制變數每輪乘以 2，執行 k 輪後約為 2ᵏ；到達 n 所需的 k 約是 log₂n，所以迴圈為 O(log n)。二分搜尋也是每次排除約一半候選範圍，因此具有相同的成長等級。</p><ul><li>i += 1 通常對應線性次數</li><li>i *= 2 通常對應對數次數</li><li>對數底數只造成常數倍率，Big O 中可省略</li></ul><figure class="code-block"><figcaption><span>limit 為 n 時，迴圈執行約 log₂n 次，時間 O(log n)、空間 O(1)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def doubling_steps(limit):
+    value = 1
+    steps = 0
+    while value &lt; limit:
+        value *= 2
+        steps += 1
+    return steps</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>遞迴要看呼叫數與深度</h2><p>遞迴分析要問每次產生幾個子問題、每個子問題縮小多少，以及每層還做多少工作。單一路徑每次把 n 減 1 通常有 O(n) 次呼叫與 O(n) 堆疊；每次減半通常深度 O(log n)，而每層分成兩個重疊分支則可能接近 O(2ⁿ)。</p><ul><li>Base case 必須讓遞迴終止</li><li>時間計入所有呼叫執行的工作</li><li>空間通常至少包含最深呼叫路徑</li><li>尾端呼叫在 Python 中不會自動消除堆疊</li></ul><figure class="code-block"><figcaption><span>共有 n + 1 層呼叫，時間 O(n)，遞迴堆疊空間 O(n)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def recursive_sum(numbers, index=0):
+    if index == len(numbers):
+        return 0
+    return numbers[index] + recursive_sum(numbers, index + 1)</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>依序執行的成本相加，完整巢狀走訪的成本通常相乘</li><li><span>02</span>每輪倍增或減半通常形成 O(log n)</li><li><span>03</span>遞迴時間看總呼叫量，空間看最深呼叫路徑</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>外層走訪 n 次、內層走訪固定 10 次，Big O 是什麼？</summary><p>是 O(10n)，忽略固定常數後為 O(n)，不是 O(n²)。</p></details><details><summary>單一遞迴每次把 n 除以 2，且每層只做 O(1) 工作，時間與堆疊空間是多少？</summary><p>遞迴深度約為 log₂n，因此時間與呼叫堆疊空間都是 O(log n)。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>分析三角形巢狀迴圈：外層 i 從 0 到 n-1，內層執行 i 次；寫出精確加總與 Big O。</li><li>將 recursive_sum 改成迴圈版本，比較兩者的時間與輔助空間。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-01/05-python-operation-complexity.html"><span>← 上一課</span><b>Python 常見操作複雜度</b></a><a class="next" href="../unit-02/01-containers-and-mutability.html"><span>下一課 →</span><b>容器、參照與可變性</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

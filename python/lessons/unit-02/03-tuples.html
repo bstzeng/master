@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="學習 Tuple 的建立、拆包、回傳多值與作為複合鍵的條件。" />
+    <meta name="theme-color" content="#101713" />
+    <title>02.03 Tuple：固定且可表意的序列｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-02-python-builtins.html">UNIT 02 / LESSON 03</a><p class="eyebrow">Python Built-in Data Structures</p><h1>Tuple：固定且可表意的序列</h1><p class="lesson-deck">用不可變序列表達一筆完整資料</p><div class="lesson-meta"><span>入門</span><span>20 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>學習 Tuple 的建立、拆包、回傳多值與作為複合鍵的條件。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>辨認 Tuple 與 List 的選型差異</li><li>使用拆包提升程式可讀性</li><li>判斷 Tuple 是否可以被雜湊</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>不可變序列的用途</h2><p>Tuple 與 List 一樣有順序、可重複並支援索引，但建立後不能新增、刪除或替換元素。它適合表達欄位數量固定的一筆資料，例如座標、日期或函式回傳的多個結果。</p><ul><li>索引讀取通常是 O(1)</li><li>走訪與成員搜尋是 O(n)</li><li>不可變能降低資料被意外改動的風險</li></ul><figure class="code-block"><figcaption><span>用 Tuple 保存固定的一組座標並拆包。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>point = (24.15, 120.67)
+latitude, longitude = point
+print(latitude, longitude)</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>打包、拆包與多值回傳</h2><p>逗號才是建立 Tuple 的關鍵，所以單元素 Tuple 必須寫成 (value,)。拆包會按照位置把資料指派給名稱，也能使用星號收集剩餘元素，讓固定格式的資料更容易閱讀。</p><ul><li>single = (42,) 才是單元素 Tuple</li><li>left, right = right, left 可交換變數</li><li>first, *middle, last 可收集不定長中段</li></ul><figure class="code-block"><figcaption><span>函式以 Tuple 回傳兩個結果，呼叫端立即拆包。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def minimum_and_maximum(values):
+    return min(values), max(values)
+
+lowest, highest = minimum_and_maximum([7, 2, 9])
+print(lowest, highest)  # 2 9</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>Tuple、雜湊與選型</h2><p>只有當 Tuple 內所有元素都可雜湊時，Tuple 才能成為 Dictionary 的鍵或 Set 的元素。若資料會頻繁增刪就用 List；若長度與語意固定，或需要複合鍵，Tuple 通常更合適。</p><ul><li>(&quot;A&quot;, 3) 可作為字典鍵</li><li>([1, 2], 3) 含 List，因此不可雜湊</li><li>Tuple 的不可變只限制欄位參照，內含的可變物件仍可改動</li></ul><div class="table-wrap"><table><thead><tr><th>比較</th><th>List</th><th>Tuple</th></tr></thead><tbody><tr><td>是否可變</td><td>是</td><td>否</td></tr><tr><td>典型用途</td><td>動態集合</td><td>固定紀錄</td></tr><tr><td>可否作為字典鍵</td><td>否</td><td>元素皆可雜湊時可以</td></tr></tbody></table></div><figure class="code-block"><figcaption><span>以班級與座號組成 Tuple 複合鍵。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>attendance = {}
+key = (&quot;三年一班&quot;, 5)
+attendance[key] = True
+print(attendance[key])</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Tuple 是有順序、可重複且不可變的序列</li><li><span>02</span>拆包適合處理固定欄位與函式多值回傳</li><li><span>03</span>Tuple 內所有元素可雜湊時，才能作為 Dictionary 的鍵</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼 (5) 不是 Tuple，而 (5,) 才是？</summary><p>括號只負責分組運算式，逗號才會建立 Tuple。</p></details><details><summary>Tuple 一定能作為 Dictionary 的鍵嗎？</summary><p>不一定；若其中含有 List 等不可雜湊元素，整個 Tuple 也不可雜湊。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>寫一個函式回傳數列的總和、最小值與最大值，並在呼叫端拆包。</li><li>把棋盤位置表示為 Tuple，建立 Dictionary 保存各位置上的棋子。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-02/02-lists.html"><span>← 上一課</span><b>List：有順序的可變序列</b></a><a class="next" href="../unit-02/04-dictionaries.html"><span>下一課 →</span><b>Dictionary：鍵與值的快速對應</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

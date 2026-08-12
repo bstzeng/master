@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="理解 Heap 的陣列表示與局部順序，以 heapq 建立 Min Heap，並掌握 Max Heap 的相容寫法。" />
+    <meta name="theme-color" content="#101713" />
+    <title>07.05 Min Heap 與 Max Heap｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-07-stack-queue-heap.html">UNIT 07 / LESSON 05</a><p class="eyebrow">Stacks, Queues, and Heaps</p><h1>Min Heap 與 Max Heap</h1><p class="lesson-deck">理解堆積規則、建堆與 Python 慣例</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>理解 Heap 的陣列表示與局部順序，以 heapq 建立 Min Heap，並掌握 Max Heap 的相容寫法。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明 Heap 的局部順序與陣列索引</li><li>使用 heapify、heappush 與 heappop</li><li>以負值慣例實作 Max Heap</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>完全二元樹與局部順序</h2><p>Binary Heap（堆積）通常以 List 表示完全二元樹；Min Heap 保證每個父節點不大於子節點，因此根節點是全域最小值。這只是局部順序，走訪底層 List 不會得到由小到大的完整排序。</p><ul><li>索引 i 的左子節點為 2i + 1</li><li>右子節點為 2i + 2</li><li>父節點為 (i - 1) // 2</li><li>根節點 heap[0] 是最小值</li></ul><figure class="code-block"><figcaption><span>Heap 不需 Node 物件，也能用索引找到親子關係。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>heap = [2, 5, 4, 9, 8, 7]
+for parent in range(len(heap) // 2):
+    left = 2 * parent + 1
+    right = left + 1
+    print(parent, left, right if right &lt; len(heap) else None)</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>heapify 與核心操作</h2><p>heapq.heapify 可在 O(n) 時間把既有 List 原地轉成 Min Heap，比逐一 heappush 的 O(n log n) 更適合批次建立。取出 n 次可得到排序結果，但總成本仍為 O(n log n)，而且會清空 Heap。</p><ul><li>heapify：O(n)</li><li>heappush／heappop：O(log n)</li><li>heap[0]：O(1)</li><li>heappushpop 可在一次調整中加入後取出</li></ul><figure class="code-block"><figcaption><span>建堆 O(n)，依序取完 O(n log n)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>import heapq
+
+values = [8, 3, 6, 1, 5]
+heapq.heapify(values)
+ordered = []
+while values:
+    ordered.append(heapq.heappop(values))
+print(ordered)  # [1, 3, 5, 6, 8]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>Max Heap 的 heapq 慣例</h2><p>經典 Python heapq 介面以 Min Heap 為主，跨版本最常見的 Max Heap 慣例是存入負數，取出後再取負號還原；Tuple 時只反轉作為優先權的數值欄位。部分新版 Python 提供名稱帶 _max 的 API，但教材與面試程式通常仍使用負值寫法以保持相容。</p><ul><li>push 原值 x 時存 -x</li><li>pop 得到 negated 後回傳 -negated</li><li>零與負數仍可正確處理</li><li>不要忘記只反轉優先值，不要破壞附帶資料</li></ul><div class="table-wrap"><table><thead><tr><th>結構</th><th>根節點</th><th>heapq 相容寫法</th></tr></thead><tbody><tr><td>Min Heap</td><td>最小值</td><td>直接存原值</td></tr><tr><td>Max Heap</td><td>最大值</td><td>數值取負後存入</td></tr></tbody></table></div><figure class="code-block"><figcaption><span>以負值搭配 Min Heap 取得目前最大值。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>import heapq
+
+max_heap = []
+for value in [4, 9, 2, 7]:
+    heapq.heappush(max_heap, -value)
+maximum = -heapq.heappop(max_heap)
+print(maximum)  # 9</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Heap 只維持親子局部順序，底層 List 不是完整排序</li><li><span>02</span>heapify 為 O(n)，查看根 O(1)，加入與取出 O(log n)</li><li><span>03</span>跨版本 Max Heap 常以負值搭配 heapq 實作</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為何 heapify 是 O(n)，不是直覺的 O(n log n)？</summary><p>自底向上建堆時，多數靠近葉節點的元素只需很少調整，所有調整高度加總可證明為 O(n)。</p></details><details><summary>Max Heap 存入原值 12 時，負值慣例實際存什麼？取出後如何還原？</summary><p>存 -12；heappop 得到 -12 後再取負號還原成 12。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>將一組數字 heapify，逐步畫出每次 heappop 後的 List。</li><li>以負值 Max Heap 持續取得遊戲排行榜目前最高分。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-07/04-priority-queue.html"><span>← 上一課</span><b>Priority Queue：依優先權取出</b></a><a class="next" href="../unit-07/06-top-k-with-heaps.html"><span>下一課 →</span><b>Top K：只保留真正需要的候選</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

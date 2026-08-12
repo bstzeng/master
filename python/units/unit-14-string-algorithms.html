@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="從暴力匹配的重複比較出發，學習 KMP、Rolling Hash、Trie，以及中心擴展、動態規劃與 Manacher 回文演算法。" />
+    <meta name="theme-color" content="#101713" />
+    <title>單元 14｜經典字串演算法｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../styles.css" />
+    <script src="../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../index.html">課程總覽</a>
+        <a class="" href="../phase-1.html">第一階段</a>
+        <a class="is-active" href="../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <section class="unit-hero">
+        <div><a class="breadcrumb" href="../phase-2.html">PHASE 02 / UNIT 14</a><p class="eyebrow">Classic String Algorithms</p><h1>經典字串演算法</h1><p class="hero-intro">從暴力匹配的重複比較出發，學習 KMP、Rolling Hash、Trie，以及中心擴展、動態規劃與 Manacher 回文演算法。</p><a class="primary-button" href="#lessons">查看 8 堂課 <span>↓</span></a></div>
+        <aside><span>UNIT</span><strong>14</strong><p>能依單一模式、多模式、前綴查詢與回文需求，選擇合適的字串演算法並說明正確性、複雜度與碰撞風險。</p></aside>
+      </section>
+      <section class="unit-info"><div><p class="section-index">BEFORE YOU START</p><h2>先備知識</h2><ul><li>熟悉 Python String、List、Dictionary 與切片</li><li>理解迴圈、索引、函式與 Big O</li><li>具備基本動態規劃與雜湊概念</li></ul></div><div><p class="section-index">AFTER THIS UNIT</p><h2>完成後你能夠</h2><ul><li>實作暴力字串匹配並找出重複比較</li><li>建立 LPS 表並完成 KMP 搜尋</li><li>以 Rolling Hash 實作 Rabin–Karp 並處理碰撞</li><li>建立 Trie 支援完整單字與前綴查詢</li><li>比較中心擴展、DP 與 Manacher 的回文解法</li></ul></div></section>
+      <section class="lesson-section" id="lessons"><div class="section-head"><div><p class="section-index">LESSON LIST</p><h2>本單元課程</h2></div><p>建議依序閱讀；每一課約 15–25 分鐘，讀完後先回答理解題，再挑一題延伸練習。</p></div><div class="lesson-list">
+        <article class="lesson-row">
+          <span>01</span>
+          <div><p>基礎 · 30 分鐘</p><h3>字串匹配與暴力搜尋</h3><b>先定義問題，再觀察重複比較</b></div>
+          <a href="../lessons/unit-14/01-naive-string-matching.html" aria-label="開始課程：字串匹配與暴力搜尋">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>02</span>
+          <div><p>基礎 · 35 分鐘</p><h3>Prefix、Suffix 與 KMP 直覺</h3><b>利用已匹配內容決定下一次對齊</b></div>
+          <a href="../lessons/unit-14/02-prefix-suffix-and-kmp-intuition.html" aria-label="開始課程：Prefix、Suffix 與 KMP 直覺">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>03</span>
+          <div><p>進階 · 40 分鐘</p><h3>LPS Table：預先整理回退位置</h3><b>在線性時間建立模式字串的自我資訊</b></div>
+          <a href="../lessons/unit-14/03-lps-table.html" aria-label="開始課程：LPS Table：預先整理回退位置">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>04</span>
+          <div><p>進階 · 40 分鐘</p><h3>KMP 完整搜尋流程</h3><b>組合 LPS 與雙指標找出所有匹配</b></div>
+          <a href="../lessons/unit-14/04-complete-kmp-search.html" aria-label="開始課程：KMP 完整搜尋流程">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>05</span>
+          <div><p>進階 · 45 分鐘</p><h3>Rabin–Karp 與 Rolling Hash</h3><b>用固定長度視窗快速更新指紋</b></div>
+          <a href="../lessons/unit-14/05-rabin-karp-and-rolling-hash.html" aria-label="開始課程：Rabin–Karp 與 Rolling Hash">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>06</span>
+          <div><p>進階 · 40 分鐘</p><h3>Trie：以共同前綴組織單字</h3><b>讓搜尋成本取決於查詢長度</b></div>
+          <a href="../lessons/unit-14/06-trie.html" aria-label="開始課程：Trie：以共同前綴組織單字">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>07</span>
+          <div><p>進階 · 45 分鐘</p><h3>回文：中心擴展與動態規劃</h3><b>利用對稱性找最長回文子字串</b></div>
+          <a href="../lessons/unit-14/07-palindromes-expansion-and-dp.html" aria-label="開始課程：回文：中心擴展與動態規劃">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>08</span>
+          <div><p>進階 · 45 分鐘</p><h3>Manacher 概念與字串演算法選型</h3><b>重用鏡像半徑，完成整體方法比較</b></div>
+          <a href="../lessons/unit-14/08-manacher-and-selection.html" aria-label="開始課程：Manacher 概念與字串演算法選型">開始閱讀 →</a>
+        </article></div></section>
+      <nav class="bottom-nav"><a href="../phase-2.html">← 返回第 2 階段大綱</a><a href="../index.html">完整學習地圖 ↑</a></nav></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

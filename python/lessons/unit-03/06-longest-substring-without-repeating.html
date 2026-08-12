@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="以經典字串題整合動態滑動視窗、雜湊表與邊界更新。" />
+    <meta name="theme-color" content="#101713" />
+    <title>03.06 經典題型：最長不重複子字串｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-03-arrays-and-strings.html">UNIT 03 / LESSON 06</a><p class="eyebrow">Array and String Techniques</p><h1>經典題型：最長不重複子字串</h1><p class="lesson-deck">用索引表快速跳過重複字元</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>以經典字串題整合動態滑動視窗、雜湊表與邊界更新。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>定義不含重複字元的有效視窗</li><li>使用最後出現索引調整左邊界</li><li>避免左邊界向後倒退</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>視窗不變量</h2><p>這題要求最長的連續子字串，因此可用視窗 [left, right] 表示目前答案候選。整個過程必須維持「視窗內沒有重複字元」這個不變量（Invariant），每次加入新字元後再修正左邊界。</p><ul><li>子字串必須連續，子序列則不一定</li><li>right 逐字加入目前字元</li><li>視窗有效後才更新最佳長度</li></ul><figure class="code-block"><figcaption><span>set 版本逐一移除左端字元，直到新字元不再重複。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def longest_unique_length_with_set(text):
+    left = 0
+    window = set()
+    best = 0
+    for right, character in enumerate(text):
+        while character in window:
+            window.remove(text[left])
+            left += 1
+        window.add(character)
+        best = max(best, right - left + 1)
+    return best</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>記住最後出現位置</h2><p>若記錄每個字元最後出現的索引，遇到重複時可讓 left 直接跳到舊位置的下一格。left 必須取目前值與跳轉位置的最大值，否則較早的重複紀錄可能讓視窗倒退。</p><ul><li>last_seen 保存「字元 → 最後索引」</li><li>更新式為 left = max(left, last_seen[character] + 1)</li><li>每輪最後都要覆寫目前字元的最後索引</li></ul><figure class="code-block"><figcaption><span>除了長度，也保存最佳起點，最後回傳實際子字串。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def longest_unique_substring(text):
+    left = 0
+    last_seen = {}
+    best_start = 0
+    best_length = 0
+
+    for right, character in enumerate(text):
+        if character in last_seen:
+            left = max(left, last_seen[character] + 1)
+        last_seen[character] = right
+        length = right - left + 1
+        if length &gt; best_length:
+            best_start = left
+            best_length = length
+
+    return text[best_start:best_start + best_length]
+
+print(longest_unique_substring(&quot;abcabcbb&quot;))  # abc</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>測試邊界與成本</h2><p>每個字元只被 right 處理一次，雜湊查找平均 O(1)，因此平均時間是 O(n)；last_seen 最多保存 k 個不同字元，空間是 O(k)。空字串應回傳空字串，而全相同字元的答案長度為一。</p><ul><li>測試空字串、單字元與全不重複字串</li><li>用 abba 驗證 left 不會因舊紀錄倒退</li><li>若只回傳長度，無須保存 best_start</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>在 abba 的最後一個 a，舊 a 已在目前視窗外；max 能保護目前左邊界。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>目前視窗必須始終保持沒有重複字元。</li><li><span>02</span>最後出現索引能讓左邊界直接跳轉。</li><li><span>03</span>left 只能向右移動，更新時必須使用 max。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼 left 要寫成 max(left, last_seen[character] + 1)？</summary><p>字元的舊位置可能已在目前視窗左側，直接賦值會讓 left 倒退並把重複字元重新納入視窗。</p></details><details><summary>最長不重複子字串解法的額外空間 O(k) 中，k 是什麼？</summary><p>k 是輸入中不同字元的數量，因為 last_seen 至多為每種字元保存一筆索引。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>修改函式，同時回傳最長不重複子字串及其起始索引。</li><li>求最多允許兩種不同字元的最長子字串。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-03/05-sliding-window.html"><span>← 上一課</span><b>Sliding Window 滑動視窗</b></a><a class="next" href="../unit-03/07-prefix-sums-and-difference-arrays.html"><span>下一課 →</span><b>Prefix Sum 與差分陣列</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

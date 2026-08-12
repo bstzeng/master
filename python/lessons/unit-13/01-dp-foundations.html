@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="辨認 DP 的兩項核心性質，從決策樹理解重複工作。" />
+    <meta name="theme-color" content="#101713" />
+    <title>13.01 DP 核心：重疊子問題與最佳子結構｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-13-dynamic-programming.html">UNIT 13 / LESSON 01</a><p class="eyebrow">Dynamic Programming</p><h1>DP 核心：重疊子問題與最佳子結構</h1><p class="lesson-deck">把重複計算保存起來</p><div class="lesson-meta"><span>入門</span><span>25 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>辨認 DP 的兩項核心性質，從決策樹理解重複工作。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>辨認重疊子問題</li><li>說明最佳子結構</li><li>區分 DP 與一般分治</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>重疊子問題</h2><p>若遞迴樹反覆以相同參數求解相同答案，就存在重疊子問題。DP 將答案保存，使每種狀態只計算一次。</p><ul><li>fib(5) 會多次呼叫 fib(3)</li><li>狀態數常遠少於遞迴呼叫數</li></ul><figure class="code-block"><figcaption><span>樸素 Fibonacci 時間約 O(2ⁿ)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def fib_slow(n):
+    if n &lt;= 1: return n
+    return fib_slow(n - 1) + fib_slow(n - 2)</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>最佳子結構</h2><p>若原問題的最佳答案能由較小問題的最佳答案組合而成，就具有最佳子結構。轉移式必須涵蓋最後一步的所有合法選擇。</p><ul><li>先定義子問題答案代表什麼</li><li>局部最佳不一定能組成全域最佳</li></ul><div class="table-wrap"><table><thead><tr><th>性質</th><th>檢查問題</th></tr></thead><tbody><tr><td>重疊子問題</td><td>相同狀態是否重算？</td></tr><tr><td>最佳子結構</td><td>大答案能否由小答案組成？</td></tr></tbody></table></div></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>DP 不是公式背誦</h2><p>DP 的工作是定義有限狀態與依賴關係，再依正確順序求值。若狀態遺漏影響未來的資訊，即使程式能跑也可能錯誤。</p><ul><li>先寫暴力選擇有助找轉移</li><li>時間通常是狀態數乘每狀態轉移成本</li><li>空間取決於保存多少狀態</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>先用一句話定義 dp[state]，再寫公式。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>重疊子問題讓保存答案有價值。</li><li><span>02</span>最佳子結構讓小答案能組成大答案。</li><li><span>03</span>DP 複雜度可由狀態數與轉移成本估算。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>分治一定是 DP 嗎？</summary><p>不一定；子問題若互不重疊，就沒有保存重複答案的主要需求。</p></details><details><summary>狀態定義為何重要？</summary><p>它決定已保存資訊是否足以完成後續轉移。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>畫出 fib(5) 遞迴樹並圈出重複狀態。</li><li>判斷二分搜尋是否有重疊子問題。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-12/08-exchange-arguments-and-greedy-vs-dp.html"><span>← 上一課</span><b>交換論證與 Greedy vs DP</b></a><a class="next" href="../unit-13/02-memoization-vs-tabulation.html"><span>下一課 →</span><b>Memoization 與 Tabulation</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

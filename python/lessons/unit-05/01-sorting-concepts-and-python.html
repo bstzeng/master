@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="理解排序鍵、穩定與原地排序，並使用 Python 內建排序處理實務資料。" />
+    <meta name="theme-color" content="#101713" />
+    <title>05.01 排序基本觀念與 Python sorted｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-05-sorting.html">UNIT 05 / LESSON 01</a><p class="eyebrow">Sorting Algorithms</p><h1>排序基本觀念與 Python sorted</h1><p class="lesson-deck">先說清楚順序規則，再選擇工具</p><div class="lesson-meta"><span>入門</span><span>25 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>理解排序鍵、穩定與原地排序，並使用 Python 內建排序處理實務資料。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>區分穩定與原地排序</li><li>正確使用 sorted 與 list.sort</li><li>用 key 表達單欄與多欄規則</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>排序需要明確規格</h2><p>排序（Sorting）是依比較規則重新排列資料，不只限於數字由小到大。設計前要確認排序鍵、升降冪，以及鍵相同時是否必須保留原先順序。</p><ul><li>排序鍵決定比較哪個值</li><li>升冪與降冪必須明確</li><li>多欄位規則要決定優先順序</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>穩定與原地是不同性質</h2><p>穩定排序（Stable Sort）會保留相同鍵元素的原相對順序，適合分階段排序；原地排序（In-place Sort）只使用少量額外空間修改原容器。穩定不代表原地，兩者也都不直接等於速度快。</p><ul><li>穩定性關心相同鍵的相對順序</li><li>原地性關心額外記憶體</li><li>需求不同時可能選擇不同演算法</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>Python 的排序是穩定的，因此可先按次要鍵排序，再按主要鍵排序。</p></aside></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>Python 內建排序與 key</h2><p>sorted(iterable) 回傳新 list，list.sort() 則原地修改 list 並回傳 None；兩者都可用 key 為每個元素計算比較鍵。Python 使用穩定的 Timsort，最壞時間 O(n log n)，實務程式通常應優先使用內建工具。</p><ul><li>key 函式每個元素通常只計算一次</li><li>reverse=True 可反轉最終順序</li><li>tuple key 可依多欄位排序</li><li>不要把 list.sort() 的回傳值當成結果</li></ul><figure class="code-block"><figcaption><span>先依成績降冪，再依姓名升冪；sorted 不改動原 list。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>students = [
+    {&quot;name&quot;: &quot;Amy&quot;, &quot;score&quot;: 90},
+    {&quot;name&quot;: &quot;Bo&quot;, &quot;score&quot;: 75},
+    {&quot;name&quot;: &quot;Chen&quot;, &quot;score&quot;: 90},
+]
+
+ranked = sorted(students, key=lambda item: (-item[&quot;score&quot;], item[&quot;name&quot;]))</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>排序規格包含鍵、方向與相同鍵處理</li><li><span>02</span>穩定性和原地性描述不同取捨</li><li><span>03</span>實務上優先使用 Python 內建穩定排序與 key</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>sorted(items) 與 items.sort() 的主要差別是什麼？</summary><p>sorted 接受任意可迭代物並回傳新 list；list.sort 原地修改該 list，回傳 None。</p></details><details><summary>穩定排序對相同 key 的元素提供什麼保證？</summary><p>它們在排序後仍保持輸入中的相對先後順序。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>將員工依部門升冪、薪資降冪排序，設計合適的 tuple key。</li><li>用一組相同分數但不同到達順序的資料驗證 Python 排序穩定性。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-04/07-breadth-first-search.html"><span>← 上一課</span><b>BFS 廣度優先搜尋</b></a><a class="next" href="../unit-05/02-bubble-sort.html"><span>下一課 →</span><b>Bubble Sort 氣泡排序</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

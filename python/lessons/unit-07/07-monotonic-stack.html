@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="理解單調堆疊的不變量，以一次走訪解決下一個更大元素與跨度問題。" />
+    <meta name="theme-color" content="#101713" />
+    <title>07.07 Monotonic Stack：尋找下一個更大元素｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-07-stack-queue-heap.html">UNIT 07 / LESSON 07</a><p class="eyebrow">Stacks, Queues, and Heaps</p><h1>Monotonic Stack：尋找下一個更大元素</h1><p class="lesson-deck">丟棄不可能再成為答案的候選</p><div class="lesson-meta"><span>進階</span><span>35 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>理解單調堆疊的不變量，以一次走訪解決下一個更大元素與跨度問題。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>維護 Monotonic Stack 的單調不變量</li><li>實作 Next Greater Element</li><li>以攤銷分析證明總時間 O(n)</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>單調不變量與候選</h2><p>Monotonic Stack（單調堆疊）讓 Stack 中的值保持遞增或遞減，只保留仍可能成為未來答案的候選。新元素破壞單調性時，持續 pop 並同時為被移除元素確定答案。</p><ul><li>找下一個更大值：常維護遞減 Stack</li><li>找下一個更小值：常維護遞增 Stack</li><li>Stack 通常保存索引，方便算距離</li><li>相等值是否 pop 取決於題目是嚴格大於或大於等於</li></ul><figure class="code-block"><figcaption><span>Stack 內索引對應的值維持由底到頂遞減。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>values = [2, 1, 4, 3]
+stack = []
+for index, value in enumerate(values):
+    while stack and values[stack[-1]] &lt; value:
+        previous = stack.pop()
+        print(values[previous], &quot;的下一個更大值是&quot;, value)
+    stack.append(index)</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Next Greater Element 模板</h2><p>先以預設值 -1 表示尚未找到答案，再由左到右掃描；當目前值大於 Stack 頂端的值，就能確定頂端的下一個更大元素。掃描結束仍留在 Stack 的索引，代表右側沒有更大值。</p><ul><li>答案陣列先填 -1</li><li>while 負責解決已找到答案的舊候選</li><li>append 保存目前索引等待未來</li><li>若求距離，寫成 current_index - previous_index</li></ul><figure class="code-block"><figcaption><span>每個索引入 Stack 一次，找到答案後離開一次。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def next_greater(values):
+    answers = [-1] * len(values)
+    stack = []
+    for index, value in enumerate(values):
+        while stack and values[stack[-1]] &lt; value:
+            previous = stack.pop()
+            answers[previous] = value
+        stack.append(index)
+    return answers
+
+print(next_greater([2, 1, 4, 3]))  # [4, 4, -1, -1]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>攤銷 O(n) 與常見變形</h2><p>雖然程式有巢狀 while，但每個索引最多 push 一次、pop 一次，所有迭代加總為 O(n)，額外空間 O(n)。每日溫度、股票跨度與直方圖最大矩形都建立在同一種候選淘汰思維上。</p><ul><li>不要把巢狀迴圈直接判為 O(n²)</li><li>向左找可反向掃描或調整 Stack 意義</li><li>循環陣列可模擬走訪 2n 次</li><li>先寫清楚 Stack 由底到頂的單調方向</li></ul><div class="table-wrap"><table><thead><tr><th>題型</th><th>Stack 保存</th><th>pop 條件</th></tr></thead><tbody><tr><td>下一個嚴格更大</td><td>尚未解決的遞減索引</td><td>舊值 &lt; 新值</td></tr><tr><td>下一個嚴格更小</td><td>尚未解決的遞增索引</td><td>舊值 &gt; 新值</td></tr><tr><td>距離問題</td><td>索引</td><td>條件成立後相減</td></tr></tbody></table></div><aside class="concept-callout"><b>KEY IDEA</b><p>單調結構最重要的不是背模板，而是說明被 pop 的候選為何永遠不再需要。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Monotonic Stack 以單調不變量保留仍可能成為答案的候選</li><li><span>02</span>每個元素最多進出一次，因此總時間為 O(n)</li><li><span>03</span>保存索引能同時取得值、位置與距離</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>Next Greater Element 為何常保存索引而非只保存值？</summary><p>索引可定位答案欄位、讀回原值，並能計算與下一個更大值之間的距離。</p></details><details><summary>演算法有 for 包 while，為何仍是 O(n)？</summary><p>每個索引整體只會 push 一次、pop 一次，while 的總執行次數不超過 n。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>回傳每一天要等幾天才會遇到更高溫，沒有則回傳 0。</li><li>修改模板，找出每個元素右側第一個嚴格更小元素。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-07/06-top-k-with-heaps.html"><span>← 上一課</span><b>Top K：只保留真正需要的候選</b></a><a class="next" href="../unit-07/08-monotonic-queue-sliding-maximum.html"><span>下一課 →</span><b>Monotonic Queue 與滑動區間最大值</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

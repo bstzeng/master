@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="建立雙向節點，練習尾端加入與已知節點刪除時的對稱接線。" />
+    <meta name="theme-color" content="#101713" />
+    <title>06.04 雙向鏈結串列｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-06-linked-lists.html">UNIT 06 / LESSON 04</a><p class="eyebrow">Linked Lists</p><h1>雙向鏈結串列</h1><p class="lesson-deck">用 prev 與 next 支援雙向移動</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>建立雙向節點，練習尾端加入與已知節點刪除時的對稱接線。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明 prev 與 next 的雙向關係</li><li>維護 head 與 tail</li><li>安全刪除已知雙向節點</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>每條連結都有反方向</h2><p>雙向鏈結串列（Doubly Linked List）的節點同時保存 prev 與 next，因此可從 head 向後走，也可從 tail 向前走。代價是每個節點多一個參照，接線時也必須維持兩個方向一致。</p><ul><li>文字圖：None ← [10] ⇄ [20] ⇄ [30] → None</li><li>head.prev 應為 None，tail.next 應為 None</li><li>若 A.next 是 B，正常情況下 B.prev 也應是 A</li></ul><figure class="code-block"><figcaption><span>串列物件同時保留兩端，方便從最適合的方向開始操作。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>class DoublyNode:
+    def __init__(self, value):
+        self.value = value
+        self.prev = None
+        self.next = None
+
+class DoublyLinkedList:
+    def __init__(self):
+        self.head = None
+        self.tail = None</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>尾端加入要接兩個方向</h2><p>尾端加入 new_node 時，舊 tail.next 要指向新節點，新節點的 prev 也要回指舊 tail，最後才更新 tail。空串列沒有舊尾端，因此 head 與 tail 必須同時指向第一個節點。</p><ul><li>加入前：[old_tail] → None</li><li>接線後：[old_tail] ⇄ [new_node] → None</li><li>最後更新 self.tail = new_node</li></ul><figure class="code-block"><figcaption><span>保有 tail 時，尾端加入為 O(1)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def append(self, value):
+    new_node = DoublyNode(value)
+    if self.tail is None:
+        self.head = new_node
+        self.tail = new_node
+        return new_node
+
+    new_node.prev = self.tail
+    self.tail.next = new_node
+    self.tail = new_node
+    return new_node
+
+DoublyLinkedList.append = append</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>刪除已知節點</h2><p>刪除 node 時，讓左鄰居與右鄰居互相連接；若某側不存在，就代表需要更新 head 或 tail。已經握有 node 參照時，刪除時間是 O(1)，但先按值搜尋 node 仍需 O(n)。</p><ul><li>中間刪除：[left] ⇄ [node] ⇄ [right] 變成 [left] ⇄ [right]</li><li>node.prev 為 None 時更新 head</li><li>node.next 為 None 時更新 tail</li></ul><figure class="code-block"><figcaption><span>最後清除 node 的兩個參照，明確表示它已離開串列。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def remove(self, node):
+    if node.prev is None:
+        self.head = node.next
+    else:
+        node.prev.next = node.next
+
+    if node.next is None:
+        self.tail = node.prev
+    else:
+        node.next.prev = node.prev
+
+    node.prev = None
+    node.next = None
+
+DoublyLinkedList.remove = remove</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>雙向節點以 prev 與 next 維持對稱連結。</li><li><span>02</span>head 與 tail 讓兩端操作都能在 O(1) 完成。</li><li><span>03</span>已知節點的刪除是 O(1)，按值尋找後刪除則是 O(n)。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>在 A 與 B 之間加入 X，至少要建立哪兩個方向的直接關係？</summary><p>要讓 A.next 與 X.prev 互相對應，也要讓 X.next 與 B.prev 互相對應，共維護四個欄位。</p></details><details><summary>刪除 tail 節點時，新的 tail 是誰？</summary><p>新的 tail 是舊 tail.prev，並且它的 next 應更新為 None；若不存在前一節點，串列會變空。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>為 DoublyLinkedList 實作 prepend，在頭端 O(1) 加入節點。</li><li>寫一個函式從 tail 沿 prev 走訪，回傳反向的數值清單。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-06/03-insertion-and-deletion.html"><span>← 上一課</span><b>插入與刪除</b></a><a class="next" href="../unit-06/05-reversing-a-linked-list.html"><span>下一課 →</span><b>反轉鏈結串列</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

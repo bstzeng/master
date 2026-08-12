@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="以 N-Queens 與迷宮整合狀態、合法性檢查、撤銷與剪枝。" />
+    <meta name="theme-color" content="#101713" />
+    <title>08.08 N-Queens、迷宮與剪枝｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-08-recursion-divide-backtracking.html">UNIT 08 / LESSON 08</a><p class="eyebrow">Recursion, Divide and Conquer, and Backtracking</p><h1>N-Queens、迷宮與剪枝</h1><p class="lesson-deck">把限制轉成快速檢查，縮小搜尋樹</p><div class="lesson-meta"><span>進階</span><span>40 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>以 N-Queens 與迷宮整合狀態、合法性檢查、撤銷與剪枝。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>用集合快速檢查皇后衝突</li><li>在迷宮搜尋中標記與撤銷走訪狀態</li><li>判斷剪枝是否安全並分析最壞複雜度</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>N-Queens 的限制集合</h2><p>N-Queens 要在 n×n 棋盤每列放一個皇后，且任兩個不能同欄或同斜線。逐列放置能自動避免同列衝突，再用 columns、row-col 與 row+col 三個集合以平均 O(1) 檢查其餘限制。</p><ul><li>columns 保存已占用欄</li><li>row - col 相同表示同一條左上到右下斜線</li><li>row + col 相同表示同一條右上到左下斜線</li></ul><figure class="code-block"><figcaption><span>positions[row] 是該列皇后的欄位置，集合在返回時完整撤銷。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def solve_n_queens(n):
+    results, positions = [], []
+    columns, diagonal_down, diagonal_up = set(), set(), set()
+    def backtrack(row):
+        if row == n:
+            results.append(positions.copy()); return
+        for col in range(n):
+            if (col in columns or row - col in diagonal_down
+                    or row + col in diagonal_up):
+                continue
+            positions.append(col)
+            columns.add(col); diagonal_down.add(row - col); diagonal_up.add(row + col)
+            backtrack(row + 1)
+            positions.pop()
+            columns.remove(col); diagonal_down.remove(row - col); diagonal_up.remove(row + col)
+    backtrack(0)
+    return results</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>迷宮：避免在路徑中繞圈</h2><p>迷宮可把每個可走格視為狀態，從目前位置嘗試上下左右並遞迴。為避免同一路徑繞圈，進入格子時加入 path_seen，返回時移除；若只需找任一路徑，找到終點即可提早回傳。</p><ul><li>越界、牆壁或已在目前路徑中的格子立即剪枝</li><li>選擇：加入位置；撤銷：移除位置</li><li>只判斷可達性時，也可永久標記 visited 避免重複探索</li></ul><figure class="code-block"><figcaption><span>grid 中 0 可走、1 是牆；成功時不撤銷，讓 path 保留答案。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def find_maze_path(grid, start, goal):
+    rows, cols = len(grid), len(grid[0])
+    path, path_seen = [], set()
+    def backtrack(row, col):
+        position = (row, col)
+        if not (0 &lt;= row &lt; rows and 0 &lt;= col &lt; cols): return False
+        if grid[row][col] == 1 or position in path_seen: return False
+        path.append(position); path_seen.add(position)
+        if position == goal: return True
+        for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            if backtrack(row + dr, col + dc): return True
+        path.pop(); path_seen.remove(position)
+        return False
+    return path if backtrack(*start) else []</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>剪枝的正確性與成本</h2><p>剪枝（Pruning）要用可證明的條件排除不可能成功的分支，例如皇后位置已衝突或迷宮位置已在當前路徑。N-Queens 最壞仍接近 O(n!) 搜尋，迷宮列舉簡單路徑也可能指數成長；集合讓每次合法性檢查更快，但不改變最壞搜尋空間的本質。</p><ul><li>可行性剪枝：目前狀態已違反硬性限制</li><li>界線剪枝：剩餘資源不足以完成答案</li><li>最佳化剪枝：目前下界已不可能優於已知答案</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>剪枝前要說明「為什麼被剪掉的分支不可能含答案」，不能只因它看起來希望較小。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>把限制轉成 set，可快速檢查 N-Queens 的欄與斜線衝突。</li><li><span>02</span>迷宮回溯必須管理走訪狀態，避免同一路徑反覆繞圈。</li><li><span>03</span>剪枝改善實際搜尋量，但安全性需要可說明的判斷依據。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>N-Queens 中為什麼不需要另外保存已占用的 row？</summary><p>演算法每一層只處理一個固定 row，並在放置後前進到下一列，因此自然不會在同一列放兩個皇后。</p></details><details><summary>迷宮中 path_seen 何時應該撤銷？</summary><p>若要列舉或保留其他可能路徑，當目前分支失敗返回時應移除該位置；若只做可達性且不需重訪，則可使用永久 visited。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>把 N-Queens 的 positions 轉成由 Q 與 . 組成的棋盤字串。</li><li>修改迷宮函式列出所有不重複簡單路徑，並比較永久 visited 為何不再適用。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-08/07-permutations-and-combinations.html"><span>← 上一課</span><b>排列與組合</b></a><a class="next" href="../unit-09/01-trees-and-binary-trees.html"><span>下一課 →</span><b>樹與 Binary Tree 二元樹</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

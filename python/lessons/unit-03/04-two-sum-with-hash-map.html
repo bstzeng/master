@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="從暴力配對推導出雜湊表解法，並處理索引與重複值。" />
+    <meta name="theme-color" content="#101713" />
+    <title>03.04 經典題型：Two Sum｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-03-arrays-and-strings.html">UNIT 03 / LESSON 04</a><p class="eyebrow">Array and String Techniques</p><h1>經典題型：Two Sum</h1><p class="lesson-deck">用互補值把 O(n²) 降為平均 O(n)</p><div class="lesson-meta"><span>基礎</span><span>25 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>從暴力配對推導出雜湊表解法，並處理索引與重複值。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明暴力解法的重複工作</li><li>以雜湊表查找互補值</li><li>正確處理相同數值與索引限制</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>從所有配對開始思考</h2><p>Two Sum 要找出兩個不同索引，使其數值總和等於 target。暴力法為每個位置檢查後方所有位置，概念直接但會產生約 n² 個配對。</p><ul><li>同一個元素不能使用兩次</li><li>題目通常要求回傳索引，而非數值</li><li>暴力解法時間 O(n²)、額外空間 O(1)</li></ul><figure class="code-block"><figcaption><span>second 從 first + 1 開始，避免重複配對與使用同一索引。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def two_sum_brute_force(numbers, target):
+    for first in range(len(numbers)):
+        for second in range(first + 1, len(numbers)):
+            if numbers[first] + numbers[second] == target:
+                return [first, second]
+    return []</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>儲存看過的數值</h2><p>走到目前數值 value 時，需要的互補值是 target - value。若互補值已在 seen 中，就找到一對答案；否則把目前數值與索引記錄起來，供後面的元素查找。</p><ul><li>seen 的鍵是數值，值是先前索引</li><li>先查找再寫入，確保使用兩個不同索引</li><li>重複數值可正常處理，例如 [3, 3] 與 target 6</li></ul><figure class="code-block"><figcaption><span>只保存已經走訪過的位置，答案的第一個索引必定早於第二個。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def two_sum(numbers, target):
+    seen = {}
+    for index, value in enumerate(numbers):
+        complement = target - value
+        if complement in seen:
+            return [seen[complement], index]
+        seen[value] = index
+    return []
+
+print(two_sum([2, 7, 11, 15], 9))  # [0, 1]
+print(two_sum([3, 3], 6))           # [0, 1]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>時間換空間</h2><p>雜湊表平均 O(1) 查找讓整體平均時間降為 O(n)，最壞需保存 n 個項目，因此額外空間是 O(n)。這是典型的空間換時間：使用更多記憶體，避免重複掃描。</p><ul><li>若輸入保證恰有一組答案，可找到後立即回傳</li><li>若需全部配對，資料結構與重複值處理方式要重新設計</li><li>已排序輸入也可用雙指標，以 O(1) 額外空間求解</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>修改題目輸出要求時，不要直接假設同一份 Two Sum 程式仍然正確。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Two Sum 的關鍵查詢是 target - value 是否曾經出現。</li><li><span>02</span>先查找再記錄可避免重複使用同一索引。</li><li><span>03</span>雜湊解法平均時間 O(n)、額外空間 O(n)。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼不能先把目前值寫入 seen，再查找互補值？</summary><p>當目前值剛好等於自己的互補值時，可能錯誤地使用同一索引兩次；先查找可確保互補值來自先前位置。</p></details><details><summary>雜湊表解法相較暴力法付出什麼代價？</summary><p>額外使用最多 O(n) 空間保存已看過的數值與索引，以換取平均 O(n) 時間。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>修改 Two Sum，使找不到答案時回傳 None，並補上空陣列與單元素測試。</li><li>給定已排序陣列，改用雙指標完成 Two Sum，並比較空間複雜度。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-03/03-two-pointers.html"><span>← 上一課</span><b>Two Pointers 雙指標</b></a><a class="next" href="../unit-03/05-sliding-window.html"><span>下一課 →</span><b>Sliding Window 滑動視窗</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="針對區間查詢、快取、資料庫索引、近似統計、動態連通性與單調序列，學習專門資料結構如何交換時間、空間與功能。" />
+    <meta name="theme-color" content="#101713" />
+    <title>單元 15｜進階資料結構｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../styles.css" />
+    <script src="../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../index.html">課程總覽</a>
+        <a class="" href="../phase-1.html">第一階段</a>
+        <a class="is-active" href="../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <section class="unit-hero">
+        <div><a class="breadcrumb" href="../phase-2.html">PHASE 02 / UNIT 15</a><p class="eyebrow">Advanced Data Structures</p><h1>進階資料結構</h1><p class="hero-intro">針對區間查詢、快取、資料庫索引、近似統計、動態連通性與單調序列，學習專門資料結構如何交換時間、空間與功能。</p><a class="primary-button" href="#lessons">查看 10 堂課 <span>↓</span></a></div>
+        <aside><span>UNIT</span><strong>15</strong><p>能從操作比例、更新模式、精確度與記憶體限制出發，選擇並實作合適的進階資料結構，而不是只記住名稱。</p></aside>
+      </section>
+      <section class="unit-info"><div><p class="section-index">BEFORE YOU START</p><h2>先備知識</h2><ul><li>熟悉 Python list、dict、class、位元操作與 collections</li><li>理解 Tree、Heap、Hash Table、Prefix Sum 與 Big O</li><li>能閱讀遞迴、迭代與簡單機率概念</li></ul></div><div><p class="section-index">AFTER THIS UNIT</p><h2>完成後你能夠</h2><ul><li>依更新與查詢型態選擇 Prefix Sum、Fenwick Tree 或 Segment Tree</li><li>理解 Lazy Propagation 如何延後區間更新</li><li>以 Hash Map 與 Doubly Linked List 實作 LRU Cache</li><li>比較 LFU、B-Tree、B+ Tree、Hash Index 與 Tree Index</li><li>實作並分析 Bloom Filter 與 Count-Min Sketch</li><li>使用 DSU、Sparse Table、Monotonic Stack 與 Queue 解決典型效能問題</li></ul></div></section>
+      <section class="lesson-section" id="lessons"><div class="section-head"><div><p class="section-index">LESSON LIST</p><h2>本單元課程</h2></div><p>建議依序閱讀；每一課約 15–25 分鐘，讀完後先回答理解題，再挑一題延伸練習。</p></div><div class="lesson-list">
+        <article class="lesson-row">
+          <span>01</span>
+          <div><p>中階 · 28 分鐘</p><h3>Range Query 與 Prefix Sum 的限制</h3><b>查詢快不代表更新也快</b></div>
+          <a href="../lessons/unit-15/01-range-query-and-prefix-limits.html" aria-label="開始課程：Range Query 與 Prefix Sum 的限制">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>02</span>
+          <div><p>進階 · 35 分鐘</p><h3>Fenwick Tree 樹狀陣列</h3><b>用最低有效位元管理分段前綴和</b></div>
+          <a href="../lessons/unit-15/02-fenwick-tree.html" aria-label="開始課程：Fenwick Tree 樹狀陣列">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>03</span>
+          <div><p>進階 · 38 分鐘</p><h3>Segment Tree 線段樹</h3><b>用二元分割保存每個區間的聚合結果</b></div>
+          <a href="../lessons/unit-15/03-segment-tree.html" aria-label="開始課程：Segment Tree 線段樹">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>04</span>
+          <div><p>進階 · 34 分鐘</p><h3>Lazy Propagation 與 Fenwick 比較</h3><b>整段更新時先記帳，需要深入時再下推</b></div>
+          <a href="../lessons/unit-15/04-lazy-propagation-and-selection.html" aria-label="開始課程：Lazy Propagation 與 Fenwick 比較">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>05</span>
+          <div><p>進階 · 40 分鐘</p><h3>LRU Cache 與 LFU Cache</h3><b>用索引加順序結構在 O(1) 內淘汰資料</b></div>
+          <a href="../lessons/unit-15/05-lru-and-lfu-cache.html" aria-label="開始課程：LRU Cache 與 LFU Cache">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>06</span>
+          <div><p>進階概念 · 35 分鐘</p><h3>B-Tree、B+ Tree 與資料庫索引</h3><b>讓每次磁碟讀取取得更多鍵，並支援範圍掃描</b></div>
+          <a href="../lessons/unit-15/06-database-index-trees-and-hash.html" aria-label="開始課程：B-Tree、B+ Tree 與資料庫索引">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>07</span>
+          <div><p>進階 · 34 分鐘</p><h3>Bloom Filter 與 False Positive</h3><b>用少量位元快速排除一定不存在的項目</b></div>
+          <a href="../lessons/unit-15/07-bloom-filter.html" aria-label="開始課程：Bloom Filter 與 False Positive">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>08</span>
+          <div><p>進階 · 32 分鐘</p><h3>Count-Min Sketch</h3><b>用多列計數器近似高流量事件頻率</b></div>
+          <a href="../lessons/unit-15/08-count-min-sketch.html" aria-label="開始課程：Count-Min Sketch">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>09</span>
+          <div><p>進階 · 38 分鐘</p><h3>DSU 進階與 Sparse Table</h3><b>一個處理動態合併，一個加速完全靜態查詢</b></div>
+          <a href="../lessons/unit-15/09-advanced-dsu-and-sparse-table.html" aria-label="開始課程：DSU 進階與 Sparse Table">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>10</span>
+          <div><p>進階 · 36 分鐘</p><h3>Monotonic Stack 與 Queue 進階</h3><b>及時移除再也不可能成為答案的候選</b></div>
+          <a href="../lessons/unit-15/10-advanced-monotonic-structures.html" aria-label="開始課程：Monotonic Stack 與 Queue 進階">開始閱讀 →</a>
+        </article></div></section>
+      <nav class="bottom-nav"><a href="../phase-2.html">← 返回第 2 階段大綱</a><a href="../index.html">完整學習地圖 ↑</a></nav></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

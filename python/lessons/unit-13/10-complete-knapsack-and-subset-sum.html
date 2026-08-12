@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="比較完全背包與 0/1 可行性背包。" />
+    <meta name="theme-color" content="#101713" />
+    <title>13.10 Complete Knapsack、Subset Sum 與 Partition｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-13-dynamic-programming.html">UNIT 13 / LESSON 10</a><p class="eyebrow">Dynamic Programming</p><h1>Complete Knapsack、Subset Sum 與 Partition</h1><p class="lesson-deck">用迴圈方向控制重複選取</p><div class="lesson-meta"><span>進階</span><span>40 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>比較完全背包與 0/1 可行性背包。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>實作完全背包</li><li>以布林 DP 解 Subset Sum</li><li>轉換 Partition 問題</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>Complete Knapsack</h2><p>完全背包允許每種物品重複選取，一維 dp 的容量改為由小到大，使本輪更新值可再次參與後續容量。這正是與 0/1 背包的核心差別。</p><ul><li>外層物品、內層容量正向</li><li>dp[c-weight] 可已包含目前物品</li><li>時間 O(nC)、空間 O(C)</li></ul><figure class="code-block"><figcaption><span>正向更新允許同一物品多次使用。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def complete_knapsack(weights, values, capacity):
+    dp=[0]*(capacity+1)
+    for weight,value in zip(weights,values):
+        for c in range(weight,capacity+1): dp[c]=max(dp[c],dp[c-weight]+value)
+    return dp[capacity]</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Subset Sum</h2><p>dp[s] 表示是否能用已處理元素湊出總和 s，每個元素最多一次，所以 s 必須反向更新。dp[0]=True 提供空集合起點。</p><ul><li>轉移：dp[s] |= dp[s-value]</li><li>反向避免重複使用 value</li><li>時間 O(n·target)、空間 O(target)</li></ul><figure class="code-block"><figcaption><span>布林背包只關心可達性。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def subset_sum(numbers, target):
+    dp=[False]*(target+1); dp[0]=True
+    for value in numbers:
+        for total in range(target,value-1,-1): dp[total] |= dp[total-value]
+    return dp[target]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>Partition Equal Subset Sum</h2><p>若總和為 odd，就不可能分成等和兩組；若為 even，只需判斷是否存在總和 total/2 的子集合。這把分割問題化為 0/1 Subset Sum。</p><ul><li>先做奇偶快速排除</li><li>找到半總和子集合後，其餘元素自然是另一半</li><li>空間沿用 O(total/2)</li></ul><figure class="code-block"><figcaption><span>時間 O(n·total)、空間 O(total)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def can_partition(numbers):
+    total=sum(numbers)
+    return False if total%2 else subset_sum(numbers,total//2)</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>容量正向更新允許重複選，反向更新限制一次。</li><li><span>02</span>Subset Sum 是布林型 0/1 背包。</li><li><span>03</span>Equal Partition 可轉為目標為總和一半的子集合。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>完全背包為何正向更新？</summary><p>讓剛加入目前物品的狀態可在同輪再次使用。</p></details><details><summary>總和為奇數為何不能等分？</summary><p>兩組整數和相等時，總和必為該整數的兩倍，也就是偶數。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>計算可湊出 target 的 0/1 子集合數。</li><li>比較 Coin Change 與 Complete Knapsack 的迴圈順序。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-13/09-zero-one-knapsack.html"><span>← 上一課</span><b>0/1 Knapsack</b></a><a class="next" href="../unit-13/11-longest-increasing-subsequence.html"><span>下一課 →</span><b>LIS：O(n²) 與 O(n log n)</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,314 @@
+{
+  "number": 9,
+  "phase": 1,
+  "slug": "trees",
+  "title": "樹狀資料結構",
+  "english": "Tree Data Structures",
+  "summary": "從樹與二元樹的共同語言開始，學習深度與廣度走訪，再進入 BST、平衡樹、Trie 與 Heap 的結構及用途。",
+  "goal": "能把階層資料表示成樹，選擇合適走訪方式，並依查找、前綴或極值需求選用 BST、Trie 或 Heap。",
+  "prerequisites": [
+    "理解 Python 類別、函式、list、dict、set 與 deque",
+    "能閱讀遞迴與迭代程式",
+    "知道 Stack、Queue、Heap 與 Big O 基本概念"
+  ],
+  "outcomes": [
+    "使用正確術語描述樹與二元樹",
+    "實作前序、中序、後序與層序走訪",
+    "計算樹的高度、節點深度與直徑",
+    "實作 BST 的查找、插入與刪除",
+    "說明平衡如何影響樹操作成本",
+    "依需求使用 Trie 或陣列式 Heap"
+  ],
+  "lessons": [
+    {
+      "number": 1,
+      "slug": "trees-and-binary-trees",
+      "title": "樹與 Binary Tree 二元樹",
+      "subtitle": "用節點和邊表達有層次的資料",
+      "duration": "24 分鐘",
+      "difficulty": "入門",
+      "summary": "建立根、父子、葉節點、子樹與二元樹的共同術語，並以節點類別建立範例。",
+      "objectives": ["辨認樹的基本組成", "區分一般樹與二元樹", "用 Python 節點表示二元樹"],
+      "sections": [
+        {
+          "heading": "樹描述階層與分支",
+          "paragraphs": ["樹（Tree）由節點（Node）與連接節點的邊（Edge）構成，從唯一根節點向下形成階層。除根以外，每個節點恰有一個父節點；沒有子節點的是葉節點，而從某節點往下的完整部分稱為子樹。"],
+          "bullets": ["根節點沒有父節點", "兄弟節點共享同一父節點", "路徑是由邊連接的一串節點", "含 V 個節點的樹有 V - 1 條邊"]
+        },
+        {
+          "heading": "二元樹限制每個節點的孩子數",
+          "paragraphs": ["二元樹（Binary Tree）的每個節點最多有左、右兩個孩子，左右位置具有區別；它不保證排序，也不保證每層填滿。滿二元樹、完全二元樹與二元搜尋樹是額外性質，不能只因為有兩個孩子就混為一談。"],
+          "bullets": ["每個節點可有零、一或兩個孩子", "左子樹與右子樹不可任意互換", "二元樹不等於 Binary Search Tree", "完全二元樹適合用陣列緊密儲存"]
+        },
+        {
+          "heading": "以參照連接節點",
+          "paragraphs": ["最直覺的 Python 表示法讓每個節點保存值與左右孩子參照；整棵樹只需保留 root。這種結構適合形狀不規則的樹，但若要從孩子回到父親，就需額外保存 parent 或由走訪過程記錄路徑。"],
+          "bullets": ["None 表示該方向沒有孩子", "建立節點是 O(1)", "存取已知節點的左右孩子是 O(1)"],
+          "code": "class TreeNode:\n    def __init__(self, value, left=None, right=None):\n        self.value = value\n        self.left = left\n        self.right = right\n\nroot = TreeNode(8, TreeNode(3), TreeNode(10))",
+          "code_caption": "root 的值是 8，左孩子為 3，右孩子為 10。"
+        }
+      ],
+      "takeaways": ["樹用節點與邊表示單一根開始的階層", "二元樹只限制左右孩子數，不自動具有排序性", "參照式節點適合表示形狀不規則的二元樹"],
+      "quiz": [
+        {"question": "二元樹每個節點都必須有兩個孩子嗎？", "answer": "不必；二元樹只規定最多兩個孩子，也可以有一個或沒有孩子。"},
+        {"question": "有 12 個節點且連通無環的樹有幾條邊？", "answer": "有 11 條邊，因為含 V 個節點的樹恰有 V - 1 條邊。"}
+      ],
+      "practice": ["畫出公司組織、檔案目錄各五個節點，標示根、父子與葉節點。", "用 TreeNode 建立三層二元樹，刻意讓部分節點只有一個孩子。"]
+    },
+    {
+      "number": 2,
+      "slug": "dfs-tree-traversals",
+      "title": "DFS 前序、中序與後序走訪",
+      "subtitle": "改變處理根節點的時機，就得到三種深度優先順序",
+      "duration": "30 分鐘",
+      "difficulty": "入門進階",
+      "summary": "以遞迴實作三種二元樹 DFS 走訪，理解順序、用途與呼叫堆疊成本。",
+      "objectives": ["區分前中後序", "實作遞迴走訪", "依問題選擇處理節點的時機"],
+      "sections": [
+        {
+          "heading": "DFS 沿子樹深入",
+          "paragraphs": ["二元樹的深度優先搜尋（Depth-First Search, DFS）會先深入一個子樹再回來處理另一側。前序、中序與後序都先遞迴探索左、右子樹，名稱差異來自根節點在兩者之前、之間或之後處理。"],
+          "bullets": ["前序：根、左、右", "中序：左、根、右", "後序：左、右、根", "遞迴呼叫堆疊扮演 Stack"]
+        },
+        {
+          "heading": "一個模板三種位置",
+          "paragraphs": ["base case 遇到 None 就返回；把 append 放在兩次遞迴呼叫的不同位置即可表達走訪順序。以下中序版本先完成左子樹才記錄根，若輸入是合法 BST，結果會是非遞減順序。"],
+          "bullets": ["先定義空節點行為", "每個節點恰好加入一次", "更換 append 位置可改成前序或後序"],
+          "code": "def inorder(root):\n    order = []\n\n    def visit(node):\n        if node is None:\n            return\n        visit(node.left)\n        order.append(node.value)\n        visit(node.right)\n\n    visit(root)\n    return order",
+          "code_caption": "中序走訪；n 個節點時間 O(n)，呼叫堆疊 O(h)，h 為樹高。"
+        },
+        {
+          "heading": "處理時機對應問題語意",
+          "paragraphs": ["前序在孩子前處理根，適合複製結構或輸出前綴表示；中序常用於 BST 依序讀值；後序等孩子結果完成才處理根，適合刪除子樹或計算依賴孩子的性質。三者都訪問每個節點一次，時間 O(n)，空間取決於高度 O(h)。"],
+          "bullets": ["前序：先建立或處理父節點", "中序：BST 產生排序結果", "後序：先取得孩子結果", "退化鏈的 h 可達 n"]
+        }
+      ],
+      "takeaways": ["三種 DFS 的差別是根節點的處理位置", "所有節點只訪問一次，因此時間 O(n)", "遞迴空間是 O(h)，平衡與退化樹差異很大"],
+      "quiz": [
+        {"question": "需要先計算左右子樹大小再計算根的大小，應使用哪種順序？", "answer": "後序，因為根的結果依賴左右孩子先完成。"},
+        {"question": "中序走訪任何二元樹都會得到排序結果嗎？", "answer": "不會；只有滿足 BST 排序規則的樹，中序結果才是非遞減順序。"}
+      ],
+      "practice": ["將 inorder 的 append 移動，分別實作 preorder 與 postorder。", "對同一棵七節點樹手算三種走訪順序，再用程式驗證。"]
+    },
+    {
+      "number": 3,
+      "slug": "level-order-traversal",
+      "title": "BFS Level Order 層序走訪",
+      "subtitle": "使用 Queue 由上到下、由左到右探索",
+      "duration": "26 分鐘",
+      "difficulty": "入門進階",
+      "summary": "以 deque 實作二元樹 BFS，按層收集節點並分析寬度空間。",
+      "objectives": ["解釋 Queue 與層序的關係", "實作按層分組的 BFS", "比較 BFS 與 DFS 的空間形態"],
+      "sections": [
+        {
+          "heading": "Queue 保持先發現先處理",
+          "paragraphs": ["層序走訪（Level Order Traversal）是一種廣度優先搜尋（Breadth-First Search, BFS），先處理深度 0，再處理深度 1。把孩子加到佇列尾端、從前端取出，可維持由上到下且同層由左到右的順序。"],
+          "bullets": ["Queue 採先進先出", "孩子在父節點處理後入隊", "適合層級、最淺深度與最近節點問題"]
+        },
+        {
+          "heading": "固定本層大小再處理",
+          "paragraphs": ["每輪開始時 queue 的長度就是本層節點數，固定這個數量再依序取出，便能把每層放進獨立 list。Python 使用 deque.popleft() 為 O(1)，避免 list.pop(0) 搬移元素的 O(n)。"],
+          "bullets": ["空樹直接回傳空 list", "level_size 隔開相鄰層", "只將非 None 孩子入隊"],
+          "code": "from collections import deque\n\ndef level_order(root):\n    if root is None:\n        return []\n    levels = []\n    queue = deque([root])\n    while queue:\n        level = []\n        for _ in range(len(queue)):\n            node = queue.popleft()\n            level.append(node.value)\n            if node.left: queue.append(node.left)\n            if node.right: queue.append(node.right)\n        levels.append(level)\n    return levels",
+          "code_caption": "回傳每層的值；時間 O(n)，queue 最多保存 O(w)，w 為最大寬度。"
+        },
+        {
+          "heading": "空間由最寬一層決定",
+          "paragraphs": ["每個節點入隊與出隊一次，所以時間 O(n)；queue 同時保存的節點最多接近樹的最大寬度 w，額外空間 O(w)，輸出另需 O(n)。平衡樹底層可能很寬，而細長樹的 BFS queue 很小；這與 DFS 的 O(h) 堆疊形成對比。"],
+          "bullets": ["處理時間 O(n)", "工作 queue 空間 O(w)", "回傳所有值的輸出空間 O(n)", "選 DFS 或 BFS 時應考慮樹形"]
+        }
+      ],
+      "takeaways": ["層序走訪使用 Queue 按深度探索", "固定每輪 queue 長度可把結果按層分組", "BFS 工作空間 O(w)，與 DFS 的 O(h) 不同"],
+      "quiz": [
+        {"question": "為什麼不能在 for 迴圈中每次重新以目前 len(queue) 決定本層？", "answer": "處理父節點時會加入下一層孩子，使 queue 長度改變；應在一層開始時固定原本長度。"},
+        {"question": "完全二元樹的 BFS queue 最多可能保存多少量級節點？", "answer": "最底層可占全樹約一半節點，因此最大寬度是 O(n)。"}
+      ],
+      "practice": ["修改 level_order，只回傳每層最大值。", "使用 BFS 找出第一個葉節點所在的最小深度。"]
+    },
+    {
+      "number": 4,
+      "slug": "height-depth-and-diameter",
+      "title": "高度、深度與直徑",
+      "subtitle": "先統一定義，再用後序一次收集子樹資訊",
+      "duration": "32 分鐘",
+      "difficulty": "中階",
+      "summary": "區分節點深度與樹高，並用後序 DFS 在 O(n) 內計算二元樹直徑。",
+      "objectives": ["清楚定義深度與高度", "遞迴計算樹高", "以子樹高度推導直徑"],
+      "sections": [
+        {
+          "heading": "深度向上數，高度向下數",
+          "paragraphs": ["節點深度（Depth）是從根到該節點的距離，高度（Height）是從節點往下到最遠葉節點的距離；樹高就是根的高度。距離可以用邊數或節點數定義，兩者只差一，但整份程式必須一致。"],
+          "bullets": ["本課以節點數表示高度", "空樹高度定義為 0", "葉節點高度為 1", "根深度可定義為 0"]
+        },
+        {
+          "heading": "高度是左右結果加一",
+          "paragraphs": ["根到最遠葉節點必定經過左或右子樹，因此高度等於左右高度最大值加一。這是後序問題：必須先取得兩個孩子的結果，才能計算目前節點。"],
+          "bullets": ["base case：None 回傳 0", "每個節點只計算一次", "時間 O(n)", "呼叫堆疊 O(h)"],
+          "code": "def tree_height(root):\n    if root is None:\n        return 0\n    return 1 + max(tree_height(root.left), tree_height(root.right))",
+          "code_caption": "以節點數定義高度；單節點樹高度為 1。"
+        },
+        {
+          "heading": "直徑不一定經過根",
+          "paragraphs": ["直徑（Diameter）是任兩節點之間最長路徑；它可能完全位於某個子樹。後序走訪取得左右高度時，以 left_height + right_height 更新經過目前節點的邊數直徑，同時向父節點回傳高度，便能一次 O(n) 完成。"],
+          "bullets": ["經過某節點的直徑由左右高度相加", "全域答案取所有節點候選最大值", "時間 O(n)，堆疊 O(h)", "若每個節點另算高度會退化到 O(n²)"],
+          "code": "def tree_diameter(root):\n    best = 0\n    def height(node):\n        nonlocal best\n        if node is None:\n            return 0\n        left = height(node.left)\n        right = height(node.right)\n        best = max(best, left + right)\n        return 1 + max(left, right)\n    height(root)\n    return best",
+          "code_caption": "回傳以邊數計算的直徑；每個節點只處理一次。"
+        }
+      ],
+      "takeaways": ["深度由根往下量，高度由節點往最遠葉量", "先統一邊數或節點數定義才能避免差一錯誤", "後序同時回傳高度並更新直徑可在 O(n) 完成"],
+      "quiz": [
+        {"question": "本課定義下，空樹與單節點樹高度各是多少？", "answer": "空樹為 0，單節點樹為 1，因為高度以路徑上的節點數表示。"},
+        {"question": "為什麼只計算 left_height + right_height 在根節點不夠？", "answer": "最長路徑可能完全位於左或右子樹，未必經過整棵樹的根。"}
+      ],
+      "practice": ["改寫 tree_height，以邊數定義高度並清楚設定空樹值。", "擴充直徑程式，額外記錄最長路徑的兩個端點。"]
+    },
+    {
+      "number": 5,
+      "slug": "binary-search-tree-operations",
+      "title": "BST 查找、插入與刪除",
+      "subtitle": "用排序性沿單一路徑排除子樹",
+      "duration": "38 分鐘",
+      "difficulty": "中階",
+      "summary": "建立 Binary Search Tree 規則，實作核心操作並理解高度控制其成本。",
+      "objectives": ["說明 BST 不變量與重複值政策", "實作查找、插入與刪除", "以樹高 h 分析操作"],
+      "sections": [
+        {
+          "heading": "BST 把較小與較大值分開",
+          "paragraphs": ["二元搜尋樹（Binary Search Tree, BST）要求每個節點左子樹的鍵都較小、右子樹的鍵都較大，且所有子樹也遵守相同規則。重複鍵要事先決定禁止、固定放一側或在節點內計數，否則操作規格不完整。"],
+          "bullets": ["比較一次就能選擇一個子樹", "中序走訪得到排序鍵", "BST 不是自動平衡", "本課程式忽略重複鍵"]
+        },
+        {
+          "heading": "查找與插入沿同一路徑",
+          "paragraphs": ["查找由 root 開始，比目前值小就往左、大就往右，命中或遇到 None 結束；插入走相同路徑，在第一個 None 接上新節點。兩者最多經過樹高 h 個節點，時間 O(h)，迭代版本額外空間 O(1)。"],
+          "bullets": ["平衡時 h = O(log n)", "退化鏈時 h = O(n)", "插入後仍須維持全域 BST 規則"],
+          "code": "def bst_search(root, target):\n    node = root\n    while node:\n        if target == node.value: return node\n        node = node.left if target < node.value else node.right\n    return None\n\ndef bst_insert(root, value):\n    if root is None: return TreeNode(value)\n    if value < root.value:\n        root.left = bst_insert(root.left, value)\n    elif value > root.value:\n        root.right = bst_insert(root.right, value)\n    return root",
+          "code_caption": "查找為迭代、插入為遞迴；時間皆為 O(h)。"
+        },
+        {
+          "heading": "刪除分成三種情況",
+          "paragraphs": ["刪除葉節點可直接回傳 None；只有一個孩子時以該孩子取代；有兩個孩子時可用右子樹最小值作為中序後繼，複製其值後再從右子樹刪除它。搜尋與調整都沿少數路徑，時間 O(h)，遞迴堆疊 O(h)。"],
+          "bullets": ["零個孩子：移除節點", "一個孩子：提升唯一孩子", "兩個孩子：替換為後繼再刪後繼", "函式必須回傳更新後子樹根"],
+          "code": "def bst_delete(root, value):\n    if root is None: return None\n    if value < root.value:\n        root.left = bst_delete(root.left, value)\n    elif value > root.value:\n        root.right = bst_delete(root.right, value)\n    else:\n        if root.left is None: return root.right\n        if root.right is None: return root.left\n        successor = root.right\n        while successor.left:\n            successor = successor.left\n        root.value = successor.value\n        root.right = bst_delete(root.right, successor.value)\n    return root",
+          "code_caption": "刪除後回傳新的子樹根，讓父節點正確重新連接。"
+        }
+      ],
+      "takeaways": ["BST 以全域左右排序規則排除不可能子樹", "核心操作時間是 O(h)，不是無條件 O(log n)", "刪除兩孩子節點可用中序後繼維持排序性"],
+      "quiz": [
+        {"question": "依序插入 1、2、3、4，普通 BST 的高度可能是多少量級？", "answer": "會形成向右的鏈，高度為 O(n)，查找也可能退化成 O(n)。"},
+        {"question": "刪除有兩個孩子的節點時，為何右子樹最小值適合取代它？", "answer": "它大於所有左子樹鍵，又是右子樹中最小者，替換後能維持 BST 排序規則。"}
+      ],
+      "practice": ["依序插入 8、3、10、1、6、14，再畫出 BST 並寫出中序結果。", "測試刪除葉節點、單一孩子與兩個孩子三種情況。"]
+    },
+    {
+      "number": 6,
+      "slug": "balanced-trees",
+      "title": "平衡樹的基本概念",
+      "subtitle": "限制高度，讓搜尋成本不因插入順序失控",
+      "duration": "28 分鐘",
+      "difficulty": "中階",
+      "summary": "理解 AVL Tree 與 Red-Black Tree 如何用旋轉及額外規則維持對數高度。",
+      "objectives": ["解釋平衡與操作成本的關係", "理解旋轉保留 BST 次序", "比較 AVL 與 Red-Black Tree 的取捨"],
+      "sections": [
+        {
+          "heading": "平衡的目標是控制高度",
+          "paragraphs": ["平衡搜尋樹（Balanced Search Tree）不是要求左右節點數完全相等，而是透過規則讓高度保持 O(log n)。如此查找、插入與刪除即使面對不利順序，也能避免普通 BST 退化成長鏈。"],
+          "bullets": ["核心保證是高度 O(log n)", "維護平衡需要額外資訊與調整", "平衡條件依樹種而不同", "不是所有二元樹都需要排序性"]
+        },
+        {
+          "heading": "旋轉改形狀但保留順序",
+          "paragraphs": ["左旋與右旋是局部重新連接節點的操作，能降低過高一側，同時保持中序鍵順序不變。AVL Tree 以左右子樹高度差限制平衡，插入或刪除後依失衡形態使用單旋或雙旋。"],
+          "bullets": ["旋轉只修改常數個連結", "局部旋轉本身為 O(1)", "更新高度或平衡因子不可遺漏", "LL、RR、LR、RL 對應不同修正"]
+        },
+        {
+          "heading": "AVL 與 Red-Black 的取捨",
+          "paragraphs": ["AVL Tree 平衡較嚴格，通常查找深度較小，但更新可能需要較多調整；Red-Black Tree 使用顏色與路徑規則維持較寬鬆的 O(log n) 高度，常用於通用有序映射。Python 內建 dict 是雜湊表，並未直接提供這兩種樹。"],
+          "bullets": ["AVL：高度控制較嚴格", "Red-Black：更新與查找取折衷", "兩者核心操作最壞 O(log n)", "需要排序鍵、範圍查詢時樹比雜湊表更自然"],
+          "table": {
+            "headers": ["結構", "平衡方式", "主要特性"],
+            "rows": [["普通 BST", "無", "可能退化 O(n)"], ["AVL Tree", "高度差", "較嚴格平衡"], ["Red-Black Tree", "顏色與路徑規則", "較少嚴格但仍 O(log n)"]]
+          }
+        }
+      ],
+      "takeaways": ["平衡樹的重點是將高度限制在 O(log n)", "旋轉能調整局部形狀而不破壞 BST 中序順序", "AVL 與 Red-Black 使用不同規則交換查找高度與更新成本"],
+      "quiz": [
+        {"question": "平衡樹是否要求每個節點左右子樹節點數完全相同？", "answer": "不要求；不同平衡樹用不同條件控制高度，目標是避免高度退化。"},
+        {"question": "旋轉為何不破壞 BST 排序？", "answer": "它只改變局部父子關係，並依鍵的大小重新連接，使該區域中序走訪順序保持不變。"}
+      ],
+      "practice": ["畫出 1、2、3 形成的右斜 BST，再手動畫一次左旋。", "比較需要頻繁範圍查詢與只需精確鍵查找時，平衡樹和 dict 的適用性。"]
+    },
+    {
+      "number": 7,
+      "slug": "trie",
+      "title": "Trie 字典樹",
+      "subtitle": "讓共同前綴共用路徑",
+      "duration": "32 分鐘",
+      "difficulty": "中階",
+      "summary": "以字元邊建立 Trie，實作新增、完整單字與前綴查詢，分析長度與空間成本。",
+      "objectives": ["說明 Trie 的前綴共享", "實作 insert、search 與 starts_with", "比較 Trie 與 set 的適用情境"],
+      "sections": [
+        {
+          "heading": "路徑代表前綴",
+          "paragraphs": ["Trie 又稱 Prefix Tree，從根沿字元邊走過的路徑代表字串前綴，因此 apple 與 app 共用 a、p、p 節點。節點需要終止標記區分完整單字和單純前綴，否則插入 apple 後會誤認 app 已存在。"],
+          "bullets": ["根節點不代表特定字元", "孩子映射由下一字元找到節點", "is_end 標記完整單字", "共同前綴只儲存一次路徑"]
+        },
+        {
+          "heading": "新增與查詢走相同路徑",
+          "paragraphs": ["insert 遇到不存在的字元就建立節點；search 走完整個單字後還要檢查 is_end；starts_with 只需確認前綴路徑存在。若字串長度為 L，三者時間皆 O(L)，與 Trie 中總單字數沒有直接線性關係。"],
+          "bullets": ["setdefault 可取得或建立孩子", "完整查找需要 is_end", "前綴查找不要求終止標記", "空字串政策應由介面明確定義"],
+          "code": "class TrieNode:\n    def __init__(self):\n        self.children = {}\n        self.is_end = False\n\nclass Trie:\n    def __init__(self): self.root = TrieNode()\n    def insert(self, word):\n        node = self.root\n        for char in word:\n            node = node.children.setdefault(char, TrieNode())\n        node.is_end = True\n    def _walk(self, text):\n        node = self.root\n        for char in text:\n            if char not in node.children: return None\n            node = node.children[char]\n        return node\n    def search(self, word):\n        node = self._walk(word)\n        return node is not None and node.is_end\n    def starts_with(self, prefix):\n        return self._walk(prefix) is not None",
+          "code_caption": "字串長度 L 時，新增與查詢時間 O(L)。"
+        },
+        {
+          "heading": "前綴能力換取節點成本",
+          "paragraphs": ["Trie 適合自動完成、字典前綴篩選與逐字搜尋，但每個節點的 dict 會帶來可觀的物件成本。最壞節點數接近所有字串長度總和 S，空間 O(S)；若只需精確成員查找，set 通常更簡單且記憶體常更實用。"],
+          "bullets": ["前綴列舉是 Trie 的核心優勢", "空間最壞 O(S)", "字元集與節點表示影響常數成本", "精確查找可先考慮 set"]
+        }
+      ],
+      "takeaways": ["Trie 讓多個字串共用相同前綴路徑", "is_end 用來區分完整單字與前綴", "操作時間 O(L)，但可能使用接近總字元數的節點空間"],
+      "quiz": [
+        {"question": "插入 apple 後，starts_with('app') 與 search('app') 各是什麼？", "answer": "starts_with 為 True，search 為 False，除非 app 也曾被完整插入並標記 is_end。"},
+        {"question": "只需判斷完整帳號是否存在，為何 set 可能優於 Trie？", "answer": "set 介面更直接，平均精確查找快，且不需為每個前綴建立節點物件。"}
+      ],
+      "practice": ["擴充 Trie，列出指定 prefix 下最多 k 個完整單字。", "設計刪除單字流程，思考何時能安全移除不再共用的節點。"]
+    },
+    {
+      "number": 8,
+      "slug": "heap-as-a-tree",
+      "title": "Heap 與樹的關係",
+      "subtitle": "用完全二元樹形狀在陣列中維持極值",
+      "duration": "30 分鐘",
+      "difficulty": "中階",
+      "summary": "理解 Binary Heap 的形狀與順序性質、陣列索引關係，以及它和 BST 的根本差異。",
+      "objectives": ["說明完全二元樹與 Heap Property", "使用索引找到父子節點", "依需求區分 Heap 與 BST"],
+      "sections": [
+        {
+          "heading": "Heap 同時限制形狀與局部順序",
+          "paragraphs": ["二元堆積（Binary Heap）是完全二元樹，除最後一層外全部填滿，最後一層由左向右填。最小堆只保證每個父節點不大於孩子，因此根是全域最小值，但兄弟與不同子樹之間沒有完整排序。"],
+          "bullets": ["完全形狀讓高度保持 O(log n)", "最小堆根為最小值", "最大堆根為最大值", "Heap 不是 Binary Search Tree"]
+        },
+        {
+          "heading": "完全形狀適合陣列索引",
+          "paragraphs": ["以零起始陣列儲存 Heap 時，索引 i 的左孩子為 2i + 1、右孩子為 2i + 2，父節點為 (i - 1) // 2，因此不需保存指標。插入後向上調整，移除根後把末元素移到根再向下調整，兩者都沿樹高花 O(log n)。"],
+          "bullets": ["讀取根為 O(1)", "插入為 O(log n)", "移除根為 O(log n)", "搜尋任意值最壞 O(n)"],
+          "code": "import heapq\n\nheap = []\nfor value in [7, 2, 9, 4]:\n    heapq.heappush(heap, value)\nsmallest = heap[0]\nremoved = heapq.heappop(heap)",
+          "code_caption": "heapq 實作最小堆；底層 list 只保證 Heap Property，不是完整排序。"
+        },
+        {
+          "heading": "Heap 與 BST 解決不同查詢",
+          "paragraphs": ["Heap 擅長反覆取得極值，常用於 Priority Queue、Top K 與排程；它不能沿左右關係有效尋找任意鍵。平衡 BST 能進行 O(log n) 精確查找、前後鄰居與範圍查詢，但維護規則更複雜；選擇應由最常操作決定。"],
+          "bullets": ["只反覆取最小／最大：Heap", "需要有序範圍與任意鍵：平衡 BST", "Heap 建立可用 heapify O(n)", "Python heapq 不保證迭代輸出有序"],
+          "table": {
+            "headers": ["操作", "Binary Heap", "平衡 BST"],
+            "rows": [["讀取最小值", "O(1)（最小堆）", "O(log n) 或保存指標"], ["插入", "O(log n)", "O(log n)"], ["任意鍵查找", "O(n)", "O(log n)"], ["範圍走訪", "不適合", "適合"]]
+          }
+        }
+      ],
+      "takeaways": ["Binary Heap 是具有局部順序的完全二元樹", "完全形狀使它能用陣列公式連接父子並維持 O(log n) 高度", "Heap 適合極值，平衡 BST 適合任意鍵與範圍查詢"],
+      "quiz": [
+        {"question": "最小堆的第二小值一定在陣列索引 1 嗎？", "answer": "不一定；它可能在根的左或右孩子，Heap 只保證父不大於孩子。"},
+        {"question": "為什麼 Heap 中搜尋任意 target 最壞是 O(n)？", "answer": "局部父子順序不足以判斷 target 應在左或右子樹，最壞可能需要檢查所有節點。"}
+      ],
+      "practice": ["對長度 10 的 Heap，列出索引 3 的父、左孩子與右孩子索引。", "分別為急診優先排程、姓名範圍查詢與 Top K 選擇 Heap 或 BST 並說明原因。"]
+    }
+  ]
+}

@@ -1,0 +1,674 @@
+{
+  "number": 2,
+  "phase": 1,
+  "slug": "python-builtins",
+  "title": "Python 內建資料結構",
+  "english": "Python Built-in Data Structures",
+  "summary": "從資料是否有順序、是否重複、是否需要快速查找與是否會改動出發，學會使用 Python 常見容器及標準函式庫工具。",
+  "goal": "能依問題需求選擇 List、Tuple、Dictionary、Set、String、deque 或 heap，並說明主要操作的時間與空間成本。",
+  "prerequisites": [
+    "會使用變數、條件判斷與迴圈",
+    "能閱讀函式呼叫與基本 Python 3 語法"
+  ],
+  "outcomes": [
+    "區分可變與不可變物件，避免別名與複製造成的錯誤",
+    "正確操作 Python 常用內建容器並估算主要操作複雜度",
+    "使用 collections.deque 實作 Stack 與 Queue",
+    "使用 heapq 建立最小堆積與優先佇列",
+    "依順序、唯一性、查找與更新需求選擇資料結構"
+  ],
+  "lessons": [
+    {
+      "number": 1,
+      "slug": "containers-and-mutability",
+      "title": "容器、參照與可變性",
+      "subtitle": "先理解資料怎麼被保存與改動",
+      "duration": "20 分鐘",
+      "difficulty": "入門",
+      "summary": "建立容器選型的共同語言，理解可變物件、不可變物件、別名與淺複製。",
+      "objectives": [
+        "區分可變與不可變物件",
+        "說明賦值與複製的差異",
+        "用需求初步篩選資料結構"
+      ],
+      "sections": [
+        {
+          "heading": "容器解決的四個問題",
+          "paragraphs": [
+            "資料結構是保存與取用資料的規則，而選擇時先問四件事：順序是否重要、元素能否重複、查找要多快、內容會不會改動。Python 提供多種容器，沒有一種能在所有操作上同時最好。"
+          ],
+          "bullets": [
+            "List：有順序、可重複、可修改",
+            "Tuple：有順序、可重複、不可修改",
+            "Dictionary：以唯一鍵對應值",
+            "Set：只保留不重複元素"
+          ],
+          "table": {
+            "headers": ["需求", "優先考慮"],
+            "rows": [
+              ["依位置讀取", "List／Tuple／String"],
+              ["用鍵快速查值", "Dictionary"],
+              ["去重或成員測試", "Set"],
+              ["兩端頻繁加入移除", "deque"]
+            ]
+          }
+        },
+        {
+          "heading": "可變與不可變物件",
+          "paragraphs": [
+            "List、Dictionary 與 Set 是可變（mutable）物件，原物件可以就地更新；Tuple、String 與數字是不可變（immutable）物件，所謂修改其實會產生新物件。這個差異會影響函式副作用、能否作為字典鍵，以及除錯方式。"
+          ],
+          "bullets": [
+            "可變物件適合持續累積或更新內容",
+            "不可變物件較容易推理與安全分享",
+            "字典鍵與集合元素必須可雜湊，通常也應不可變"
+          ],
+          "code": "numbers = [1, 2]\nalias = numbers\nalias.append(3)\nprint(numbers)  # [1, 2, 3]\n\nword = \"py\"\nnew_word = word + \"thon\"\nprint(word, new_word)  # py python",
+          "code_caption": "List 會被就地修改；String 串接會建立新字串。"
+        },
+        {
+          "heading": "賦值、淺複製與成本",
+          "paragraphs": [
+            "賦值只讓兩個名稱指向同一物件，時間是 O(1)；list.copy() 或切片會建立外層的新容器，時間與額外空間皆為 O(n)。淺複製不會複製內層的可變物件，因此巢狀資料仍可能共享內容。"
+          ],
+          "bullets": [
+            "alias = original：共享同一物件，O(1)",
+            "clone = original.copy()：複製外層，O(n)",
+            "需要完整分離巢狀物件時才考慮 deepcopy"
+          ],
+          "code": "matrix = [[1], [2]]\nshallow = matrix.copy()\nshallow[0].append(9)\nprint(matrix)  # [[1, 9], [2]]",
+          "code_caption": "淺複製後，內層 List 仍由兩個外層容器共享。",
+          "callout": "看到資料被意外改動時，先檢查是否有兩個變數指向同一個可變物件。"
+        }
+      ],
+      "takeaways": [
+        "先用順序、重複、查找與更新需求篩選容器",
+        "可變物件能就地更新，不可變物件的變更會產生新物件",
+        "賦值是共享參照，淺複製只分離最外層"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼 List 不能直接作為 Dictionary 的鍵？",
+          "answer": "List 可變且不可雜湊，內容改動會破壞鍵在雜湊表中的定位；可改用只含可雜湊元素的 Tuple。"
+        },
+        {
+          "question": "將含 n 個元素的 List 指派給另一個變數，時間複雜度是多少？",
+          "answer": "O(1)，因為只複製物件參照，沒有逐一複製元素。"
+        }
+      ],
+      "practice": [
+        "建立一個 List，分別用賦值與 copy() 產生新變數，再比較修改後的結果。",
+        "為學生座標、成績查詢與唯一標籤各選一種資料結構並說明理由。"
+      ]
+    },
+    {
+      "number": 2,
+      "slug": "lists",
+      "title": "List：有順序的可變序列",
+      "subtitle": "掌握索引、更新與動態陣列成本",
+      "duration": "25 分鐘",
+      "difficulty": "入門",
+      "summary": "學習 List 的建立、走訪、增刪與動態陣列特性，並辨認頭尾操作的成本差異。",
+      "objectives": [
+        "使用索引、切片與 List comprehension",
+        "正確選擇 append、insert、pop 與 remove",
+        "估算 List 常見操作的複雜度"
+      ],
+      "sections": [
+        {
+          "heading": "索引、切片與走訪",
+          "paragraphs": [
+            "List 以連續位置保存參照，適合需要維持順序與依索引讀取的資料。讀取或更新單一索引通常是 O(1)，完整走訪與複製切片則依元素數量為 O(n)。"
+          ],
+          "bullets": [
+            "索引可用負數從尾端計算",
+            "切片左含右不含，會建立新 List",
+            "enumerate 可同時取得索引與元素"
+          ],
+          "code": "scores = [72, 88, 95, 81]\nprint(scores[1])       # 88\nprint(scores[1:3])     # [88, 95]\nfor index, score in enumerate(scores):\n    print(index, score)",
+          "code_caption": "以索引、切片與 enumerate 讀取有順序資料。"
+        },
+        {
+          "heading": "加入、移除與位移",
+          "paragraphs": [
+            "append 與從尾端 pop 的平均成本是 O(1)，因為通常不用搬動既有元素。從開頭或中間 insert、pop 會讓後方元素位移，成本是 O(n)，因此 List 不適合當作頻繁出隊的 Queue。"
+          ],
+          "bullets": [
+            "append(value)：尾端加入，平均 O(1)",
+            "pop()：尾端移除，O(1)",
+            "insert(0, value)／pop(0)：O(n)",
+            "remove(value)：先搜尋再移除，O(n)"
+          ],
+          "code": "tasks = [\"備課\", \"出題\"]\ntasks.append(\"批改\")\nfinished = tasks.pop()\nprint(tasks, finished)",
+          "code_caption": "把 List 尾端當作 Stack 使用，加入與移除都有效率。"
+        },
+        {
+          "heading": "搜尋、排序與推導式",
+          "paragraphs": [
+            "使用 in 或 index 尋找 List 元素通常要從頭掃描，所以是 O(n)；排序 n 個元素通常是 O(n log n)。List comprehension 能把轉換與篩選寫得清楚，但仍會走訪輸入並建立新 List。"
+          ],
+          "bullets": [
+            "value in items：O(n)",
+            "items.sort()：就地排序，通常 O(n log n)",
+            "sorted(items)：回傳新的已排序 List",
+            "查找頻繁且不在意順序時考慮 Set"
+          ],
+          "code": "scores = [72, 88, 95, 81]\npassed = [score for score in scores if score >= 80]\nranked = sorted(passed, reverse=True)\nprint(ranked)  # [95, 88, 81]",
+          "code_caption": "先用推導式篩選，再保留原資料並產生排序結果。"
+        }
+      ],
+      "takeaways": [
+        "List 適合有順序、可重複且需要修改的資料",
+        "索引是 O(1)，線性搜尋與中間增刪通常是 O(n)",
+        "List 尾端適合 Stack，但開頭不適合頻繁出隊"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼 list.pop(0) 是 O(n)？",
+          "answer": "移除第一個元素後，其餘元素都必須向前位移一格。"
+        },
+        {
+          "question": "sort() 與 sorted() 的主要差異是什麼？",
+          "answer": "sort() 就地修改原 List 並回傳 None；sorted() 接受任意可迭代物件並回傳新的 List。"
+        }
+      ],
+      "practice": [
+        "將一組溫度資料篩選出高於平均值的項目並由高到低排序。",
+        "比較從尾端 pop 與從開頭 pop 的用途，寫出各自適合的情境。"
+      ]
+    },
+    {
+      "number": 3,
+      "slug": "tuples",
+      "title": "Tuple：固定且可表意的序列",
+      "subtitle": "用不可變序列表達一筆完整資料",
+      "duration": "20 分鐘",
+      "difficulty": "入門",
+      "summary": "學習 Tuple 的建立、拆包、回傳多值與作為複合鍵的條件。",
+      "objectives": [
+        "辨認 Tuple 與 List 的選型差異",
+        "使用拆包提升程式可讀性",
+        "判斷 Tuple 是否可以被雜湊"
+      ],
+      "sections": [
+        {
+          "heading": "不可變序列的用途",
+          "paragraphs": [
+            "Tuple 與 List 一樣有順序、可重複並支援索引，但建立後不能新增、刪除或替換元素。它適合表達欄位數量固定的一筆資料，例如座標、日期或函式回傳的多個結果。"
+          ],
+          "bullets": [
+            "索引讀取通常是 O(1)",
+            "走訪與成員搜尋是 O(n)",
+            "不可變能降低資料被意外改動的風險"
+          ],
+          "code": "point = (24.15, 120.67)\nlatitude, longitude = point\nprint(latitude, longitude)",
+          "code_caption": "用 Tuple 保存固定的一組座標並拆包。"
+        },
+        {
+          "heading": "打包、拆包與多值回傳",
+          "paragraphs": [
+            "逗號才是建立 Tuple 的關鍵，所以單元素 Tuple 必須寫成 (value,)。拆包會按照位置把資料指派給名稱，也能使用星號收集剩餘元素，讓固定格式的資料更容易閱讀。"
+          ],
+          "bullets": [
+            "single = (42,) 才是單元素 Tuple",
+            "left, right = right, left 可交換變數",
+            "first, *middle, last 可收集不定長中段"
+          ],
+          "code": "def minimum_and_maximum(values):\n    return min(values), max(values)\n\nlowest, highest = minimum_and_maximum([7, 2, 9])\nprint(lowest, highest)  # 2 9",
+          "code_caption": "函式以 Tuple 回傳兩個結果，呼叫端立即拆包。"
+        },
+        {
+          "heading": "Tuple、雜湊與選型",
+          "paragraphs": [
+            "只有當 Tuple 內所有元素都可雜湊時，Tuple 才能成為 Dictionary 的鍵或 Set 的元素。若資料會頻繁增刪就用 List；若長度與語意固定，或需要複合鍵，Tuple 通常更合適。"
+          ],
+          "bullets": [
+            "(\"A\", 3) 可作為字典鍵",
+            "([1, 2], 3) 含 List，因此不可雜湊",
+            "Tuple 的不可變只限制欄位參照，內含的可變物件仍可改動"
+          ],
+          "table": {
+            "headers": ["比較", "List", "Tuple"],
+            "rows": [
+              ["是否可變", "是", "否"],
+              ["典型用途", "動態集合", "固定紀錄"],
+              ["可否作為字典鍵", "否", "元素皆可雜湊時可以"]
+            ]
+          },
+          "code": "attendance = {}\nkey = (\"三年一班\", 5)\nattendance[key] = True\nprint(attendance[key])",
+          "code_caption": "以班級與座號組成 Tuple 複合鍵。"
+        }
+      ],
+      "takeaways": [
+        "Tuple 是有順序、可重複且不可變的序列",
+        "拆包適合處理固定欄位與函式多值回傳",
+        "Tuple 內所有元素可雜湊時，才能作為 Dictionary 的鍵"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼 (5) 不是 Tuple，而 (5,) 才是？",
+          "answer": "括號只負責分組運算式，逗號才會建立 Tuple。"
+        },
+        {
+          "question": "Tuple 一定能作為 Dictionary 的鍵嗎？",
+          "answer": "不一定；若其中含有 List 等不可雜湊元素，整個 Tuple 也不可雜湊。"
+        }
+      ],
+      "practice": [
+        "寫一個函式回傳數列的總和、最小值與最大值，並在呼叫端拆包。",
+        "把棋盤位置表示為 Tuple，建立 Dictionary 保存各位置上的棋子。"
+      ]
+    },
+    {
+      "number": 4,
+      "slug": "dictionaries",
+      "title": "Dictionary：鍵與值的快速對應",
+      "subtitle": "用雜湊表建立可讀又高效的查找",
+      "duration": "25 分鐘",
+      "difficulty": "入門",
+      "summary": "學習 Dictionary 的鍵值模型、安全存取、走訪、計數與平均複雜度。",
+      "objectives": [
+        "建立、查詢與更新鍵值資料",
+        "使用 get、items 與 setdefault",
+        "理解雜湊表的平均 O(1) 與鍵限制"
+      ],
+      "sections": [
+        {
+          "heading": "從鍵找到值",
+          "paragraphs": [
+            "Dictionary（字典）用唯一的鍵對應一個值，適合學生編號對姓名、商品代碼對庫存等查詢。鍵查找、新增與更新平均是 O(1)，但這是雜湊表在一般分布下的平均表現。"
+          ],
+          "bullets": [
+            "鍵必須唯一，重複指派會覆蓋舊值",
+            "鍵必須可雜湊，例如 String、數字或合格的 Tuple",
+            "現代 Python 保留插入順序，但主要優勢仍是依鍵查找"
+          ],
+          "code": "student = {\"id\": 17, \"name\": \"小安\"}\nstudent[\"score\"] = 92\nstudent[\"score\"] += 3\nprint(student)",
+          "code_caption": "以有意義的鍵新增與更新學生資料。"
+        },
+        {
+          "heading": "安全存取與走訪",
+          "paragraphs": [
+            "使用 brackets 讀取不存在的鍵會拋出 KeyError，而 get 可以提供預設值。走訪 items() 能同時取得鍵和值，完整走訪 n 組資料需要 O(n)。"
+          ],
+          "bullets": [
+            "mapping[key]：鍵必須存在",
+            "mapping.get(key, default)：缺少時回傳預設值",
+            "keys()、values()、items() 提供不同走訪視角"
+          ],
+          "code": "scores = {\"Amy\": 91, \"Bo\": 84}\nprint(scores.get(\"Chen\", 0))\nfor name, score in scores.items():\n    print(name, score)",
+          "code_caption": "用 get 安全查詢，並以 items 走訪鍵值配對。"
+        },
+        {
+          "heading": "計數模式與複雜度",
+          "paragraphs": [
+            "Dictionary 常用來累積頻率，因為每次依鍵讀寫平均 O(1)，處理 n 個項目的總時間平均為 O(n)。它需要額外 O(k) 空間保存 k 個不同鍵；若只在意元素是否出現，Set 表達會更直接。"
+          ],
+          "bullets": [
+            "查找、插入、刪除：平均 O(1)",
+            "完整複製或走訪：O(n)",
+            "頻率、分組與快取是常見使用情境"
+          ],
+          "code": "words = [\"red\", \"blue\", \"red\", \"green\"]\ncounts = {}\nfor word in words:\n    counts[word] = counts.get(word, 0) + 1\nprint(counts)",
+          "code_caption": "以 Dictionary 在線性時間內建立頻率表。",
+          "table": {
+            "headers": ["需求", "建議"],
+            "rows": [
+              ["鍵對應額外資訊", "Dictionary"],
+              ["只問是否存在", "Set"],
+              ["依整數位置讀取", "List／Tuple"]
+            ]
+          }
+        }
+      ],
+      "takeaways": [
+        "Dictionary 以唯一且可雜湊的鍵對應值",
+        "鍵查找與更新平均 O(1)，完整走訪 O(n)",
+        "get 適合預設值，items 適合同時走訪鍵和值"
+      ],
+      "quiz": [
+        {
+          "question": "何時應使用 get 而不是 brackets 讀取字典？",
+          "answer": "當鍵可能不存在且希望提供合理預設值時使用 get；若缺鍵代表程式錯誤，brackets 的 KeyError 反而有助除錯。"
+        },
+        {
+          "question": "Dictionary 查找一定是 O(1) 嗎？",
+          "answer": "通常以平均 O(1) 分析；極端雜湊碰撞下最壞可退化，但一般選型以平均成本為主。"
+        }
+      ],
+      "practice": [
+        "統計一段文字中每個英文字母出現的次數，忽略空白。",
+        "建立商品代碼到庫存量的 Dictionary，完成查詢、補貨與售出操作。"
+      ]
+    },
+    {
+      "number": 5,
+      "slug": "sets",
+      "title": "Set：唯一元素與集合運算",
+      "subtitle": "快速判斷存在、去重與比較群組",
+      "duration": "20 分鐘",
+      "difficulty": "入門",
+      "summary": "學習 Set 的唯一性、成員測試、集合運算與不保證位置順序的特性。",
+      "objectives": [
+        "使用 Set 去除重複資料",
+        "以集合運算比較兩群資料",
+        "比較 Set 與 List 的查找成本"
+      ],
+      "sections": [
+        {
+          "heading": "唯一性與快速成員測試",
+          "paragraphs": [
+            "Set（集合）只保存不重複且可雜湊的元素，特別適合回答某值是否已出現。成員測試、加入與刪除平均為 O(1)，相較 List 的 O(n) 線性搜尋更適合大量重複查找。"
+          ],
+          "bullets": [
+            "元素不重複，沒有索引位置",
+            "in、add、discard 平均 O(1)",
+            "不要依賴 Set 的迭代順序"
+          ],
+          "code": "seen = set()\nfor student_id in [3, 8, 3, 5]:\n    if student_id in seen:\n        print(\"重複：\", student_id)\n    seen.add(student_id)",
+          "code_caption": "用 Set 在走訪時偵測重複項目。"
+        },
+        {
+          "heading": "交集、聯集與差集",
+          "paragraphs": [
+            "集合運算能直接表達兩群資料之間的關係，比巢狀迴圈更接近問題語意。對大小分別為 n 與 m 的集合，聯集與差集通常與輸入規模線性相關，交集通常可從較小集合開始檢查。"
+          ],
+          "bullets": [
+            "a | b：聯集，出現在任一集合",
+            "a & b：交集，同時出現",
+            "a - b：差集，只出現在 a",
+            "a ^ b：對稱差集，只出現在其中之一"
+          ],
+          "code": "python_class = {\"Amy\", \"Bo\", \"Chen\"}\nmath_class = {\"Bo\", \"Di\"}\nprint(python_class & math_class)  # {'Bo'}\nprint(python_class - math_class)  # 只修 Python",
+          "code_caption": "用交集與差集比較選課名單。"
+        },
+        {
+          "heading": "去重與選型限制",
+          "paragraphs": [
+            "set(items) 能在線性平均時間內去重，但結果不保證保留可依賴的位置順序。若要保留第一次出現順序，可利用 Dictionary 鍵唯一且保留插入順序的特性；若元素還要對應資料，直接使用 Dictionary。"
+          ],
+          "bullets": [
+            "只需唯一性與存在判斷：Set",
+            "需要唯一鍵對應資訊：Dictionary",
+            "需要位置、重複與順序：List",
+            "空集合必須寫 set()，{} 是空 Dictionary"
+          ],
+          "code": "items = [\"A\", \"B\", \"A\", \"C\"]\nunique_unordered = set(items)\nunique_in_order = list(dict.fromkeys(items))\nprint(unique_unordered)\nprint(unique_in_order)  # ['A', 'B', 'C']",
+          "code_caption": "比較一般去重與保留首次出現順序的去重。"
+        }
+      ],
+      "takeaways": [
+        "Set 保存唯一且可雜湊的元素，不提供索引",
+        "成員測試、加入與刪除平均 O(1)",
+        "集合運算能清楚表達交集、聯集與差集"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼大量成員測試通常應選 Set 而不是 List？",
+          "answer": "Set 以雜湊表將平均查找降為 O(1)，List 通常要逐項比較而為 O(n)。"
+        },
+        {
+          "question": "如何建立空 Set？",
+          "answer": "使用 set()；字面值 {} 建立的是空 Dictionary。"
+        }
+      ],
+      "practice": [
+        "給兩份報名名單，找出同時報名、只報第一場與至少報一場的人。",
+        "將含重複標籤的 List 去重，分別實作不要求順序與保留順序的版本。"
+      ]
+    },
+    {
+      "number": 6,
+      "slug": "strings",
+      "title": "String：不可變的文字序列",
+      "subtitle": "以序列觀念處理文字與避免低效串接",
+      "duration": "25 分鐘",
+      "difficulty": "入門",
+      "summary": "理解 String 的不可變性、索引切片、常用轉換與高效組合方式。",
+      "objectives": [
+        "以索引、切片與字串方法處理文字",
+        "解釋 String 不可變帶來的成本",
+        "使用 join 高效組合多段文字"
+      ],
+      "sections": [
+        {
+          "heading": "文字也是序列",
+          "paragraphs": [
+            "String 是由 Unicode 字元組成的不可變序列，支援索引、切片、in 與迭代。讀取單一位置通常是 O(1)，但切片長度為 k 時需要建立新字串，時間與空間皆為 O(k)。"
+          ],
+          "bullets": [
+            "索引取得一個新的一字元 String",
+            "切片規則與 List 相同，左含右不含",
+            "成員或子字串搜尋不應假設為 O(1)"
+          ],
+          "code": "text = \"資料結構\"\nprint(text[0])     # 資\nprint(text[1:3])   # 料結\nfor character in text:\n    print(character)",
+          "code_caption": "把 String 當作不可變序列進行索引、切片與走訪。"
+        },
+        {
+          "heading": "清理、拆分與格式化",
+          "paragraphs": [
+            "字串方法不會改動原字串，而是回傳新的 String；strip、split、replace 與 lower 是資料清理的常用工具。這些方法通常需要檢視或複製文字，對長度 n 的字串多半以 O(n) 理解。"
+          ],
+          "bullets": [
+            "strip() 移除頭尾空白",
+            "split(separator) 拆成 List",
+            "separator.join(parts) 合併字串",
+            "f-string 適合將值嵌入文字"
+          ],
+          "code": "raw = \"  Amy,91  \"\nname, score_text = raw.strip().split(\",\")\nmessage = f\"{name} 的分數是 {int(score_text)}\"\nprint(message)",
+          "code_caption": "清理輸入、拆分欄位，再用 f-string 產生訊息。"
+        },
+        {
+          "heading": "大量串接與資料選型",
+          "paragraphs": [
+            "因 String 不可變，迴圈中反覆使用 result += piece 可能不斷複製既有內容，累積成本可能接近 O(n²)。先把片段存入 List，最後用 join 一次配置結果，通常可在總字元數的 O(n) 時間完成。"
+          ],
+          "bullets": [
+            "固定文字與文字處理：String",
+            "大量累積片段：List 加 join",
+            "需要修改單一字元：先轉 List，完成後 join",
+            "String 可雜湊，因此可作為 Dictionary 鍵或 Set 元素"
+          ],
+          "code": "words = [\"Python\", \"資料結構\", \"入門\"]\ntitle = \"｜\".join(words)\nprint(title)",
+          "code_caption": "用 join 線性地組合多段文字。",
+          "callout": "小量、一次性的 + 串接很清楚；需要在迴圈大量累積時再改用 List 與 join。"
+        }
+      ],
+      "takeaways": [
+        "String 是不可變的 Unicode 字元序列",
+        "切片與多數轉換會依文字長度建立新物件",
+        "大量組合文字時優先使用 List 收集後再 join"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼不能寫 text[0] = 'A'？",
+          "answer": "String 不可變，不能就地替換字元；必須建立新的 String。"
+        },
+        {
+          "question": "迴圈中大量串接字串時，為何 join 通常較好？",
+          "answer": "反覆 += 可能一再複製逐漸變長的結果；join 能先知道片段並較接近一次完成配置，總成本通常為 O(n)。"
+        }
+      ],
+      "practice": [
+        "將逗號分隔且含多餘空白的姓名清單整理成乾淨的 List。",
+        "把一組句子片段用換行符號組成報告，比較 += 與 join 的寫法。"
+      ]
+    },
+    {
+      "number": 7,
+      "slug": "stack-queue-and-deque",
+      "title": "Stack、Queue 與 deque",
+      "subtitle": "依進出順序選擇正確的 Python 實作",
+      "duration": "25 分鐘",
+      "difficulty": "入門",
+      "summary": "理解 LIFO 與 FIFO 規則，並以 List 或 collections.deque 實作有效率的操作。",
+      "objectives": [
+        "用 List 或 deque 實作 Stack",
+        "用 deque 實作 Queue",
+        "比較兩種容器在兩端操作的複雜度"
+      ],
+      "sections": [
+        {
+          "heading": "Stack：後進先出",
+          "paragraphs": [
+            "Stack（堆疊）遵守後進先出（LIFO），像疊盤子一樣最後放上的項目最先取走。Python 可直接用 List 尾端的 append 與 pop 實作，兩者平均或攤銷成本皆為 O(1)。"
+          ],
+          "bullets": [
+            "push：list.append(value)",
+            "pop：list.pop()",
+            "peek：stack[-1]，先確認非空",
+            "適合復原、括號配對與深度優先搜尋"
+          ],
+          "code": "stack = []\nstack.append(\"第一頁\")\nstack.append(\"第二頁\")\ncurrent = stack.pop()\nprint(current)  # 第二頁",
+          "code_caption": "使用 List 尾端建立簡單 Stack。"
+        },
+        {
+          "heading": "Queue：先進先出",
+          "paragraphs": [
+            "Queue（佇列）遵守先進先出（FIFO），適合排隊工作與廣度優先搜尋。List 的 pop(0) 是 O(n)，應改用 collections.deque 的 append 與 popleft，兩端操作都是 O(1)。"
+          ],
+          "bullets": [
+            "enqueue：deque.append(value)",
+            "dequeue：deque.popleft()",
+            "不要用 List 的 pop(0) 處理大量出隊",
+            "deque 可限制 maxlen 建立固定長度緩衝區"
+          ],
+          "code": "from collections import deque\n\nqueue = deque([\"Amy\", \"Bo\"])\nqueue.append(\"Chen\")\nnext_student = queue.popleft()\nprint(next_student)  # Amy",
+          "code_caption": "deque 讓 Queue 的入隊與出隊都保持常數時間。"
+        },
+        {
+          "heading": "List 與 deque 的選型",
+          "paragraphs": [
+            "deque 是雙端佇列，左右兩端加入與移除皆為 O(1)，但不適合頻繁依中間索引存取。需要隨機索引與尾端操作時用 List；需要左端或兩端頻繁進出時用 deque。"
+          ],
+          "bullets": [
+            "List 索引：O(1)，左端增刪：O(n)",
+            "deque 兩端增刪：O(1)",
+            "deque 中間索引不具 List 的常數時間優勢",
+            "單執行緒的一般 Stack 可優先用 List，語意清楚即可"
+          ],
+          "table": {
+            "headers": ["需求", "建議結構", "主要操作"],
+            "rows": [
+              ["後進先出", "List／deque", "append、pop：O(1)"],
+              ["先進先出", "deque", "append、popleft：O(1)"],
+              ["雙端操作", "deque", "appendleft、popleft：O(1)"],
+              ["依索引隨機讀取", "List", "items[i]：O(1)"]
+            ]
+          },
+          "code": "from collections import deque\n\nhistory = deque(maxlen=3)\nfor page in [\"A\", \"B\", \"C\", \"D\"]:\n    history.append(page)\nprint(list(history))  # ['B', 'C', 'D']",
+          "code_caption": "固定長度 deque 會自動淘汰另一端最舊的資料。"
+        }
+      ],
+      "takeaways": [
+        "Stack 是 LIFO，List 尾端 append 與 pop 即可高效實作",
+        "Queue 是 FIFO，應使用 deque 的 append 與 popleft",
+        "deque 擅長兩端操作，List 擅長隨機索引"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼不建議以 List 的 pop(0) 實作 Queue？",
+          "answer": "每次移除第一項都要搬動其餘元素，單次成本為 O(n)。"
+        },
+        {
+          "question": "只需要一般 Stack 時，List 與 deque 應如何選？",
+          "answer": "兩者尾端操作都有效率；List 較常見且簡單，若還需要左端操作或固定 maxlen 再選 deque。"
+        }
+      ],
+      "practice": [
+        "用 List 實作檢查括號是否成對的 Stack。",
+        "用 deque 模擬服務櫃台，依到達順序處理三位顧客。"
+      ]
+    },
+    {
+      "number": 8,
+      "slug": "heapq-and-choosing-structures",
+      "title": "heapq 與資料結構選型",
+      "subtitle": "維護最高優先項目並完成整體比較",
+      "duration": "30 分鐘",
+      "difficulty": "入門",
+      "summary": "使用 heapq 建立最小堆積與優先佇列，並以操作成本與資料語意完成容器選型。",
+      "objectives": [
+        "使用 heappush、heappop 與 heapify",
+        "解釋 Heap 與排序 List 的差異",
+        "用決策表為實際問題選擇容器"
+      ],
+      "sections": [
+        {
+          "heading": "最小堆積與優先佇列",
+          "paragraphs": [
+            "Heap（堆積）讓最小元素保持在索引 0，適合每次取出目前最高優先權項目，而不必維持全部資料有序。Python 的 heapq 操作一般 List，heappush 與 heappop 都是 O(log n)，查看 heap[0] 是 O(1)。"
+          ],
+          "bullets": [
+            "heapq 預設是 Min Heap（最小堆積）",
+            "heappush：加入並維持堆積，O(log n)",
+            "heappop：取出最小項目，O(log n)",
+            "堆積陣列不是完整排序結果"
+          ],
+          "code": "import heapq\n\ntasks = []\nheapq.heappush(tasks, (2, \"回信\"))\nheapq.heappush(tasks, (1, \"處理故障\"))\nheapq.heappush(tasks, (3, \"整理文件\"))\npriority, task = heapq.heappop(tasks)\nprint(priority, task)",
+          "code_caption": "Tuple 先比較優先值，因此數字最小的任務先被取出。"
+        },
+        {
+          "heading": "建堆、最大堆與 Top K",
+          "paragraphs": [
+            "heapify 能在 O(n) 時間把現有 List 轉成堆積，比逐一加入的 O(n log n) 更適合批次資料。需要最大優先值時可依 Python 版本使用最大堆 API，或在相容寫法中存負數；維護大小為 k 的 Heap 可在 O(n log k) 找出 Top K。"
+          ],
+          "bullets": [
+            "heapq.heapify(items)：O(n)",
+            "反轉數值正負可模擬 Max Heap",
+            "heapreplace／heappushpop 可合併替換步驟",
+            "全部排序通常 O(n log n)，只取 Top K 可用 O(n log k)"
+          ],
+          "code": "import heapq\n\nscores = [72, 91, 85, 99, 88]\ntop_three = heapq.nlargest(3, scores)\nprint(top_three)  # [99, 91, 88]",
+          "code_caption": "使用 nlargest 取得少量最大值，不必手寫完整排序。"
+        },
+        {
+          "heading": "用操作需求完成選型",
+          "paragraphs": [
+            "選資料結構時，不只比較 Big O，也要看資料語意、可讀性與最常發生的操作。先選最直接表達需求的結構，再以實際輸入規模檢查瓶頸；若需要完整有序結果就排序，若只反覆取得最小值才使用 Heap。"
+          ],
+          "bullets": [
+            "順序與索引：List／Tuple／String",
+            "鍵值查找：Dictionary；唯一成員：Set",
+            "兩端進出：deque；反覆取最小優先：Heap",
+            "複雜度相同時，選語意更清楚、介面更簡單者"
+          ],
+          "table": {
+            "headers": ["結構", "最適合", "核心成本"],
+            "rows": [
+              ["List", "動態有序資料、索引", "索引 O(1)，中間增刪 O(n)"],
+              ["Tuple", "固定紀錄、複合鍵", "索引 O(1)，不可變"],
+              ["Dictionary", "鍵到值的對應", "查找／更新平均 O(1)"],
+              ["Set", "唯一性、成員測試", "查找／加入平均 O(1)"],
+              ["String", "不可變文字", "走訪 O(n)，大量串接用 join"],
+              ["deque", "Queue 與雙端操作", "兩端增刪 O(1)"],
+              ["Heap", "動態最小值、優先佇列", "查看 O(1)，增刪 O(log n)"]
+            ]
+          },
+          "code": "def choose_structure(need_key_lookup, need_unique, need_queue):\n    if need_key_lookup:\n        return \"Dictionary\"\n    if need_unique:\n        return \"Set\"\n    if need_queue:\n        return \"deque\"\n    return \"List\"\n\nprint(choose_structure(False, False, True))",
+          "code_caption": "用簡化決策函式練習把需求對應到資料結構。",
+          "callout": "Heap 只保證根節點最小，不保證直接走訪時由小到大。"
+        }
+      ],
+      "takeaways": [
+        "heapq 以 O(log n) 加入或取出最小項目，查看最小值為 O(1)",
+        "只需 Top K 或動態優先項目時，Heap 通常比反覆完整排序合適",
+        "選型同時考慮資料語意、常用操作、複雜度與可讀性"
+      ],
+      "quiz": [
+        {
+          "question": "直接印出 Heap 內部 List，會得到完整排序嗎？",
+          "answer": "不會；Heap 只維持父節點不大於子節點等局部規則，僅能保證索引 0 是最小值。"
+        },
+        {
+          "question": "任務會持續加入，且每次都要取出最小期限，該選排序 List 還是 Heap？",
+          "answer": "選 Heap；每次加入與取出為 O(log n)，不必在每次更新後重新維持完整排序。"
+        }
+      ],
+      "practice": [
+        "使用 heapq 依照截止時間處理五項任務，若時間相同再依名稱排序。",
+        "為通訊錄、瀏覽紀錄、待辦優先權與不重複關鍵字各選資料結構並分析主要操作成本。"
+      ]
+    }
+  ]
+}

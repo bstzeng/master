@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="使用最小堆建立 Huffman Tree，理解前綴碼、加權路徑長度與貪心合併。" />
+    <meta name="theme-color" content="#101713" />
+    <title>12.06 Huffman Coding｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-12-greedy.html">UNIT 12 / LESSON 06</a><p class="eyebrow">Greedy Algorithms</p><h1>Huffman Coding</h1><p class="lesson-deck">反覆合併最低頻率，建立最短加權前綴碼</p><div class="lesson-meta"><span>中階</span><span>35 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>使用最小堆建立 Huffman Tree，理解前綴碼、加權路徑長度與貪心合併。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明前綴碼與頻率目標</li><li>以 heapq 建立 Huffman Tree</li><li>理解最低頻率合併的正確性直覺</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>高頻符號應使用短碼</h2><p>Huffman Coding 要為每個符號建立無歧義的二進位前綴碼，使頻率乘碼長的總和最小。前綴碼要求任何完整碼都不是另一碼的前綴，因此從編碼樹根沿 0、1 邊走到葉節點即可唯一解碼。</p><ul><li>符號放在葉節點</li><li>左、右邊可分別標示 0、1</li><li>目標是最小化加權碼長</li><li>編碼形狀可能不唯一但最佳成本相同</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>最小堆反覆取兩個最低頻率</h2><p>把每個符號當成單節點樹放入最小堆，每次取出頻率最低的兩棵樹，合成頻率總和的新樹再放回，直到只剩根。counter 用來在頻率相同時提供可比較的第二欄，避免 Python 比較節點物件。</p><ul><li>初始化 heapify 為 O(n)</li><li>執行 n - 1 次合併</li><li>每次 pop 與 push 為 O(log n)</li><li>總時間 O(n log n)、樹空間 O(n)</li></ul><figure class="code-block"><figcaption><span>回傳由 tuple 表示的 Huffman Tree；單一符號的碼長政策需由介面另訂。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>import heapq
+from itertools import count
+
+def build_huffman(frequencies):
+    serial = count()
+    heap = [(freq, next(serial), symbol) for symbol, freq in frequencies.items()]
+    heapq.heapify(heap)
+    while len(heap) &gt; 1:
+        left_freq, _, left = heapq.heappop(heap)
+        right_freq, _, right = heapq.heappop(heap)
+        node = (left, right)
+        heapq.heappush(heap, (left_freq + right_freq, next(serial), node))
+    return heap[0][2] if heap else None</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>最低頻率可成為最深兄弟</h2><p>在某個最佳前綴碼樹中，可以把最低頻率的兩個符號安排為最深的一對兄弟而不增加成本；合併它們後，問題縮成少一個符號的同型問題。這提供貪心選擇與最佳子結構，展開合併節點便得到原問題最佳樹。</p><ul><li>低頻符號承擔較長路徑較便宜</li><li>兄弟合併把共同前綴視為一個新符號</li><li>交換只會讓加權成本不增</li><li>Huffman 最佳化碼長，不包含檔頭等實務開銷</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Huffman Tree 產生無歧義的前綴碼</li><li><span>02</span>反覆合併兩個最低頻率可用最小堆有效實作</li><li><span>03</span>最低頻率兄弟性質與縮約問題支撐貪心正確性</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼高頻符號通常應靠近根？</summary><p>靠近根代表碼較短，高頻率乘上較短長度能降低總加權碼長。</p></details><details><summary>建樹時為何使用最小堆而不是每輪重新排序？</summary><p>最小堆可用 O(log n) 取出與放回極小值，使總時間 O(n log n)，避免反覆完整排序的額外成本。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>為頻率 A:5、B:9、C:12、D:13、E:16、F:45 手動記錄每次合併。</li><li>走訪 build_huffman 的結果，為左邊加 0、右邊加 1，產生 symbol 到 code 的映射。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-12/05-fractional-knapsack.html"><span>← 上一課</span><b>Fractional Knapsack 分數背包</b></a><a class="next" href="../unit-12/07-coin-change-traps.html"><span>下一課 →</span><b>硬幣陷阱與反例</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="以狀態與轉移保存子問題答案，系統學習序列、網格、字串、背包與區間 DP。" />
+    <meta name="theme-color" content="#101713" />
+    <title>單元 13｜Dynamic Programming 動態規劃｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../styles.css" />
+    <script src="../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../index.html">課程總覽</a>
+        <a class="" href="../phase-1.html">第一階段</a>
+        <a class="is-active" href="../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <section class="unit-hero">
+        <div><a class="breadcrumb" href="../phase-2.html">PHASE 02 / UNIT 13</a><p class="eyebrow">Dynamic Programming</p><h1>Dynamic Programming 動態規劃</h1><p class="hero-intro">以狀態與轉移保存子問題答案，系統學習序列、網格、字串、背包與區間 DP。</p><a class="primary-button" href="#lessons">查看 12 堂課 <span>↓</span></a></div>
+        <aside><span>UNIT</span><strong>13</strong><p>能辨認 DP 結構，定義 state、transition、base case 與計算順序，並分析及優化時空間。</p></aside>
+      </section>
+      <section class="unit-info"><div><p class="section-index">BEFORE YOU START</p><h2>先備知識</h2><ul><li>熟悉遞迴、陣列、字串與雜湊表</li><li>能分析時間與空間複雜度</li><li>理解搜尋樹與組合問題</li></ul></div><div><p class="section-index">AFTER THIS UNIT</p><h2>完成後你能夠</h2><ul><li>能將暴力遞迴改為記憶化或表格法</li><li>能設計一維與二維 DP</li><li>能辨認背包、序列與區間題型</li><li>能以滾動變數或一維陣列優化空間</li></ul></div></section>
+      <section class="lesson-section" id="lessons"><div class="section-head"><div><p class="section-index">LESSON LIST</p><h2>本單元課程</h2></div><p>建議依序閱讀；每一課約 15–25 分鐘，讀完後先回答理解題，再挑一題延伸練習。</p></div><div class="lesson-list">
+        <article class="lesson-row">
+          <span>01</span>
+          <div><p>入門 · 25 分鐘</p><h3>DP 核心：重疊子問題與最佳子結構</h3><b>把重複計算保存起來</b></div>
+          <a href="../lessons/unit-13/01-dp-foundations.html" aria-label="開始課程：DP 核心：重疊子問題與最佳子結構">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>02</span>
+          <div><p>入門 · 30 分鐘</p><h3>Memoization 與 Tabulation</h3><b>自頂向下與自底向上</b></div>
+          <a href="../lessons/unit-13/02-memoization-vs-tabulation.html" aria-label="開始課程：Memoization 與 Tabulation">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>03</span>
+          <div><p>基礎 · 30 分鐘</p><h3>State、Transition、Base Case 與順序</h3><b>用四個問題設計 DP</b></div>
+          <a href="../lessons/unit-13/03-state-transition-order.html" aria-label="開始課程：State、Transition、Base Case 與順序">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>04</span>
+          <div><p>基礎 · 25 分鐘</p><h3>Fibonacci 與 Climbing Stairs</h3><b>從遞迴關係到一維 DP</b></div>
+          <a href="../lessons/unit-13/04-fibonacci-and-climbing-stairs.html" aria-label="開始課程：Fibonacci 與 Climbing Stairs">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>05</span>
+          <div><p>基礎 · 35 分鐘</p><h3>House Robber 與 Maximum Subarray</h3><b>選或不選，以及以目前位置結尾</b></div>
+          <a href="../lessons/unit-13/05-house-robber-and-maximum-subarray.html" aria-label="開始課程：House Robber 與 Maximum Subarray">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>06</span>
+          <div><p>基礎 · 35 分鐘</p><h3>Coin Change 與 Word Break</h3><b>最少數量與可行性 DP</b></div>
+          <a href="../lessons/unit-13/06-coin-change-and-word-break.html" aria-label="開始課程：Coin Change 與 Word Break">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>07</span>
+          <div><p>基礎 · 30 分鐘</p><h3>Grid、Unique Paths 與 Minimum Path Sum</h3><b>依上方與左方狀態填表</b></div>
+          <a href="../lessons/unit-13/07-grid-dp.html" aria-label="開始課程：Grid、Unique Paths 與 Minimum Path Sum">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>08</span>
+          <div><p>進階 · 40 分鐘</p><h3>LCS 與 Edit Distance</h3><b>用二維前綴狀態比較兩字串</b></div>
+          <a href="../lessons/unit-13/08-lcs-and-edit-distance.html" aria-label="開始課程：LCS 與 Edit Distance">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>09</span>
+          <div><p>進階 · 40 分鐘</p><h3>0/1 Knapsack</h3><b>每件物品最多選一次</b></div>
+          <a href="../lessons/unit-13/09-zero-one-knapsack.html" aria-label="開始課程：0/1 Knapsack">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>10</span>
+          <div><p>進階 · 40 分鐘</p><h3>Complete Knapsack、Subset Sum 與 Partition</h3><b>用迴圈方向控制重複選取</b></div>
+          <a href="../lessons/unit-13/10-complete-knapsack-and-subset-sum.html" aria-label="開始課程：Complete Knapsack、Subset Sum 與 Partition">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>11</span>
+          <div><p>進階 · 40 分鐘</p><h3>LIS：O(n²) 與 O(n log n)</h3><b>從結尾狀態到 tails 二分搜尋</b></div>
+          <a href="../lessons/unit-13/11-longest-increasing-subsequence.html" aria-label="開始課程：LIS：O(n²) 與 O(n log n)">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>12</span>
+          <div><p>進階 · 45 分鐘</p><h3>回文、Interval DP 與統一解題框架</h3><b>以區間長度安排依賴</b></div>
+          <a href="../lessons/unit-13/12-palindrome-interval-dp-framework.html" aria-label="開始課程：回文、Interval DP 與統一解題框架">開始閱讀 →</a>
+        </article></div></section>
+      <nav class="bottom-nav"><a href="../phase-2.html">← 返回第 2 階段大綱</a><a href="../index.html">完整學習地圖 ↑</a></nav></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

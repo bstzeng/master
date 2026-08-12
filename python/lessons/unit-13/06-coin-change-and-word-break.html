@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="練習最小化與布林可行性兩種 DP。" />
+    <meta name="theme-color" content="#101713" />
+    <title>13.06 Coin Change 與 Word Break｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-13-dynamic-programming.html">UNIT 13 / LESSON 06</a><p class="eyebrow">Dynamic Programming</p><h1>Coin Change 與 Word Break</h1><p class="lesson-deck">最少數量與可行性 DP</p><div class="lesson-meta"><span>基礎</span><span>35 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>練習最小化與布林可行性兩種 DP。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>設計 Coin Change 狀態</li><li>設計 Word Break 狀態</li><li>選擇正確初值</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>Coin Change</h2><p>令 dp[a] 為湊出金額 a 的最少硬幣數，最後一枚為 coin 時由 dp[a-coin]+1 轉移。不可達狀態初始化為 infinity。</p><ul><li>dp[0]=0</li><li>對每個 amount 嘗試所有 coin</li><li>答案仍為 inf 時回傳 -1</li></ul><figure class="code-block"><figcaption><span>時間 O(amount·len(coins))、空間 O(amount)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def coin_change(coins, amount):
+    dp = [float(&#x27;inf&#x27;)] * (amount + 1); dp[0] = 0
+    for value in range(1, amount + 1):
+        for coin in coins:
+            if coin &lt;= value: dp[value] = min(dp[value], dp[value-coin] + 1)
+    return -1 if dp[amount] == float(&#x27;inf&#x27;) else dp[amount]</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Word Break</h2><p>令 dp[i] 表示 text 前 i 個字元能否由字典單字切分。若存在 j 使 dp[j] 為真且 text[j:i] 在字典，就令 dp[i] 為真。</p><ul><li>dp[0]=True 代表空前綴可切分</li><li>set 提供平均 O(1) 單字查找</li><li>找到一個 j 後即可停止</li></ul><figure class="code-block"><figcaption><span>忽略切片成本時 O(n²)，空間 O(n)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def word_break(text, words):
+    words = set(words); dp = [False] * (len(text)+1); dp[0] = True
+    for end in range(1, len(text)+1):
+        dp[end] = any(dp[start] and text[start:end] in words for start in range(end))
+    return dp[-1]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>最小值與可行性</h2><p>兩題都枚舉最後一段，但聚合方式不同：Coin Change 取 min，Word Break 取 any。若需重建硬幣或單字，需為每個狀態保存 predecessor。</p><ul><li>最佳化問題保存數值</li><li>存在性問題保存 bool</li><li>一維表已是常見空間界線</li></ul><div class="table-wrap"><table><thead><tr><th>題目</th><th>初值</th><th>聚合</th></tr></thead><tbody><tr><td>Coin Change</td><td>inf, dp0=0</td><td>min</td></tr><tr><td>Word Break</td><td>False, dp0=True</td><td>any</td></tr></tbody></table></div></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>不可達最小值狀態可用 infinity。</li><li><span>02</span>Word Break 以可切分前綴作狀態。</li><li><span>03</span>聚合運算由題目問最小值、最大值、數量或存在性決定。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>Coin Change 為何 dp[0]=0？</summary><p>金額零不需任何硬幣，且它是加入第一枚硬幣的合法起點。</p></details><details><summary>Word Break 的 dp[0] 為何是 True？</summary><p>空字串視為已完成切分，讓第一個單字可由空前綴轉移。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>回傳 Coin Change 的一組最少硬幣。</li><li>限制單字最多使用一次，思考狀態需增加什麼資訊。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-13/05-house-robber-and-maximum-subarray.html"><span>← 上一課</span><b>House Robber 與 Maximum Subarray</b></a><a class="next" href="../unit-13/07-grid-dp.html"><span>下一課 →</span><b>Grid、Unique Paths 與 Minimum Path Sum</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

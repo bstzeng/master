@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="把問題表示成圖，使用堆疊或遞迴進行深度優先搜尋，並以 visited 避免循環。" />
+    <meta name="theme-color" content="#101713" />
+    <title>04.06 DFS 深度優先搜尋｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-04-searching.html">UNIT 04 / LESSON 06</a><p class="eyebrow">Searching Algorithms</p><h1>DFS 深度優先搜尋</h1><p class="lesson-deck">沿著一條路深入到底，再回頭探索其他分支</p><div class="lesson-meta"><span>中階</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>把問題表示成圖，使用堆疊或遞迴進行深度優先搜尋，並以 visited 避免循環。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>解釋 DFS 的走訪順序與堆疊關係</li><li>實作鄰接表圖的迭代 DFS</li><li>分析 O(V + E) 時間與 O(V) 空間</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>搜尋策略不只用來找數字</h2><p>深度優先搜尋（Depth-First Search, DFS）是一種探索狀態空間或圖的策略：先沿一個分支深入，無路可走後再回到最近的分岔。網頁連結、城市道路、迷宮位置或任務依賴都能表示成頂點與邊，再交給 DFS 探索。</p><ul><li>頂點（Vertex）代表狀態或物件</li><li>邊（Edge）代表可到達或關聯</li><li>堆疊的後進先出形成深入順序</li><li>適合可達性、連通區塊與路徑存在問題</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>用 visited 避免重複探索</h2><p>一般圖可能存在循環，例如 A 到 B、B 又回到 A；若不記錄已看過頂點，搜尋可能無限進行。下例在放入 stack 時就加入 visited，確保同一頂點最多排入一次。</p><ul><li>stack 儲存待探索頂點</li><li>visited set 提供平均 O(1) 成員檢查</li><li>鄰居反向放入可讓輸出更接近原鄰接順序</li></ul><figure class="code-block"><figcaption><span>graph 是鄰接表 dict；函式回傳從 start 可達頂點的 DFS 順序。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def dfs(graph, start):
+    order = []
+    stack = [start]
+    visited = {start}
+
+    while stack:
+        node = stack.pop()
+        order.append(node)
+        for neighbor in reversed(graph.get(node, [])):
+            if neighbor not in visited:
+                visited.add(neighbor)
+                stack.append(neighbor)
+
+    return order</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>複雜度與遞迴版本</h2><p>使用鄰接表時，每個可達頂點最多處理一次、每條邊最多檢查固定次數，所以時間 O(V + E)，visited 與 stack 最多容納 O(V)。遞迴 DFS 由呼叫堆疊代替顯式 stack，寫法簡潔，但很深的路徑可能超過 Python 遞迴深度。</p><ul><li>V 是頂點數，E 是邊數</li><li>時間 O(V + E)</li><li>額外空間 O(V)</li><li>DFS 不保證無權圖的最少邊數路徑</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>DFS 使用堆疊概念沿一個分支深入後回溯</li><li><span>02</span>一般圖必須用 visited 避免循環與重複工作</li><li><span>03</span>鄰接表 DFS 的時間 O(V + E)、額外空間 O(V)</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>樹通常不回到父節點，為什麼一般圖的 DFS 仍需要 visited？</summary><p>一般圖可能有循環或多條路徑通往同一頂點；visited 能防止無限循環並避免重複探索。</p></details><details><summary>DFS 找到的第一條路徑一定是邊數最少的嗎？</summary><p>不一定。DFS 會先深入某個分支；在無權圖中需要最少邊數路徑時通常使用 BFS。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>修改 dfs，使它收到 target 並回傳 target 是否可從 start 到達。</li><li>用遞迴實作同一個 DFS，並說明呼叫堆疊的最壞深度。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-04/05-binary-search-on-answer.html"><span>← 上一課</span><b>Binary Search on Answer 對答案二分搜尋</b></a><a class="next" href="../unit-04/07-breadth-first-search.html"><span>下一課 →</span><b>BFS 廣度優先搜尋</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

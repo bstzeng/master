@@ -1,0 +1,384 @@
+{
+  "number": 15,
+  "phase": 2,
+  "slug": "advanced-data-structures",
+  "title": "進階資料結構",
+  "english": "Advanced Data Structures",
+  "summary": "針對區間查詢、快取、資料庫索引、近似統計、動態連通性與單調序列，學習專門資料結構如何交換時間、空間與功能。",
+  "goal": "能從操作比例、更新模式、精確度與記憶體限制出發，選擇並實作合適的進階資料結構，而不是只記住名稱。",
+  "prerequisites": [
+    "熟悉 Python list、dict、class、位元操作與 collections",
+    "理解 Tree、Heap、Hash Table、Prefix Sum 與 Big O",
+    "能閱讀遞迴、迭代與簡單機率概念"
+  ],
+  "outcomes": [
+    "依更新與查詢型態選擇 Prefix Sum、Fenwick Tree 或 Segment Tree",
+    "理解 Lazy Propagation 如何延後區間更新",
+    "以 Hash Map 與 Doubly Linked List 實作 LRU Cache",
+    "比較 LFU、B-Tree、B+ Tree、Hash Index 與 Tree Index",
+    "實作並分析 Bloom Filter 與 Count-Min Sketch",
+    "使用 DSU、Sparse Table、Monotonic Stack 與 Queue 解決典型效能問題"
+  ],
+  "lessons": [
+    {
+      "number": 1,
+      "slug": "range-query-and-prefix-limits",
+      "title": "Range Query 與 Prefix Sum 的限制",
+      "subtitle": "查詢快不代表更新也快",
+      "duration": "28 分鐘",
+      "difficulty": "中階",
+      "summary": "定義區間查詢模型，複習前綴和並看懂靜態預處理在頻繁更新下的瓶頸。",
+      "objectives": ["區分點更新與區間更新", "實作半開區間前綴和", "由操作比例選擇資料結構"],
+      "sections": [
+        {
+          "heading": "先寫出操作介面",
+          "paragraphs": ["區間查詢（Range Query）不是單一演算法，而是一類在陣列某段上求和、最小值或其他聚合的需求。選資料結構前要確認查詢區間語意、是否更新、更新單點或整段，以及運算能否由兩個前綴結果相消。"],
+          "bullets": ["Point Update：修改一個位置", "Range Update：修改一整段", "Range Query：聚合一段資料", "半開區間 [left,right) 與 Python 切片一致"]
+        },
+        {
+          "heading": "Prefix Sum 用預處理換 O(1) 查詢",
+          "paragraphs": ["令 prefix[i] 表示前 i 個元素總和，則 [left,right) 的和是 prefix[right] - prefix[left]。建立一次需 O(n) 時間與 O(n) 空間，之後每次區間和為 O(1)，非常適合資料固定但查詢很多的情況。"],
+          "bullets": ["prefix 長度為 n + 1", "prefix[0] = 0 簡化邊界", "建置 O(n)、查詢 O(1)"],
+          "code": "def build_prefix(numbers):\n    prefix = [0]\n    for value in numbers:\n        prefix.append(prefix[-1] + value)\n    return prefix\n\ndef range_sum(prefix, left, right):\n    return prefix[right] - prefix[left]",
+          "code_caption": "range_sum 查詢半開區間 [left,right)。"
+        },
+        {
+          "heading": "更新使所有後綴失效",
+          "paragraphs": ["若 numbers[i] 改變，prefix[i+1:] 都需同步調整，單次更新成為 O(n)；反覆重建也同樣昂貴。只有追加資料時可 O(1) 延伸 prefix，而一般點更新加區間和應考慮 Fenwick Tree，更多聚合或區間操作則考慮 Segment Tree。"],
+          "bullets": ["靜態多查詢：Prefix Sum", "點更新加區間和：Fenwick Tree", "多種聚合或複雜更新：Segment Tree", "先估算更新次數 U 與查詢次數 Q"]
+        }
+      ],
+      "takeaways": ["Range Query 的選型取決於聚合、更新與區間語意", "Prefix Sum 以 O(n) 預處理換取 O(1) 區間和", "一般點更新會讓 Prefix Sum 的更新成本退化為 O(n)"],
+      "quiz": [
+        {"question": "為何 prefix 陣列通常多配置一格？", "answer": "prefix[0]=0 代表零個元素，讓從索引 0 開始的區間也能用同一個相減公式。"},
+        {"question": "資料永不修改且有百萬次區間和查詢，應優先考慮什麼？", "answer": "Prefix Sum，因為一次 O(n) 建置後，每次查詢只需 O(1)。"}
+      ],
+      "practice": ["用前綴和回答 [2,7) 並手算兩個 prefix 索引。", "列出三種工作負載的 U、Q 與聚合類型，再初選 Prefix、Fenwick 或 Segment Tree。"]
+    },
+    {
+      "number": 2,
+      "slug": "fenwick-tree",
+      "title": "Fenwick Tree 樹狀陣列",
+      "subtitle": "用最低有效位元管理分段前綴和",
+      "duration": "35 分鐘",
+      "difficulty": "進階",
+      "summary": "實作 Fenwick Tree 的點更新、前綴和與區間和，理解一基索引和 O(log n) 路徑。",
+      "objectives": ["解釋 lowbit 管理的範圍", "實作 add 與 prefix_sum", "分析 O(log n) 更新查詢"],
+      "sections": [
+        {
+          "heading": "每格保存一段後綴區塊",
+          "paragraphs": ["Fenwick Tree（Binary Indexed Tree）用長度 n+1 的陣列保存多個部分和；一基索引 i 的 lowbit = i & -i，代表 tree[i] 涵蓋到 i 為止、長度為 lowbit 的區段。這些區段能拼出任意前綴，又能讓一次更新只影響 O(log n) 個節點。"],
+          "bullets": ["內部採一基索引", "lowbit 決定節點負責範圍", "結構只需 O(n) 空間", "最適合可累積且可相消的操作"]
+        },
+        {
+          "heading": "更新向上，查詢向前",
+          "paragraphs": ["點更新 add(index,delta) 將外部零基索引轉成一基後，反覆加 lowbit 更新所有包含該點的區塊；前綴查詢則反覆減 lowbit，累加互不重疊的區塊。兩條路每步消除或增加一個二進位低位，最多 O(log n) 步。"],
+          "bullets": ["add 路徑：i += i & -i", "prefix 路徑：i -= i & -i", "range_sum 由兩個前綴相減", "負 delta 可表示減少"],
+          "code": "class FenwickTree:\n    def __init__(self, size):\n        self.tree = [0] * (size + 1)\n\n    def add(self, index, delta):\n        index += 1\n        while index < len(self.tree):\n            self.tree[index] += delta\n            index += index & -index\n\n    def prefix_sum(self, end):\n        total = 0\n        while end > 0:\n            total += self.tree[end]\n            end -= end & -end\n        return total\n\n    def range_sum(self, left, right):\n        return self.prefix_sum(right) - self.prefix_sum(left)",
+          "code_caption": "外部介面使用半開區間 [left,right)；更新與查詢均 O(log n)。"
+        },
+        {
+          "heading": "知道目前值才能做 set",
+          "paragraphs": ["Fenwick 原生操作是增加 delta；要把索引值設定為 new_value，可另存原陣列並加入 new_value-old_value。它的常數小、程式短，適合動態前綴和與頻率累積，但一般 range minimum 不可由兩個前綴相減，應改用 Segment Tree。"],
+          "bullets": ["點更新 O(log n)", "前綴與區間和 O(log n)", "空間 O(n)", "功能較專一但通常比 Segment Tree 輕量"]
+        }
+      ],
+      "takeaways": ["Fenwick 以 lowbit 將前綴拆成 O(log n) 個區塊", "點增加與前綴和都只走 O(log n) 個索引", "它適合可相消的累積操作，不是所有區間聚合都適用"],
+      "quiz": [
+        {"question": "為何 tree 長度通常是 n+1？", "answer": "Fenwick 內部用一基索引，索引 0 保留不用，使 lowbit 跳轉規則簡潔。"},
+        {"question": "可以用兩個 prefix minimum 相減得到區間 minimum 嗎？", "answer": "不能，最小值沒有像加法那樣的反運算；一般動態區間最小值應使用 Segment Tree。"}
+      ],
+      "practice": ["對長度 8 的 Fenwick，列出更新外部索引 2 時經過的內部索引。", "在 class 旁維護 values，實作 set(index,new_value)。"]
+    },
+    {
+      "number": 3,
+      "slug": "segment-tree",
+      "title": "Segment Tree 線段樹",
+      "subtitle": "用二元分割保存每個區間的聚合結果",
+      "duration": "38 分鐘",
+      "difficulty": "進階",
+      "summary": "建立支援點更新和區間聚合的 Segment Tree，理解 O(log n) 查詢來自少量完整覆蓋節點。",
+      "objectives": ["說明節點區間與合併函式", "實作迭代區間和線段樹", "分析建置、更新與查詢成本"],
+      "sections": [
+        {
+          "heading": "每個節點摘要一段資料",
+          "paragraphs": ["Segment Tree 將整個陣列區間反覆切半，葉節點代表單一元素，內部節點保存左右孩子聚合結果。只要 combine 具有結合性，就能用於 sum、min、max 或 gcd；不同聚合還需要正確的單位元素。"],
+          "bullets": ["根代表完整區間", "孩子代表左右半區間", "combine 例如加法或 min", "樹高 O(log n)、空間 O(n)"]
+        },
+        {
+          "heading": "迭代式陣列配置",
+          "paragraphs": ["將 n 個葉放在 tree[n:2n]，父節點 i 保存 tree[2i] 與 tree[2i+1] 的和。點更新從葉一路重算祖先；半開區間查詢遇到落單邊界就納入結果，再把 left、right 同時移到父層。"],
+          "bullets": ["建置 O(n)", "點更新 O(log n)", "區間查詢 O(log n)", "此版本聚合為加法"],
+          "code": "class SegmentTree:\n    def __init__(self, numbers):\n        self.n = len(numbers)\n        self.tree = [0] * (2 * self.n)\n        self.tree[self.n:] = numbers\n        for index in range(self.n - 1, 0, -1):\n            self.tree[index] = self.tree[2 * index] + self.tree[2 * index + 1]\n\n    def set(self, index, value):\n        index += self.n\n        self.tree[index] = value\n        while index > 1:\n            index //= 2\n            self.tree[index] = self.tree[2 * index] + self.tree[2 * index + 1]\n\n    def range_sum(self, left, right):\n        left += self.n; right += self.n; total = 0\n        while left < right:\n            if left % 2: total += self.tree[left]; left += 1\n            if right % 2: right -= 1; total += self.tree[right]\n            left //= 2; right //= 2\n        return total",
+          "code_caption": "支援半開區間 [left,right) 的點更新與區間和。"
+        },
+        {
+          "heading": "彈性來自可替換的聚合",
+          "paragraphs": ["把加法改成 min 時，未被選取區段的單位元素應是正無限大，而非 0；若要同時保存最大值與出現次數，節點可存 tuple 並自訂 combine。Segment Tree 比 Fenwick 程式複雜、常數較大，但能處理更多無法以前綴相減的聚合。"],
+          "bullets": ["單位元素必須符合 combine", "節點可以保存多欄摘要", "查詢只合併 O(log n) 個完整區段", "複雜區間更新需要 Lazy Propagation"]
+        }
+      ],
+      "takeaways": ["Segment Tree 的節點保存對應區間聚合", "建置 O(n)，點更新與區間查詢 O(log n)", "它比 Fenwick 更彈性，但實作與常數成本較高"],
+      "quiz": [
+        {"question": "把區間和改成區間最小值時，為何空結果不能回傳 0？", "answer": "0 可能小於實際元素而污染 min；單位元素應是正無限大，使 min(x,∞)=x。"},
+        {"question": "Segment Tree 為何能在 O(log n) 查一段，而不是走訪每個葉？", "answer": "查詢區間可拆成少量完整覆蓋的樹節點，每層最多處理固定數量邊界節點。"}
+      ],
+      "practice": ["將 SegmentTree 改為區間 minimum，調整建置、更新、查詢與單位元素。", "設計節點 tuple，讓查詢同時回傳區間最大值與其出現次數。"]
+    },
+    {
+      "number": 4,
+      "slug": "lazy-propagation-and-selection",
+      "title": "Lazy Propagation 與 Fenwick 比較",
+      "subtitle": "整段更新時先記帳，需要深入時再下推",
+      "duration": "34 分鐘",
+      "difficulty": "進階",
+      "summary": "理解 Lazy Propagation 如何避免逐點更新，並以操作需求比較 Prefix、Fenwick 與 Segment Tree。",
+      "objectives": ["解釋延遲標記語意", "讀懂區間加總虛擬碼", "完成三種結構的選型"],
+      "sections": [
+        {
+          "heading": "逐點更新會失去線段樹優勢",
+          "paragraphs": ["若要把 [left,right) 每個值都加 delta，逐點呼叫 set 需 O(k log n)。Lazy Propagation 在查詢區間完整覆蓋節點時，直接更新該節點摘要並留下 lazy 標記，只有之後部分進入孩子時才把影響下推。"],
+          "bullets": ["完整覆蓋時不再深入", "lazy 記錄孩子尚未套用的更新", "部分覆蓋前先 push", "區間更新與查詢可達 O(log n)"]
+        },
+        {
+          "heading": "摘要必須反映整段影響",
+          "paragraphs": ["區間加法搭配區間和時，長度 length 的節點總和要增加 delta*length，lazy[node] 再累加 delta。下推時把標記套到兩個孩子並清空父標記；更新規則與聚合不同時，標記的組合方式也要重新設計。"],
+          "bullets": ["apply(node,delta)：更新摘要與標記", "push(node)：把標記傳給孩子", "update/query 遇部分覆蓋前先 push", "區間指定值與區間加法的標記不可直接混用"],
+          "code": "def range_add(node, seg_left, seg_right, query_left, query_right, delta):\n    if query_right <= seg_left or seg_right <= query_left:\n        return\n    if query_left <= seg_left and seg_right <= query_right:\n        tree[node] += delta * (seg_right - seg_left)\n        lazy[node] += delta\n        return\n    push(node, seg_left, seg_right)\n    middle = (seg_left + seg_right) // 2\n    range_add(node * 2, seg_left, middle, query_left, query_right, delta)\n    range_add(node * 2 + 1, middle, seg_right, query_left, query_right, delta)\n    tree[node] = tree[node * 2] + tree[node * 2 + 1]",
+          "code_caption": "核心虛擬碼；push 必須依孩子區間長度套用並清除 lazy[node]。"
+        },
+        {
+          "heading": "用最小足夠結構",
+          "paragraphs": ["靜態區間和選 Prefix Sum 最簡單；點加與區間和可選 Fenwick；需要 min/max、自訂節點或一般區間更新時選 Segment Tree，區間更新頻繁再加入 Lazy。若只需區間加與點查詢，也可用差分概念的 Fenwick，不能只按名稱決策。"],
+          "bullets": ["Prefix：靜態、查詢 O(1)", "Fenwick：精簡、點更新與前綴 O(log n)", "Segment：聚合彈性、常數較大", "Lazy Segment：區間更新強但除錯成本最高"],
+          "table": {
+            "headers": ["需求", "建議結構", "代表成本"],
+            "rows": [["靜態區間和", "Prefix Sum", "查詢 O(1)"], ["點加＋區間和", "Fenwick", "更新/查詢 O(log n)"], ["點更新＋區間 min", "Segment Tree", "更新/查詢 O(log n)"], ["區間加＋區間和", "Lazy Segment Tree", "更新/查詢 O(log n)"]]
+          }
+        }
+      ],
+      "takeaways": ["Lazy 標記把完整覆蓋的區間更新延後到必要時下推", "節點摘要與標記都必須正確反映整段更新", "選型應使用最小足夠結構，避免不必要複雜度"],
+      "quiz": [
+        {"question": "區間和節點長度為 8，整段加 3 時 tree[node] 增加多少？", "answer": "增加 3×8=24，因為節點摘要是八個元素的總和。"},
+        {"question": "只需動態點加與區間和，為何 Fenwick 常優於 Lazy Segment Tree？", "answer": "Fenwick 已能以 O(log n) 完成且程式短、常數小；Lazy 的額外彈性在此沒有被使用。"}
+      ],
+      "practice": ["寫出 push 對左右孩子摘要及 lazy 標記的更新步驟。", "為四種自訂工作負載選 Prefix、Fenwick、Segment 或 Lazy Segment 並說明。"]
+    },
+    {
+      "number": 5,
+      "slug": "lru-and-lfu-cache",
+      "title": "LRU Cache 與 LFU Cache",
+      "subtitle": "用索引加順序結構在 O(1) 內淘汰資料",
+      "duration": "40 分鐘",
+      "difficulty": "進階",
+      "summary": "以 Hash Map 加 Doubly Linked List 實作 LRU，並比較 LFU 所需的頻率分桶。",
+      "objectives": ["說明 LRU 的兩種操作需求", "實作 O(1) get/put", "理解 LFU 的額外狀態與平手規則"],
+      "sections": [
+        {
+          "heading": "一個結構負責查找，一個負責順序",
+          "paragraphs": ["LRU Cache（Least Recently Used）容量滿時淘汰最久未使用項目。dict 讓 key 到節點查找平均 O(1)，Doubly Linked List 讓已知節點能 O(1) 移動或刪除；若只用 list，找鍵或移動通常會退化到 O(n)。"],
+          "bullets": ["Hash Map：key → node", "雙向鏈結串列：最近使用順序", "頭端代表最近、尾端代表最久", "虛擬頭尾節點簡化邊界"]
+        },
+        {
+          "heading": "get 與 put 都更新最近性",
+          "paragraphs": ["get 命中後把節點移到頭端；put 更新既有值也要移到頭端，新增超過容量時刪除尾端前一節點及 map 紀錄。每個步驟只操作固定數量指標與 dict，因此平均 O(1)，空間 O(capacity)。"],
+          "bullets": ["remove 只需節點的 prev/next", "add_front 固定接在 head 後", "淘汰時同時刪 map 與鏈結", "capacity=0 應由介面明確處理"],
+          "code": "class Node:\n    def __init__(self, key=None, value=None):\n        self.key, self.value = key, value\n        self.prev = self.next = None\n\nclass LRUCache:\n    def __init__(self, capacity):\n        self.capacity, self.nodes = capacity, {}\n        self.head, self.tail = Node(), Node()\n        self.head.next = self.tail; self.tail.prev = self.head\n    def _remove(self, node):\n        node.prev.next = node.next; node.next.prev = node.prev\n    def _front(self, node):\n        node.next = self.head.next; node.prev = self.head\n        self.head.next.prev = node; self.head.next = node\n    def get(self, key):\n        node = self.nodes.get(key)\n        if node is None: return None\n        self._remove(node); self._front(node); return node.value\n    def put(self, key, value):\n        if self.capacity <= 0: return\n        if key in self.nodes:\n            node = self.nodes[key]; node.value = value; self._remove(node)\n        else:\n            node = self.nodes[key] = Node(key, value)\n        self._front(node)\n        if len(self.nodes) > self.capacity:\n            old = self.tail.prev; self._remove(old); del self.nodes[old.key]",
+          "code_caption": "get/put 平均 O(1)，節點數最多為 capacity。"
+        },
+        {
+          "heading": "LFU 還要追蹤使用頻率",
+          "paragraphs": ["LFU Cache（Least Frequently Used）先淘汰頻率最低項目，頻率相同時常再淘汰其中最久未使用者。要達平均 O(1)，通常使用 key→node、frequency→該頻率的雙向串列，以及 min_frequency；命中時要把節點從 f 桶移到 f+1 桶。"],
+          "bullets": ["LRU 只追蹤最近時間順序", "LFU 追蹤頻率及同頻 LRU", "頻率老化政策會影響長期熱門項目", "更精確政策換來更高實作與記憶體成本"]
+        }
+      ],
+      "takeaways": ["LRU 以 dict 加雙向鏈結串列同時得到 O(1) 查找與順序調整", "快取更新時資料索引和順序結構必須保持一致", "LFU 需要頻率分桶、min_frequency 與平手淘汰政策"],
+      "quiz": [
+        {"question": "LRU 為何使用雙向而非單向鏈結串列？", "answer": "已知節點時要 O(1) 找到前後節點並移除；單向串列仍需搜尋前驅。"},
+        {"question": "LFU 中兩個 key 頻率相同時通常如何淘汰？", "answer": "常以同頻率桶內的 LRU 順序，淘汰其中最久未使用者；介面應明確規定。"}
+      ],
+      "practice": ["手動追蹤容量 2 的 LRU 執行 put(A)、put(B)、get(A)、put(C) 後內容與順序。", "畫出 LFU 的三張映射/結構，說明一次 get 如何搬移節點。"]
+    },
+    {
+      "number": 6,
+      "slug": "database-index-trees-and-hash",
+      "title": "B-Tree、B+ Tree 與資料庫索引",
+      "subtitle": "讓每次磁碟讀取取得更多鍵，並支援範圍掃描",
+      "duration": "35 分鐘",
+      "difficulty": "進階概念",
+      "summary": "理解多路平衡樹配合儲存頁面的原因，並比較 Hash Index 與 Tree Index 的查詢能力。",
+      "objectives": ["說明多路樹降低高度的原因", "區分 B-Tree 與 B+ Tree", "依等值或範圍查詢選索引"],
+      "sections": [
+        {
+          "heading": "多路節點配合頁面 I/O",
+          "paragraphs": ["B-Tree 是平衡多路搜尋樹，一個節點保存許多排序鍵與孩子，使分支因子遠大於二元樹。資料庫與檔案系統把節點設計成接近一個儲存頁面，讓一次較昂貴的 I/O 載入大量鍵並降低整棵樹高度。"],
+          "bullets": ["所有葉位於相同深度", "節點滿時分裂、過少時合併或借鍵", "搜尋成本常以頁面 I/O 次數衡量", "高度約為 O(log_b n)，b 是高分支因子"]
+        },
+        {
+          "heading": "B+ Tree 把資料集中在葉層",
+          "paragraphs": ["B-Tree 的內部與葉節點都可保存資料紀錄；B+ Tree 通常讓內部節點只保存導引鍵，實際資料或指標集中在葉節點，葉節點再以鏈結串起。較小的內部項目提高分支因子，而葉鏈結讓範圍查詢能從起點順序掃描。"],
+          "bullets": ["內部節點主要負責導航", "葉節點保存所有搜尋鍵資料", "葉層鏈結適合 ORDER BY 與範圍掃描", "實際資料庫格式依產品而異"]
+        },
+        {
+          "heading": "Hash Index 與 Tree Index 各有所長",
+          "paragraphs": ["Hash Index 依雜湊值定位桶，適合完整鍵等值查詢，平均很快但不保留鍵順序；B+ Tree 類 Tree Index 的等值查詢多一段樹走訪，卻支援 <、>、BETWEEN、排序與前綴範圍。複合索引是否可用還受欄位順序與查詢規劃器影響。"],
+          "bullets": ["等值查詢：Hash 或 Tree 都可能適合", "範圍與有序輸出：Tree Index", "低選擇性欄位建索引未必有利", "索引會增加寫入與儲存成本"],
+          "table": {
+            "headers": ["能力", "Hash Index", "B+ Tree Index"],
+            "rows": [["完整鍵等值", "擅長", "擅長"], ["範圍查詢", "通常不適合", "擅長"], ["維持鍵順序", "否", "是"], ["更新代價", "需維護桶", "需維護平衡與頁面"]]
+          }
+        }
+      ],
+      "takeaways": ["B-Tree 以高分支因子降低昂貴頁面存取次數", "B+ Tree 的葉層鏈結使範圍與有序掃描有效率", "Hash Index 偏向等值，Tree Index 支援等值、範圍與排序"],
+      "quiz": [
+        {"question": "B+ Tree 為何比二元搜尋樹更適合磁碟索引？", "answer": "每個頁面可保存許多鍵與孩子，分支因子高、樹較矮，因此搜尋需要的頁面 I/O 較少。"},
+        {"question": "查詢 WHERE age BETWEEN 20 AND 30，Hash Index 和 B+ Tree 通常選哪個？", "answer": "通常選 B+ Tree，因為它保留鍵順序並能從下界開始連續掃描範圍。"}
+      ],
+      "practice": ["為使用者 email 等值登入與 created_at 月份報表分別選索引類型。", "說明在寫入非常頻繁的表上增加五個索引可能帶來的代價。"]
+    },
+    {
+      "number": 7,
+      "slug": "bloom-filter",
+      "title": "Bloom Filter 與 False Positive",
+      "subtitle": "用少量位元快速排除一定不存在的項目",
+      "duration": "34 分鐘",
+      "difficulty": "進階",
+      "summary": "實作簡化 Bloom Filter，理解多重雜湊、假陽性、無假陰性前提與選型。",
+      "objectives": ["說明 Bloom Filter 的回答語意", "實作 add 與 membership", "解釋位元數、雜湊數與誤判率取捨"],
+      "sections": [
+        {
+          "heading": "回答一定沒有或可能有",
+          "paragraphs": ["Bloom Filter 是機率型成員結構：加入元素時用 k 個雜湊位置設位元，查詢時若任一位為 0，元素一定未加入；全部為 1 只能說可能加入，因為其他元素可能碰巧設滿相同位置。"],
+          "bullets": ["False Positive：未加入卻回答可能有", "標準只加不刪版本沒有 False Negative", "不保存原始元素", "適合在昂貴查詢前快速排除"]
+        },
+        {
+          "heading": "多個穩定雜湊映射到 Bit Array",
+          "paragraphs": ["下例以 hashlib 對 seed 與字串編碼產生 k 個穩定位置，教學上用 bool list 代替真正壓縮位元陣列。add 和查詢都做 k 次雜湊，時間 O(k)，空間 O(m)，m 是位元數。"],
+          "bullets": ["相同值與 seed 必須產生相同位置", "m 越大通常碰撞越少", "k 太少或太多都可能提高誤判", "實務應使用真正 bit array 節省空間"],
+          "code": "import hashlib\n\nclass BloomFilter:\n    def __init__(self, bit_count, hash_count):\n        self.bits = [False] * bit_count\n        self.hash_count = hash_count\n    def _positions(self, value):\n        raw = str(value).encode()\n        for seed in range(self.hash_count):\n            digest = hashlib.sha256(seed.to_bytes(4, \"big\") + raw).digest()\n            yield int.from_bytes(digest[:8], \"big\") % len(self.bits)\n    def add(self, value):\n        for position in self._positions(value): self.bits[position] = True\n    def __contains__(self, value):\n        return all(self.bits[position] for position in self._positions(value))",
+          "code_caption": "教學版本；add 與查詢 O(k)，bool list 不具真正位元壓縮效果。"
+        },
+        {
+          "heading": "容量規劃與刪除限制",
+          "paragraphs": ["元素越多，位元逐漸飽和，假陽性率會提高，因此應依預期元素數 n 和可接受誤判率配置 m、k。直接把位元清零可能傷到其他元素並造成假陰性；需要刪除可用 Counting Bloom Filter，但每格計數會增加空間。"],
+          "bullets": ["Bloom 回答可能有後仍需查權威資料", "超過設計容量會快速降低品質", "不可直接刪位元", "不容許任何誤判時使用 set 或資料庫索引"]
+        }
+      ],
+      "takeaways": ["Bloom Filter 能確定不存在，但存在回答帶有假陽性", "操作成本 O(k)、空間 O(m)，品質取決於 m、k、n", "標準 Bloom 不支援安全刪除，也不取代權威資料來源"],
+      "quiz": [
+        {"question": "Bloom Filter 回答 False 時，元素可能其實已加入嗎？", "answer": "在標準只新增、實作正確且狀態未損壞的前提下不會；它沒有假陰性。"},
+        {"question": "為什麼不能刪除元素時直接清除它的 k 個位元？", "answer": "那些位元可能也被其他元素共享，清零會讓其他已加入元素被錯判不存在。"}
+      ],
+      "practice": ["用很小 bit_count 加入多個值，實際尋找一個 False Positive。", "為爬蟲 URL 去重前置檢查設計 Bloom 與權威集合的兩層流程。"]
+    },
+    {
+      "number": 8,
+      "slug": "count-min-sketch",
+      "title": "Count-Min Sketch",
+      "subtitle": "用多列計數器近似高流量事件頻率",
+      "duration": "32 分鐘",
+      "difficulty": "進階",
+      "summary": "實作 Count-Min Sketch，理解只高估不低估、誤差來源與串流選型。",
+      "objectives": ["描述 width 與 depth 的作用", "實作 update 與 estimate", "理解高估保證與限制"],
+      "sections": [
+        {
+          "heading": "固定空間摘要巨大鍵空間",
+          "paragraphs": ["Count-Min Sketch（CMS）用 depth 列、每列 width 個計數器摘要事件頻率；每次事件在每列各增加一個雜湊位置，查詢取各列計數最小值。它不保存所有鍵，適合網路流量、點擊與日誌串流的近似計數。"],
+          "bullets": ["空間 O(depth × width)", "更新與查詢 O(depth)", "不同列使用不同雜湊", "空間不隨不同鍵總數直接成長"]
+        },
+        {
+          "heading": "最小值降低碰撞高估",
+          "paragraphs": ["每個計數器包含目標和碰撞鍵的次數，因此不會低於真實頻率，只可能高估；取多列最小值可避開部分碰撞較嚴重的列。width 主要控制誤差幅度，depth 主要降低超出誤差保證的機率。"],
+          "bullets": ["標準正增量下 estimate ≥ true count", "碰撞只會增加估計", "更大 width 降低加性誤差", "更大 depth 提高信賴度"],
+          "code": "import hashlib\n\nclass CountMinSketch:\n    def __init__(self, width, depth):\n        self.width = width\n        self.table = [[0] * width for _ in range(depth)]\n    def _index(self, value, row):\n        raw = f\"{row}:{value}\".encode()\n        return int.from_bytes(hashlib.sha256(raw).digest()[:8], \"big\") % self.width\n    def update(self, value, count=1):\n        for row in range(len(self.table)):\n            self.table[row][self._index(value, row)] += count\n    def estimate(self, value):\n        return min(self.table[row][self._index(value, row)] for row in range(len(self.table)))",
+          "code_caption": "假設 count 為非負；更新與查詢 O(depth)。"
+        },
+        {
+          "heading": "近似頻率不是完整排名答案",
+          "paragraphs": ["CMS 適合點查詢某鍵的近似次數，但它未保存鍵本身，不能單獨列出所有 Top K；通常要搭配候選集合或 Heap。需要精確帳務、負增量或刪除時，標準只增 CMS 的保證不再直接適用，應選精確 dict 或其他 Sketch。"],
+          "bullets": ["適合允許小幅高估的監控", "不能單獨枚舉鍵", "精確計數使用 dict", "可合併相同尺寸與雜湊設定的 Sketch"]
+        }
+      ],
+      "takeaways": ["CMS 以固定二維計數器近似大量鍵頻率", "標準正增量下估計只高估，取多列最小值降低碰撞影響", "它適合串流點查詢，但不能獨自還原鍵或精確 Top K"],
+      "quiz": [
+        {"question": "為何 estimate 取最小值而不是平均值？", "answer": "每列碰撞只會增加計數；取最小值選擇污染最少的一列，同時維持不低估性。"},
+        {"question": "CMS 能否列出所有出現次數最高的鍵？", "answer": "不能單獨做到，因為它只保存計數器不保存鍵；需搭配候選鍵結構。"}
+      ],
+      "practice": ["建立小 width 的 CMS，加入多個鍵並比較 estimate 與 dict 真實值。", "設計 CMS 加候選 Heap 的熱門事件流程，說明兩者各保存什麼。"]
+    },
+    {
+      "number": 9,
+      "slug": "advanced-dsu-and-sparse-table",
+      "title": "DSU 進階與 Sparse Table",
+      "subtitle": "一個處理動態合併，一個加速完全靜態查詢",
+      "duration": "38 分鐘",
+      "difficulty": "進階",
+      "summary": "實作具路徑壓縮與按大小合併的 DSU，並理解 Sparse Table 的冪次區間預處理。",
+      "objectives": ["實作最佳化 DSU", "建立靜態 RMQ Sparse Table", "依更新需求區分兩者及其他結構"],
+      "sections": [
+        {
+          "heading": "DSU 維護動態連通分組",
+          "paragraphs": ["Disjoint Set Union（DSU）支援 find 查元素代表與 union 合併兩組。路徑壓縮讓 find 經過的節點直接指向根，按大小合併則把小樹接到大樹；兩者合用後每次操作攤銷 O(α(n))，在實務上近似常數。"],
+          "bullets": ["parent 保存父節點", "size 只在根節點有意義", "find 壓縮查找路徑", "union by size 控制樹高"],
+          "code": "class DSU:\n    def __init__(self, n):\n        self.parent = list(range(n))\n        self.size = [1] * n\n    def find(self, x):\n        if self.parent[x] != x:\n            self.parent[x] = self.find(self.parent[x])\n        return self.parent[x]\n    def union(self, a, b):\n        root_a, root_b = self.find(a), self.find(b)\n        if root_a == root_b: return False\n        if self.size[root_a] < self.size[root_b]: root_a, root_b = root_b, root_a\n        self.parent[root_b] = root_a\n        self.size[root_a] += self.size[root_b]\n        return True",
+          "code_caption": "合併與查找攤銷 O(α(n))，空間 O(n)。"
+        },
+        {
+          "heading": "Sparse Table 預算所有二次冪區間",
+          "paragraphs": ["Sparse Table 適合完全不更新的陣列，預先保存每個起點長度 2^k 的聚合；建置 O(n log n)、空間 O(n log n)。對 min/max 這類冪等運算，任意區間可用兩個可能重疊的最大冪區段合併，查詢 O(1)。"],
+          "bullets": ["冪等表示 combine(x,x)=x", "RMQ 查詢選 k=floor(log2(length))", "兩段可重疊仍不影響 min/max", "一般 range sum 不能用重疊兩段公式"],
+          "code": "def build_sparse_min(numbers):\n    table = [numbers[:]]\n    length = 2\n    while length <= len(numbers):\n        half = length // 2\n        previous = table[-1]\n        table.append([min(previous[i], previous[i + half])\n                      for i in range(len(numbers) - length + 1)])\n        length *= 2\n    return table\n\ndef sparse_range_min(table, left, right):\n    length = right - left\n    level = length.bit_length() - 1\n    width = 1 << level\n    return min(table[level][left], table[level][right - width])",
+          "code_caption": "查詢非空半開區間 [left,right)；建置 O(n log n)、RMQ O(1)。"
+        },
+        {
+          "heading": "按問題的變動方向選型",
+          "paragraphs": ["DSU 解決的是集合只合併、不需拆分的動態連通性；Sparse Table 解決的是資料完全靜態、查詢極多的冪等區間聚合，兩者用途不同。需要線上更新的 RMQ 改選 Segment Tree，需要離線刪邊則可評估反向處理或更進階動態連通結構。"],
+          "bullets": ["只加邊連通性：DSU", "靜態大量 min/max：Sparse Table", "動態 RMQ：Segment Tree", "DSU 不擅長刪除或分裂集合"]
+        }
+      ],
+      "takeaways": ["路徑壓縮加按大小合併使 DSU 操作攤銷近常數", "Sparse Table 用 O(n log n) 預處理換冪等 RMQ O(1)", "DSU 管連通合併，Sparse Table 管靜態區間，選型不可只看複雜度"],
+      "quiz": [
+        {"question": "DSU 為何不適合直接刪除一條既有邊？", "answer": "它只保存集合代表，沒有保存能判斷刪邊後是否仍連通的完整內部圖結構。"},
+        {"question": "Sparse Table 的兩段重疊技巧為何適用 min 而不適用 sum？", "answer": "min 是冪等的，重複元素不改變結果；sum 重複計算交集會讓答案過大。"}
+      ],
+      "practice": ["用 DSU 統計一組無向邊形成的連通元件數。", "為 [5,2,7,1,3,6] 建立 Sparse Table 前三層並查詢 [1,5)。"]
+    },
+    {
+      "number": 10,
+      "slug": "advanced-monotonic-structures",
+      "title": "Monotonic Stack 與 Queue 進階",
+      "subtitle": "及時移除再也不可能成為答案的候選",
+      "duration": "36 分鐘",
+      "difficulty": "進階",
+      "summary": "以單調堆疊解下一個較大值，以單調佇列解滑動視窗最大值，理解攤銷 O(n)。",
+      "objectives": ["建立單調候選不變量", "實作 Next Greater 與 Sliding Window Maximum", "以進出次數分析攤銷成本"],
+      "sections": [
+        {
+          "heading": "單調堆疊等待未來答案",
+          "paragraphs": ["Monotonic Stack 保存尚未找到下一個較大值的索引，並讓其對應值由棧底到棧頂遞減。新值較大時，棧頂的第一個較大值已確定並可彈出；每個索引只入棧、出棧各一次，所以整體 O(n) 而非巢狀表象的 O(n²)。"],
+          "bullets": ["保存索引可計算距離或回填答案", "彈出條件決定嚴格或非嚴格比較", "未被彈出者答案維持預設", "適合 Next Greater、每日溫度與柱狀圖"]
+          ,"code": "def next_greater(numbers):\n    answer = [-1] * len(numbers)\n    stack = []\n    for index, value in enumerate(numbers):\n        while stack and numbers[stack[-1]] < value:\n            answer[stack.pop()] = value\n        stack.append(index)\n    return answer",
+          "code_caption": "每個索引最多 push/pop 一次，時間 O(n)、空間 O(n)。"
+        },
+        {
+          "heading": "單調佇列維持視窗最大候選",
+          "paragraphs": ["滑動視窗最大值需要同時移除過期索引與較小的尾端候選。deque 中索引由舊到新、對應值由大到小，因此隊首永遠是目前最大值；新值進入時，被它壓過且更舊的較小值永遠不可能再成為最大值，可安全刪除。"],
+          "bullets": ["先移除 index-k 以前的過期索引", "尾端移除小於等於新值者", "隊首是當前視窗最大值", "每個索引最多進出一次"],
+          "code": "from collections import deque\n\ndef sliding_window_max(numbers, k):\n    if k <= 0 or k > len(numbers): return []\n    queue, result = deque(), []\n    for index, value in enumerate(numbers):\n        while queue and queue[0] <= index - k: queue.popleft()\n        while queue and numbers[queue[-1]] <= value: queue.pop()\n        queue.append(index)\n        if index >= k - 1: result.append(numbers[queue[0]])\n    return result",
+          "code_caption": "時間 O(n)、工作空間 O(k)、輸出空間 O(n-k+1)。"
+        },
+        {
+          "heading": "正確性來自支配關係",
+          "paragraphs": ["單調結構能快，是因為新候選能永久支配某些舊候選：它更晚過期且數值不小，因此舊候選不可能在未來勝出。若問題的比較規則不具有這種支配關係，強行維持單調會丟失答案；實作時也要先決定相等值保留新或舊索引。"],
+          "bullets": ["Stack 處理單方向最近關係", "Queue 處理移動視窗極值", "while 總次數以每元素出棧一次做攤銷分析", "相等值政策影響索引與距離答案"]
+        }
+      ],
+      "takeaways": ["單調結構只保存仍可能成為未來答案的候選", "每個元素最多進出一次，使看似巢狀流程總時間 O(n)", "Monotonic Stack 適合最近較大/小，Queue 適合滑動視窗極值"],
+      "quiz": [
+        {"question": "sliding_window_max 為何可以刪除尾端較小且更舊的值？", "answer": "新值不小於它又更晚離開視窗，只要舊值仍在，新值也在且更適合當最大值，因此舊值永不會勝出。"},
+        {"question": "程式中有 for 加 while，為什麼仍是 O(n)？", "answer": "每個索引只入結構一次且最多被彈出一次，所有 while 迭代合計 O(n)，是攤銷分析。"}
+      ],
+      "practice": ["修改 next_greater，使答案回傳距離而非數值。", "把 sliding_window_max 改成滑動視窗最小值，列出比較符號要如何變更。"]
+    }
+  ]
+}

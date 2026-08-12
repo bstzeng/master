@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="實作 Fenwick Tree 的點更新、前綴和與區間和，理解一基索引和 O(log n) 路徑。" />
+    <meta name="theme-color" content="#101713" />
+    <title>15.02 Fenwick Tree 樹狀陣列｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-15-advanced-data-structures.html">UNIT 15 / LESSON 02</a><p class="eyebrow">Advanced Data Structures</p><h1>Fenwick Tree 樹狀陣列</h1><p class="lesson-deck">用最低有效位元管理分段前綴和</p><div class="lesson-meta"><span>進階</span><span>35 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>實作 Fenwick Tree 的點更新、前綴和與區間和，理解一基索引和 O(log n) 路徑。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>解釋 lowbit 管理的範圍</li><li>實作 add 與 prefix_sum</li><li>分析 O(log n) 更新查詢</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>每格保存一段後綴區塊</h2><p>Fenwick Tree（Binary Indexed Tree）用長度 n+1 的陣列保存多個部分和；一基索引 i 的 lowbit = i &amp; -i，代表 tree[i] 涵蓋到 i 為止、長度為 lowbit 的區段。這些區段能拼出任意前綴，又能讓一次更新只影響 O(log n) 個節點。</p><ul><li>內部採一基索引</li><li>lowbit 決定節點負責範圍</li><li>結構只需 O(n) 空間</li><li>最適合可累積且可相消的操作</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>更新向上，查詢向前</h2><p>點更新 add(index,delta) 將外部零基索引轉成一基後，反覆加 lowbit 更新所有包含該點的區塊；前綴查詢則反覆減 lowbit，累加互不重疊的區塊。兩條路每步消除或增加一個二進位低位，最多 O(log n) 步。</p><ul><li>add 路徑：i += i &amp; -i</li><li>prefix 路徑：i -= i &amp; -i</li><li>range_sum 由兩個前綴相減</li><li>負 delta 可表示減少</li></ul><figure class="code-block"><figcaption><span>外部介面使用半開區間 [left,right)；更新與查詢均 O(log n)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>class FenwickTree:
+    def __init__(self, size):
+        self.tree = [0] * (size + 1)
+
+    def add(self, index, delta):
+        index += 1
+        while index &lt; len(self.tree):
+            self.tree[index] += delta
+            index += index &amp; -index
+
+    def prefix_sum(self, end):
+        total = 0
+        while end &gt; 0:
+            total += self.tree[end]
+            end -= end &amp; -end
+        return total
+
+    def range_sum(self, left, right):
+        return self.prefix_sum(right) - self.prefix_sum(left)</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>知道目前值才能做 set</h2><p>Fenwick 原生操作是增加 delta；要把索引值設定為 new_value，可另存原陣列並加入 new_value-old_value。它的常數小、程式短，適合動態前綴和與頻率累積，但一般 range minimum 不可由兩個前綴相減，應改用 Segment Tree。</p><ul><li>點更新 O(log n)</li><li>前綴與區間和 O(log n)</li><li>空間 O(n)</li><li>功能較專一但通常比 Segment Tree 輕量</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Fenwick 以 lowbit 將前綴拆成 O(log n) 個區塊</li><li><span>02</span>點增加與前綴和都只走 O(log n) 個索引</li><li><span>03</span>它適合可相消的累積操作，不是所有區間聚合都適用</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為何 tree 長度通常是 n+1？</summary><p>Fenwick 內部用一基索引，索引 0 保留不用，使 lowbit 跳轉規則簡潔。</p></details><details><summary>可以用兩個 prefix minimum 相減得到區間 minimum 嗎？</summary><p>不能，最小值沒有像加法那樣的反運算；一般動態區間最小值應使用 Segment Tree。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>對長度 8 的 Fenwick，列出更新外部索引 2 時經過的內部索引。</li><li>在 class 旁維護 values，實作 set(index,new_value)。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-15/01-range-query-and-prefix-limits.html"><span>← 上一課</span><b>Range Query 與 Prefix Sum 的限制</b></a><a class="next" href="../unit-15/03-segment-tree.html"><span>下一課 →</span><b>Segment Tree 線段樹</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

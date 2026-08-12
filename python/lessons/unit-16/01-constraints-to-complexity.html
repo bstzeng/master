@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="把輸入、輸出、限制與資料性質轉為演算法需求。" />
+    <meta name="theme-color" content="#101713" />
+    <title>16.01 讀題與從限制推複雜度｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-16-problem-solving.html">UNIT 16 / LESSON 01</a><p class="eyebrow">Problem Solving and Algorithm Design</p><h1>讀題與從限制推複雜度</h1><p class="lesson-deck">先讀規格，再選工具</p><div class="lesson-meta"><span>基礎</span><span>25 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>把輸入、輸出、限制與資料性質轉為演算法需求。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>摘錄規格</li><li>估計運算量</li><li>辨認隱含性質</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>重寫問題契約</h2><p>先用自己的話寫出輸入、輸出與合法條件，可避免解錯問題。特別標記是否有序、可重複、可修改與答案是否唯一。</p><ul><li>區分索引與數值</li><li>確認空輸入及無解輸出</li><li>辨認連續區間或任意子集合</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>由 n 估算上限</h2><p>把複雜度換成粗略操作數：n=10⁵ 時 O(n²) 通常不可行，而 n≤20 可能允許 O(2ⁿ)。這是篩選候選方法，不是硬性時間保證。</p><ul><li>小 n 可考慮回溯</li><li>大 n 常需 O(n) 或 O(n log n)</li><li>同時檢查記憶體限制</li></ul><figure class="code-block"><figcaption><span>用量級比較候選解法。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def operation_estimates(n):
+    return {&#x27;linear&#x27;: n, &#x27;n_log_n&#x27;: n * max(1, n.bit_length()), &#x27;quadratic&#x27;: n * n}
+print(operation_estimates(100_000))</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>限制也是提示</h2><p>正數、已排序、無環或值域很小，都可能啟用特定技巧。選型前把每項推論寫成「因為限制 X，所以可用 Y」。</p><ul><li>已排序可能用二分或雙指標</li><li>無權圖最短邊數用 BFS</li><li>小值域可能用計數陣列</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>不要使用題目沒有保證的性質。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>先明確輸入輸出與邊界。</li><li><span>02</span>用 n 排除不可行量級。</li><li><span>03</span>資料性質是演算法選型依據。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>n=10⁵ 為何通常不選 O(n²)？</summary><p>約 10¹⁰ 次工作，多數時限無法承受。</p></details><details><summary>已排序為何重要？</summary><p>它提供單調順序，可安全排除搜尋範圍。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>為三組不同 n 列出可能複雜度。</li><li>從一題規格整理輸入、輸出、性質與邊界。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-15/10-advanced-monotonic-structures.html"><span>← 上一課</span><b>Monotonic Stack 與 Queue 進階</b></a><a class="next" href="../unit-16/02-brute-force-and-bottlenecks.html"><span>下一課 →</span><b>Brute Force 與瓶頸</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

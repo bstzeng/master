@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="使用大小為 k 的 Heap 找出最大或最小的 k 個項目，並比較排序與 Heap 解法。" />
+    <meta name="theme-color" content="#101713" />
+    <title>07.06 Top K：只保留真正需要的候選｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-07-stack-queue-heap.html">UNIT 07 / LESSON 06</a><p class="eyebrow">Stacks, Queues, and Heaps</p><h1>Top K：只保留真正需要的候選</h1><p class="lesson-deck">以固定大小 Heap 避免完整排序</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>使用大小為 k 的 Heap 找出最大或最小的 k 個項目，並比較排序與 Heap 解法。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明 Top K 為何適合固定大小 Heap</li><li>實作找出最大的 k 個元素</li><li>比較 O(n log n) 與 O(n log k) 解法</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>Top K 的保留策略</h2><p>若只要 n 筆資料中最大的 k 筆，不必把全部資料排序；維護大小最多為 k 的 Min Heap，根節點就是目前候選中最小者。新值較大時替換根，最後留下的正是全域最大 k 筆。</p><ul><li>求最大 K 個：維護大小 k 的 Min Heap</li><li>求最小 K 個：維護大小 k 的 Max Heap</li><li>根節點是候選集合的淘汰門檻</li><li>k 必須先確認不為負數</li></ul><figure class="code-block"><figcaption><span>Heap 永遠只保存目前最大的三個候選。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>import heapq
+
+def largest_k(values, k):
+    if k &lt;= 0:
+        return []
+    heap = []
+    for value in values:
+        if len(heap) &lt; k:
+            heapq.heappush(heap, value)
+        elif value &gt; heap[0]:
+            heapq.heapreplace(heap, value)
+    return sorted(heap, reverse=True)
+
+print(largest_k([7, 2, 9, 4, 8], 3))  # [9, 8, 7]</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>複雜度與資料流優勢</h2><p>每個元素最多觸發一次 O(log k) 的 Heap 操作，因此掃描成本 O(n log k)，額外空間 O(k)；最後若要排序 k 筆，再加 O(k log k)。當 k 遠小於 n 或資料以串流到達時，這比完整排序 O(n log n) 更有吸引力。</p><ul><li>完整排序：O(n log n)、通常保存 O(n)</li><li>固定 Heap：O(n log k)、額外 O(k)</li><li>資料可一筆一筆處理，不需先全部載入</li><li>k 接近 n 時排序可能更簡單</li></ul><div class="table-wrap"><table><thead><tr><th>方法</th><th>時間</th><th>額外保留</th><th>適用</th></tr></thead><tbody><tr><td>sorted</td><td>O(n log n)</td><td>完整結果</td><td>需要全部排名</td></tr><tr><td>大小 k Heap</td><td>O(n log k)</td><td>O(k)</td><td>只需要少量 Top K</td></tr><tr><td>heapq.nlargest</td><td>依實作選策略</td><td>由函式處理</td><td>程式簡潔優先</td></tr></tbody></table></div></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>帶資料的 Top K 與邊界</h2><p>真實問題通常依某欄位排名，可把 (score, sequence, item) 放入 Heap，避免同分時比較不可排序物件。還要定義 k 大於資料量、同分是否全收，以及結果需不需要再排序，這些都是題目契約的一部分。</p><ul><li>k = 0 回傳空結果</li><li>k 大於 n 時通常回傳全部資料</li><li>同分規則需明確指定</li><li>Heap 內容不是排名順序，輸出前可能需 sorted</li></ul><figure class="code-block"><figcaption><span>Tuple 將分數與同分規則一起編碼；正式系統應讓規則更具名。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>import heapq
+
+def top_students(records, k):
+    candidates = []
+    for sequence, record in enumerate(records):
+        entry = (record[&quot;score&quot;], -sequence, record[&quot;name&quot;])
+        if len(candidates) &lt; k:
+            heapq.heappush(candidates, entry)
+        elif entry &gt; candidates[0]:
+            heapq.heapreplace(candidates, entry)
+    return sorted(candidates, reverse=True)
+
+records = [{&quot;name&quot;: &quot;Amy&quot;, &quot;score&quot;: 90}, {&quot;name&quot;: &quot;Bo&quot;, &quot;score&quot;: 85}]
+print(top_students(records, 1))</code></pre></figure><aside class="concept-callout"><b>KEY IDEA</b><p>先確認要的是第 k 大、最大的 k 個，還是完整排序；三者輸出不同。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>求最大 K 個時維護大小 k 的 Min Heap，以根作為淘汰門檻</li><li><span>02</span>固定大小 Heap 可將成本降為 O(n log k)，空間為 O(k)</li><li><span>03</span>輸出順序、同分規則與 k 的邊界必須明確處理</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>找最大的 k 個數，為何使用 Min Heap 而不是 Max Heap？</summary><p>需要快速找到候選中最小、最該被淘汰的值；Min Heap 的根正好在 O(1) 提供此門檻。</p></details><details><summary>n = 一百萬、k = 10 時，Heap 解法的主要優勢是什麼？</summary><p>只保留 10 個候選並以 O(n log 10) 處理，不需保存或完整排序全部一百萬筆。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>實作 smallest_k，使用負值 Max Heap 並輸出由小到大結果。</li><li>持續讀入網站瀏覽數，隨時維護前五名文章。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-07/05-min-and-max-heaps.html"><span>← 上一課</span><b>Min Heap 與 Max Heap</b></a><a class="next" href="../unit-07/07-monotonic-stack.html"><span>下一課 →</span><b>Monotonic Stack：尋找下一個更大元素</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

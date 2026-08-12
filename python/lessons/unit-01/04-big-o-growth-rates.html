@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="理解 Big O 是漸近上界，並能比較常數、對數、線性、線性對數、平方與指數成長。" />
+    <meta name="theme-color" content="#101713" />
+    <title>01.04 Big O 與常見成長等級｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-01-algorithm-foundations.html">UNIT 01 / LESSON 04</a><p class="eyebrow">Algorithm Foundations</p><h1>Big O 與常見成長等級</h1><p class="lesson-deck">忽略次要細節，專注輸入變大後的趨勢</p><div class="lesson-meta"><span>入門</span><span>25 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>理解 Big O 是漸近上界，並能比較常數、對數、線性、線性對數、平方與指數成長。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>用簡化規則求得常見 Big O</li><li>依成長速度排列複雜度</li><li>根據資料量判斷解法是否可能可行</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>Big O 描述成長上界</h2><p>Big O 表示當輸入很大時，成本不會比某個成長等級更快，常用來描述最壞情況。像 3n + 20 在 n 變大後由 n 主導，因此寫成 O(n)；Big O 不等於精確執行時間，也不代表常數永遠不重要。</p><ul><li>忽略固定常數：O(3n) 簡化為 O(n)</li><li>保留最高階項：O(n² + n) 簡化為 O(n²)</li><li>不同輸入參數不能隨意合併：O(n + m) 應保留</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>認識常見成長速度</h2><p>O(1) 不隨 n 增加，O(log n) 每一步大幅縮小問題，O(n) 逐筆處理，O(n log n) 常見於有效率排序，而 O(n²) 常來自比較所有配對。O(2ⁿ) 會隨 n 快速爆增，通常只能處理很小的輸入。</p><ul><li>較慢成長通常較能承受大型資料</li><li>log 的底數在 Big O 中通常省略</li><li>同一成長等級的實際速度仍可能不同</li></ul><div class="table-wrap"><table><thead><tr><th>Big O</th><th>直覺</th><th>典型例子</th></tr></thead><tbody><tr><td>O(1)</td><td>固定步驟</td><td>依索引讀取 list</td></tr><tr><td>O(log n)</td><td>每步縮小一半</td><td>已排序資料的二分搜尋</td></tr><tr><td>O(n)</td><td>逐筆看一次</td><td>線性搜尋</td></tr><tr><td>O(n log n)</td><td>分層且每層處理 n 筆</td><td>合併排序</td></tr><tr><td>O(n²)</td><td>處理所有配對</td><td>雙層完整迴圈</td></tr><tr><td>O(2ⁿ)</td><td>每項都有選或不選</td><td>暴力列舉子集合</td></tr></tbody></table></div></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>從限制反推可行解法</h2><p>若 n 只有 20，指數解法有時仍能嘗試；若 n 接近十萬，通常要尋找 O(n) 或 O(n log n) 解法。這只是初步篩選，實際可行性還受常數、記憶體、語言與執行環境影響。</p><ul><li>先讀資料範圍，再設計演算法</li><li>小輸入可以優先選簡單可靠的解法</li><li>大型輸入應特別警覺巢狀完整走訪</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Big O 著重輸入很大時的主導成長項</li><li><span>02</span>O(1) 到 O(2ⁿ) 的可擴展性差異非常大</li><li><span>03</span>輸入限制能幫助排除不可能及時完成的解法</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>5n² + 100n + 8 的 Big O 是什麼？</summary><p>是 O(n²)，因為忽略常數後，n² 是 n 變大時的最高階主導項。</p></details><details><summary>兩段依序執行、各走訪 n 筆資料的迴圈，為什麼是 O(n) 而非 O(n²)？</summary><p>操作數是 n + n = 2n，忽略常數後為 O(n)；只有兩個完整迴圈互相巢狀時通常才是 O(n²)。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>將 O(n²)、O(1)、O(n log n)、O(log n)、O(n) 依成長速度由慢到快排序。</li><li>判斷列舉長度 n list 中所有索引配對的時間複雜度，並說明理由。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-01/03-time-and-space-complexity.html"><span>← 上一課</span><b>時間與空間複雜度</b></a><a class="next" href="../unit-01/05-python-operation-complexity.html"><span>下一課 →</span><b>Python 常見操作複雜度</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

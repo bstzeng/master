@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="以多項式雜湊和滑動視窗實作 Rabin–Karp，理解平均線性時間、碰撞驗證與模數選擇。" />
+    <meta name="theme-color" content="#101713" />
+    <title>14.05 Rabin–Karp 與 Rolling Hash｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-14-string-algorithms.html">UNIT 14 / LESSON 05</a><p class="eyebrow">Classic String Algorithms</p><h1>Rabin–Karp 與 Rolling Hash</h1><p class="lesson-deck">用固定長度視窗快速更新指紋</p><div class="lesson-meta"><span>進階</span><span>45 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>以多項式雜湊和滑動視窗實作 Rabin–Karp，理解平均線性時間、碰撞驗證與模數選擇。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>解釋 Rolling Hash 如何 O(1) 更新視窗</li><li>實作帶碰撞驗證的 Rabin–Karp</li><li>分析平均與最壞複雜度</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>雜湊先篩選候選</h2><p>Rabin–Karp 把 Pattern 與每個同長 Text 視窗轉成數值指紋，雜湊不同即可確定字串不同，雜湊相同則再逐字元驗證。它把昂貴比較集中在少數候選，但雜湊相同不代表內容必然相同。</p><ul><li>Pattern 與視窗長度都為 m</li><li>雜湊不同可立即跳過</li><li>雜湊相同必須驗證原字串</li><li>適合多 Pattern 或需要字串指紋的延伸題型</li></ul><figure class="code-block"><figcaption><span>多項式雜湊把字元順序編入固定範圍的數值。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>base = 256
+modulus = 1_000_000_007
+def polynomial_hash(text):
+    value = 0
+    for character in text:
+        value = (value * base + ord(character)) % modulus
+    return value
+
+print(polynomial_hash(&quot;abc&quot;))</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Rolling Hash 更新視窗</h2><p>視窗右移時，先扣除離開字元對最高位的貢獻，再乘 base 並加上進入字元，全部對 modulus 取餘數。預先算 high = base^(m - 1) mod modulus 後，每次更新只需 O(1)。</p><ul><li>移除 outgoing * high</li><li>剩餘內容左移：乘 base</li><li>加入 incoming 的字元碼</li><li>每一步取模避免整數無限成長</li></ul><figure class="code-block"><figcaption><span>固定長度視窗可在常數時間更新雜湊值。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def roll_hash(current, outgoing, incoming, high, base, modulus):
+    current = (current - ord(outgoing) * high) % modulus
+    return (current * base + ord(incoming)) % modulus
+
+base, modulus, length = 256, 1_000_000_007, 3
+high = pow(base, length - 1, modulus)</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>完整搜尋、碰撞與複雜度</h2><p>計算初始 Pattern 與第一個視窗雜湊需 O(m)，之後掃描視窗平均 O(n)，額外空間 O(1)；若大量碰撞導致每次都驗證 m 個字元，最壞仍為 O(nm)。選大質數模數、雙雜湊可降低碰撞機率，但要求完全正確時仍應保留字串驗證。</p><ul><li>平均時間 O(n + m)</li><li>碰撞下最壞 O(nm)</li><li>工作空間 O(1)，輸出另計</li><li>雙雜湊降低風險但不等於數學上零碰撞</li></ul><figure class="code-block"><figcaption><span>雜湊相等後仍以切片驗證，碰撞不會產生錯誤答案。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def rabin_karp(text, pattern, base=256, modulus=1_000_000_007):
+    n, m = len(text), len(pattern)
+    if m == 0:
+        return list(range(n + 1))
+    if m &gt; n:
+        return []
+    high = pow(base, m - 1, modulus)
+    pattern_hash = window_hash = 0
+    for index in range(m):
+        pattern_hash = (pattern_hash * base + ord(pattern[index])) % modulus
+        window_hash = (window_hash * base + ord(text[index])) % modulus
+    matches = []
+    for start in range(n - m + 1):
+        if window_hash == pattern_hash and text[start:start + m] == pattern:
+            matches.append(start)
+        if start &lt; n - m:
+            window_hash = (window_hash - ord(text[start]) * high) % modulus
+            window_hash = (window_hash * base + ord(text[start + m])) % modulus
+    return matches
+
+print(rabin_karp(&quot;banana&quot;, &quot;ana&quot;))  # [1, 3]</code></pre></figure><aside class="concept-callout"><b>KEY IDEA</b><p>若省略碰撞驗證，演算法可能變成機率正確；教材版本保留驗證以確保答案。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Rabin–Karp 先以雜湊篩選候選，雜湊相同後再驗證文字</li><li><span>02</span>Rolling Hash 能在視窗右移時 O(1) 更新指紋</li><li><span>03</span>平均時間 O(n + m)，但碰撞可能使最壞情況回到 O(nm)</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>兩個字串雜湊值相同，能直接判定內容相同嗎？</summary><p>不能；有限雜湊範圍必然可能碰撞，要求確定正確時要再比較原字串。</p></details><details><summary>Rolling Hash 比每個視窗重新計算雜湊快在哪裡？</summary><p>它利用前一視窗值，移除一字元並加入一字元，每次右移只需 O(1)，而非 O(m)。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>將 Rabin–Karp 改為使用兩組不同模數，只有雙雜湊相同才驗證。</li><li>刻意使用很小的 modulus 找出碰撞案例，確認驗證步驟能避免錯誤匹配。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-14/04-complete-kmp-search.html"><span>← 上一課</span><b>KMP 完整搜尋流程</b></a><a class="next" href="../unit-14/06-trie.html"><span>下一課 →</span><b>Trie：以共同前綴組織單字</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

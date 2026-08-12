@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="定義 LPS 陣列，逐格建立最長 Proper Prefix／Suffix 長度，分析建表的攤銷 O(m)。" />
+    <meta name="theme-color" content="#101713" />
+    <title>14.03 LPS Table：預先整理回退位置｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-14-string-algorithms.html">UNIT 14 / LESSON 03</a><p class="eyebrow">Classic String Algorithms</p><h1>LPS Table：預先整理回退位置</h1><p class="lesson-deck">在線性時間建立模式字串的自我資訊</p><div class="lesson-meta"><span>進階</span><span>40 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>定義 LPS 陣列，逐格建立最長 Proper Prefix／Suffix 長度，分析建表的攤銷 O(m)。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明 lps[i] 的精確意義</li><li>正確實作匹配、回退與歸零分支</li><li>以指標移動分析 O(m) 建表成本</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>LPS 每格代表什麼</h2><p>LPS（Longest Proper Prefix which is also Suffix）陣列的 lps[i]，表示 pattern[:i + 1] 的最長 Proper Border 長度。lps[0] 必為 0，因為單字元字串沒有非空且不等於自身的 Proper Border。</p><ul><li>陣列長度等於 Pattern 長度 m</li><li>值是長度，不是字串或索引</li><li>lps[i] 不會大於 i</li><li>建表只依賴 Pattern 本身</li></ul><figure class="code-block"><figcaption><span>用前綴與後綴內容檢查每個 LPS 長度。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>pattern = &quot;ababaca&quot;
+lps = [0, 0, 1, 2, 3, 0, 1]
+for index, length in enumerate(lps):
+    prefix = pattern[:length]
+    suffix = pattern[index - length + 1:index + 1] if length else &quot;&quot;
+    print(index, prefix, suffix)</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>匹配、回退與歸零</h2><p>建表使用 index 探索下一字元、length 表示目前 Border 長度；字元相同時 Border 延長，失配且 length &gt; 0 時回退到 lps[length - 1] 並重新比較，不移動 index。只有 length 已為 0 且仍失配時，才設定 lps[index] = 0 並前進。</p><ul><li>相同：length += 1，寫入後 index += 1</li><li>失配且 length &gt; 0：只回退 length</li><li>失配且 length == 0：寫 0 並前進</li><li>回退可能連續發生多次</li></ul><figure class="code-block"><figcaption><span>LPS 建表的標準 Python 3 實作。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def build_lps(pattern):
+    lps = [0] * len(pattern)
+    length = 0
+    index = 1
+    while index &lt; len(pattern):
+        if pattern[index] == pattern[length]:
+            length += 1
+            lps[index] = length
+            index += 1
+        elif length &gt; 0:
+            length = lps[length - 1]
+        else:
+            lps[index] = 0
+            index += 1
+    return lps
+
+print(build_lps(&quot;ababaca&quot;))  # [0, 0, 1, 2, 3, 0, 1]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>為何建表是 O(m)</h2><p>雖然失配分支可能讓 length 多次回退，但 index 只會前進到 m，而 length 的增加總量也受 index 前進次數限制，因此所有回退總量為線性。建表時間 O(m)、空間 O(m)，之後可用同一張表搜尋任意 Text。</p><ul><li>index 從 1 單調前進到 m</li><li>length 的回退不會低於 0</li><li>巢狀式回退不代表 O(m²)</li><li>同一 Pattern 多次搜尋可重用 LPS</li></ul><div class="table-wrap"><table><thead><tr><th>階段</th><th>時間</th><th>空間</th></tr></thead><tbody><tr><td>建立 LPS</td><td>O(m)</td><td>O(m)</td></tr><tr><td>以 LPS 搜尋一個 Text</td><td>O(n)</td><td>除輸出外 O(1)</td></tr><tr><td>完整 KMP</td><td>O(n + m)</td><td>O(m)</td></tr></tbody></table></div><aside class="concept-callout"><b>KEY IDEA</b><p>最常見錯誤是失配回退後仍讓 index 前進，這會漏掉較短 Border 的重新比較。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>lps[i] 是 pattern[:i + 1] 的最長 Proper Border 長度</li><li><span>02</span>失配且 length &gt; 0 時只回退 length，不移動 index</li><li><span>03</span>LPS 可在 O(m) 時間及 O(m) 空間建立</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼 lps[0] 一定是 0？</summary><p>長度一的字串沒有非空且比自身短的前綴與後綴。</p></details><details><summary>建表失配且 length &gt; 0 時，下一步為何不是 length -= 1？</summary><p>應直接跳到較短的已知 Border lps[length - 1]，略過已證明不可能的長度。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>手算 Pattern &#x27;aabaacaabaa&#x27; 的完整 LPS 陣列，再用程式驗證。</li><li>在 build_lps 中加入追蹤輸出，觀察每次 index 與 length 的變化。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-14/02-prefix-suffix-and-kmp-intuition.html"><span>← 上一課</span><b>Prefix、Suffix 與 KMP 直覺</b></a><a class="next" href="../unit-14/04-complete-kmp-search.html"><span>下一課 →</span><b>KMP 完整搜尋流程</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

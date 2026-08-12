@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="學習以局部選擇逐步建構答案，透過區間、跳躍、背包、編碼與硬幣案例，辨認何時貪心正確、何時會失敗。" />
+    <meta name="theme-color" content="#101713" />
+    <title>單元 12｜Greedy 貪心演算法｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../styles.css" />
+    <script src="../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../index.html">課程總覽</a>
+        <a class="" href="../phase-1.html">第一階段</a>
+        <a class="is-active" href="../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <section class="unit-hero">
+        <div><a class="breadcrumb" href="../phase-2.html">PHASE 02 / UNIT 12</a><p class="eyebrow">Greedy Algorithms</p><h1>Greedy 貪心演算法</h1><p class="hero-intro">學習以局部選擇逐步建構答案，透過區間、跳躍、背包、編碼與硬幣案例，辨認何時貪心正確、何時會失敗。</p><a class="primary-button" href="#lessons">查看 8 堂課 <span>↓</span></a></div>
+        <aside><span>UNIT</span><strong>12</strong><p>能提出貪心規則、實作並分析演算法，還能以交換論證或反例說明局部最佳是否能導向全域最佳。</p></aside>
+      </section>
+      <section class="unit-info"><div><p class="section-index">BEFORE YOU START</p><h2>先備知識</h2><ul><li>能使用 Python 排序、list、dict 與 heapq</li><li>理解 Big O、區間與基本圖樹概念</li><li>能閱讀簡單的正確性論證與反例</li></ul></div><div><p class="section-index">AFTER THIS UNIT</p><h2>完成後你能夠</h2><ul><li>辨認具有貪心選擇性質與最佳子結構的問題</li><li>解決經典區間排程、Jump Game 與分數背包</li><li>理解 Huffman Coding 如何以局部合併得到最佳前綴碼</li><li>主動尋找硬幣等問題中的反例</li><li>用交換論證說明正確性並區分 Greedy 與 DP</li></ul></div></section>
+      <section class="lesson-section" id="lessons"><div class="section-head"><div><p class="section-index">LESSON LIST</p><h2>本單元課程</h2></div><p>建議依序閱讀；每一課約 15–25 分鐘，讀完後先回答理解題，再挑一題延伸練習。</p></div><div class="lesson-list">
+        <article class="lesson-row">
+          <span>01</span>
+          <div><p>中階 · 28 分鐘</p><h3>貪心核心與題型辨認</h3><b>每一步做局部選擇，但必須證明不會失去最佳答案</b></div>
+          <a href="../lessons/unit-12/01-greedy-core-and-recognition.html" aria-label="開始課程：貪心核心與題型辨認">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>02</span>
+          <div><p>中階 · 30 分鐘</p><h3>活動選擇與區間排程</h3><b>選最早結束的相容活動，為未來保留空間</b></div>
+          <a href="../lessons/unit-12/02-activity-selection.html" aria-label="開始課程：活動選擇與區間排程">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>03</span>
+          <div><p>中階 · 27 分鐘</p><h3>區間合併</h3><b>排序後只需和目前合併區間比較</b></div>
+          <a href="../lessons/unit-12/03-merge-intervals.html" aria-label="開始課程：區間合併">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>04</span>
+          <div><p>中階 · 28 分鐘</p><h3>Jump Game 跳躍遊戲</h3><b>不用保存每條路，只追蹤目前能到達的最遠位置</b></div>
+          <a href="../lessons/unit-12/04-jump-game.html" aria-label="開始課程：Jump Game 跳躍遊戲">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>05</span>
+          <div><p>中階 · 30 分鐘</p><h3>Fractional Knapsack 分數背包</h3><b>物品可切分時，先拿單位重量價值最高者</b></div>
+          <a href="../lessons/unit-12/05-fractional-knapsack.html" aria-label="開始課程：Fractional Knapsack 分數背包">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>06</span>
+          <div><p>中階 · 35 分鐘</p><h3>Huffman Coding</h3><b>反覆合併最低頻率，建立最短加權前綴碼</b></div>
+          <a href="../lessons/unit-12/06-huffman-coding.html" aria-label="開始課程：Huffman Coding">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>07</span>
+          <div><p>中階 · 28 分鐘</p><h3>硬幣陷阱與反例</h3><b>優先拿最大硬幣有時成功，有時會錯得很自然</b></div>
+          <a href="../lessons/unit-12/07-coin-change-traps.html" aria-label="開始課程：硬幣陷阱與反例">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>08</span>
+          <div><p>中階 · 35 分鐘</p><h3>交換論證與 Greedy vs DP</h3><b>用證明與狀態需求決定是否能放心不回頭</b></div>
+          <a href="../lessons/unit-12/08-exchange-arguments-and-greedy-vs-dp.html" aria-label="開始課程：交換論證與 Greedy vs DP">開始閱讀 →</a>
+        </article></div></section>
+      <nav class="bottom-nav"><a href="../phase-2.html">← 返回第 2 階段大綱</a><a href="../index.html">完整學習地圖 ↑</a></nav></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

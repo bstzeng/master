@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="實作具路徑壓縮與按大小合併的 DSU，並理解 Sparse Table 的冪次區間預處理。" />
+    <meta name="theme-color" content="#101713" />
+    <title>15.09 DSU 進階與 Sparse Table｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-15-advanced-data-structures.html">UNIT 15 / LESSON 09</a><p class="eyebrow">Advanced Data Structures</p><h1>DSU 進階與 Sparse Table</h1><p class="lesson-deck">一個處理動態合併，一個加速完全靜態查詢</p><div class="lesson-meta"><span>進階</span><span>38 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>實作具路徑壓縮與按大小合併的 DSU，並理解 Sparse Table 的冪次區間預處理。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>實作最佳化 DSU</li><li>建立靜態 RMQ Sparse Table</li><li>依更新需求區分兩者及其他結構</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>DSU 維護動態連通分組</h2><p>Disjoint Set Union（DSU）支援 find 查元素代表與 union 合併兩組。路徑壓縮讓 find 經過的節點直接指向根，按大小合併則把小樹接到大樹；兩者合用後每次操作攤銷 O(α(n))，在實務上近似常數。</p><ul><li>parent 保存父節點</li><li>size 只在根節點有意義</li><li>find 壓縮查找路徑</li><li>union by size 控制樹高</li></ul><figure class="code-block"><figcaption><span>合併與查找攤銷 O(α(n))，空間 O(n)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>class DSU:
+    def __init__(self, n):
+        self.parent = list(range(n))
+        self.size = [1] * n
+    def find(self, x):
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])
+        return self.parent[x]
+    def union(self, a, b):
+        root_a, root_b = self.find(a), self.find(b)
+        if root_a == root_b: return False
+        if self.size[root_a] &lt; self.size[root_b]: root_a, root_b = root_b, root_a
+        self.parent[root_b] = root_a
+        self.size[root_a] += self.size[root_b]
+        return True</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Sparse Table 預算所有二次冪區間</h2><p>Sparse Table 適合完全不更新的陣列，預先保存每個起點長度 2^k 的聚合；建置 O(n log n)、空間 O(n log n)。對 min/max 這類冪等運算，任意區間可用兩個可能重疊的最大冪區段合併，查詢 O(1)。</p><ul><li>冪等表示 combine(x,x)=x</li><li>RMQ 查詢選 k=floor(log2(length))</li><li>兩段可重疊仍不影響 min/max</li><li>一般 range sum 不能用重疊兩段公式</li></ul><figure class="code-block"><figcaption><span>查詢非空半開區間 [left,right)；建置 O(n log n)、RMQ O(1)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def build_sparse_min(numbers):
+    table = [numbers[:]]
+    length = 2
+    while length &lt;= len(numbers):
+        half = length // 2
+        previous = table[-1]
+        table.append([min(previous[i], previous[i + half])
+                      for i in range(len(numbers) - length + 1)])
+        length *= 2
+    return table
+
+def sparse_range_min(table, left, right):
+    length = right - left
+    level = length.bit_length() - 1
+    width = 1 &lt;&lt; level
+    return min(table[level][left], table[level][right - width])</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>按問題的變動方向選型</h2><p>DSU 解決的是集合只合併、不需拆分的動態連通性；Sparse Table 解決的是資料完全靜態、查詢極多的冪等區間聚合，兩者用途不同。需要線上更新的 RMQ 改選 Segment Tree，需要離線刪邊則可評估反向處理或更進階動態連通結構。</p><ul><li>只加邊連通性：DSU</li><li>靜態大量 min/max：Sparse Table</li><li>動態 RMQ：Segment Tree</li><li>DSU 不擅長刪除或分裂集合</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>路徑壓縮加按大小合併使 DSU 操作攤銷近常數</li><li><span>02</span>Sparse Table 用 O(n log n) 預處理換冪等 RMQ O(1)</li><li><span>03</span>DSU 管連通合併，Sparse Table 管靜態區間，選型不可只看複雜度</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>DSU 為何不適合直接刪除一條既有邊？</summary><p>它只保存集合代表，沒有保存能判斷刪邊後是否仍連通的完整內部圖結構。</p></details><details><summary>Sparse Table 的兩段重疊技巧為何適用 min 而不適用 sum？</summary><p>min 是冪等的，重複元素不改變結果；sum 重複計算交集會讓答案過大。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>用 DSU 統計一組無向邊形成的連通元件數。</li><li>為 [5,2,7,1,3,6] 建立 Sparse Table 前三層並查詢 [1,5)。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-15/08-count-min-sketch.html"><span>← 上一課</span><b>Count-Min Sketch</b></a><a class="next" href="../unit-15/10-advanced-monotonic-structures.html"><span>下一課 →</span><b>Monotonic Stack 與 Queue 進階</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

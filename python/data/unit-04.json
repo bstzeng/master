@@ -1,0 +1,542 @@
+{
+  "number": 4,
+  "phase": 1,
+  "slug": "searching",
+  "title": "搜尋演算法",
+  "english": "Searching Algorithms",
+  "summary": "從逐筆搜尋到二分搜尋，再延伸到答案空間、深度優先與廣度優先搜尋，建立依資料特性選擇策略的能力。",
+  "goal": "能根據資料是否排序、條件是否單調，以及問題是否形成圖，選擇並正確實作合適的搜尋演算法。",
+  "prerequisites": [
+    "能使用 Python 函式、條件判斷與迴圈",
+    "理解 list、set、dict 與 collections.deque 的基本用途",
+    "知道 Big O、O(n) 與 O(log n) 的意義"
+  ],
+  "outcomes": [
+    "實作並分析線性搜尋與二分搜尋",
+    "用迴圈不變量避免二分搜尋邊界錯誤",
+    "使用 Lower Bound 與 Upper Bound 處理重複值",
+    "辨認並解決可以對答案進行二分搜尋的單調問題",
+    "使用 DFS 與 BFS 走訪圖，並比較兩者的適用情境"
+  ],
+  "lessons": [
+    {
+      "number": 1,
+      "slug": "linear-search",
+      "title": "Linear Search 線性搜尋",
+      "subtitle": "按順序檢查資料，是最直接也最通用的搜尋方式",
+      "duration": "20 分鐘",
+      "difficulty": "入門",
+      "summary": "學會逐筆搜尋、處理找不到與重複值，並理解提前結束對最佳及最壞情況的影響。",
+      "objectives": [
+        "實作回傳索引的線性搜尋",
+        "說明最佳、最壞與額外空間複雜度",
+        "判斷線性搜尋適合的資料情境"
+      ],
+      "sections": [
+        {
+          "heading": "逐筆檢查不需要排序",
+          "paragraphs": [
+            "線性搜尋（Linear Search）從第一筆資料開始逐一比較，遇到目標就停止。它不要求資料已排序，也適用於只能依序讀取的資料，因此常是最可靠的第一版解法。"
+          ],
+          "bullets": [
+            "輸入可以是未排序序列",
+            "找到目標時可以提前 return",
+            "找不到時必須掃描全部 n 筆"
+          ]
+        },
+        {
+          "heading": "明確定義回傳契約",
+          "paragraphs": [
+            "搜尋函式應事先約定找到與找不到時回傳什麼，也要說明重複值出現時回傳哪一個位置。下例回傳第一個相符索引，找不到則回傳 -1；這個契約讓呼叫端不必猜測。"
+          ],
+          "bullets": [
+            "enumerate 同時取得索引與元素",
+            "第一個相符項目立刻結束",
+            "空 list 自然得到 -1"
+          ],
+          "code": "def linear_search(items, target):\n    for index, value in enumerate(items):\n        if value == target:\n            return index\n    return -1",
+          "code_caption": "回傳第一個 target 的索引；時間 O(n)，額外空間 O(1)。"
+        },
+        {
+          "heading": "複雜度與適用時機",
+          "paragraphs": [
+            "目標在第一格時只比較一次，最佳情況是 O(1)；目標在最後或不存在時需要比較 n 次，最壞情況是 O(n)。若資料很小、只查一次或無法排序，線性搜尋常比建立額外索引更划算。"
+          ],
+          "bullets": [
+            "最佳時間 O(1)",
+            "最壞時間 O(n)",
+            "額外空間 O(1)",
+            "反覆查詢大型固定資料時可考慮排序或雜湊索引"
+          ]
+        }
+      ],
+      "takeaways": [
+        "線性搜尋不要求輸入已排序",
+        "回傳值與重複值規則應寫入函式契約",
+        "提前結束改善部分輸入，但最壞時間仍是 O(n)"
+      ],
+      "quiz": [
+        {
+          "question": "在未排序 list 中找一筆資料，能直接使用一般二分搜尋嗎？",
+          "answer": "不能。一般二分搜尋依賴排序來排除一半範圍；未排序時應先線性搜尋，或在值得時先建立適合的索引。"
+        },
+        {
+          "question": "linear_search([4, 7, 4], 4) 回傳什麼？",
+          "answer": "回傳 0，因為函式遇到第一個相符值就立即回傳索引。"
+        }
+      ],
+      "practice": [
+        "改寫函式，使它回傳 target 出現的所有索引，並分析時間與輸出空間。",
+        "為線性搜尋設計空 list、重複值、第一格命中與找不到四種測試。"
+      ]
+    },
+    {
+      "number": 2,
+      "slug": "binary-search",
+      "title": "Binary Search 二分搜尋",
+      "subtitle": "利用排序，每次排除一半候選範圍",
+      "duration": "24 分鐘",
+      "difficulty": "入門",
+      "summary": "理解二分搜尋的必要條件與閉區間模板，實作在已排序資料中尋找任一相符位置。",
+      "objectives": [
+        "說明排序為何能支持二分搜尋",
+        "實作閉區間二分搜尋",
+        "分析 O(log n) 的由來"
+      ],
+      "sections": [
+        {
+          "heading": "排序讓我們安全排除資料",
+          "paragraphs": [
+            "二分搜尋（Binary Search）查看候選區間的中間值；若目標更小，就能排除中間值與右半邊，反之則排除左半邊。這個推論依賴資料已按相同比較規則排序，否則被排除的區域仍可能藏著答案。"
+          ],
+          "bullets": [
+            "輸入必須能依索引存取且已排序",
+            "每輪比較中間元素",
+            "每輪將候選數量縮小約一半"
+          ]
+        },
+        {
+          "heading": "閉區間模板",
+          "paragraphs": [
+            "若 left 與 right 都代表仍可能包含答案的位置，搜尋區間就是閉區間 [left, right]，因此條件使用 left <= right。檢查 middle 後必須排除它，所以分別更新為 right = middle - 1 或 left = middle + 1。"
+          ],
+          "bullets": [
+            "初始 left = 0、right = len(items) - 1",
+            "區間非空的條件是 left <= right",
+            "每輪更新都讓候選區間嚴格縮小"
+          ],
+          "code": "def binary_search(items, target):\n    left, right = 0, len(items) - 1\n\n    while left <= right:\n        middle = (left + right) // 2\n        if items[middle] == target:\n            return middle\n        if items[middle] < target:\n            left = middle + 1\n        else:\n            right = middle - 1\n\n    return -1",
+          "code_caption": "在遞增排序的 items 中回傳任一相符索引；找不到回傳 -1。"
+        },
+        {
+          "heading": "為什麼是 O(log n)",
+          "paragraphs": [
+            "候選數量從 n 依序變成 n/2、n/4，直到剩下一筆，最多約需 log₂n 輪。每輪只做常數次比較與索引操作，所以時間 O(log n)，迴圈版本只使用三個索引變數，額外空間 O(1)。"
+          ],
+          "bullets": [
+            "資料量加倍通常只多一輪",
+            "時間 O(log n)",
+            "迭代版本額外空間 O(1)",
+            "排序本身的成本要依使用情境另行計入"
+          ]
+        }
+      ],
+      "takeaways": [
+        "二分搜尋的排除規則依賴資料已排序",
+        "閉區間模板使用 left <= right 並排除已檢查的 middle",
+        "每輪減半使時間複雜度成為 O(log n)"
+      ],
+      "quiz": [
+        {
+          "question": "閉區間 [left, right] 在什麼條件下已經沒有候選值？",
+          "answer": "當 left > right 時區間為空，因此迴圈條件應是 left <= right。"
+        },
+        {
+          "question": "為一份未排序資料先排序再二分，只查詢一次一定比線性搜尋快嗎？",
+          "answer": "不一定。排序通常需 O(n log n)，只查一次可能比 O(n) 線性搜尋更貴；若排序結果可供許多次查詢，才較可能值得。"
+        }
+      ],
+      "practice": [
+        "手動追蹤在 [2, 5, 8, 12, 16] 中搜尋 12 時 left、middle、right 的變化。",
+        "為 binary_search 撰寫找到第一格、最後格、中間值與不存在目標的測試。"
+      ]
+    },
+    {
+      "number": 3,
+      "slug": "binary-search-boundaries",
+      "title": "二分搜尋的邊界處理",
+      "subtitle": "用區間語意與不變量消除 off-by-one 錯誤",
+      "duration": "25 分鐘",
+      "difficulty": "中階",
+      "summary": "比較閉區間與半開區間，學會檢查終止條件、更新規則與邊界測試。",
+      "objectives": [
+        "說明區間不變量",
+        "一致使用閉區間或半開區間模板",
+        "以系統化測試找出邊界錯誤"
+      ],
+      "sections": [
+        {
+          "heading": "先決定區間代表什麼",
+          "paragraphs": [
+            "二分搜尋常見錯誤不是不懂減半，而是混用不同區間的規則。閉區間 [left, right] 包含兩端；半開區間 [left, right) 不包含 right，兩者的初始值、迴圈條件與更新方式必須成套使用。"
+          ],
+          "bullets": [
+            "閉區間初始 right = n - 1",
+            "半開區間初始 right = n",
+            "不要從一個模板拿條件、從另一個模板拿更新式"
+          ],
+          "table": {
+            "headers": ["項目", "閉區間 [left, right]", "半開區間 [left, right)"],
+            "rows": [
+              ["初始值", "0, n - 1", "0, n"],
+              ["非空條件", "left <= right", "left < right"],
+              ["排除 middle 後縮右界", "right = middle - 1", "right = middle"],
+              ["終止時", "left > right", "left == right"]
+            ]
+          }
+        },
+        {
+          "heading": "不變量是除錯工具",
+          "paragraphs": [
+            "可以把不變量寫成『若答案存在，它一定還在目前候選區間』。每次比較後，只排除已證明不可能的部分，並確認區間嚴格縮小；若某條分支仍保留 middle，就要特別確認不會永遠卡在同一位置。"
+          ],
+          "bullets": [
+            "更新前說明哪一段已不可能有答案",
+            "更新後確認候選範圍變小",
+            "整數除法方向會影響 middle 的位置",
+            "Python 不會整數溢位，但公式仍應保持清楚"
+          ],
+          "callout": "看到無限迴圈時，先檢查某個分支是否把 left 或 right 留在原值。"
+        },
+        {
+          "heading": "用最小案例壓測邊界",
+          "paragraphs": [
+            "空序列、單一元素、兩個元素、目標在最左或最右，最容易暴露 off-by-one 錯誤。含重複值時，基本二分搜尋只保證找到任一相符位置；若需求是第一個或最後一個位置，必須改用下一課的邊界搜尋。"
+          ],
+          "bullets": [
+            "測試空序列與單一元素",
+            "測試目標小於最小值或大於最大值",
+            "測試兩元素序列的左右位置",
+            "先寫清楚重複值的預期結果"
+          ]
+        }
+      ],
+      "takeaways": [
+        "二分搜尋的初始值、條件與更新必須符合同一區間語意",
+        "候選區間不變量能指導正確更新並保證終止",
+        "最小與邊界案例是發現 off-by-one 錯誤的有效工具"
+      ],
+      "quiz": [
+        {
+          "question": "半開區間 [left, right) 為何初始 right 可以等於 len(items)？",
+          "answer": "因為 right 本來就不包含在候選區間內；有效索引仍只到 len(items) - 1。"
+        },
+        {
+          "question": "更新式寫成 left = middle，可能出現什麼問題？",
+          "answer": "若 middle 恰好等於 left，區間不會縮小而可能無限迴圈；除非模板與取中點方式特別設計，通常應排除 middle。"
+        }
+      ],
+      "practice": [
+        "選擇閉區間或半開區間模板，逐項寫出初始值、條件、左右更新與終止狀態。",
+        "故意將 binary_search 的 right = middle - 1 改成 right = middle，找出一個會卡住或產生錯誤的測試。"
+      ]
+    },
+    {
+      "number": 4,
+      "slug": "lower-and-upper-bound",
+      "title": "Lower Bound 與 Upper Bound",
+      "subtitle": "在重複值中找插入邊界，而不只找任一相符位置",
+      "duration": "28 分鐘",
+      "difficulty": "中階",
+      "summary": "使用半開區間模板尋找第一個大於等於或第一個大於目標的位置，並以邊界差計算出現次數。",
+      "objectives": [
+        "定義 Lower Bound 與 Upper Bound",
+        "實作兩種邊界搜尋",
+        "應用邊界求範圍與出現次數"
+      ],
+      "sections": [
+        {
+          "heading": "搜尋的是分界點",
+          "paragraphs": [
+            "Lower Bound 是第一個大於等於 target 的位置，Upper Bound 是第一個嚴格大於 target 的位置。兩者都允許回傳 len(items)，表示分界在所有元素之後；因此它們同時也是維持排序時的插入位置。"
+          ],
+          "bullets": [
+            "Lower Bound：第一個 value >= target",
+            "Upper Bound：第一個 value > target",
+            "不存在相符值時仍會回傳合法插入位置",
+            "輸入必須按相同規則排序"
+          ]
+        },
+        {
+          "heading": "半開區間實作",
+          "paragraphs": [
+            "搜尋期間維持 [left, right)；符合邊界條件時，middle 可能就是答案，因此保留它並令 right = middle。否則 middle 與左側都不可能是第一個符合位置，令 left = middle + 1，最後 left == right 即為分界。"
+          ],
+          "bullets": [
+            "Lower Bound 判斷 items[middle] >= target",
+            "Upper Bound 只需改成 items[middle] > target",
+            "每輪候選範圍都嚴格縮小"
+          ],
+          "code": "def lower_bound(items, target):\n    left, right = 0, len(items)\n    while left < right:\n        middle = (left + right) // 2\n        if items[middle] >= target:\n            right = middle\n        else:\n            left = middle + 1\n    return left\n\ndef upper_bound(items, target):\n    left, right = 0, len(items)\n    while left < right:\n        middle = (left + right) // 2\n        if items[middle] > target:\n            right = middle\n        else:\n            left = middle + 1\n    return left",
+          "code_caption": "兩個函式時間 O(log n)、額外空間 O(1)。"
+        },
+        {
+          "heading": "從兩個邊界得到範圍",
+          "paragraphs": [
+            "在排序序列中，等於 target 的元素恰好位於 [lower_bound, upper_bound)，所以出現次數是兩者相減。若差為零就代表不存在；要取第一個相符索引時，還應檢查 lower 是否小於 n 且 items[lower] 等於 target。"
+          ],
+          "bullets": [
+            "出現次數 = upper - lower",
+            "相符範圍使用半開區間 [lower, upper)",
+            "先檢查邊界再讀取 items[lower]",
+            "Python 標準庫 bisect_left 與 bisect_right 提供相同概念"
+          ]
+        }
+      ],
+      "takeaways": [
+        "Lower Bound 找第一個大於等於，Upper Bound 找第一個嚴格大於",
+        "邊界可能等於 len(items)，讀取元素前要檢查",
+        "兩個邊界的差就是排序資料中目標的出現次數"
+      ],
+      "quiz": [
+        {
+          "question": "在 [1, 3, 3, 3, 8] 中，target = 3 的 lower 與 upper 是多少？",
+          "answer": "lower 是 1，upper 是 4，因此 3 出現 4 - 1 = 3 次。"
+        },
+        {
+          "question": "在 [2, 4, 6] 中搜尋 target = 9 的 Lower Bound 回傳什麼？",
+          "answer": "回傳 3，也就是 len(items)；9 應插在所有元素之後。"
+        }
+      ],
+      "practice": [
+        "用 lower_bound 與 upper_bound 寫出 count_occurrences(items, target)。",
+        "列出 target 小於最小值、大於最大值、不存在於中間與重複出現時的預期邊界。"
+      ]
+    },
+    {
+      "number": 5,
+      "slug": "binary-search-on-answer",
+      "title": "Binary Search on Answer 對答案二分搜尋",
+      "subtitle": "不直接找資料，而是在可行答案中找臨界值",
+      "duration": "30 分鐘",
+      "difficulty": "中階",
+      "summary": "辨認單調可行性，建立判斷函式，並用二分搜尋找到最小可行答案。",
+      "objectives": [
+        "辨認答案空間的單調性",
+        "分離可行性判斷與邊界搜尋",
+        "分析答案範圍帶來的對數成本"
+      ],
+      "sections": [
+        {
+          "heading": "搜尋單調的真假分界",
+          "paragraphs": [
+            "對答案二分搜尋（Binary Search on Answer）不是在陣列找 target，而是在一段候選答案中找最小可行或最大可行值。關鍵是可行性具有單調性，例如速度越快越能在期限內完成，真假排列才會形成可搜尋的分界。"
+          ],
+          "bullets": [
+            "先定義候選答案的上下界",
+            "設計 can_finish(answer) 判斷是否可行",
+            "確認可行性只會從 False 轉 True，或反向一次",
+            "沒有單調性就不能直接使用二分"
+          ]
+        },
+        {
+          "heading": "範例：找最低處理速度",
+          "paragraphs": [
+            "假設 tasks 記錄每批工作量，每小時以 speed 處理同一批，完成一批所需時間為向上取整 task/speed。若某速度能在 hours_limit 內完成，更高速度也一定可行，因此可搜尋第一個可行速度。"
+          ],
+          "bullets": [
+            "最低候選速度為 1",
+            "最高只需到 max(tasks)",
+            "每次可行性檢查走訪全部 n 批工作"
+          ],
+          "code": "def minimum_speed(tasks, hours_limit):\n    def can_finish(speed):\n        needed = sum((task + speed - 1) // speed for task in tasks)\n        return needed <= hours_limit\n\n    left, right = 1, max(tasks)\n    while left < right:\n        middle = (left + right) // 2\n        if can_finish(middle):\n            right = middle\n        else:\n            left = middle + 1\n    return left",
+          "code_caption": "搜尋第一個可行速度；假設 tasks 非空且 hours_limit 至少等於批次數。"
+        },
+        {
+          "heading": "複雜度與正確性檢查",
+          "paragraphs": [
+            "若候選答案範圍寬度為 R，二分最多檢查 O(log R) 次，而每次 can_finish 花 O(n)，總時間 O(n log R)、額外空間 O(1)。實作前還要驗證上下界涵蓋答案、至少存在一個可行值，並確認判斷函式沒有隱藏的非單調條件。"
+          ],
+          "bullets": [
+            "總成本 = 判斷成本 × 二分輪數",
+            "邊界答案本身不一定出現在輸入資料中",
+            "以最小可行值測試 left - 1 不可行、left 可行",
+            "不合法或無解輸入要由函式契約處理"
+          ]
+        }
+      ],
+      "takeaways": [
+        "對答案二分搜尋需要單調的可行性分界",
+        "把判斷函式與搜尋邊界分開能讓邏輯更易驗證",
+        "總時間是一次可行性判斷成本乘上 O(log R)"
+      ],
+      "quiz": [
+        {
+          "question": "若 can_finish(10) 為 True，但 can_finish(11) 可能變成 False，可以直接找最小可行值嗎？",
+          "answer": "不能直接使用這個二分模板，因為可行性不具 False 到 True 的單調性，排除一半範圍的推論不成立。"
+        },
+        {
+          "question": "候選範圍有一百萬個整數，二分大約需要幾十萬次判斷嗎？",
+          "answer": "不需要，只需約 log₂(1,000,000)，也就是約 20 次判斷。"
+        }
+      ],
+      "practice": [
+        "設計『在預算內能製作至少 k 件商品』的單調判斷，說明要找最大或最小哪種邊界。",
+        "替 minimum_speed 加入空 tasks、期限不足與單一工作批次的輸入檢查或測試。"
+      ]
+    },
+    {
+      "number": 6,
+      "slug": "depth-first-search",
+      "title": "DFS 深度優先搜尋",
+      "subtitle": "沿著一條路深入到底，再回頭探索其他分支",
+      "duration": "30 分鐘",
+      "difficulty": "中階",
+      "summary": "把問題表示成圖，使用堆疊或遞迴進行深度優先搜尋，並以 visited 避免循環。",
+      "objectives": [
+        "解釋 DFS 的走訪順序與堆疊關係",
+        "實作鄰接表圖的迭代 DFS",
+        "分析 O(V + E) 時間與 O(V) 空間"
+      ],
+      "sections": [
+        {
+          "heading": "搜尋策略不只用來找數字",
+          "paragraphs": [
+            "深度優先搜尋（Depth-First Search, DFS）是一種探索狀態空間或圖的策略：先沿一個分支深入，無路可走後再回到最近的分岔。網頁連結、城市道路、迷宮位置或任務依賴都能表示成頂點與邊，再交給 DFS 探索。"
+          ],
+          "bullets": [
+            "頂點（Vertex）代表狀態或物件",
+            "邊（Edge）代表可到達或關聯",
+            "堆疊的後進先出形成深入順序",
+            "適合可達性、連通區塊與路徑存在問題"
+          ]
+        },
+        {
+          "heading": "用 visited 避免重複探索",
+          "paragraphs": [
+            "一般圖可能存在循環，例如 A 到 B、B 又回到 A；若不記錄已看過頂點，搜尋可能無限進行。下例在放入 stack 時就加入 visited，確保同一頂點最多排入一次。"
+          ],
+          "bullets": [
+            "stack 儲存待探索頂點",
+            "visited set 提供平均 O(1) 成員檢查",
+            "鄰居反向放入可讓輸出更接近原鄰接順序"
+          ],
+          "code": "def dfs(graph, start):\n    order = []\n    stack = [start]\n    visited = {start}\n\n    while stack:\n        node = stack.pop()\n        order.append(node)\n        for neighbor in reversed(graph.get(node, [])):\n            if neighbor not in visited:\n                visited.add(neighbor)\n                stack.append(neighbor)\n\n    return order",
+          "code_caption": "graph 是鄰接表 dict；函式回傳從 start 可達頂點的 DFS 順序。"
+        },
+        {
+          "heading": "複雜度與遞迴版本",
+          "paragraphs": [
+            "使用鄰接表時，每個可達頂點最多處理一次、每條邊最多檢查固定次數，所以時間 O(V + E)，visited 與 stack 最多容納 O(V)。遞迴 DFS 由呼叫堆疊代替顯式 stack，寫法簡潔，但很深的路徑可能超過 Python 遞迴深度。"
+          ],
+          "bullets": [
+            "V 是頂點數，E 是邊數",
+            "時間 O(V + E)",
+            "額外空間 O(V)",
+            "DFS 不保證無權圖的最少邊數路徑"
+          ]
+        }
+      ],
+      "takeaways": [
+        "DFS 使用堆疊概念沿一個分支深入後回溯",
+        "一般圖必須用 visited 避免循環與重複工作",
+        "鄰接表 DFS 的時間 O(V + E)、額外空間 O(V)"
+      ],
+      "quiz": [
+        {
+          "question": "樹通常不回到父節點，為什麼一般圖的 DFS 仍需要 visited？",
+          "answer": "一般圖可能有循環或多條路徑通往同一頂點；visited 能防止無限循環並避免重複探索。"
+        },
+        {
+          "question": "DFS 找到的第一條路徑一定是邊數最少的嗎？",
+          "answer": "不一定。DFS 會先深入某個分支；在無權圖中需要最少邊數路徑時通常使用 BFS。"
+        }
+      ],
+      "practice": [
+        "修改 dfs，使它收到 target 並回傳 target 是否可從 start 到達。",
+        "用遞迴實作同一個 DFS，並說明呼叫堆疊的最壞深度。"
+      ]
+    },
+    {
+      "number": 7,
+      "slug": "breadth-first-search",
+      "title": "BFS 廣度優先搜尋",
+      "subtitle": "按距離一層一層展開，找無權圖的最短路徑",
+      "duration": "32 分鐘",
+      "difficulty": "中階",
+      "summary": "使用佇列進行廣度優先搜尋，計算無權圖的最少邊數距離，並與 DFS 比較。",
+      "objectives": [
+        "解釋 BFS 的分層探索順序",
+        "使用 deque 實作 BFS 距離計算",
+        "比較 BFS 與 DFS 的搜尋特性"
+      ],
+      "sections": [
+        {
+          "heading": "佇列維持由近到遠的順序",
+          "paragraphs": [
+            "廣度優先搜尋（Breadth-First Search, BFS）先探索距離起點一條邊的所有頂點，再探索距離兩條邊的頂點。先進先出的佇列（Queue）維持這個分層順序，因此某個頂點第一次被發現時，就已得到無權圖中的最少邊數距離。"
+          ],
+          "bullets": [
+            "佇列使用先進先出順序",
+            "搜尋像水波一樣逐層向外擴散",
+            "第一次發現即得到無權圖最短距離",
+            "有不同邊權重時不能直接套用此結論"
+          ]
+        },
+        {
+          "heading": "用 deque 實作距離搜尋",
+          "paragraphs": [
+            "Python 應使用 collections.deque 的 popleft 進行 O(1) 出隊，不要使用 list.pop(0) 的 O(n) 搬移。將頂點加入 queue 時立刻記錄 distance，也就同時標示 visited，避免它被其他父節點重複排入。"
+          ],
+          "bullets": [
+            "distance dict 同時記錄已訪問與距離",
+            "鄰居距離等於目前距離加 1",
+            "可加入 parent dict 還原實際路徑"
+          ],
+          "code": "from collections import deque\n\ndef bfs_distances(graph, start):\n    queue = deque([start])\n    distance = {start: 0}\n\n    while queue:\n        node = queue.popleft()\n        for neighbor in graph.get(node, []):\n            if neighbor not in distance:\n                distance[neighbor] = distance[node] + 1\n                queue.append(neighbor)\n\n    return distance",
+          "code_caption": "回傳 start 到每個可達頂點的最少邊數；時間 O(V + E)、額外空間 O(V)。"
+        },
+        {
+          "heading": "在 DFS 與 BFS 之間選擇",
+          "paragraphs": [
+            "DFS 與 BFS 都能判斷可達性，使用鄰接表時也都是 O(V + E)，差別主要在探索順序與記憶體形態。要找無權最短路徑或層級時優先考慮 BFS；要深入探索、回溯或處理連通結構時 DFS 常更自然，但實際仍取決於問題。"
+          ],
+          "bullets": [
+            "BFS：無權最短路徑、層級、最少步數",
+            "DFS：深入探索、連通區塊、回溯結構",
+            "BFS 前線很寬時可能同時保存許多頂點",
+            "兩者在一般圖中都需要 visited"
+          ],
+          "table": {
+            "headers": ["比較", "DFS", "BFS"],
+            "rows": [
+              ["核心結構", "Stack／遞迴", "Queue"],
+              ["探索順序", "先深入分支", "由近到遠分層"],
+              ["無權最短路徑", "不保證", "保證第一次發現的距離"],
+              ["鄰接表時間", "O(V + E)", "O(V + E)"]
+            ]
+          }
+        }
+      ],
+      "takeaways": [
+        "BFS 透過佇列按距離逐層探索",
+        "無權圖中第一次發現頂點時即可確定最少邊數距離",
+        "BFS 與 DFS 複雜度相近，但探索順序與適用目的不同"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼 BFS 應在入隊時而非出隊時標記 visited？",
+          "answer": "入隊時標記可避免同一頂點在真正出隊前被多個鄰居重複加入，減少重複工作並維持清楚的第一次發現距離。"
+        },
+        {
+          "question": "道路每條有不同通行時間時，BFS 找到的邊數最少路徑一定耗時最短嗎？",
+          "answer": "不一定。BFS 只最小化邊數；有非負權重時通常要使用 Dijkstra 等加權最短路徑演算法。"
+        }
+      ],
+      "practice": [
+        "在 bfs_distances 加入 parent dict，寫出從終點回推到起點的最短路徑。",
+        "將二維迷宮的每個可走格視為頂點，說明如何用 BFS 找到最少移動步數。"
+      ]
+    }
+  ]
+}

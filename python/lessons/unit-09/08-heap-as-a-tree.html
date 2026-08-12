@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="理解 Binary Heap 的形狀與順序性質、陣列索引關係，以及它和 BST 的根本差異。" />
+    <meta name="theme-color" content="#101713" />
+    <title>09.08 Heap 與樹的關係｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-09-trees.html">UNIT 09 / LESSON 08</a><p class="eyebrow">Tree Data Structures</p><h1>Heap 與樹的關係</h1><p class="lesson-deck">用完全二元樹形狀在陣列中維持極值</p><div class="lesson-meta"><span>中階</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>理解 Binary Heap 的形狀與順序性質、陣列索引關係，以及它和 BST 的根本差異。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明完全二元樹與 Heap Property</li><li>使用索引找到父子節點</li><li>依需求區分 Heap 與 BST</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>Heap 同時限制形狀與局部順序</h2><p>二元堆積（Binary Heap）是完全二元樹，除最後一層外全部填滿，最後一層由左向右填。最小堆只保證每個父節點不大於孩子，因此根是全域最小值，但兄弟與不同子樹之間沒有完整排序。</p><ul><li>完全形狀讓高度保持 O(log n)</li><li>最小堆根為最小值</li><li>最大堆根為最大值</li><li>Heap 不是 Binary Search Tree</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>完全形狀適合陣列索引</h2><p>以零起始陣列儲存 Heap 時，索引 i 的左孩子為 2i + 1、右孩子為 2i + 2，父節點為 (i - 1) // 2，因此不需保存指標。插入後向上調整，移除根後把末元素移到根再向下調整，兩者都沿樹高花 O(log n)。</p><ul><li>讀取根為 O(1)</li><li>插入為 O(log n)</li><li>移除根為 O(log n)</li><li>搜尋任意值最壞 O(n)</li></ul><figure class="code-block"><figcaption><span>heapq 實作最小堆；底層 list 只保證 Heap Property，不是完整排序。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>import heapq
+
+heap = []
+for value in [7, 2, 9, 4]:
+    heapq.heappush(heap, value)
+smallest = heap[0]
+removed = heapq.heappop(heap)</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>Heap 與 BST 解決不同查詢</h2><p>Heap 擅長反覆取得極值，常用於 Priority Queue、Top K 與排程；它不能沿左右關係有效尋找任意鍵。平衡 BST 能進行 O(log n) 精確查找、前後鄰居與範圍查詢，但維護規則更複雜；選擇應由最常操作決定。</p><ul><li>只反覆取最小／最大：Heap</li><li>需要有序範圍與任意鍵：平衡 BST</li><li>Heap 建立可用 heapify O(n)</li><li>Python heapq 不保證迭代輸出有序</li></ul><div class="table-wrap"><table><thead><tr><th>操作</th><th>Binary Heap</th><th>平衡 BST</th></tr></thead><tbody><tr><td>讀取最小值</td><td>O(1)（最小堆）</td><td>O(log n) 或保存指標</td></tr><tr><td>插入</td><td>O(log n)</td><td>O(log n)</td></tr><tr><td>任意鍵查找</td><td>O(n)</td><td>O(log n)</td></tr><tr><td>範圍走訪</td><td>不適合</td><td>適合</td></tr></tbody></table></div></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Binary Heap 是具有局部順序的完全二元樹</li><li><span>02</span>完全形狀使它能用陣列公式連接父子並維持 O(log n) 高度</li><li><span>03</span>Heap 適合極值，平衡 BST 適合任意鍵與範圍查詢</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>最小堆的第二小值一定在陣列索引 1 嗎？</summary><p>不一定；它可能在根的左或右孩子，Heap 只保證父不大於孩子。</p></details><details><summary>為什麼 Heap 中搜尋任意 target 最壞是 O(n)？</summary><p>局部父子順序不足以判斷 target 應在左或右子樹，最壞可能需要檢查所有節點。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>對長度 10 的 Heap，列出索引 3 的父、左孩子與右孩子索引。</li><li>分別為急診優先排程、姓名範圍查詢與 Top K 選擇 Heap 或 BST 並說明原因。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-09/07-trie.html"><span>← 上一課</span><b>Trie 字典樹</b></a><a class="next" href="../unit-10/01-graph-vocabulary-and-types.html"><span>下一課 →</span><b>圖、頂點、邊與圖的類型</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

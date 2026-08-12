@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="使用遞迴與顯式 Stack 完成深度優先搜尋，理解 visited 的必要性。" />
+    <meta name="theme-color" content="#101713" />
+    <title>10.03 Depth-First Search DFS｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-10-graph-basics.html">UNIT 10 / LESSON 03</a><p class="eyebrow">Graph Fundamentals</p><h1>Depth-First Search DFS</h1><p class="lesson-deck">沿一條路深入，再退回探索其他分支</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>使用遞迴與顯式 Stack 完成深度優先搜尋，理解 visited 的必要性。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>實作遞迴 DFS</li><li>實作迭代 DFS</li><li>分析鄰接表下的成本</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>深入前先標記 visited</h2><p>深度優先搜尋（DFS）從起點沿未訪鄰居持續深入，沒有新路才返回。圖可能有環或多條路到同一點，因此必須在進入頂點時標記 visited，避免重複處理與無限循環。</p><ul><li>處理目前頂點後逐一探索鄰居</li><li>visited 保存已發現的頂點</li><li>遞迴 Call Stack 自動保存返回位置</li></ul><figure class="code-block"><figcaption><span>標記發生在遞迴呼叫鄰居之前。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def dfs_recursive(graph, start):
+    visited = set()
+    order = []
+    def visit(vertex):
+        visited.add(vertex)
+        order.append(vertex)
+        for neighbor in graph[vertex]:
+            if neighbor not in visited:
+                visit(neighbor)
+    visit(start)
+    return order</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>以 Stack 改寫迭代 DFS</h2><p>顯式 Stack 版本把待探索頂點自行存入 list，適合避免深層遞迴限制。若在 pop 後才標記，頂點可能被重複推入；在加入 Stack 時標記可控制重複項目。</p><ul><li>stack.pop() 取出最後加入的頂點</li><li>加入鄰居時立刻標記 visited</li><li>鄰居加入順序會影響走訪輸出，但不影響可達集合</li></ul><figure class="code-block"><figcaption><span>reversed 只用來讓輸出順序較接近遞迴版，不是 DFS 必要條件。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def dfs_iterative(graph, start):
+    visited = {start}
+    stack = [start]
+    order = []
+    while stack:
+        vertex = stack.pop()
+        order.append(vertex)
+        for neighbor in reversed(graph[vertex]):
+            if neighbor not in visited:
+                visited.add(neighbor)
+                stack.append(neighbor)
+    return order</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>成本與適用情境</h2><p>採鄰接表時，每個可達頂點處理一次、每條邊查看固定次數，因此時間 O(V+E)，visited 與堆疊空間 O(V)。DFS 適合可達性、完整路徑探索、拓樸排序與結構性判斷，但不保證未加權圖的最短路徑。</p><ul><li>遞迴深度最壞 O(V)</li><li>只從一個起點會忽略其他不連通元件</li><li>需要回溯路徑時可額外保存 parent 或 path</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>DFS 的走訪順序不是唯一答案，取決於鄰接表中的鄰居順序。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>DFS 沿分支深入，visited 防止重複與繞圈。</li><li><span>02</span>遞迴與顯式 Stack 都能實作 DFS。</li><li><span>03</span>鄰接表下 DFS 時間 O(V+E)、額外空間 O(V)。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>圖的 DFS 為什麼通常需要 visited，而樹的 DFS 常可省略？</summary><p>一般圖可能有環與多個父來源；樹從根向下時每個節點只有唯一父路徑，不會回到已訪節點。</p></details><details><summary>DFS 能保證找到未加權圖最少邊數路徑嗎？</summary><p>不能，DFS 可能先深入很長路徑；最少邊數應使用 BFS。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>用 DFS 判斷 target 是否能從 start 到達。</li><li>修改迭代 DFS 保存 parent，找到目標後還原一條路徑。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-10/02-adjacency-list-and-matrix.html"><span>← 上一課</span><b>Adjacency List 與 Adjacency Matrix</b></a><a class="next" href="../unit-10/04-breadth-first-search.html"><span>下一課 →</span><b>Breadth-First Search BFS</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

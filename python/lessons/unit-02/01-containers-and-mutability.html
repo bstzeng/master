@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="建立容器選型的共同語言，理解可變物件、不可變物件、別名與淺複製。" />
+    <meta name="theme-color" content="#101713" />
+    <title>02.01 容器、參照與可變性｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-02-python-builtins.html">UNIT 02 / LESSON 01</a><p class="eyebrow">Python Built-in Data Structures</p><h1>容器、參照與可變性</h1><p class="lesson-deck">先理解資料怎麼被保存與改動</p><div class="lesson-meta"><span>入門</span><span>20 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>建立容器選型的共同語言，理解可變物件、不可變物件、別名與淺複製。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>區分可變與不可變物件</li><li>說明賦值與複製的差異</li><li>用需求初步篩選資料結構</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>容器解決的四個問題</h2><p>資料結構是保存與取用資料的規則，而選擇時先問四件事：順序是否重要、元素能否重複、查找要多快、內容會不會改動。Python 提供多種容器，沒有一種能在所有操作上同時最好。</p><ul><li>List：有順序、可重複、可修改</li><li>Tuple：有順序、可重複、不可修改</li><li>Dictionary：以唯一鍵對應值</li><li>Set：只保留不重複元素</li></ul><div class="table-wrap"><table><thead><tr><th>需求</th><th>優先考慮</th></tr></thead><tbody><tr><td>依位置讀取</td><td>List／Tuple／String</td></tr><tr><td>用鍵快速查值</td><td>Dictionary</td></tr><tr><td>去重或成員測試</td><td>Set</td></tr><tr><td>兩端頻繁加入移除</td><td>deque</td></tr></tbody></table></div></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>可變與不可變物件</h2><p>List、Dictionary 與 Set 是可變（mutable）物件，原物件可以就地更新；Tuple、String 與數字是不可變（immutable）物件，所謂修改其實會產生新物件。這個差異會影響函式副作用、能否作為字典鍵，以及除錯方式。</p><ul><li>可變物件適合持續累積或更新內容</li><li>不可變物件較容易推理與安全分享</li><li>字典鍵與集合元素必須可雜湊，通常也應不可變</li></ul><figure class="code-block"><figcaption><span>List 會被就地修改；String 串接會建立新字串。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>numbers = [1, 2]
+alias = numbers
+alias.append(3)
+print(numbers)  # [1, 2, 3]
+
+word = &quot;py&quot;
+new_word = word + &quot;thon&quot;
+print(word, new_word)  # py python</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>賦值、淺複製與成本</h2><p>賦值只讓兩個名稱指向同一物件，時間是 O(1)；list.copy() 或切片會建立外層的新容器，時間與額外空間皆為 O(n)。淺複製不會複製內層的可變物件，因此巢狀資料仍可能共享內容。</p><ul><li>alias = original：共享同一物件，O(1)</li><li>clone = original.copy()：複製外層，O(n)</li><li>需要完整分離巢狀物件時才考慮 deepcopy</li></ul><figure class="code-block"><figcaption><span>淺複製後，內層 List 仍由兩個外層容器共享。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>matrix = [[1], [2]]
+shallow = matrix.copy()
+shallow[0].append(9)
+print(matrix)  # [[1, 9], [2]]</code></pre></figure><aside class="concept-callout"><b>KEY IDEA</b><p>看到資料被意外改動時，先檢查是否有兩個變數指向同一個可變物件。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>先用順序、重複、查找與更新需求篩選容器</li><li><span>02</span>可變物件能就地更新，不可變物件的變更會產生新物件</li><li><span>03</span>賦值是共享參照，淺複製只分離最外層</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼 List 不能直接作為 Dictionary 的鍵？</summary><p>List 可變且不可雜湊，內容改動會破壞鍵在雜湊表中的定位；可改用只含可雜湊元素的 Tuple。</p></details><details><summary>將含 n 個元素的 List 指派給另一個變數，時間複雜度是多少？</summary><p>O(1)，因為只複製物件參照，沒有逐一複製元素。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>建立一個 List，分別用賦值與 copy() 產生新變數，再比較修改後的結果。</li><li>為學生座標、成績查詢與唯一標籤各選一種資料結構並說明理由。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-01/06-analyzing-loops-and-recursion.html"><span>← 上一課</span><b>分析迴圈與遞迴</b></a><a class="next" href="../unit-02/02-lists.html"><span>下一課 →</span><b>List：有順序的可變序列</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

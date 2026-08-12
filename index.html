@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="MASTER 是 Patrick 的個人學習知識庫，第一個主題從 Python 資料結構與經典演算法開始。" />
+    <meta name="theme-color" content="#141713" />
+    <title>MASTER｜Patrick 的個人教學知識庫</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="MASTER 首頁">
+        <span class="brand-dot" aria-hidden="true"></span>
+        <span>MASTER</span>
+      </a>
+      <nav aria-label="主要選單">
+        <a href="#topics">主題</a>
+        <a href="#purpose">關於</a>
+      </nav>
+      <span class="header-note">PERSONAL LEARNING ARCHIVE</span>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-meta" aria-hidden="true">
+          <span>ISSUE 001</span>
+          <span>EST. 2026</span>
+        </div>
+        <div class="hero-copy">
+          <p class="eyebrow">Patrick's personal learning archive</p>
+          <h1 id="hero-title">先真正理解，<br /><em>再把它留下來。</em></h1>
+          <p class="hero-intro">這裡不是完成品展示櫃，而是一張持續更新的學習工作桌。把讀過、推演過、實作過的內容留下來，慢慢整理成真正能再次使用的知識。</p>
+          <a class="round-link" href="#topics" aria-label="前往主題列表"><span>開始閱讀</span><b aria-hidden="true">↓</b></a>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="art-grid"></div>
+          <span class="art-word">M</span>
+          <div class="art-stamp">LEARN<br />DOCUMENT<br />TEACH</div>
+          <span class="art-caption">A knowledge system<br />built one note at a time.</span>
+        </div>
+      </section>
+
+      <section class="topics" id="topics" aria-labelledby="topics-title">
+        <div class="section-head">
+          <div>
+            <p class="section-index">01 / TOPICS</p>
+            <h2 id="topics-title">目前整理的主題</h2>
+          </div>
+          <p>先從一個主題開始。每新增一個領域，就在這裡多留一個入口。</p>
+        </div>
+
+        <div class="topic-grid">
+          <article class="topic-card featured">
+            <a href="python/index.html" aria-label="進入 Python 資料結構與經典演算法主題"></a>
+            <div class="topic-number">01</div>
+            <div class="topic-content">
+              <p class="topic-label">ACTIVE TOPIC</p>
+              <h3>Python 演算法</h3>
+              <p>從複雜度、內建資料結構一路學到圖論、動態規劃與綜合解題，建立一套可以反覆使用的演算法思考方式。</p>
+              <div class="topic-tags"><span>資料結構</span><span>經典演算法</span><span>Python 3</span><span>兩階段課程</span></div>
+            </div>
+            <div class="topic-arrow" aria-hidden="true">↗</div>
+          </article>
+
+          <article class="topic-card placeholder">
+            <div class="topic-number">02</div>
+            <div class="topic-content">
+              <p class="topic-label">NEXT TOPIC</p>
+              <h3>下一個主題</h3>
+              <p>未來想學、想整理、想留下的內容，都可以從這張卡片開始長出來。</p>
+            </div>
+            <div class="topic-plus" aria-hidden="true">＋</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="purpose" id="purpose" aria-labelledby="purpose-title">
+        <p class="section-index">02 / WHY THIS EXISTS</p>
+        <div>
+          <h2 id="purpose-title">不是背下更多，<br />是理解得更深。</h2>
+          <p>把抽象概念轉成自己的語言，把一次推演變成下次能用的工具。這個網站的價值，不在有多少頁，而在每一頁都真的幫得上忙。</p>
+        </div>
+        <ol>
+          <li><span>01</span>先理解</li>
+          <li><span>02</span>再整理</li>
+          <li><span>03</span>親手實作</li>
+          <li><span>04</span>持續修正</li>
+        </ol>
+      </section>
+    </main>
+
+    <footer>
+      <span>MASTER / PERSONAL ARCHIVE</span>
+      <p>Keep learning. Keep making it clear.</p>
+      <span>© <b id="current-year"></b> PATRICK</span>
+    </footer>
+  </body>
+</html>

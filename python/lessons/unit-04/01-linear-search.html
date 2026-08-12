@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="學會逐筆搜尋、處理找不到與重複值，並理解提前結束對最佳及最壞情況的影響。" />
+    <meta name="theme-color" content="#101713" />
+    <title>04.01 Linear Search 線性搜尋｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-04-searching.html">UNIT 04 / LESSON 01</a><p class="eyebrow">Searching Algorithms</p><h1>Linear Search 線性搜尋</h1><p class="lesson-deck">按順序檢查資料，是最直接也最通用的搜尋方式</p><div class="lesson-meta"><span>入門</span><span>20 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>學會逐筆搜尋、處理找不到與重複值，並理解提前結束對最佳及最壞情況的影響。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>實作回傳索引的線性搜尋</li><li>說明最佳、最壞與額外空間複雜度</li><li>判斷線性搜尋適合的資料情境</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>逐筆檢查不需要排序</h2><p>線性搜尋（Linear Search）從第一筆資料開始逐一比較，遇到目標就停止。它不要求資料已排序，也適用於只能依序讀取的資料，因此常是最可靠的第一版解法。</p><ul><li>輸入可以是未排序序列</li><li>找到目標時可以提前 return</li><li>找不到時必須掃描全部 n 筆</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>明確定義回傳契約</h2><p>搜尋函式應事先約定找到與找不到時回傳什麼，也要說明重複值出現時回傳哪一個位置。下例回傳第一個相符索引，找不到則回傳 -1；這個契約讓呼叫端不必猜測。</p><ul><li>enumerate 同時取得索引與元素</li><li>第一個相符項目立刻結束</li><li>空 list 自然得到 -1</li></ul><figure class="code-block"><figcaption><span>回傳第一個 target 的索引；時間 O(n)，額外空間 O(1)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def linear_search(items, target):
+    for index, value in enumerate(items):
+        if value == target:
+            return index
+    return -1</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>複雜度與適用時機</h2><p>目標在第一格時只比較一次，最佳情況是 O(1)；目標在最後或不存在時需要比較 n 次，最壞情況是 O(n)。若資料很小、只查一次或無法排序，線性搜尋常比建立額外索引更划算。</p><ul><li>最佳時間 O(1)</li><li>最壞時間 O(n)</li><li>額外空間 O(1)</li><li>反覆查詢大型固定資料時可考慮排序或雜湊索引</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>線性搜尋不要求輸入已排序</li><li><span>02</span>回傳值與重複值規則應寫入函式契約</li><li><span>03</span>提前結束改善部分輸入，但最壞時間仍是 O(n)</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>在未排序 list 中找一筆資料，能直接使用一般二分搜尋嗎？</summary><p>不能。一般二分搜尋依賴排序來排除一半範圍；未排序時應先線性搜尋，或在值得時先建立適合的索引。</p></details><details><summary>linear_search([4, 7, 4], 4) 回傳什麼？</summary><p>回傳 0，因為函式遇到第一個相符值就立即回傳索引。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>改寫函式，使它回傳 target 出現的所有索引，並分析時間與輸出空間。</li><li>為線性搜尋設計空 list、重複值、第一格命中與找不到四種測試。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-03/07-prefix-sums-and-difference-arrays.html"><span>← 上一課</span><b>Prefix Sum 與差分陣列</b></a><a class="next" href="../unit-04/02-binary-search.html"><span>下一課 →</span><b>Binary Search 二分搜尋</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

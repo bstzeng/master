@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="從逐筆搜尋到二分搜尋，再延伸到答案空間、深度優先與廣度優先搜尋，建立依資料特性選擇策略的能力。" />
+    <meta name="theme-color" content="#101713" />
+    <title>單元 04｜搜尋演算法｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../styles.css" />
+    <script src="../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../index.html">課程總覽</a>
+        <a class="is-active" href="../phase-1.html">第一階段</a>
+        <a class="" href="../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <section class="unit-hero">
+        <div><a class="breadcrumb" href="../phase-1.html">PHASE 01 / UNIT 04</a><p class="eyebrow">Searching Algorithms</p><h1>搜尋演算法</h1><p class="hero-intro">從逐筆搜尋到二分搜尋，再延伸到答案空間、深度優先與廣度優先搜尋，建立依資料特性選擇策略的能力。</p><a class="primary-button" href="#lessons">查看 7 堂課 <span>↓</span></a></div>
+        <aside><span>UNIT</span><strong>04</strong><p>能根據資料是否排序、條件是否單調，以及問題是否形成圖，選擇並正確實作合適的搜尋演算法。</p></aside>
+      </section>
+      <section class="unit-info"><div><p class="section-index">BEFORE YOU START</p><h2>先備知識</h2><ul><li>能使用 Python 函式、條件判斷與迴圈</li><li>理解 list、set、dict 與 collections.deque 的基本用途</li><li>知道 Big O、O(n) 與 O(log n) 的意義</li></ul></div><div><p class="section-index">AFTER THIS UNIT</p><h2>完成後你能夠</h2><ul><li>實作並分析線性搜尋與二分搜尋</li><li>用迴圈不變量避免二分搜尋邊界錯誤</li><li>使用 Lower Bound 與 Upper Bound 處理重複值</li><li>辨認並解決可以對答案進行二分搜尋的單調問題</li><li>使用 DFS 與 BFS 走訪圖，並比較兩者的適用情境</li></ul></div></section>
+      <section class="lesson-section" id="lessons"><div class="section-head"><div><p class="section-index">LESSON LIST</p><h2>本單元課程</h2></div><p>建議依序閱讀；每一課約 15–25 分鐘，讀完後先回答理解題，再挑一題延伸練習。</p></div><div class="lesson-list">
+        <article class="lesson-row">
+          <span>01</span>
+          <div><p>入門 · 20 分鐘</p><h3>Linear Search 線性搜尋</h3><b>按順序檢查資料，是最直接也最通用的搜尋方式</b></div>
+          <a href="../lessons/unit-04/01-linear-search.html" aria-label="開始課程：Linear Search 線性搜尋">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>02</span>
+          <div><p>入門 · 24 分鐘</p><h3>Binary Search 二分搜尋</h3><b>利用排序，每次排除一半候選範圍</b></div>
+          <a href="../lessons/unit-04/02-binary-search.html" aria-label="開始課程：Binary Search 二分搜尋">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>03</span>
+          <div><p>中階 · 25 分鐘</p><h3>二分搜尋的邊界處理</h3><b>用區間語意與不變量消除 off-by-one 錯誤</b></div>
+          <a href="../lessons/unit-04/03-binary-search-boundaries.html" aria-label="開始課程：二分搜尋的邊界處理">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>04</span>
+          <div><p>中階 · 28 分鐘</p><h3>Lower Bound 與 Upper Bound</h3><b>在重複值中找插入邊界，而不只找任一相符位置</b></div>
+          <a href="../lessons/unit-04/04-lower-and-upper-bound.html" aria-label="開始課程：Lower Bound 與 Upper Bound">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>05</span>
+          <div><p>中階 · 30 分鐘</p><h3>Binary Search on Answer 對答案二分搜尋</h3><b>不直接找資料，而是在可行答案中找臨界值</b></div>
+          <a href="../lessons/unit-04/05-binary-search-on-answer.html" aria-label="開始課程：Binary Search on Answer 對答案二分搜尋">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>06</span>
+          <div><p>中階 · 30 分鐘</p><h3>DFS 深度優先搜尋</h3><b>沿著一條路深入到底，再回頭探索其他分支</b></div>
+          <a href="../lessons/unit-04/06-depth-first-search.html" aria-label="開始課程：DFS 深度優先搜尋">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>07</span>
+          <div><p>中階 · 32 分鐘</p><h3>BFS 廣度優先搜尋</h3><b>按距離一層一層展開，找無權圖的最短路徑</b></div>
+          <a href="../lessons/unit-04/07-breadth-first-search.html" aria-label="開始課程：BFS 廣度優先搜尋">開始閱讀 →</a>
+        </article></div></section>
+      <nav class="bottom-nav"><a href="../phase-1.html">← 返回第 1 階段大綱</a><a href="../index.html">完整學習地圖 ↑</a></nav></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

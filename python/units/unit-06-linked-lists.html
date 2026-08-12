@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="從節點與單向鏈結開始，練習走訪、搜尋、插入、刪除、反轉、雙向鏈結、快慢指標與環狀偵測。" />
+    <meta name="theme-color" content="#101713" />
+    <title>單元 06｜鏈結串列｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../styles.css" />
+    <script src="../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../index.html">課程總覽</a>
+        <a class="is-active" href="../phase-1.html">第一階段</a>
+        <a class="" href="../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <section class="unit-hero">
+        <div><a class="breadcrumb" href="../phase-1.html">PHASE 01 / UNIT 06</a><p class="eyebrow">Linked Lists</p><h1>鏈結串列</h1><p class="hero-intro">從節點與單向鏈結開始，練習走訪、搜尋、插入、刪除、反轉、雙向鏈結、快慢指標與環狀偵測。</p><a class="primary-button" href="#lessons">查看 7 堂課 <span>↓</span></a></div>
+        <aside><span>UNIT</span><strong>06</strong><p>能用 Python 建立鏈結串列，安全調整節點連結，並根據問題選擇走訪、反轉或快慢指標技巧。</p></aside>
+      </section>
+      <section class="unit-info"><div><p class="section-index">BEFORE YOU START</p><h2>先備知識</h2><ul><li>會定義 Python class、函式與使用 None</li><li>理解物件參照與變數指向物件的概念</li><li>能分析 O(1) 與 O(n) 時間複雜度</li></ul></div><div><p class="section-index">AFTER THIS UNIT</p><h2>完成後你能夠</h2><ul><li>能畫出 Node、head、next 與 prev 之間的連結</li><li>能實作單向與雙向鏈結串列的基本操作</li><li>能正確反轉單向鏈結串列而不遺失剩餘節點</li><li>能使用快慢指標尋找中點與倒數節點</li><li>能以 Floyd 演算法偵測環狀鏈結串列</li></ul></div></section>
+      <section class="lesson-section" id="lessons"><div class="section-head"><div><p class="section-index">LESSON LIST</p><h2>本單元課程</h2></div><p>建議依序閱讀；每一課約 15–25 分鐘，讀完後先回答理解題，再挑一題延伸練習。</p></div><div class="lesson-list">
+        <article class="lesson-row">
+          <span>01</span>
+          <div><p>入門 · 25 分鐘</p><h3>Node 與單向鏈結串列</h3><b>用節點參照串起一條資料鏈</b></div>
+          <a href="../lessons/unit-06/01-nodes-and-singly-linked-lists.html" aria-label="開始課程：Node 與單向鏈結串列">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>02</span>
+          <div><p>入門 · 25 分鐘</p><h3>走訪與搜尋</h3><b>沿著 next 前進，直到找到目標或走到終點</b></div>
+          <a href="../lessons/unit-06/02-traversal-and-search.html" aria-label="開始課程：走訪與搜尋">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>03</span>
+          <div><p>基礎 · 30 分鐘</p><h3>插入與刪除</h3><b>先保存需要的參照，再重新接線</b></div>
+          <a href="../lessons/unit-06/03-insertion-and-deletion.html" aria-label="開始課程：插入與刪除">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>04</span>
+          <div><p>基礎 · 30 分鐘</p><h3>雙向鏈結串列</h3><b>用 prev 與 next 支援雙向移動</b></div>
+          <a href="../lessons/unit-06/04-doubly-linked-lists.html" aria-label="開始課程：雙向鏈結串列">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>05</span>
+          <div><p>基礎 · 30 分鐘</p><h3>反轉鏈結串列</h3><b>以三個參照逐條翻轉箭頭</b></div>
+          <a href="../lessons/unit-06/05-reversing-a-linked-list.html" aria-label="開始課程：反轉鏈結串列">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>06</span>
+          <div><p>基礎 · 30 分鐘</p><h3>快慢指標</h3><b>利用不同速度建立節點間的位置關係</b></div>
+          <a href="../lessons/unit-06/06-fast-and-slow-pointers.html" aria-label="開始課程：快慢指標">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>07</span>
+          <div><p>基礎 · 35 分鐘</p><h3>環狀鏈結串列偵測</h3><b>用 Floyd 演算法在常數空間判斷是否成環</b></div>
+          <a href="../lessons/unit-06/07-cycle-detection.html" aria-label="開始課程：環狀鏈結串列偵測">開始閱讀 →</a>
+        </article></div></section>
+      <nav class="bottom-nav"><a href="../phase-1.html">← 返回第 1 階段大綱</a><a href="../index.html">完整學習地圖 ↑</a></nav></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

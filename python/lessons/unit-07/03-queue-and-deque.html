@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="理解 FIFO 規則，以 collections.deque 實作 Queue 與雙端操作。" />
+    <meta name="theme-color" content="#101713" />
+    <title>07.03 Queue 與 deque：先進先出｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-07-stack-queue-heap.html">UNIT 07 / LESSON 03</a><p class="eyebrow">Stacks, Queues, and Heaps</p><h1>Queue 與 deque：先進先出</h1><p class="lesson-deck">用雙端佇列避免線性位移</p><div class="lesson-meta"><span>入門</span><span>25 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>理解 FIFO 規則，以 collections.deque 實作 Queue 與雙端操作。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明 FIFO 與 Queue 的核心操作</li><li>使用 deque 實作入隊與出隊</li><li>比較 List 與 deque 的操作成本</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>FIFO 與排隊模型</h2><p>Queue（佇列）遵守先進先出（First In, First Out，FIFO），最早加入的元素最先離開。它適合公平排程、訊息緩衝，以及依距離層級探索的廣度優先搜尋。</p><ul><li>enqueue：從尾端加入</li><li>dequeue：從前端取出</li><li>front：查看下一個項目</li><li>同一層工作依進入順序處理</li></ul><figure class="code-block"><figcaption><span>deque 的 append 與 popleft 直接表達 Queue 操作。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>from collections import deque
+
+queue = deque([&quot;Amy&quot;, &quot;Bo&quot;])
+queue.append(&quot;Chen&quot;)
+print(queue[0])          # Amy
+print(queue.popleft())   # Amy</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>為何使用 deque</h2><p>List 的 pop(0) 會讓其餘元素前移，單次成本 O(n)；deque 專為兩端操作設計，append、appendleft、pop 與 popleft 都是 O(1)。保存 n 個待處理元素需要 O(n) 空間，但 deque 不適合頻繁存取中間索引。</p><ul><li>list.append：攤銷 O(1)</li><li>list.pop(0)：O(n)</li><li>deque.append／popleft：O(1)</li><li>隨機索引需求高時仍選 List</li></ul><figure class="code-block"><figcaption><span>每項工作入隊與出隊一次，總時間 O(n)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>from collections import deque
+
+def process_all(tasks):
+    queue = deque(tasks)
+    order = []
+    while queue:
+        order.append(queue.popleft())
+    return order
+
+print(process_all([&quot;A&quot;, &quot;B&quot;, &quot;C&quot;]))</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>雙端操作與固定視窗</h2><p>deque 是 Double-ended Queue，可在左右兩端常數時間增刪，因而也能實作 Stack 或固定長度緩衝區。設定 maxlen 後，加入新元素超過容量時會自動淘汰另一端最舊資料。</p><ul><li>appendleft 適合插入緊急工作</li><li>rotate 可循環移動元素</li><li>maxlen 適合最近 N 筆紀錄</li><li>雙端搜尋或中間刪除仍可能是 O(n)</li></ul><div class="table-wrap"><table><thead><tr><th>需求</th><th>結構</th><th>成本</th></tr></thead><tbody><tr><td>尾端 Stack</td><td>List 或 deque</td><td>O(1)</td></tr><tr><td>FIFO Queue</td><td>deque</td><td>兩端 O(1)</td></tr><tr><td>依索引存取</td><td>List</td><td>O(1)</td></tr></tbody></table></div><figure class="code-block"><figcaption><span>固定長度 deque 自動保存最近三筆資料。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>from collections import deque
+
+recent = deque(maxlen=3)
+for value in [10, 20, 30, 40]:
+    recent.append(value)
+print(list(recent))  # [20, 30, 40]</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Queue 遵守 FIFO，最早加入的元素最先離開</li><li><span>02</span>deque 讓 Queue 的入隊與出隊都在 O(1) 完成</li><li><span>03</span>deque 擅長兩端增刪，List 擅長隨機索引</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼 List 不適合大量使用 pop(0)？</summary><p>每次都要搬動其餘元素，單次為 O(n)，多次出隊可能累積成 O(n²)。</p></details><details><summary>deque(maxlen=3) 已滿時再 append 會發生什麼？</summary><p>新元素從右端加入，最左端最舊元素會被自動淘汰。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>以 deque 模擬一般與緊急兩種入隊方式的服務櫃台。</li><li>建立只保存最近五次搜尋關鍵字的紀錄。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-07/02-balanced-parentheses.html"><span>← 上一課</span><b>經典題型：括號配對</b></a><a class="next" href="../unit-07/04-priority-queue.html"><span>下一課 →</span><b>Priority Queue：依優先權取出</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

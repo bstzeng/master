@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="建立網格路徑數與最小成本 DP，並壓縮為一列。" />
+    <meta name="theme-color" content="#101713" />
+    <title>13.07 Grid、Unique Paths 與 Minimum Path Sum｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-13-dynamic-programming.html">UNIT 13 / LESSON 07</a><p class="eyebrow">Dynamic Programming</p><h1>Grid、Unique Paths 與 Minimum Path Sum</h1><p class="lesson-deck">依上方與左方狀態填表</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>建立網格路徑數與最小成本 DP，並壓縮為一列。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>定義網格二維狀態</li><li>處理第一列與第一欄</li><li>實作一維空間優化</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>Unique Paths</h2><p>只能向右或向下時，到 (r,c) 的路徑來自上方與左方，兩者數量相加。第一列與第一欄各只有一條路。</p><ul><li>dp[r][c]=dp[r-1][c]+dp[r][c-1]</li><li>時間與空間 O(rows·cols)</li></ul><figure class="code-block"><figcaption><span>表格索引就是所在格子。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def unique_paths(rows, cols):
+    dp = [[1] * cols for _ in range(rows)]
+    for r in range(1, rows):
+        for c in range(1, cols): dp[r][c] = dp[r-1][c] + dp[r][c-1]
+    return dp[-1][-1]</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Minimum Path Sum</h2><p>若格子帶成本，dp[r][c] 表示到該格的最小總成本，取上方與左方較小值再加目前成本。邊界只有單一來源，需個別初始化或使用 infinity。</p><ul><li>起點成本要計入</li><li>轉移使用 min 而非加總</li><li>負值不影響此 DAG 式依賴</li></ul><figure class="code-block"><figcaption><span>一維 dp 時，更新前 dp[c] 是上方，dp[c-1] 是左方。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def minimum_path_sum(grid):
+    rows, cols = len(grid), len(grid[0]); dp = [float(&#x27;inf&#x27;)] * cols
+    for r in range(rows):
+        for c in range(cols):
+            if r == c == 0: dp[c] = grid[r][c]
+            else: dp[c] = min(dp[c], dp[c-1] if c else float(&#x27;inf&#x27;)) + grid[r][c]
+    return dp[-1]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>障礙與空間壓縮</h2><p>遇到障礙格時可把該狀態設為 0 條路徑，其他格仍從上與左累加。因每列只依賴上一列與本列左側，可將空間由 O(rows·cols) 降為 O(cols)。</p><ul><li>內層沿左到右更新</li><li>障礙會切斷經過該格的轉移</li><li>可選較短維度作 dp 以降至 O(min(rows,cols))</li></ul><div class="table-wrap"><table><thead><tr><th>題型</th><th>聚合</th><th>壓縮空間</th></tr></thead><tbody><tr><td>路徑數</td><td>上+左</td><td>O(cols)</td></tr><tr><td>最小成本</td><td>min(上,左)+成本</td><td>O(cols)</td></tr></tbody></table></div></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>網格 DP 的方向決定依賴與填表順序。</li><li><span>02</span>路徑數加總來源，最小成本取來源最小值。</li><li><span>03</span>只依賴上一列時可壓縮成一維。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>一維更新時 dp[c] 更新前代表什麼？</summary><p>上一列同一欄，也就是目前格的上方狀態。</p></details><details><summary>障礙格的路徑數為何設 0？</summary><p>沒有合法路徑能進入或通過它。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>實作含障礙的 Unique Paths。</li><li>允許右、下、右下三方向，修改轉移與空間分析。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-13/06-coin-change-and-word-break.html"><span>← 上一課</span><b>Coin Change 與 Word Break</b></a><a class="next" href="../unit-13/08-lcs-and-edit-distance.html"><span>下一課 →</span><b>LCS 與 Edit Distance</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

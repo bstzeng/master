@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="依單調排除與視窗不變量區分兩種技巧。" />
+    <meta name="theme-color" content="#101713" />
+    <title>16.04 Two Pointers vs Sliding Window｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-16-problem-solving.html">UNIT 16 / LESSON 04</a><p class="eyebrow">Problem Solving and Algorithm Design</p><h1>Two Pointers vs Sliding Window</h1><p class="lesson-deck">看指標是否共同描述連續區間</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>依單調排除與視窗不變量區分兩種技巧。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>辨認雙指標</li><li>辨認滑動視窗</li><li>驗證移動規則</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>雙指標做單調排除</h2><p>已排序配對和可由左右總和決定移動哪側，每步排除一批答案。核心是移動規則有單調證明。</p><ul><li>常見左右夾逼</li><li>也可同向快慢指標</li><li>不一定維護區間統計</li></ul><figure class="code-block"><figcaption><span>已排序時 O(n)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def pair(a,t):
+    l,r=0,len(a)-1
+    while l&lt;r:
+        s=a[l]+a[r]
+        if s==t:return True
+        if s&lt;t:l+=1
+        else:r-=1
+    return False</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>視窗維護連續範圍</h2><p>滑動視窗讓 [left,right] 表示目前連續子陣列或子字串，加入右端並依條件移除左端。重點是維持視窗不變量。</p><ul><li>固定長度做增量更新</li><li>動態長度依有效條件收縮</li><li>題目必須關注連續範圍</li></ul></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>用問題語意選型</h2><p>若兩索引用來比較端點或壓縮資料，多半是雙指標；若共同界定且維護區間狀態，則是滑動視窗。兩者邊界單向移動時通常 O(n)。</p><ul><li>負數可能破壞總和視窗單調性</li><li>先寫不變量再寫移動</li><li>測試 left 超過 right 的邊界</li></ul><figure class="code-block"><figcaption><span>閉區間視窗的統一長度公式。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code># 視窗長度
+length = right - left + 1</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>雙指標依單調關係排除。</li><li><span>02</span>滑動視窗維護連續區間狀態。</li><li><span>03</span>移動規則必須證明不漏解。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>最長不重複子字串是哪類？</summary><p>動態滑動視窗，維護無重複區間。</p></details><details><summary>負數為何可能破壞總和視窗？</summary><p>加入或移除後總和不再單調變化。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>各找一題雙指標與滑動視窗並寫不變量。</li><li>說明已排序 Two Sum 每次移動為何安全。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-16/03-preprocess-sort-hash.html"><span>← 上一課</span><b>預處理、空間換時間、排序與 Hashing</b></a><a class="next" href="../unit-16/05-dfs-bfs-union-find.html"><span>下一課 →</span><b>DFS、BFS 與 Union-Find 選型</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

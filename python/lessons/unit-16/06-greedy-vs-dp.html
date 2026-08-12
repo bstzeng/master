@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="用硬幣與區間案例比較貪心證明與 DP 狀態。" />
+    <meta name="theme-color" content="#101713" />
+    <title>16.06 Greedy vs DP 選型｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-16-problem-solving.html">UNIT 16 / LESSON 06</a><p class="eyebrow">Problem Solving and Algorithm Design</p><h1>Greedy vs DP 選型</h1><p class="lesson-deck">局部決定能否安全固定</p><div class="lesson-meta"><span>進階</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>用硬幣與區間案例比較貪心證明與 DP 狀態。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>辨認貪心需求</li><li>找反例</li><li>改建 DP</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>Greedy 固定當下選擇</h2><p>貪心每步選看似最佳且不回頭，必須證明存在交換性或貪心選擇性。區間排程選最早結束者可留下最大後續空間。</p><ul><li>速度通常快且狀態少</li><li>局部合理不等於全域正確</li><li>先嘗試交換論證</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>反例是快速檢查</h2><p>硬幣 [1,3,4] 湊 6 時，先拿 4 得三枚，而 3+3 只需兩枚，推翻最大面額貪心。小型窮舉很適合找反例。</p><ul><li>測非典型與邊界組合</li><li>反例只需一個</li><li>失敗後找重疊子問題</li></ul><figure class="code-block"><figcaption><span>此幣制下貪心不是最佳。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def greedy_coins(amount):
+    used=0
+    for coin in (4,3,1):
+        used,amount=used+amount//coin,amount%coin
+    return used
+print(greedy_coins(6))  # 3</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>DP 保留多條可能</h2><p>若當下選擇會影響未來且無法安全固定，DP 以狀態保存不同子問題最佳值。代價通常是更多時間與空間。</p><ul><li>Greedy 需正確性證明</li><li>DP 需重疊子問題與最佳子結構</li><li>先問能否不可逆地丟棄其他選擇</li></ul><div class="table-wrap"><table><thead><tr><th>方法</th><th>核心問題</th></tr></thead><tbody><tr><td>Greedy</td><td>局部選擇可安全固定嗎？</td></tr><tr><td>DP</td><td>需保存哪些子問題答案？</td></tr></tbody></table></div></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Greedy 必須證明局部選擇安全。</li><li><span>02</span>小型反例可快速推翻錯誤貪心。</li><li><span>03</span>無法固定選擇時考慮 DP 狀態。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>一個反例能否推翻貪心？</summary><p>能，演算法宣稱對所有合法輸入正確。</p></details><details><summary>DP 一定比 Greedy 好嗎？</summary><p>不是；若貪心可證明正確，通常更省資源。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>為最大面額硬幣策略再找一個反例。</li><li>比較活動選擇用 Greedy 與 DP 的狀態。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-16/05-dfs-bfs-union-find.html"><span>← 上一課</span><b>DFS、BFS 與 Union-Find 選型</b></a><a class="next" href="../unit-16/07-binary-search-on-answer.html"><span>下一課 →</span><b>Binary Search on Answer</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="整理交換論證模板，比較貪心與動態規劃，建立面對陌生最佳化問題的決策流程。" />
+    <meta name="theme-color" content="#101713" />
+    <title>12.08 交換論證與 Greedy vs DP｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-12-greedy.html">UNIT 12 / LESSON 08</a><p class="eyebrow">Greedy Algorithms</p><h1>交換論證與 Greedy vs DP</h1><p class="lesson-deck">用證明與狀態需求決定是否能放心不回頭</p><div class="lesson-meta"><span>中階</span><span>35 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>整理交換論證模板，比較貪心與動態規劃，建立面對陌生最佳化問題的決策流程。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>寫出交換論證骨架</li><li>辨認 Greedy 與 DP 的狀態差異</li><li>根據反例與證明選擇方法</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>交換論證把最佳解拉向貪心解</h2><p>交換論證先取一個最佳解 O，找出它和貪心解 G 的第一個不同選擇，再證明能把 O 的選擇換成 G 的選擇而不破壞可行性、也不讓目標變差。反覆交換後得到包含所有貪心選擇的最佳解，便證明 G 也是最佳。</p><ul><li>先明確定義任意最佳解 O</li><li>找第一個分歧位置</li><li>證明交換後仍可行且不變差</li><li>對剩餘子問題重複推論</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Greedy 只保留一條路，DP 保留必要狀態</h2><p>Greedy 認為某個局部選擇安全，因此丟棄其他候選，通常更快且空間較少；Dynamic Programming（DP）在無法安全丟棄時，依狀態保留多個子問題最佳值。是否存在重疊子問題不是貪心證明，關鍵仍是其他選擇能否被安全支配。</p><ul><li>Greedy：不可撤銷地保留單一方向</li><li>DP：保存多個狀態以比較未來組合</li><li>能證明安全選擇時優先 Greedy</li><li>局部選擇互相影響且無交換性時考慮 DP</li></ul><div class="table-wrap"><table><thead><tr><th>問題</th><th>典型方法</th><th>關鍵理由</th></tr></thead><tbody><tr><td>最多不重疊活動</td><td>Greedy</td><td>最早結束可安全交換</td></tr><tr><td>分數背包</td><td>Greedy</td><td>物品可做等重量交換</td></tr><tr><td>0/1 背包</td><td>DP</td><td>不可切分使局部密度不安全</td></tr><tr><td>一般最少硬幣</td><td>DP</td><td>最大面額優先可能有反例</td></tr></tbody></table></div></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>陌生問題的決策清單</h2><p>先寫暴力或小型窮舉當作答案對照，再提出能排除候選的貪心規則；若找到反例，就識別必須保存哪些資訊形成 DP 狀態。若交換論證成功，仍要分析排序、Heap 或資料結構成本，而不是只看最後一趟掃描。</p><ul><li>用小輸入驗證候選規則</li><li>說出選擇後被永久丟棄的方案</li><li>嘗試交換、領先或不變量證明</li><li>記錄時間、空間與輸入前提</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>交換論證透過不變差的替換證明貪心選擇安全</li><li><span>02</span>Greedy 丟棄替代路徑，DP 則保存足以比較未來的狀態</li><li><span>03</span>先找反例再求證明，能避免把直覺誤當定理</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>交換論證只證明交換後仍可行，是否已足夠？</summary><p>不足，還必須證明目標值不會變差，才能保證交換後仍是最佳解。</p></details><details><summary>什麼跡象表示可能需要 DP 而非 Greedy？</summary><p>局部最好選擇會影響後續組合、找得到反例，且無法安全丟棄其他候選時，通常需用狀態保存多種可能。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>為活動選擇寫出完整四步交換論證，不只描述直覺。</li><li>選一題最佳化問題，列出 Greedy 會丟棄的資訊與 DP 可能需要保存的狀態。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-12/07-coin-change-traps.html"><span>← 上一課</span><b>硬幣陷阱與反例</b></a><a class="next" href="../unit-13/01-dp-foundations.html"><span>下一課 →</span><b>DP 核心：重疊子問題與最佳子結構</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

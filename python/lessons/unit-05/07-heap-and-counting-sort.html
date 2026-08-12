@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="比較堆積排序與計數排序的前提、實作方式，以及 O(n log n) 和 O(n + k) 的適用條件。" />
+    <meta name="theme-color" content="#101713" />
+    <title>05.07 Heap Sort 與 Counting Sort｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-05-sorting.html">UNIT 05 / LESSON 07</a><p class="eyebrow">Sorting Algorithms</p><h1>Heap Sort 與 Counting Sort</h1><p class="lesson-deck">一個靠比較保證上界，一個利用有限整數範圍</p><div class="lesson-meta"><span>中階</span><span>35 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>比較堆積排序與計數排序的前提、實作方式，以及 O(n log n) 和 O(n + k) 的適用條件。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>用 heapq 實作堆積式排序</li><li>實作支援負整數的計數排序</li><li>根據值域 k 判斷計數排序是否合適</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>Heap Sort 反覆取出極值</h2><p>堆積排序（Heap Sort）先建立能快速取得最小或最大值的 Heap，再反覆取出極值形成排序結果。下例使用 Python 最小堆 heapq，寫法簡潔但會複製資料；經典陣列 Heap Sort 可原地完成，通常不穩定。</p><ul><li>建堆可在 O(n) 完成</li><li>每次 heappop 為 O(log n)</li><li>總時間 O(n log n)</li><li>此 heapq 版本額外空間 O(n)</li></ul><figure class="code-block"><figcaption><span>利用最小堆回傳遞增的新 list；時間 O(n log n)、空間 O(n)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>import heapq
+
+def heap_sorted(items):
+    heap = list(items)
+    heapq.heapify(heap)
+    return [heapq.heappop(heap) for _ in range(len(heap))]</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Counting Sort 直接統計值域</h2><p>計數排序（Counting Sort）不比較元素，而是統計每個整數值出現幾次，再依值域輸出。若 n 是元素數、k 是最大值與最小值的跨度，時間 O(n + k)、額外空間 O(k)；只有 k 相對可控時才划算。</p><ul><li>適用於可映射到小範圍的整數鍵</li><li>偏移量可支援負整數</li><li>值域很大時會浪費記憶體</li><li>此直接重建值的版本不保留附屬資料穩定性</li></ul><figure class="code-block"><figcaption><span>支援負整數；時間 O(n + k)、額外空間 O(k)，k = high - low + 1。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def counting_sort(numbers):
+    if not numbers:
+        return []
+    low, high = min(numbers), max(numbers)
+    counts = [0] * (high - low + 1)
+    for value in numbers:
+        counts[value - low] += 1
+    result = []
+    for offset, count in enumerate(counts):
+        result.extend([offset + low] * count)
+    return result</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>比較式與非比較式的界線</h2><p>只透過兩兩比較的通用排序，在常見決策樹模型下最壞需要 Ω(n log n)；Heap Sort 達到這個等級。Counting Sort 使用值域資訊繞過比較下界，但必須付出 O(k) 空間，所以不是對所有資料都比 O(n log n) 排序更快。</p><ul><li>Heap Sort 不要求小值域</li><li>Counting Sort 依賴有限離散鍵</li><li>k 遠大於 n 時避免 Counting Sort</li><li>要穩定排序物件需使用累積計數與反向放置版本</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Heap Sort 提供 O(n log n) 最壞時間但標準版本不穩定</li><li><span>02</span>Counting Sort 以 O(n + k) 時間換取 O(k) 值域空間</li><li><span>03</span>非比較排序的速度來自對資料型態與範圍的額外假設</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>一百個整數分布在 0 到十億，適合直接使用 Counting Sort 嗎？</summary><p>不適合，k 約十億而 n 只有一百，計數陣列會消耗極大量且多數無用的空間。</p></details><details><summary>heapq 版本與經典原地 Heap Sort 的空間性質相同嗎？</summary><p>不同。此版本複製 heap 並建立結果，需 O(n) 額外空間；經典陣列版本可做到 O(1) 輔助空間。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>以 n 與 k 比較 Counting Sort 和 O(n log n) 排序可能的適用範圍。</li><li>用 heapq 寫出只取最小 k 個元素的函式，說明是否需要完整排序。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-05/06-quick-sort.html"><span>← 上一課</span><b>Quick Sort 快速排序</b></a><a class="next" href="../unit-05/08-sorting-comparison.html"><span>下一課 →</span><b>排序演算法總比較</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

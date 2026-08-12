@@ -1,0 +1,327 @@
+{
+  "number": 10,
+  "phase": 1,
+  "slug": "graph-basics",
+  "title": "圖論基礎",
+  "english": "Graph Fundamentals",
+  "summary": "從頂點與邊的模型出發，學習圖的表示、DFS、BFS、連通元件、環偵測、拓樸排序與 Union-Find。",
+  "goal": "能把關係型問題建模成圖，選擇合適表示法與走訪演算法，並正確分析 V、E 尺度下的時間與空間。",
+  "prerequisites": [
+    "熟悉 Python list、dict、set 與 collections.deque",
+    "理解 Stack、Queue、遞迴與時間複雜度",
+    "能閱讀頂點編號與成對資料"
+  ],
+  "outcomes": [
+    "能區分有向、無向、加權與未加權圖",
+    "能建立並比較鄰接表與鄰接矩陣",
+    "能實作 DFS、BFS 與連通元件計數",
+    "能偵測有向及無向圖的環並完成拓樸排序",
+    "能使用 Union-Find 維護動態連通性"
+  ],
+  "lessons": [
+    {
+      "number": 1,
+      "slug": "graph-vocabulary-and-types",
+      "title": "圖、頂點、邊與圖的類型",
+      "subtitle": "用節點與關係描述網路世界",
+      "duration": "20 分鐘",
+      "difficulty": "入門",
+      "summary": "認識圖的核心名詞，並依方向、權重與連通性分類。",
+      "objectives": ["辨認頂點與邊", "區分常見圖類型", "把生活問題建模成圖"],
+      "sections": [
+        {
+          "heading": "頂點與邊",
+          "paragraphs": ["圖（Graph）由頂點（Vertex）與邊（Edge）組成，頂點代表實體或狀態，邊代表兩者關係。分析時常以 V 表示頂點數、E 表示邊數。"],
+          "bullets": ["社群圖：人是頂點，好友關係是邊", "道路圖：地點是頂點，道路是邊", "狀態圖：狀態是頂點，合法轉移是邊"],
+          "code": "vertices = {\"A\", \"B\", \"C\"}\nedges = [(\"A\", \"B\"), (\"B\", \"C\")]\nprint(len(vertices), len(edges))  # V=3, E=2",
+          "code_caption": "邊清單可直接記錄哪些頂點成對相連。"
+        },
+        {
+          "heading": "方向與權重",
+          "paragraphs": ["無向圖的 A—B 可雙向通行，有向圖的 A→B 則不自動包含 B→A。邊也可帶有距離、價格或時間等權重；本單元先以未加權走訪為主。"],
+          "bullets": ["好友通常建模為無向邊", "追蹤關係通常建模為有向邊", "導航距離適合加權邊"],
+          "table": {"headers": ["類型", "邊的意義", "例子"], "rows": [["無向", "雙向關係", "好友"], ["有向", "單向關係", "課程先修"], ["加權", "邊附成本", "道路距離"]]}
+        },
+        {
+          "heading": "路徑、度數與連通性",
+          "paragraphs": ["路徑是一串相鄰邊形成的行走順序；無向圖中，頂點的度數是相連邊數，有向圖則分入度與出度。若任兩頂點之間都有路徑，無向圖稱為連通圖。"],
+          "bullets": ["簡單路徑不重複經過頂點", "環是起點與終點相同的非空路徑", "不連通圖由多個 Connected Components 組成"],
+          "callout": "先確認邊是否有方向與權重，會直接影響表示法與可用演算法。"
+        }
+      ],
+      "takeaways": ["圖用頂點表示事物、用邊表示關係。", "方向與權重是選擇演算法前的重要條件。", "圖的輸入規模通常用 V 與 E 表示。"],
+      "quiz": [
+        {"question": "課程先修關係為什麼適合用有向圖？", "answer": "先修具有方向；A 是 B 的先修，不代表 B 也是 A 的先修。"},
+        {"question": "有向圖中入度與出度分別代表什麼？", "answer": "入度是指向該頂點的邊數，出度是由該頂點指出的邊數。"}
+      ],
+      "practice": ["把捷運站與站間連線建模成圖，說明是否需要方向與權重。", "為工作流程列出頂點、邊、入度與出度的實際語意。"]
+    },
+    {
+      "number": 2,
+      "slug": "adjacency-list-and-matrix",
+      "title": "Adjacency List 與 Adjacency Matrix",
+      "subtitle": "依圖的密度與查詢需求選擇表示法",
+      "duration": "25 分鐘",
+      "difficulty": "入門",
+      "summary": "建立鄰接表與鄰接矩陣，並比較空間、鄰居走訪與邊查詢成本。",
+      "objectives": ["建立無向與有向鄰接表", "建立鄰接矩陣", "依密度選擇表示法"],
+      "sections": [
+        {
+          "heading": "Adjacency List 鄰接表",
+          "paragraphs": ["鄰接表（Adjacency List）為每個頂點保存可直接到達的鄰居，空間是 O(V+E)，適合多數稀疏圖。無向邊必須在兩端各加入一次，有向邊只加入來源到目的地。"],
+          "bullets": ["dict 的鍵是頂點，值可用 list 或 set", "走訪頂點 u 的鄰居需 O(deg(u))", "set 避免重複邊並提供平均 O(1) 邊查詢"],
+          "code": "def build_undirected_graph(vertices, edges):\n    graph = {vertex: [] for vertex in vertices}\n    for first, second in edges:\n        graph[first].append(second)\n        graph[second].append(first)\n    return graph\n\ngraph = build_undirected_graph(range(4), [(0, 1), (1, 2), (1, 3)])",
+          "code_caption": "無向邊 (u, v) 同時建立 u→v 與 v→u。"
+        },
+        {
+          "heading": "Adjacency Matrix 鄰接矩陣",
+          "paragraphs": ["鄰接矩陣（Adjacency Matrix）以 V×V 表格記錄任兩頂點是否相連，查詢一條邊是 O(1)。它固定使用 O(V²) 空間，走訪某頂點鄰居也要掃描整列 O(V)。"],
+          "bullets": ["matrix[u][v] 為 1 表示有邊", "無向圖矩陣沿主對角線對稱", "加權圖可用權重取代 1，並選定無邊的特殊值"],
+          "code": "def build_matrix(vertex_count, edges, directed=False):\n    matrix = [[0] * vertex_count for _ in range(vertex_count)]\n    for source, target in edges:\n        matrix[source][target] = 1\n        if not directed:\n            matrix[target][source] = 1\n    return matrix",
+          "code_caption": "矩陣適合頂點能用 0 到 V-1 索引的情況。"
+        },
+        {
+          "heading": "依密度與操作選擇",
+          "paragraphs": ["當 E 遠小於 V²，鄰接表通常較省空間且能快速列出實際鄰居；圖很密或經常詢問特定兩點是否直接相連時，矩陣較直覺。建表時間至少要讀取所有頂點與輸入邊。"],
+          "bullets": ["鄰接表空間 O(V+E)", "鄰接矩陣空間與初始化 O(V²)", "演算法複雜度必須註明採用哪種表示法"],
+          "table": {"headers": ["操作", "鄰接表", "鄰接矩陣"], "rows": [["空間", "O(V+E)", "O(V²)"], ["列出 u 鄰居", "O(deg(u))", "O(V)"], ["查詢 u→v", "list O(deg(u))", "O(1)"]]}
+        }
+      ],
+      "takeaways": ["鄰接表適合稀疏圖與鄰居走訪。", "鄰接矩陣以 O(V²) 空間換取 O(1) 邊查詢。", "無向邊在鄰接表與矩陣中都要建立對稱關係。"],
+      "quiz": [
+        {"question": "V 很大而 E 接近 V 時，通常應選哪種表示法？", "answer": "通常選鄰接表，空間 O(V+E) 遠小於矩陣的 O(V²)。"},
+        {"question": "為什麼鄰接矩陣列出一個頂點的鄰居要 O(V)？", "answer": "必須掃描該頂點對應的整列，才能判斷每個可能頂點是否相鄰。"}
+      ],
+      "practice": ["把一份有向邊清單轉成鄰接表，確保沒有加入反向邊。", "同一張小圖分別畫成鄰接表與鄰接矩陣，核對每條邊。"]
+    },
+    {
+      "number": 3,
+      "slug": "depth-first-search",
+      "title": "Depth-First Search DFS",
+      "subtitle": "沿一條路深入，再退回探索其他分支",
+      "duration": "30 分鐘",
+      "difficulty": "基礎",
+      "summary": "使用遞迴與顯式 Stack 完成深度優先搜尋，理解 visited 的必要性。",
+      "objectives": ["實作遞迴 DFS", "實作迭代 DFS", "分析鄰接表下的成本"],
+      "sections": [
+        {
+          "heading": "深入前先標記 visited",
+          "paragraphs": ["深度優先搜尋（DFS）從起點沿未訪鄰居持續深入，沒有新路才返回。圖可能有環或多條路到同一點，因此必須在進入頂點時標記 visited，避免重複處理與無限循環。"],
+          "bullets": ["處理目前頂點後逐一探索鄰居", "visited 保存已發現的頂點", "遞迴 Call Stack 自動保存返回位置"],
+          "code": "def dfs_recursive(graph, start):\n    visited = set()\n    order = []\n    def visit(vertex):\n        visited.add(vertex)\n        order.append(vertex)\n        for neighbor in graph[vertex]:\n            if neighbor not in visited:\n                visit(neighbor)\n    visit(start)\n    return order",
+          "code_caption": "標記發生在遞迴呼叫鄰居之前。"
+        },
+        {
+          "heading": "以 Stack 改寫迭代 DFS",
+          "paragraphs": ["顯式 Stack 版本把待探索頂點自行存入 list，適合避免深層遞迴限制。若在 pop 後才標記，頂點可能被重複推入；在加入 Stack 時標記可控制重複項目。"],
+          "bullets": ["stack.pop() 取出最後加入的頂點", "加入鄰居時立刻標記 visited", "鄰居加入順序會影響走訪輸出，但不影響可達集合"],
+          "code": "def dfs_iterative(graph, start):\n    visited = {start}\n    stack = [start]\n    order = []\n    while stack:\n        vertex = stack.pop()\n        order.append(vertex)\n        for neighbor in reversed(graph[vertex]):\n            if neighbor not in visited:\n                visited.add(neighbor)\n                stack.append(neighbor)\n    return order",
+          "code_caption": "reversed 只用來讓輸出順序較接近遞迴版，不是 DFS 必要條件。"
+        },
+        {
+          "heading": "成本與適用情境",
+          "paragraphs": ["採鄰接表時，每個可達頂點處理一次、每條邊查看固定次數，因此時間 O(V+E)，visited 與堆疊空間 O(V)。DFS 適合可達性、完整路徑探索、拓樸排序與結構性判斷，但不保證未加權圖的最短路徑。"],
+          "bullets": ["遞迴深度最壞 O(V)", "只從一個起點會忽略其他不連通元件", "需要回溯路徑時可額外保存 parent 或 path"],
+          "callout": "DFS 的走訪順序不是唯一答案，取決於鄰接表中的鄰居順序。"
+        }
+      ],
+      "takeaways": ["DFS 沿分支深入，visited 防止重複與繞圈。", "遞迴與顯式 Stack 都能實作 DFS。", "鄰接表下 DFS 時間 O(V+E)、額外空間 O(V)。"],
+      "quiz": [
+        {"question": "圖的 DFS 為什麼通常需要 visited，而樹的 DFS 常可省略？", "answer": "一般圖可能有環與多個父來源；樹從根向下時每個節點只有唯一父路徑，不會回到已訪節點。"},
+        {"question": "DFS 能保證找到未加權圖最少邊數路徑嗎？", "answer": "不能，DFS 可能先深入很長路徑；最少邊數應使用 BFS。"}
+      ],
+      "practice": ["用 DFS 判斷 target 是否能從 start 到達。", "修改迭代 DFS 保存 parent，找到目標後還原一條路徑。"]
+    },
+    {
+      "number": 4,
+      "slug": "breadth-first-search",
+      "title": "Breadth-First Search BFS",
+      "subtitle": "按距離層級由近到遠探索",
+      "duration": "30 分鐘",
+      "difficulty": "基礎",
+      "summary": "使用 deque 實作 BFS，並求未加權圖的最少邊數距離。",
+      "objectives": ["使用 Queue 完成 BFS", "計算層級與最短距離", "判斷 BFS 的適用限制"],
+      "sections": [
+        {
+          "heading": "Queue 維持先進先出",
+          "paragraphs": ["廣度優先搜尋（BFS）先探索起點，再探索距離一條邊、兩條邊的頂點。Queue 的先進先出順序維持這個層級，因此 Python 應使用 deque.popleft()。"],
+          "bullets": ["起點先加入 queue 與 visited", "取出 vertex 後加入所有未訪鄰居", "發現鄰居時立即標記，避免重複入列"],
+          "code": "from collections import deque\n\ndef bfs_order(graph, start):\n    visited = {start}\n    queue = deque([start])\n    order = []\n    while queue:\n        vertex = queue.popleft()\n        order.append(vertex)\n        for neighbor in graph[vertex]:\n            if neighbor not in visited:\n                visited.add(neighbor)\n                queue.append(neighbor)\n    return order",
+          "code_caption": "不要用 list.pop(0)，它搬移剩餘元素需 O(n)。"
+        },
+        {
+          "heading": "未加權最短路徑",
+          "paragraphs": ["在所有邊成本相同的圖中，BFS 第一次發現頂點時走過的邊數必定最少。可令 distance[neighbor] = distance[vertex] + 1，並保存 parent 還原實際路徑。"],
+          "bullets": ["distance[start] = 0", "第一次發現後不再更新距離", "有不同權重時不能直接使用一般 BFS"],
+          "code": "def shortest_distances(graph, start):\n    distance = {start: 0}\n    queue = deque([start])\n    while queue:\n        vertex = queue.popleft()\n        for neighbor in graph[vertex]:\n            if neighbor not in distance:\n                distance[neighbor] = distance[vertex] + 1\n                queue.append(neighbor)\n    return distance",
+          "code_caption": "distance 同時充當 visited，避免維護兩份狀態。"
+        },
+        {
+          "heading": "成本與使用時機",
+          "paragraphs": ["鄰接表下 BFS 時間 O(V+E)，distance、visited 與 queue 最壞使用 O(V) 空間。它適合未加權最短路徑、層級走訪與距離擴散；若只需任一可達路徑，DFS 也可能更簡潔。"],
+          "bullets": ["Queue 最寬時可能同時保存 O(V) 頂點", "只會走訪 start 可達的區域", "多源 BFS 可把多個起點同時以距離 0 入列"],
+          "table": {"headers": ["需求", "常見選擇"], "rows": [["任意可達路徑", "DFS 或 BFS"], ["未加權最短邊數", "BFS"], ["加權最短距離", "依權重選 Dijkstra 等演算法"]]}
+        }
+      ],
+      "takeaways": ["BFS 用 Queue 按距離層級探索。", "未加權圖中第一次發現頂點即得到最少邊數距離。", "鄰接表下 BFS 時間 O(V+E)、空間 O(V)。"],
+      "quiz": [
+        {"question": "為什麼 BFS 應在加入 queue 時標記 visited？", "answer": "若延後到取出時才標記，同一頂點可能被多個鄰居重複加入 queue。"},
+        {"question": "邊權重為 1、10、1 時，一般 BFS 能求最小總權重嗎？", "answer": "不能，BFS 最小化的是邊數，只有每條邊成本相同時才等同最小總權重。"}
+      ],
+      "practice": ["用 BFS 回傳 start 到 target 的最少邊數，無法到達時回傳 -1。", "在網格中從多個火源同時開始 BFS，計算每格最早被火到達的時間。"]
+    },
+    {
+      "number": 5,
+      "slug": "connected-components",
+      "title": "Connected Components 連通元件",
+      "subtitle": "從每個未訪頂點啟動一次完整走訪",
+      "duration": "25 分鐘",
+      "difficulty": "基礎",
+      "summary": "使用外層迴圈配合 DFS 或 BFS，計算無向圖中的連通群組。",
+      "objectives": ["定義連通元件", "計數並標記每個元件", "處理孤立頂點"],
+      "sections": [
+        {
+          "heading": "一次走訪覆蓋一個元件",
+          "paragraphs": ["無向圖的連通元件（Connected Component）是內部任兩點互相可達的最大頂點集合。從一個未訪頂點開始 DFS 或 BFS，會恰好標記它所在的整個元件。"],
+          "bullets": ["已訪頂點不再啟動新走訪", "每次從未訪頂點啟動，元件數加一", "沒有邊的孤立頂點本身也是一個元件"],
+          "code": "def count_components(graph):\n    visited = set()\n    count = 0\n    for start in graph:\n        if start in visited:\n            continue\n        count += 1\n        stack = [start]\n        visited.add(start)\n        while stack:\n            vertex = stack.pop()\n            for neighbor in graph[vertex]:\n                if neighbor not in visited:\n                    visited.add(neighbor)\n                    stack.append(neighbor)\n    return count",
+          "code_caption": "外層找新元件入口，內層走完整個元件。"
+        },
+        {
+          "heading": "標籤比只有計數更實用",
+          "paragraphs": ["若替每個頂點保存 component_id，之後可在 O(1) 判斷兩點是否屬於同一元件。標記方式是在一次 DFS 中，將所有發現頂點寫入相同編號。"],
+          "bullets": ["component_of[vertex] = component_id", "同編號代表存在無向路徑", "元件清單也可用 list 收集各群組頂點"],
+          "code": "def label_components(graph):\n    component_of = {}\n    component_id = 0\n    for start in graph:\n        if start in component_of:\n            continue\n        stack = [start]\n        component_of[start] = component_id\n        while stack:\n            vertex = stack.pop()\n            for neighbor in graph[vertex]:\n                if neighbor not in component_of:\n                    component_of[neighbor] = component_id\n                    stack.append(neighbor)\n        component_id += 1\n    return component_of",
+          "code_caption": "字典同時扮演 visited 與元件標籤。"
+        },
+        {
+          "heading": "方向差異與成本",
+          "paragraphs": ["鄰接表下，掃描所有頂點與邊的總時間是 O(V+E)，標記與走訪空間 O(V)。有向圖的「強連通」要求雙向可達，不能直接套用此無向版本，需要另外的強連通元件演算法。"],
+          "bullets": ["輸入必須把孤立頂點也列為 graph 的鍵", "多次啟動走訪不會重複處理已訪頂點", "本課元件定義限無向圖"],
+          "callout": "只有邊清單而沒有完整頂點清單時，孤立頂點會消失，元件數也會算錯。"
+        }
+      ],
+      "takeaways": ["每次從未訪頂點啟動走訪，就找到一個新連通元件。", "孤立頂點也必須計為一個元件。", "無向元件計數時間 O(V+E)，不可直接當成有向強連通解法。"],
+      "quiz": [
+        {"question": "為什麼外層迴圈要遍歷所有頂點？", "answer": "只從一個起點走訪無法到達其他元件；外層迴圈才能為每個未訪區域啟動搜尋。"},
+        {"question": "一個沒有任何邊的頂點算連通元件嗎？", "answer": "算，它本身構成只含一個頂點的最大連通集合。"}
+      ],
+      "practice": ["回傳無向圖中最大連通元件的頂點數。", "輸出每個元件的頂點清單，並為孤立頂點加入測試。"]
+    },
+    {
+      "number": 6,
+      "slug": "cycle-detection",
+      "title": "Cycle Detection 環偵測",
+      "subtitle": "無向圖追蹤 parent，有向圖追蹤目前路徑",
+      "duration": "35 分鐘",
+      "difficulty": "基礎",
+      "summary": "比較有向與無向圖的環定義，實作兩種 DFS 偵測方式。",
+      "objectives": ["以 parent 偵測無向環", "以三色狀態偵測有向環", "說明兩種方法不能混用"],
+      "sections": [
+        {
+          "heading": "無向圖：排除走回 parent",
+          "paragraphs": ["無向邊會在鄰接表出現兩個方向，所以從 u 走到 v 後，v 看見已訪的 u 並不代表成環。DFS 必須攜帶 parent；遇到已訪鄰居且它不是 parent，才表示存在另一條路形成環。"],
+          "bullets": ["未訪鄰居：遞迴並把目前頂點當 parent", "鄰居等於 parent：忽略原路返回", "已訪且不是 parent：找到無向環"],
+          "code": "def has_cycle_undirected(graph):\n    visited = set()\n    def dfs(vertex, parent):\n        visited.add(vertex)\n        for neighbor in graph[vertex]:\n            if neighbor not in visited:\n                if dfs(neighbor, vertex): return True\n            elif neighbor != parent:\n                return True\n        return False\n    return any(start not in visited and dfs(start, None) for start in graph)",
+          "code_caption": "外層涵蓋所有不連通元件。"
+        },
+        {
+          "heading": "有向圖：回到目前路徑才是環",
+          "paragraphs": ["有向 DFS 中，指向任何已訪頂點不一定成環；只有指向目前遞迴路徑上的頂點，才形成回邊。可用 0 未訪、1 探索中、2 已完成的三色狀態區分。"],
+          "bullets": ["state=1：頂點仍在目前 Call Stack", "遇到 state=1 鄰居：找到有向環", "探索所有鄰居後設為 state=2"],
+          "code": "def has_cycle_directed(graph):\n    state = {vertex: 0 for vertex in graph}\n    def dfs(vertex):\n        state[vertex] = 1\n        for neighbor in graph[vertex]:\n            if state[neighbor] == 1: return True\n            if state[neighbor] == 0 and dfs(neighbor): return True\n        state[vertex] = 2\n        return False\n    return any(state[v] == 0 and dfs(v) for v in graph)",
+          "code_caption": "已完成頂點 state=2 不在目前路徑中，不構成回邊。"
+        },
+        {
+          "heading": "成本與適用界線",
+          "paragraphs": ["兩種 DFS 在鄰接表下都以 O(V+E) 時間與 O(V) 空間完成。parent 規則專用於無向邊的對稱表示，三色規則則反映有向圖的遞迴路徑，套錯模型會誤判。"],
+          "bullets": ["自環 u→u 會立即形成環", "平行無向邊是否形成長度二的環取決於圖定義", "若要回傳實際環，可保存 parent 並在發現時重建"],
+          "table": {"headers": ["圖類型", "需追蹤資訊", "成環訊號"], "rows": [["無向", "parent + visited", "已訪鄰居不是 parent"], ["有向", "三色 state", "邊指向探索中頂點"]]}
+        }
+      ],
+      "takeaways": ["無向圖需排除回到 parent 的反向邊。", "有向圖只有回到目前遞迴路徑才構成環。", "兩種 DFS 偵測皆為 O(V+E) 時間、O(V) 空間。"],
+      "quiz": [
+        {"question": "無向 DFS 遇到已訪的 parent 為什麼不能判定成環？", "answer": "那只是同一條無向邊在反方向的鄰接紀錄，代表沿原路返回。"},
+        {"question": "有向 DFS 遇到 state=2 的鄰居為什麼不代表環？", "answer": "該鄰居的探索已完成且不在目前遞迴路徑中，這條邊不會回到自己的祖先。"}
+      ],
+      "practice": ["修改無向環偵測，回傳一條形成環的邊。", "為有向圖三色 DFS 印出狀態變化，追蹤一張含環小圖。"]
+    },
+    {
+      "number": 7,
+      "slug": "topological-sort",
+      "title": "Topological Sort 拓樸排序",
+      "subtitle": "把先決條件排成合法線性順序",
+      "duration": "35 分鐘",
+      "difficulty": "基礎",
+      "summary": "使用 Kahn 演算法與 DFS 後序完成 DAG 拓樸排序，並偵測不可能的依賴環。",
+      "objectives": ["定義 DAG 與拓樸順序", "實作 Kahn 入度法", "理解 DFS 後序法"],
+      "sections": [
+        {
+          "heading": "只有 DAG 才有拓樸順序",
+          "paragraphs": ["拓樸排序（Topological Sort）將有向圖頂點排成序列，使每條 u→v 都讓 u 出現在 v 前面。只有有向無環圖（DAG）存在拓樸順序，且答案可能不唯一。"],
+          "bullets": ["課程先修：先修課排在後續課前", "工作依賴：前置工作先完成", "若存在有向環，環中沒有可先開始的頂點"],
+          "callout": "拓樸排序不是把頂點依編號排序，而是滿足所有方向限制。"
+        },
+        {
+          "heading": "Kahn 演算法：反覆移除入度零",
+          "paragraphs": ["Kahn 演算法先計算每個頂點入度，把所有入度零頂點加入 Queue。每取出一點就視為移除其出邊，降低鄰居入度；新變成零的鄰居即可排入答案。"],
+          "bullets": ["入度零表示目前沒有未完成先決條件", "處理 u→v 時執行 indegree[v] -= 1", "答案長度小於 V 表示剩餘頂點位於環中"],
+          "code": "from collections import deque\n\ndef topological_sort(graph):\n    indegree = {v: 0 for v in graph}\n    for source in graph:\n        for target in graph[source]: indegree[target] += 1\n    queue = deque(v for v in graph if indegree[v] == 0)\n    order = []\n    while queue:\n        vertex = queue.popleft(); order.append(vertex)\n        for neighbor in graph[vertex]:\n            indegree[neighbor] -= 1\n            if indegree[neighbor] == 0: queue.append(neighbor)\n    return order if len(order) == len(graph) else []",
+          "code_caption": "空結果可表示圖含環；若空圖也是合法輸入，可改回傳額外狀態。"
+        },
+        {
+          "heading": "DFS 後序與複雜度",
+          "paragraphs": ["另一作法在 DFS 完成頂點所有後繼後才把它加入答案，最後反轉完成順序；同時需用三色狀態偵測環。兩種方法在鄰接表下皆為 O(V+E) 時間、O(V) 額外空間。"],
+          "bullets": ["Kahn 適合直接觀察入度與可執行工作", "DFS 法利用完成時間的反序", "需要字典序最小答案時，可將零入度 Queue 改為 min-heap"],
+          "code": "def is_valid_topological_order(graph, order):\n    if len(order) != len(graph): return False\n    position = {vertex: index for index, vertex in enumerate(order)}\n    return all(position[u] < position[v] for u in graph for v in graph[u])",
+          "code_caption": "驗證器檢查每條有向邊的來源是否出現在目的地之前。"
+        }
+      ],
+      "takeaways": ["拓樸排序只適用於 DAG，答案可能不唯一。", "Kahn 演算法反覆處理入度為零的頂點。", "若無法輸出全部 V 個頂點，就表示存在有向環。"],
+      "quiz": [
+        {"question": "Kahn 演算法最後只輸出 V-2 個頂點代表什麼？", "answer": "剩餘頂點無法降到入度零，表示圖中存在有向環，因此沒有完整拓樸順序。"},
+        {"question": "一張 DAG 可能有兩種正確拓樸順序嗎？", "answer": "可能，當兩個頂點之間沒有依賴限制時，它們的相對順序可互換。"}
+      ],
+      "practice": ["給定課程先修邊，輸出任一合法修課順序。", "修改 Kahn 演算法使用 heapq，輸出字典序最小的合法順序。"]
+    },
+    {
+      "number": 8,
+      "slug": "union-find",
+      "title": "Union-Find 並查集",
+      "subtitle": "快速合併群組並查詢是否連通",
+      "duration": "35 分鐘",
+      "difficulty": "基礎",
+      "summary": "建立 Disjoint Set Union，使用路徑壓縮與按大小合併處理動態連通性。",
+      "objectives": ["理解集合代表元", "實作 find 與 union", "用 Union-Find 偵測無向冗餘邊"],
+      "sections": [
+        {
+          "heading": "Parent Forest 與代表元",
+          "paragraphs": ["Union-Find 又稱 Disjoint Set Union（DSU），把互不重疊的集合表示成多棵父指標樹。find(x) 沿 parent 找到根代表元；兩點代表元相同，就表示位於同一集合。"],
+          "bullets": ["初始時每個元素各自成集合，parent[x]=x", "根節點是自己的 parent", "DSU 回答連通性，不保存兩點間實際路徑"],
+          "code": "class UnionFind:\n    def __init__(self, size):\n        self.parent = list(range(size))\n        self.component_size = [1] * size\n\n    def find(self, item):\n        if self.parent[item] != item:\n            self.parent[item] = self.find(self.parent[item])\n        return self.parent[item]",
+          "code_caption": "遞迴返回時直接把節點接到根，完成路徑壓縮。"
+        },
+        {
+          "heading": "Union by Size 合併",
+          "paragraphs": ["union(a,b) 先找到兩者根；若相同就無須合併，否則把較小樹根接到較大樹根。按大小合併限制樹高，配合路徑壓縮可讓操作攤銷成本極低。"],
+          "bullets": ["先比較 root_a 與 root_b", "交換後保證 root_a 是較大集合", "更新 parent 與新根的 component_size"],
+          "code": "    def union(self, first, second):\n        root_first = self.find(first)\n        root_second = self.find(second)\n        if root_first == root_second:\n            return False\n        if self.component_size[root_first] < self.component_size[root_second]:\n            root_first, root_second = root_second, root_first\n        self.parent[root_second] = root_first\n        self.component_size[root_first] += self.component_size[root_second]\n        return True\n\n    def connected(self, first, second):\n        return self.find(first) == self.find(second)",
+          "code_caption": "union 回傳 False 表示兩點原本已在同一集合。"
+        },
+        {
+          "heading": "適用情境與複雜度",
+          "paragraphs": ["依序讀取無向邊時，若 union 回傳 False，該邊連接了原本已連通的兩點，加入後會形成環。路徑壓縮加按大小合併讓 m 次操作耗時 O(m·α(V))，α 成長極慢，實務上近似常數；空間 O(V)。"],
+          "bullets": ["適合邊逐步加入的動態連通查詢", "可計數成功 union 次數或剩餘集合數", "不擅長刪邊，也不能取代 BFS 的最短路徑"],
+          "code": "def first_redundant_edge(vertex_count, edges):\n    union_find = UnionFind(vertex_count)\n    for first, second in edges:\n        if not union_find.union(first, second):\n            return (first, second)\n    return None",
+          "code_caption": "對無向邊串流，第一條合併失敗的邊就是第一條冗餘邊。"
+        }
+      ],
+      "takeaways": ["find 取得集合代表元，union 合併兩個不同集合。", "路徑壓縮與按大小合併使攤銷操作近似 O(1)。", "Union-Find 適合動態連通與無向環偵測，但不提供實際路徑。"],
+      "quiz": [
+        {"question": "union(a,b) 發現兩者根相同時代表什麼？", "answer": "a 與 b 原本已在同一連通集合，不需要再次合併；若它們是一條新無向邊，可能形成環。"},
+        {"question": "路徑壓縮做了什麼？", "answer": "find 返回時把沿途節點直接接到根，縮短未來查找代表元的路徑。"}
+      ],
+      "practice": ["維護 component_count，讓每次成功 union 後集合數減一。", "給定無向邊依序加入，回報每一步兩個指定頂點是否已連通。"]
+    }
+  ]
+}

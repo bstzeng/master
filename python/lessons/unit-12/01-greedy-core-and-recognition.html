@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="建立 Greedy 的共同語言，區分候選、規則、可行性與目標，並用反例檢查策略。" />
+    <meta name="theme-color" content="#101713" />
+    <title>12.01 貪心核心與題型辨認｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-12-greedy.html">UNIT 12 / LESSON 01</a><p class="eyebrow">Greedy Algorithms</p><h1>貪心核心與題型辨認</h1><p class="lesson-deck">每一步做局部選擇，但必須證明不會失去最佳答案</p><div class="lesson-meta"><span>中階</span><span>28 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>建立 Greedy 的共同語言，區分候選、規則、可行性與目標，並用反例檢查策略。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明貪心演算法的核心</li><li>拆解候選、規則與可行性</li><li>辨認需要證明的關鍵假設</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>局部最佳不是看到最大就拿</h2><p>貪心演算法（Greedy Algorithm）依固定規則逐步選擇，選完通常不回頭修改。『局部最佳』必須針對目標精確定義，例如區間排程不是選最短活動，而是選最早結束活動，以保留最大的未來選擇空間。</p><ul><li>每步從目前可行候選中選擇</li><li>選擇通常不可撤銷</li><li>規則要直接連結全域目標</li><li>排序常用來安排選擇順序</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>兩個正確性支柱</h2><p>典型貪心問題具有貪心選擇性質：至少有一個最佳答案包含目前選擇；也具有最佳子結構：做完選擇後，剩餘部分仍是同型問題。兩者都要由題目結構推導，不能只因為範例成功就假設成立。</p><ul><li>Greedy-choice property：安全選擇可出現在最佳解</li><li>Optimal substructure：剩餘最佳解可組成全域最佳</li><li>交換論證可證明安全選擇</li><li>反例可推翻過度直覺的規則</li></ul></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>一個可重複的解題流程</h2><p>先寫清楚目標函式與可行限制，再提出局部選擇規則，最後嘗試證明或刻意找小反例。實作常是排序 O(n log n) 加一次掃描 O(n)，但複雜度必須依實際資料結構與判斷成本計算。</p><ul><li>定義候選、限制與要最大化或最小化的量</li><li>提出規則並追蹤選擇後剩餘問題</li><li>用窮舉小輸入對照以尋找反例</li><li>證明失敗時改評估 DP、搜尋或其他方法</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>貪心程式通常短，困難的是證明規則安全，而不是把迴圈寫出來。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>貪心依固定規則做不可撤銷的局部選擇</li><li><span>02</span>正確策略需要貪心選擇性質與最佳子結構</li><li><span>03</span>提出規則後必須證明或主動尋找反例</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>『每次選數值最大者』是否就是貪心演算法的通用定義？</summary><p>不是。局部選擇規則依全域目標而定，可能選最早結束、最小成本或最高比率，且必須證明安全。</p></details><details><summary>一個策略通過十個測試，是否足以證明貪心正確？</summary><p>不足。測試只能提高信心，仍需涵蓋所有合法輸入的論證；一個反例則足以推翻策略。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>為『用最少會議室安排全部會議』列出候選、限制與目標，但先不選演算法。</li><li>挑一個自己直覺想到的貪心規則，窮舉五個以下元素的小輸入尋找反例。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-11/08-kruskal-union-find-and-comparison.html"><span>← 上一課</span><b>Kruskal、Union-Find 與總比較</b></a><a class="next" href="../unit-12/02-activity-selection.html"><span>下一課 →</span><b>活動選擇與區間排程</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

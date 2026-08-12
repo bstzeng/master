@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="建立加權圖的表示方式，定義路徑成本，並依題目條件初步選擇最短路徑演算法。" />
+    <meta name="theme-color" content="#101713" />
+    <title>11.01 加權圖與最短路徑｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-11-classic-graph-algorithms.html">UNIT 11 / LESSON 01</a><p class="eyebrow">Classic Graph Algorithms</p><h1>加權圖與最短路徑</h1><p class="lesson-deck">先確認權重、方向與查詢範圍</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>建立加權圖的表示方式，定義路徑成本，並依題目條件初步選擇最短路徑演算法。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>以鄰接表表示有向或無向加權圖</li><li>區分邊數最少與總權重最小</li><li>列出選擇最短路徑演算法的關鍵條件</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>權重改變路徑的意義</h2><p>加權圖（Weighted Graph）的每條邊附有距離、時間、費用或風險等數值，路徑成本通常是沿途邊權重總和。最少邊數不一定代表最小成本，所以權重不全相同時，不能直接把 BFS 當作一般最短路徑解法。</p><ul><li>無權圖或等權圖：BFS 可得最少邊數路徑</li><li>非負權重：可考慮 Dijkstra</li><li>含負權重：考慮 Bellman–Ford</li><li>需要所有頂點對：可考慮 Floyd–Warshall</li></ul><figure class="code-block"><figcaption><span>鄰接表中的每個項目同時保存鄰居與邊權重。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>graph = {
+    &quot;A&quot;: [(&quot;B&quot;, 4), (&quot;C&quot;, 1)],
+    &quot;B&quot;: [(&quot;D&quot;, 1)],
+    &quot;C&quot;: [(&quot;B&quot;, 2), (&quot;D&quot;, 5)],
+    &quot;D&quot;: [],
+}
+
+path_cost = 1 + 2 + 1  # A -&gt; C -&gt; B -&gt; D
+print(path_cost)        # 4</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>距離、前驅與路徑重建</h2><p>最短路徑演算法通常維護 distance[v]，表示目前已知從起點到 v 的最小成本，並用 predecessor[v] 記錄最佳路徑上的前一個頂點。從終點反向追蹤 predecessor，再反轉結果，就能從距離數值重建實際路線。</p><ul><li>起點距離設為 0</li><li>其他頂點先設為無限大 float(&#x27;inf&#x27;)</li><li>找到更短路線時同時更新距離與前驅</li><li>無限大代表目前不可達</li></ul><figure class="code-block"><figcaption><span>前驅表把最短距離轉回實際頂點路徑。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def rebuild_path(predecessor, start, target):
+    path = []
+    current = target
+    while current is not None:
+        path.append(current)
+        if current == start:
+            return path[::-1]
+        current = predecessor.get(current)
+    return []
+
+previous = {&quot;A&quot;: None, &quot;C&quot;: &quot;A&quot;, &quot;B&quot;: &quot;C&quot;, &quot;D&quot;: &quot;B&quot;}
+print(rebuild_path(previous, &quot;A&quot;, &quot;D&quot;))</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>先做演算法條件檢查</h2><p>選演算法前要確認圖是有向或無向、是否含負邊、要單一起點還是所有點對，以及圖是稀疏或稠密。V 表示頂點數、E 表示邊數；鄰接表使用 O(V + E) 空間，鄰接矩陣則固定需要 O(V²)。</p><ul><li>單源、非負、稀疏：Heap Dijkstra</li><li>單源、可能有負邊：Bellman–Ford</li><li>全點對且 V 不大：Floyd–Warshall</li><li>不要把最短路徑與最小生成樹混為一談</li></ul><div class="table-wrap"><table><thead><tr><th>條件</th><th>優先考慮</th><th>主要限制</th></tr></thead><tbody><tr><td>無權或等權</td><td>BFS</td><td>成本以邊數計</td></tr><tr><td>非負權重</td><td>Dijkstra</td><td>不能有負邊</td></tr><tr><td>含負邊</td><td>Bellman–Ford</td><td>時間 O(VE)</td></tr><tr><td>所有點對</td><td>Floyd–Warshall</td><td>時間 O(V³)、空間 O(V²)</td></tr></tbody></table></div></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>加權最短路徑最小化的是邊權總和，不一定是邊數</li><li><span>02</span>distance 保存成本，predecessor 用來重建實際路徑</li><li><span>03</span>演算法選擇取決於負權重、查詢範圍與圖的表示方式</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼一般加權圖不能直接使用 BFS 求最短成本？</summary><p>BFS 最小化經過的邊數；不同邊權下，邊數較少的路徑可能成本反而較高。</p></details><details><summary>只保存 distance，為何無法可靠輸出完整路線？</summary><p>distance 只記錄最小成本；還需保存每次改善時的 predecessor，才能由終點反向重建路徑。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>把五個城市與道路時間表示成無向加權鄰接表。</li><li>為四種情境判斷應用 BFS、Dijkstra、Bellman–Ford 或 Floyd–Warshall。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-10/08-union-find.html"><span>← 上一課</span><b>Union-Find 並查集</b></a><a class="next" href="../unit-11/02-dijkstra-foundations.html"><span>下一課 →</span><b>Dijkstra：以最小暫定距離擴張</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

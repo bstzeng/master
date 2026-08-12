@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="理解 String 的不可變性、索引切片、常用轉換與高效組合方式。" />
+    <meta name="theme-color" content="#101713" />
+    <title>02.06 String：不可變的文字序列｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-02-python-builtins.html">UNIT 02 / LESSON 06</a><p class="eyebrow">Python Built-in Data Structures</p><h1>String：不可變的文字序列</h1><p class="lesson-deck">以序列觀念處理文字與避免低效串接</p><div class="lesson-meta"><span>入門</span><span>25 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>理解 String 的不可變性、索引切片、常用轉換與高效組合方式。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>以索引、切片與字串方法處理文字</li><li>解釋 String 不可變帶來的成本</li><li>使用 join 高效組合多段文字</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>文字也是序列</h2><p>String 是由 Unicode 字元組成的不可變序列，支援索引、切片、in 與迭代。讀取單一位置通常是 O(1)，但切片長度為 k 時需要建立新字串，時間與空間皆為 O(k)。</p><ul><li>索引取得一個新的一字元 String</li><li>切片規則與 List 相同，左含右不含</li><li>成員或子字串搜尋不應假設為 O(1)</li></ul><figure class="code-block"><figcaption><span>把 String 當作不可變序列進行索引、切片與走訪。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>text = &quot;資料結構&quot;
+print(text[0])     # 資
+print(text[1:3])   # 料結
+for character in text:
+    print(character)</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>清理、拆分與格式化</h2><p>字串方法不會改動原字串，而是回傳新的 String；strip、split、replace 與 lower 是資料清理的常用工具。這些方法通常需要檢視或複製文字，對長度 n 的字串多半以 O(n) 理解。</p><ul><li>strip() 移除頭尾空白</li><li>split(separator) 拆成 List</li><li>separator.join(parts) 合併字串</li><li>f-string 適合將值嵌入文字</li></ul><figure class="code-block"><figcaption><span>清理輸入、拆分欄位，再用 f-string 產生訊息。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>raw = &quot;  Amy,91  &quot;
+name, score_text = raw.strip().split(&quot;,&quot;)
+message = f&quot;{name} 的分數是 {int(score_text)}&quot;
+print(message)</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>大量串接與資料選型</h2><p>因 String 不可變，迴圈中反覆使用 result += piece 可能不斷複製既有內容，累積成本可能接近 O(n²)。先把片段存入 List，最後用 join 一次配置結果，通常可在總字元數的 O(n) 時間完成。</p><ul><li>固定文字與文字處理：String</li><li>大量累積片段：List 加 join</li><li>需要修改單一字元：先轉 List，完成後 join</li><li>String 可雜湊，因此可作為 Dictionary 鍵或 Set 元素</li></ul><figure class="code-block"><figcaption><span>用 join 線性地組合多段文字。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>words = [&quot;Python&quot;, &quot;資料結構&quot;, &quot;入門&quot;]
+title = &quot;｜&quot;.join(words)
+print(title)</code></pre></figure><aside class="concept-callout"><b>KEY IDEA</b><p>小量、一次性的 + 串接很清楚；需要在迴圈大量累積時再改用 List 與 join。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>String 是不可變的 Unicode 字元序列</li><li><span>02</span>切片與多數轉換會依文字長度建立新物件</li><li><span>03</span>大量組合文字時優先使用 List 收集後再 join</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼不能寫 text[0] = &#x27;A&#x27;？</summary><p>String 不可變，不能就地替換字元；必須建立新的 String。</p></details><details><summary>迴圈中大量串接字串時，為何 join 通常較好？</summary><p>反覆 += 可能一再複製逐漸變長的結果；join 能先知道片段並較接近一次完成配置，總成本通常為 O(n)。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>將逗號分隔且含多餘空白的姓名清單整理成乾淨的 List。</li><li>把一組句子片段用換行符號組成報告，比較 += 與 join 的寫法。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-02/05-sets.html"><span>← 上一課</span><b>Set：唯一元素與集合運算</b></a><a class="next" href="../unit-02/07-stack-queue-and-deque.html"><span>下一課 →</span><b>Stack、Queue 與 deque</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

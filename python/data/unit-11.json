@@ -1,0 +1,685 @@
+{
+  "number": 11,
+  "phase": 2,
+  "slug": "classic-graph-algorithms",
+  "title": "經典圖論演算法",
+  "english": "Classic Graph Algorithms",
+  "summary": "依邊權重與問題目標，學習單源及全點對最短路徑，以及連接所有頂點的最小生成樹演算法。",
+  "goal": "能根據負權重、圖的稀疏程度與查詢範圍，選擇並實作 Dijkstra、Bellman–Ford、Floyd–Warshall、Prim 或 Kruskal。",
+  "prerequisites": [
+    "熟悉圖的頂點、邊、鄰接表與鄰接矩陣",
+    "能使用 DFS、BFS、Heap 與 Union-Find",
+    "理解時間複雜度中的 V 與 E"
+  ],
+  "outcomes": [
+    "將加權圖建模為鄰接表或鄰接矩陣",
+    "正確選用單源與全點對最短路徑演算法",
+    "辨認負權重與可達負環造成的限制",
+    "區分最短路徑樹與最小生成樹",
+    "以 Prim 或 Kruskal 建立最小生成樹並驗證連通性"
+  ],
+  "lessons": [
+    {
+      "number": 1,
+      "slug": "weighted-graphs-and-shortest-paths",
+      "title": "加權圖與最短路徑",
+      "subtitle": "先確認權重、方向與查詢範圍",
+      "duration": "30 分鐘",
+      "difficulty": "基礎",
+      "summary": "建立加權圖的表示方式，定義路徑成本，並依題目條件初步選擇最短路徑演算法。",
+      "objectives": [
+        "以鄰接表表示有向或無向加權圖",
+        "區分邊數最少與總權重最小",
+        "列出選擇最短路徑演算法的關鍵條件"
+      ],
+      "sections": [
+        {
+          "heading": "權重改變路徑的意義",
+          "paragraphs": [
+            "加權圖（Weighted Graph）的每條邊附有距離、時間、費用或風險等數值，路徑成本通常是沿途邊權重總和。最少邊數不一定代表最小成本，所以權重不全相同時，不能直接把 BFS 當作一般最短路徑解法。"
+          ],
+          "bullets": [
+            "無權圖或等權圖：BFS 可得最少邊數路徑",
+            "非負權重：可考慮 Dijkstra",
+            "含負權重：考慮 Bellman–Ford",
+            "需要所有頂點對：可考慮 Floyd–Warshall"
+          ],
+          "code": "graph = {\n    \"A\": [(\"B\", 4), (\"C\", 1)],\n    \"B\": [(\"D\", 1)],\n    \"C\": [(\"B\", 2), (\"D\", 5)],\n    \"D\": [],\n}\n\npath_cost = 1 + 2 + 1  # A -> C -> B -> D\nprint(path_cost)        # 4",
+          "code_caption": "鄰接表中的每個項目同時保存鄰居與邊權重。"
+        },
+        {
+          "heading": "距離、前驅與路徑重建",
+          "paragraphs": [
+            "最短路徑演算法通常維護 distance[v]，表示目前已知從起點到 v 的最小成本，並用 predecessor[v] 記錄最佳路徑上的前一個頂點。從終點反向追蹤 predecessor，再反轉結果，就能從距離數值重建實際路線。"
+          ],
+          "bullets": [
+            "起點距離設為 0",
+            "其他頂點先設為無限大 float('inf')",
+            "找到更短路線時同時更新距離與前驅",
+            "無限大代表目前不可達"
+          ],
+          "code": "def rebuild_path(predecessor, start, target):\n    path = []\n    current = target\n    while current is not None:\n        path.append(current)\n        if current == start:\n            return path[::-1]\n        current = predecessor.get(current)\n    return []\n\nprevious = {\"A\": None, \"C\": \"A\", \"B\": \"C\", \"D\": \"B\"}\nprint(rebuild_path(previous, \"A\", \"D\"))",
+          "code_caption": "前驅表把最短距離轉回實際頂點路徑。"
+        },
+        {
+          "heading": "先做演算法條件檢查",
+          "paragraphs": [
+            "選演算法前要確認圖是有向或無向、是否含負邊、要單一起點還是所有點對，以及圖是稀疏或稠密。V 表示頂點數、E 表示邊數；鄰接表使用 O(V + E) 空間，鄰接矩陣則固定需要 O(V²)。"
+          ],
+          "bullets": [
+            "單源、非負、稀疏：Heap Dijkstra",
+            "單源、可能有負邊：Bellman–Ford",
+            "全點對且 V 不大：Floyd–Warshall",
+            "不要把最短路徑與最小生成樹混為一談"
+          ],
+          "table": {
+            "headers": ["條件", "優先考慮", "主要限制"],
+            "rows": [
+              ["無權或等權", "BFS", "成本以邊數計"],
+              ["非負權重", "Dijkstra", "不能有負邊"],
+              ["含負邊", "Bellman–Ford", "時間 O(VE)"],
+              ["所有點對", "Floyd–Warshall", "時間 O(V³)、空間 O(V²)"]
+            ]
+          }
+        }
+      ],
+      "takeaways": [
+        "加權最短路徑最小化的是邊權總和，不一定是邊數",
+        "distance 保存成本，predecessor 用來重建實際路徑",
+        "演算法選擇取決於負權重、查詢範圍與圖的表示方式"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼一般加權圖不能直接使用 BFS 求最短成本？",
+          "answer": "BFS 最小化經過的邊數；不同邊權下，邊數較少的路徑可能成本反而較高。"
+        },
+        {
+          "question": "只保存 distance，為何無法可靠輸出完整路線？",
+          "answer": "distance 只記錄最小成本；還需保存每次改善時的 predecessor，才能由終點反向重建路徑。"
+        }
+      ],
+      "practice": [
+        "把五個城市與道路時間表示成無向加權鄰接表。",
+        "為四種情境判斷應用 BFS、Dijkstra、Bellman–Ford 或 Floyd–Warshall。"
+      ]
+    },
+    {
+      "number": 2,
+      "slug": "dijkstra-foundations",
+      "title": "Dijkstra：以最小暫定距離擴張",
+      "subtitle": "先理解貪心正確性與 O(V²) 版本",
+      "duration": "35 分鐘",
+      "difficulty": "基礎",
+      "summary": "理解 Dijkstra 的貪心選擇、鬆弛操作與非負權重限制，實作簡單版本。",
+      "objectives": [
+        "解釋 Dijkstra 每輪選擇的頂點",
+        "使用 Relaxation 更新距離",
+        "實作並分析 O(V² + E) 版本"
+      ],
+      "sections": [
+        {
+          "heading": "固定最近的未處理頂點",
+          "paragraphs": [
+            "Dijkstra 每輪從尚未固定的頂點中，選出暫定距離最小者 u；當所有邊權皆非負時，未來繞路不可能讓 u 更短，因此可把它的距離固定。接著從 u 嘗試改善所有鄰居，逐步向外擴張已確定區域。"
+          ],
+          "bullets": [
+            "distance[start] = 0，其餘為無限大",
+            "每輪選最小未拜訪頂點",
+            "固定後不再改變其最短距離",
+            "負邊會破壞固定距離的推論"
+          ],
+          "code": "distance = {\"A\": 0, \"B\": 5, \"C\": float(\"inf\")}\nvisited = {\"A\"}\nunvisited = [vertex for vertex in distance if vertex not in visited]\ncurrent = min(unvisited, key=distance.get)\nprint(current)  # B",
+          "code_caption": "簡單版本每輪以線性搜尋找最小暫定距離。"
+        },
+        {
+          "heading": "Relaxation 鬆弛操作",
+          "paragraphs": [
+            "鬆弛（Relaxation）檢查經過 u 到鄰居 v 是否比已知路線更短：若 distance[u] + weight < distance[v]，就更新 distance[v] 與 predecessor[v]。同一條邊可能被檢查，但只有真正變短時才更新。"
+          ],
+          "bullets": [
+            "candidate = distance[u] + weight",
+            "只在 candidate 更小時更新",
+            "更新 predecessor[v] = u 以便重建",
+            "不可達頂點維持無限大"
+          ],
+          "code": "def relax(distance, predecessor, source, target, weight):\n    candidate = distance[source] + weight\n    if candidate < distance[target]:\n        distance[target] = candidate\n        predecessor[target] = source\n        return True\n    return False\n\ndistance = {\"A\": 0, \"B\": 7}\nprevious = {\"A\": None, \"B\": None}\nprint(relax(distance, previous, \"A\", \"B\", 3), distance)",
+          "code_caption": "Relaxation 是多種最短路徑演算法共用的核心操作。"
+        },
+        {
+          "heading": "O(V²) 實作與限制",
+          "paragraphs": [
+            "不使用 Heap 時，每輪線性掃描所有未拜訪頂點找最小值，共需 O(V²)，再加上走訪鄰接邊 O(E)，空間為 O(V + E)。這個版本容易理解，且在鄰接矩陣或非常稠密的圖上未必差，但仍禁止負權重。"
+          ],
+          "bullets": [
+            "時間：O(V² + E)，通常寫作 O(V²)",
+            "空間：圖加距離表為 O(V + E)",
+            "可在取出目標頂點時提前停止",
+            "遇到最小距離仍為無限大，表示剩餘頂點不可達"
+          ],
+          "code": "def dijkstra_simple(graph, start):\n    distance = {vertex: float(\"inf\") for vertex in graph}\n    distance[start] = 0\n    previous = {vertex: None for vertex in graph}\n    visited = set()\n\n    while len(visited) < len(graph):\n        choices = [v for v in graph if v not in visited]\n        current = min(choices, key=distance.get)\n        if distance[current] == float(\"inf\"):\n            break\n        visited.add(current)\n        for neighbor, weight in graph[current]:\n            candidate = distance[current] + weight\n            if candidate < distance[neighbor]:\n                distance[neighbor] = candidate\n                previous[neighbor] = current\n    return distance, previous",
+          "code_caption": "線性選最小頂點的 Dijkstra，適合先理解流程。",
+          "callout": "Dijkstra 的非負限制是正確性前提，不是單純的效能建議。"
+        }
+      ],
+      "takeaways": [
+        "Dijkstra 固定目前暫定距離最小的未處理頂點",
+        "Relaxation 用新路徑成本改善 distance 與 predecessor",
+        "簡單版本為 O(V²)，且只適用所有邊權非負的圖"
+      ],
+      "quiz": [
+        {
+          "question": "Dijkstra 為何能固定目前距離最小的頂點？",
+          "answer": "所有邊權非負時，經過任何尚未固定頂點再繞回來都不會產生更小成本。"
+        },
+        {
+          "question": "Relaxation 沒有改善距離時，是否要更新 predecessor？",
+          "answer": "不需要；predecessor 必須對應目前最短的已知路徑，只有距離變短時才一起更新。"
+        }
+      ],
+      "practice": [
+        "手動追蹤四個頂點的 Dijkstra，每輪記錄 distance 與 visited。",
+        "修改簡單版本，指定 target 並在距離固定後提早回傳。"
+      ]
+    },
+    {
+      "number": 3,
+      "slug": "heap-optimized-dijkstra",
+      "title": "Heap 優化 Dijkstra",
+      "subtitle": "在稀疏圖上有效率地取得最近頂點",
+      "duration": "40 分鐘",
+      "difficulty": "進階",
+      "summary": "以 heapq 取代線性選最小值，使用延遲刪除處理過期項目，完成常用 Dijkstra 模板。",
+      "objectives": [
+        "以 Min Heap 保存暫定距離與頂點",
+        "正確忽略過期的 Heap 項目",
+        "分析 O((V + E) log V) 複雜度"
+      ],
+      "sections": [
+        {
+          "heading": "Min Heap 取代線性搜尋",
+          "paragraphs": [
+            "把 (distance, vertex) 放入 Min Heap，就能以 O(log V) 取得目前暫定距離最小的候選，而非每輪掃描 O(V)。每次鬆弛成功就推入新距離，特別適合 E 遠小於 V² 的稀疏圖。"
+          ],
+          "bullets": [
+            "Heap 根是最小暫定距離",
+            "起點項目為 (0, start)",
+            "鬆弛成功才 heappush",
+            "頂點若不可互相比較，可加入序號 tie-breaker"
+          ],
+          "code": "import heapq\n\nfrontier = [(0, \"A\")]\nheapq.heappush(frontier, (4, \"B\"))\nheapq.heappush(frontier, (1, \"C\"))\nprint(heapq.heappop(frontier))  # (0, 'A')",
+          "code_caption": "Heap 先依距離欄位選出下一個擴張頂點。"
+        },
+        {
+          "heading": "過期項目與延遲刪除",
+          "paragraphs": [
+            "heapq 不提供有效率的 decrease-key，所以某頂點距離改善時直接推入新項目，舊項目留到取出時再判斷。若 popped_distance 不等於目前 distance[vertex]，它就是過期候選，可直接 continue。"
+          ],
+          "bullets": [
+            "同一頂點可能同時有多筆 Heap 項目",
+            "distance 字典保存唯一最新答案",
+            "過期項目不展開鄰居",
+            "這種策略稱為 Lazy Deletion（延遲刪除）"
+          ],
+          "code": "current_distance, vertex = (7, \"B\")\ndistance = {\"B\": 3}\nif current_distance != distance[vertex]:\n    print(\"忽略過期項目\")",
+          "code_caption": "距離不一致代表更短版本已在之後加入 Heap。"
+        },
+        {
+          "heading": "完整模板與複雜度",
+          "paragraphs": [
+            "使用鄰接表與二元 Heap 時，每條邊最多觸發一次成功更新並付出對數成本，常寫為 O((V + E) log V) 或 O(E log V)，空間 O(V + E)。負邊仍然禁止；若只查單一終點，可在該終點以最新距離彈出時提早停止。"
+          ],
+          "bullets": [
+            "適用：非負權重的稀疏圖",
+            "時間：O((V + E) log V)",
+            "空間：O(V + E)，Heap 可能含過期項目",
+            "終點第一次以有效距離 pop 時已確定最短"
+          ],
+          "code": "import heapq\n\ndef dijkstra(graph, start):\n    distance = {vertex: float(\"inf\") for vertex in graph}\n    previous = {vertex: None for vertex in graph}\n    distance[start] = 0\n    heap = [(0, start)]\n\n    while heap:\n        current_distance, current = heapq.heappop(heap)\n        if current_distance != distance[current]:\n            continue\n        for neighbor, weight in graph[current]:\n            if weight < 0:\n                raise ValueError(\"Dijkstra 不接受負權重\")\n            candidate = current_distance + weight\n            if candidate < distance[neighbor]:\n                distance[neighbor] = candidate\n                previous[neighbor] = current\n                heapq.heappush(heap, (candidate, neighbor))\n    return distance, previous",
+          "code_caption": "Heap Dijkstra 的標準 Python 3 實作。",
+          "table": {
+            "headers": ["版本", "選最小值", "總時間", "較適合"],
+            "rows": [
+              ["線性掃描", "O(V)", "O(V² + E)", "稠密圖或教學"],
+              ["二元 Heap", "O(log V)", "O((V + E) log V)", "稀疏圖"]
+            ]
+          }
+        }
+      ],
+      "takeaways": [
+        "Min Heap 將取得最小暫定距離的成本降為對數時間",
+        "距離改善時推入新項目，取出後以 distance 判斷並忽略過期項目",
+        "Heap Dijkstra 適用非負稀疏圖，時間為 O((V + E) log V)"
+      ],
+      "quiz": [
+        {
+          "question": "為何距離改善時不必從 Heap 中搜尋並刪除舊項目？",
+          "answer": "可直接推入新項目，舊項目取出時以最新 distance 判斷為過期並忽略，避免 O(n) 搜尋。"
+        },
+        {
+          "question": "何時能安全地對單一 target 提早停止？",
+          "answer": "target 以等於 distance[target] 的有效距離從 Heap 彈出時，其最短距離已固定。"
+        }
+      ],
+      "practice": [
+        "將 O(V²) Dijkstra 改寫為 heapq 版本並比較兩者輸出。",
+        "在模板中加入 target 與路徑重建，回傳最短成本及完整路線。"
+      ]
+    },
+    {
+      "number": 4,
+      "slug": "bellman-ford-and-negative-cycles",
+      "title": "Bellman–Ford 與負環偵測",
+      "subtitle": "允許負邊並辨認沒有有限答案的情況",
+      "duration": "40 分鐘",
+      "difficulty": "進階",
+      "summary": "透過重複鬆弛所有邊處理負權重，並以額外一輪偵測從起點可達的負環。",
+      "objectives": [
+        "解釋重複 V - 1 輪鬆弛的理由",
+        "實作 Bellman–Ford 與提早停止",
+        "偵測起點可達的負權重循環"
+      ],
+      "sections": [
+        {
+          "heading": "負權重與重複鬆弛",
+          "paragraphs": [
+            "Bellman–Ford 不貪心固定頂點，而是反覆掃描所有有向邊並鬆弛。若不存在可達負環，任何最短簡單路徑最多含 V - 1 條邊，因此完成 V - 1 輪後，改善資訊必能沿整條路徑傳播到終點。"
+          ],
+          "bullets": [
+            "邊格式通常為 (source, target, weight)",
+            "distance[start] = 0，其餘無限大",
+            "每輪依序嘗試所有 E 條邊",
+            "可以處理正邊、零權邊與負邊"
+          ],
+          "code": "edges = [\n    (\"A\", \"B\", 4),\n    (\"A\", \"C\", 5),\n    (\"B\", \"C\", -2),\n]\ndistance = {\"A\": 0, \"B\": float(\"inf\"), \"C\": float(\"inf\")}\nfor source, target, weight in edges:\n    if distance[source] != float(\"inf\"):\n        distance[target] = min(distance[target], distance[source] + weight)\nprint(distance)",
+          "code_caption": "一輪會把目前可達資訊沿邊向前傳播。"
+        },
+        {
+          "heading": "提早停止與複雜度",
+          "paragraphs": [
+            "若某一整輪沒有任何距離更新，後續輪次也不會再改變，可提早結束；最壞仍需 O(VE) 時間，距離與前驅表使用 O(V) 額外空間。相較 Dijkstra 較慢，但換來處理負邊及偵測負環的能力。"
+          ],
+          "bullets": [
+            "updated 旗標記錄本輪是否改善",
+            "不可達 source 不應拿無限大做鬆弛",
+            "最壞時間 O(VE)",
+            "額外空間 O(V)，若含邊列表則總儲存 O(V + E)"
+          ],
+          "code": "def bellman_ford(vertices, edges, start):\n    distance = {vertex: float(\"inf\") for vertex in vertices}\n    previous = {vertex: None for vertex in vertices}\n    distance[start] = 0\n\n    for _ in range(len(vertices) - 1):\n        updated = False\n        for source, target, weight in edges:\n            if distance[source] == float(\"inf\"):\n                continue\n            candidate = distance[source] + weight\n            if candidate < distance[target]:\n                distance[target] = candidate\n                previous[target] = source\n                updated = True\n        if not updated:\n            break\n    return distance, previous",
+          "code_caption": "沒有更新時提早停止的 Bellman–Ford 主流程。"
+        },
+        {
+          "heading": "第 V 輪與可達負環",
+          "paragraphs": [
+            "完成 V - 1 輪後再掃描一次，若仍有可達邊能改善距離，代表存在從起點可達的負權重循環；沿該循環反覆繞行會讓成本無限下降，因此相關頂點沒有有限最短路徑。與起點不連通的負環不會影響該單源查詢。"
+          ],
+          "bullets": [
+            "額外一輪仍可鬆弛即偵測到負環",
+            "必須確認 source 從起點可達",
+            "負環使最短距離可趨向負無限",
+            "只回傳 False 可能不足，實務上可標記受影響頂點"
+          ],
+          "code": "def has_reachable_negative_cycle(distance, edges):\n    for source, target, weight in edges:\n        if distance[source] == float(\"inf\"):\n            continue\n        if distance[source] + weight < distance[target]:\n            return True\n    return False\n\ncycle_edges = [(\"A\", \"B\", 1), (\"B\", \"C\", -3), (\"C\", \"B\", 1)]",
+          "code_caption": "應在 Bellman–Ford 的 V - 1 輪之後呼叫負環檢查。",
+          "callout": "負邊不等於負環；只有總權重為負且可重複繞行的循環才讓最短路徑失去有限答案。"
+        }
+      ],
+      "takeaways": [
+        "Bellman–Ford 以最多 V - 1 輪全邊鬆弛處理負權重",
+        "最壞時間 O(VE)，一輪沒有更新時可以提早停止",
+        "額外一輪仍可改善表示存在從起點可達的負環"
+      ],
+      "quiz": [
+        {
+          "question": "為何 Bellman–Ford 最多需要 V - 1 輪？",
+          "answer": "沒有重複頂點的最短簡單路徑最多含 V - 1 條邊，每輪能讓正確距離至少向前傳播一條邊。"
+        },
+        {
+          "question": "圖中有負環，就一定要對任何起點回報失敗嗎？",
+          "answer": "不一定；單源最短路徑只受從該起點可達的負環影響。"
+        }
+      ],
+      "practice": [
+        "實作回傳 (distance, previous, has_negative_cycle) 的完整函式。",
+        "設計一張含負邊但沒有負環的圖，手動驗證 Bellman–Ford 結果。"
+      ]
+    },
+    {
+      "number": 5,
+      "slug": "floyd-warshall",
+      "title": "Floyd–Warshall：全點對最短路徑",
+      "subtitle": "用動態規劃逐步允許中繼頂點",
+      "duration": "40 分鐘",
+      "difficulty": "進階",
+      "summary": "以距離矩陣計算所有頂點對的最短路徑，理解三層迴圈順序、負邊與負環判斷。",
+      "objectives": [
+        "定義 Floyd–Warshall 的動態規劃轉移",
+        "正確初始化並更新距離矩陣",
+        "分析 O(V³) 時間與 O(V²) 空間限制"
+      ],
+      "sections": [
+        {
+          "heading": "中繼頂點的動態規劃",
+          "paragraphs": [
+            "Floyd–Warshall 依序考慮每個頂點 k 能否作為中繼點，對每組 i、j 比較直達距離與繞經 k 的距離。轉移式為 dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])，k 必須放在最外層才能維持階段意義。"
+          ],
+          "bullets": [
+            "狀態保存目前允許的中繼頂點集合",
+            "每輪決定是否經過新頂點 k",
+            "原地更新距離矩陣即可",
+            "k、i、j 的迴圈順序不可任意互換"
+          ],
+          "code": "distance = [\n    [0, 3, float(\"inf\")],\n    [float(\"inf\"), 0, 2],\n    [5, float(\"inf\"), 0],\n]\nfor middle in range(3):\n    for source in range(3):\n        for target in range(3):\n            distance[source][target] = min(\n                distance[source][target],\n                distance[source][middle] + distance[middle][target],\n            )",
+          "code_caption": "逐步允許 0、1、2 作為中繼點。"
+        },
+        {
+          "heading": "矩陣初始化與路徑",
+          "paragraphs": [
+            "對角線距離設為 0，存在邊的位置設為權重，其餘設為無限大；若同一對頂點有多條邊，應取最小權重。若要重建路徑，可另存 next_hop 矩陣，在改善 dist[i][j] 時更新為走向 k 路線的第一步。"
+          ],
+          "bullets": [
+            "dist[i][i] = 0",
+            "沒有直接邊則為無限大",
+            "平行邊初始化為最小權重",
+            "無向邊要同時填入兩個方向"
+          ],
+          "code": "def floyd_warshall(matrix):\n    size = len(matrix)\n    distance = [row[:] for row in matrix]\n    for middle in range(size):\n        for source in range(size):\n            for target in range(size):\n                candidate = distance[source][middle] + distance[middle][target]\n                if candidate < distance[source][target]:\n                    distance[source][target] = candidate\n    return distance",
+          "code_caption": "複製輸入矩陣後原地執行全點對轉移。"
+        },
+        {
+          "heading": "負邊、負環與適用規模",
+          "paragraphs": [
+            "Floyd–Warshall 能處理負邊，但若完成後 dist[v][v] < 0，就表示 v 位於或可繞行某個負環；受該負環影響的點對沒有有限最短距離。演算法固定使用 O(V³) 時間與 O(V²) 空間，適合頂點數不大、圖較稠密或全點對查詢很多的情境。"
+          ],
+          "bullets": [
+            "允許負邊，但需檢查負環",
+            "負對角線項代表負環",
+            "時間 O(V³)，不受 E 稀少而自動改善",
+            "空間 O(V²)，大型稀疏圖通常不合適"
+          ],
+          "table": {
+            "headers": ["需求", "Floyd–Warshall 評估"],
+            "rows": [
+              ["所有頂點對距離", "直接得到完整矩陣"],
+              ["少數單源查詢", "通常過度計算"],
+              ["V 很大且 E 很少", "O(V³) 通常不可接受"],
+              ["需要偵測負環", "可檢查 dist[v][v] < 0"]
+            ]
+          },
+          "callout": "無限大加有限值在 Python 仍是無限大，但其他語言使用固定大整數時要避免溢位。"
+        }
+      ],
+      "takeaways": [
+        "Floyd–Warshall 逐步允許中繼頂點，計算所有頂點對距離",
+        "轉移式為經過 k 與不經過 k 的較小值，k 必須在最外層",
+        "時間 O(V³)、空間 O(V²)，完成後可用負對角線偵測負環"
+      ],
+      "quiz": [
+        {
+          "question": "為什麼 middle 迴圈必須放在最外層？",
+          "answer": "每一輪代表允許一組固定的中繼頂點；若順序改變，更新時可能使用尚未符合該階段定義的狀態。"
+        },
+        {
+          "question": "完成後 dist[v][v] 為負代表什麼？",
+          "answer": "存在可從 v 出發並回到 v、總權重為負的循環，因此能反覆降低路徑成本。"
+        }
+      ],
+      "practice": [
+        "為四個頂點建立矩陣並逐輪記錄加入中繼點後的變化。",
+        "擴充函式保存 next_hop，重建任意起點到終點的路徑。"
+      ]
+    },
+    {
+      "number": 6,
+      "slug": "minimum-spanning-tree-concepts",
+      "title": "Minimum Spanning Tree 基礎",
+      "subtitle": "以最低總成本連接所有頂點",
+      "duration": "30 分鐘",
+      "difficulty": "基礎",
+      "summary": "定義生成樹與最小生成樹，辨認切割性質，並區分 MST 與最短路徑樹。",
+      "objectives": [
+        "定義 Spanning Tree 與 MST",
+        "說明樹必有 V - 1 條邊",
+        "區分最低建設總成本與單源最短距離"
+      ],
+      "sections": [
+        {
+          "heading": "生成樹與最小總權重",
+          "paragraphs": [
+            "對連通無向圖，Spanning Tree（生成樹）是連接全部 V 個頂點、沒有循環且恰有 V - 1 條邊的子圖；Minimum Spanning Tree（最小生成樹，MST）則讓這些邊的總權重最小。它常建模網路、道路或電纜的最低建設成本。"
+          ],
+          "bullets": [
+            "問題通常要求無向、連通加權圖",
+            "連接全部頂點且不能有循環",
+            "任一生成樹都恰有 V - 1 條邊",
+            "權重相同時可能存在多棵 MST"
+          ],
+          "code": "vertices = {\"A\", \"B\", \"C\", \"D\"}\ntree_edges = [(\"A\", \"B\", 1), (\"B\", \"C\", 2), (\"C\", \"D\", 3)]\nassert len(tree_edges) == len(vertices) - 1\ntotal_weight = sum(weight for _, _, weight in tree_edges)\nprint(total_weight)  # 6",
+          "code_caption": "V - 1 條邊是生成樹的必要條件，但仍需確認連通且無環。"
+        },
+        {
+          "heading": "Cut Property 切割性質",
+          "paragraphs": [
+            "切割（Cut）把頂點分為兩群；跨越該切割的最輕安全邊可以加入某棵 MST，這是 Prim 與 Kruskal 貪心正確性的共同基礎。演算法的差別主要在如何建立切割、以及如何有效找出下一條安全邊。"
+          ],
+          "bullets": [
+            "Prim 的切割：已連接集合與未連接集合",
+            "Kruskal 的切割：目前不同連通分量",
+            "選跨切割最輕邊不會破壞最佳解",
+            "同權邊可有多個同樣安全的選擇"
+          ],
+          "table": {
+            "headers": ["演算法", "每步擴張單位", "避免循環方式"],
+            "rows": [
+              ["Prim", "一個頂點與一條邊", "只連到未加入頂點"],
+              ["Kruskal", "全域最輕安全邊", "Union-Find 檢查分量"]
+            ]
+          }
+        },
+        {
+          "heading": "MST 不是最短路徑樹",
+          "paragraphs": [
+            "MST 最小化整棵樹的邊權總和，不保證任一指定起點到其他頂點的路徑最短；Shortest Path Tree 則確保從固定起點出發的距離最短，但總邊權可能更高。題目問建設整體網路成本時選 MST，問導航或傳輸距離時選最短路徑。"
+          ],
+          "bullets": [
+            "MST：全域建設總成本最小",
+            "最短路徑樹：固定起點到各點最短",
+            "MST 可有多棵，總權重相同",
+            "不連通圖只能得到 Minimum Spanning Forest"
+          ],
+          "code": "def tree_weight(edges):\n    return sum(weight for _, _, weight in edges)\n\nmst = [(\"A\", \"B\", 1), (\"B\", \"C\", 1), (\"C\", \"D\", 1)]\nprint(tree_weight(mst))  # 比較的是整體邊權總和",
+          "code_caption": "MST 的目標函式是所選邊權總和。",
+          "callout": "看到『讓所有據點連通且總建設成本最低』，才是典型 MST 訊號。"
+        }
+      ],
+      "takeaways": [
+        "MST 是連接所有頂點、無環、含 V - 1 條邊且總權重最小的子圖",
+        "Prim 與 Kruskal 都依切割性質選擇安全的最輕邊",
+        "MST 最小化整體建設成本，不保證固定起點的每條路徑最短"
+      ],
+      "quiz": [
+        {
+          "question": "有 V 個頂點的生成樹一定有幾條邊？",
+          "answer": "恰有 V - 1 條；更少會不連通，更多則至少產生一個循環。"
+        },
+        {
+          "question": "從學校到每戶的距離都要最短，應直接使用 MST 嗎？",
+          "answer": "不應；這是固定起點最短路徑問題。MST 只保證整體所建邊的成本總和最小。"
+        }
+      ],
+      "practice": [
+        "畫一張四頂點加權圖，列出兩棵不同生成樹並比較總權重。",
+        "將五個應用情境分類為 MST、單源最短路徑或全點對最短路徑。"
+      ]
+    },
+    {
+      "number": 7,
+      "slug": "prim-algorithm",
+      "title": "Prim：從一個頂點擴張 MST",
+      "subtitle": "用 Heap 選出跨越切割的最輕邊",
+      "duration": "40 分鐘",
+      "difficulty": "進階",
+      "summary": "使用鄰接表、visited 與 Min Heap 實作 Prim，並處理不連通圖與複雜度。",
+      "objectives": [
+        "解釋 Prim 的已連接切割",
+        "以 Heap 實作 Prim",
+        "驗證結果是否涵蓋所有頂點"
+      ],
+      "sections": [
+        {
+          "heading": "由已連接集合向外擴張",
+          "paragraphs": [
+            "Prim 從任一頂點開始，維護已加入 MST 的 visited 集合，反覆選出從 visited 跨到未拜訪頂點的最輕邊。每次加入一個新頂點與其連接邊，直到涵蓋全部頂點。"
+          ],
+          "bullets": [
+            "起點不影響 MST 最小總權重",
+            "候選必須一端已拜訪、一端未拜訪",
+            "目標是收集 V - 1 條邊",
+            "同權邊可能使具體 MST 不同"
+          ],
+          "code": "visited = {\"A\"}\ncandidates = [(1, \"A\", \"B\"), (4, \"A\", \"C\")]\nweight, source, target = min(candidates)\nif target not in visited:\n    visited.add(target)\nprint(visited)",
+          "code_caption": "每一步只接受連到新頂點的跨切割邊。"
+        },
+        {
+          "heading": "Heap Prim 實作",
+          "paragraphs": [
+            "Min Heap 保存 (weight, source, target)，取出後若 target 已在 visited 就視為過期邊並忽略；否則接受該邊，再推入 target 的所有出邊。這和 Dijkstra 都使用 Heap，但 Prim 比較單條跨切割邊權，Dijkstra 比較從起點累積的路徑距離。"
+          ],
+          "bullets": [
+            "Heap 鍵是單條 edge weight",
+            "visited 防止循環與重複加入",
+            "每條無向邊可能以兩個方向進入鄰接表",
+            "起點虛擬邊可用 (0, None, start)"
+          ],
+          "code": "import heapq\n\ndef prim(graph, start):\n    visited = set()\n    heap = [(0, None, start)]\n    mst_edges = []\n    total = 0\n\n    while heap and len(visited) < len(graph):\n        weight, source, target = heapq.heappop(heap)\n        if target in visited:\n            continue\n        visited.add(target)\n        if source is not None:\n            mst_edges.append((source, target, weight))\n            total += weight\n        for neighbor, edge_weight in graph[target]:\n            if neighbor not in visited:\n                heapq.heappush(heap, (edge_weight, target, neighbor))\n    return mst_edges, total, visited",
+          "code_caption": "以虛擬起點邊統一第一個頂點與後續處理。"
+        },
+        {
+          "heading": "正確性、複雜度與限制",
+          "paragraphs": [
+            "每次選出跨越 visited 切割的最輕邊，依切割性質可安全加入 MST；使用鄰接表與二元 Heap 時為 O(E log V)，空間 O(V + E)。若最後 visited 數量小於 V，圖不連通，單次 Prim 只能取得起點所在分量的生成樹。"
+          ],
+          "bullets": [
+            "時間：O(E log V)",
+            "空間：O(V + E)",
+            "適合鄰接表已存在、需要由節點向外探索",
+            "不連通時需回報失敗或對每個分量重跑成森林"
+          ],
+          "table": {
+            "headers": ["比較", "Prim", "Dijkstra"],
+            "rows": [
+              ["目標", "MST 總邊權最小", "起點路徑距離最小"],
+              ["Heap 優先值", "單條邊權", "累積距離"],
+              ["負邊", "MST 可處理", "Dijkstra 不可處理"]
+            ]
+          },
+          "callout": "Prim 可處理負權邊，因為 MST 不依賴距離固定的非負推論。"
+        }
+      ],
+      "takeaways": [
+        "Prim 從一個頂點開始，反覆選擇跨到未拜訪頂點的最輕邊",
+        "Heap Prim 使用單條邊權作優先值，時間為 O(E log V)",
+        "結果邊數應為 V - 1；否則原圖不連通或實作有誤"
+      ],
+      "quiz": [
+        {
+          "question": "Prim 與 Dijkstra 都使用 Heap，優先值有何不同？",
+          "answer": "Prim 依跨切割的單條邊權；Dijkstra 依從固定起點累積的路徑距離。"
+        },
+        {
+          "question": "Prim 結束後只拜訪 V - 2 個頂點，代表什麼？",
+          "answer": "起點無法到達所有頂點，原圖不連通，因此不存在涵蓋全圖的生成樹。"
+        }
+      ],
+      "practice": [
+        "以 Heap Prim 計算一張六頂點無向圖的 MST 邊與總權重。",
+        "修改函式，在圖不連通時拋出清楚的 ValueError。"
+      ]
+    },
+    {
+      "number": 8,
+      "slug": "kruskal-union-find-and-comparison",
+      "title": "Kruskal、Union-Find 與總比較",
+      "subtitle": "按邊排序、避免循環並完成選型",
+      "duration": "45 分鐘",
+      "difficulty": "進階",
+      "summary": "以 Union-Find 判斷安全邊並實作 Kruskal，最後比較本單元所有最短路徑與 MST 演算法。",
+      "objectives": [
+        "使用 Union-Find 維護連通分量",
+        "實作 Kruskal 並分析 O(E log E)",
+        "依問題條件完成演算法總選型"
+      ],
+      "sections": [
+        {
+          "heading": "由最輕邊合併分量",
+          "paragraphs": [
+            "Kruskal 將所有無向邊依權重由小到大排序，若某邊兩端位於不同連通分量，就接受它並合併分量；若已在同一分量，加入會形成循環，因此跳過。收集 V - 1 條邊即可提早停止。"
+          ],
+          "bullets": [
+            "全域排序所有邊",
+            "不同分量的最輕邊是安全邊",
+            "同分量邊會形成循環",
+            "不連通時得到 Minimum Spanning Forest"
+          ],
+          "code": "edges = [(1, \"A\", \"B\"), (2, \"B\", \"C\"), (3, \"A\", \"C\")]\nfor weight, source, target in sorted(edges):\n    print(weight, source, target)",
+          "code_caption": "Kruskal 的第一步是將邊依權重排序。"
+        },
+        {
+          "heading": "Union-Find 與完整實作",
+          "paragraphs": [
+            "Disjoint Set Union（DSU／Union-Find）以 find 找代表、union 合併集合；路徑壓縮與按大小合併讓單次操作攤銷接近 O(1)，精確為 O(α(V))。Kruskal 的主成本來自排序，因此總時間 O(E log E)，額外空間 O(V)。"
+          ],
+          "bullets": [
+            "find(u) == find(v) 表示加入會成環",
+            "Path Compression 壓平查找路徑",
+            "Union by Size 將小樹接到大樹",
+            "排序主導總時間 O(E log E)"
+          ],
+          "code": "class UnionFind:\n    def __init__(self, vertices):\n        self.parent = {v: v for v in vertices}\n        self.size = {v: 1 for v in vertices}\n\n    def find(self, vertex):\n        if self.parent[vertex] != vertex:\n            self.parent[vertex] = self.find(self.parent[vertex])\n        return self.parent[vertex]\n\n    def union(self, first, second):\n        root_a, root_b = self.find(first), self.find(second)\n        if root_a == root_b:\n            return False\n        if self.size[root_a] < self.size[root_b]:\n            root_a, root_b = root_b, root_a\n        self.parent[root_b] = root_a\n        self.size[root_a] += self.size[root_b]\n        return True\n\ndef kruskal(vertices, edges):\n    groups = UnionFind(vertices)\n    mst_edges = []\n    total = 0\n    for weight, source, target in sorted(edges):\n        if groups.union(source, target):\n            mst_edges.append((source, target, weight))\n            total += weight\n            if len(mst_edges) == len(vertices) - 1:\n                break\n    return mst_edges, total",
+          "code_caption": "union 回傳 False 時代表兩端早已連通，該邊必須跳過。"
+        },
+        {
+          "heading": "經典圖論演算法總選型",
+          "paragraphs": [
+            "先分清目標是路徑距離還是整體連線成本，再依負邊、查詢範圍與圖表示選擇演算法。Kruskal 適合已有邊列表或稀疏圖，Prim 適合鄰接表與連續擴張；Dijkstra、Bellman–Ford、Floyd–Warshall 則回答不同條件下的最短路徑。"
+          ],
+          "bullets": [
+            "單源非負：Heap Dijkstra",
+            "單源含負邊或需負環檢測：Bellman–Ford",
+            "全點對且 V 不大：Floyd–Warshall",
+            "MST：鄰接表偏 Prim，邊列表偏 Kruskal"
+          ],
+          "table": {
+            "headers": ["演算法", "問題", "時間", "條件與限制"],
+            "rows": [
+              ["Dijkstra + Heap", "單源最短路徑", "O((V+E) log V)", "不可有負邊"],
+              ["Bellman–Ford", "單源最短路徑", "O(VE)", "可負邊、可測可達負環"],
+              ["Floyd–Warshall", "全點對最短路徑", "O(V³)", "O(V²) 空間，可測負環"],
+              ["Prim + Heap", "MST", "O(E log V)", "無向連通、鄰接表"],
+              ["Kruskal + DSU", "MST", "O(E log E)", "無向圖、邊列表"]
+            ]
+          },
+          "callout": "若題目條件不滿足演算法前提，跑出數字也不代表答案正確；選型檢查必須先於實作。"
+        }
+      ],
+      "takeaways": [
+        "Kruskal 由小到大檢查邊，以 Union-Find 跳過會形成循環的邊",
+        "排序主導 Kruskal 的 O(E log E)，DSU 操作攤銷接近常數",
+        "先區分最短路徑與 MST，再依負邊、查詢範圍與資料表示選擇演算法"
+      ],
+      "quiz": [
+        {
+          "question": "Kruskal 為何需要 Union-Find？",
+          "answer": "它要快速判斷邊兩端是否已在同一連通分量；若是，加入該邊就會形成循環。"
+        },
+        {
+          "question": "一張大型稀疏非負圖只問單一起點距離，應選 Floyd–Warshall 嗎？",
+          "answer": "通常不選；Heap Dijkstra 的 O((V+E) log V) 更符合單源與稀疏條件，Floyd–Warshall 會做 O(V³) 的全點對計算。"
+        }
+      ],
+      "practice": [
+        "用 Kruskal 計算與上一課 Prim 相同圖的 MST，確認總權重一致。",
+        "為六個圖論問題逐一寫出目標、輸入限制、選用演算法與複雜度。"
+      ]
+    }
+  ]
+}

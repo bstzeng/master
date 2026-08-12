@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="依輸出需求選擇圖演算法。" />
+    <meta name="theme-color" content="#101713" />
+    <title>16.05 DFS、BFS 與 Union-Find 選型｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-16-problem-solving.html">UNIT 16 / LESSON 05</a><p class="eyebrow">Problem Solving and Algorithm Design</p><h1>DFS、BFS 與 Union-Find 選型</h1><p class="lesson-deck">路徑、距離或只問連通</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>依輸出需求選擇圖演算法。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>比較三種工具</li><li>處理多元件</li><li>辨認不適用情境</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>DFS 探索結構</h2><p>DFS 適合可達性、列舉路徑、回溯與結構判斷。它深入優先，不保證未加權最短路徑。</p><ul><li>使用 Stack 或遞迴</li><li>圖需 visited</li><li>時間 O(V+E)</li></ul><figure class="code-block"><figcaption><span>回傳起點可達集合。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def reachable(g,s):
+    seen={s}; stack=[s]
+    while stack:
+        for v in g[stack.pop()]:
+            if v not in seen: seen.add(v); stack.append(v)
+    return seen</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>BFS 求層級距離</h2><p>BFS 依邊數由近到遠，適合未加權最短路徑與擴散時間。加權邊則需依權重改用 Dijkstra 等方法。</p><ul><li>使用 deque</li><li>入列時標記</li><li>可由多起點同時開始</li></ul></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>Union-Find 只維護群組</h2><p>Union-Find 適合邊逐步加入時的連通查詢與無向環偵測，近似常數攤銷操作。它無法還原路徑，也不擅長刪邊。</p><ul><li>只問兩點是否同集合</li><li>需要實際路徑改用搜尋</li><li>多元件 DFS/BFS 要從每個未訪點啟動</li></ul><div class="table-wrap"><table><thead><tr><th>需求</th><th>選擇</th></tr></thead><tbody><tr><td>深度探索</td><td>DFS</td></tr><tr><td>未加權最短</td><td>BFS</td></tr><tr><td>動態連通</td><td>Union-Find</td></tr></tbody></table></div></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>DFS 適合深入探索與結構。</li><li><span>02</span>BFS 適合未加權最短距離。</li><li><span>03</span>Union-Find 適合只問動態連通。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>要回傳最短路徑為何不選 Union-Find？</summary><p>它只保存集合代表元，不保存實際路徑。</p></details><details><summary>DFS 從一點開始會漏什麼？</summary><p>會漏掉其他不連通元件。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>為社群分群需求選型並解釋。</li><li>比較迷宮可達性與最短步數的選擇。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-16/04-two-pointers-vs-window.html"><span>← 上一課</span><b>Two Pointers vs Sliding Window</b></a><a class="next" href="../unit-16/06-greedy-vs-dp.html"><span>下一課 →</span><b>Greedy vs DP 選型</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="整合所有排序方法的時間、空間、穩定性與適用資料，建立實務選擇流程。" />
+    <meta name="theme-color" content="#101713" />
+    <title>05.08 排序演算法總比較｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-05-sorting.html">UNIT 05 / LESSON 08</a><p class="eyebrow">Sorting Algorithms</p><h1>排序演算法總比較</h1><p class="lesson-deck">根據輸入與需求選方法，而不是尋找唯一冠軍</p><div class="lesson-meta"><span>中階</span><span>28 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>整合所有排序方法的時間、空間、穩定性與適用資料，建立實務選擇流程。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>比較經典排序的關鍵性質</li><li>依限制排除不合適方法</li><li>說明內建排序通常優先的原因</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>共同表格先看硬性限制</h2><p>選擇排序時先看資料量、最壞時間、額外空間、穩定性與鍵值限制。表格描述本單元的典型實作；同名演算法可能因 partition、合併方式或實作細節而改變空間與穩定性。</p><ul><li>n 大時先排除 O(n²)</li><li>需要穩定性時排除標準 Selection、Quick 與 Heap Sort</li><li>記憶體緊張時注意 Merge 與 Counting 的額外空間</li></ul><div class="table-wrap"><table><thead><tr><th>演算法</th><th>最佳時間</th><th>平均／最壞時間</th><th>額外空間</th><th>穩定</th></tr></thead><tbody><tr><td>Bubble</td><td>O(n)</td><td>O(n²)／O(n²)</td><td>O(1)</td><td>是</td></tr><tr><td>Selection</td><td>O(n²)</td><td>O(n²)／O(n²)</td><td>O(1)</td><td>否</td></tr><tr><td>Insertion</td><td>O(n)</td><td>O(n²)／O(n²)</td><td>O(1)</td><td>是</td></tr><tr><td>Merge</td><td>O(n log n)</td><td>O(n log n)／O(n log n)</td><td>O(n)</td><td>是</td></tr><tr><td>Quick（典型）</td><td>O(n log n)</td><td>O(n log n)／O(n²)</td><td>平均 O(log n) 堆疊</td><td>否</td></tr><tr><td>Heap（原地）</td><td>O(n log n)</td><td>O(n log n)／O(n log n)</td><td>O(1)</td><td>否</td></tr><tr><td>Counting</td><td>O(n + k)</td><td>O(n + k)／O(n + k)</td><td>O(k)</td><td>視實作</td></tr></tbody></table></div></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>從資料特性做決定</h2><p>小型或近乎有序資料可考慮 Insertion Sort；需要穩定且可預測的 O(n log n) 可選 Merge Sort；有限整數值域且 k 不大時 Counting Sort 可能很好。若只是一般 Python 應用，內建 Timsort 已針對真實資料與部分有序情況最佳化。</p><ul><li>近乎有序：Insertion 或 Python 內建排序</li><li>穩定且一般資料：Merge 或內建排序</li><li>小整數值域：評估 Counting Sort</li><li>教學實作有助理解，但不代表應取代成熟函式庫</li></ul></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>排序也包含整體成本</h2><p>不要只比較排序函式本身：昂貴 key 若重複計算、複製大型資料、先排序卻只查詢一次，都可能主導成本。先明確說明輸入是否可修改、是否需完整排序，以及能否只用 heap 取 Top K，才能選到真正合適的方案。</p><ul><li>只需最小或最大值時不必完整排序</li><li>只需 Top K 可評估 heap</li><li>不可修改輸入時需計入副本空間</li><li>效能判斷最後應以真實資料量測驗證</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>排序沒有單一最佳方法，選擇取決於資料與限制</li><li><span>02</span>穩定性、原地性和最壞上界都是重要決策條件</li><li><span>03</span>一般 Python 程式優先使用內建排序，特殊需求再採專門方法</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>需要保留相同分數學生的報名順序，應優先關注哪個性質？</summary><p>穩定性；穩定排序會保留相同排序鍵元素的原相對順序。</p></details><details><summary>只需要一百萬筆中的十個最大值，為何不一定要完整排序？</summary><p>可用大小為 10 的 heap 維持 Top K，通常只需 O(n log 10)，避免完整排序的 O(n log n)。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>為『一千萬筆、鍵為 0 到 100 的整數、記憶體足夠』選排序方法並說明理由。</li><li>為『物件不可修改、需要穩定多欄排序』設計 Python sorted 與 key 的方案。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-05/07-heap-and-counting-sort.html"><span>← 上一課</span><b>Heap Sort 與 Counting Sort</b></a><a class="next" href="../unit-06/01-nodes-and-singly-linked-lists.html"><span>下一課 →</span><b>Node 與單向鏈結串列</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="使用 deque 實作 BFS，並求未加權圖的最少邊數距離。" />
+    <meta name="theme-color" content="#101713" />
+    <title>10.04 Breadth-First Search BFS｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-10-graph-basics.html">UNIT 10 / LESSON 04</a><p class="eyebrow">Graph Fundamentals</p><h1>Breadth-First Search BFS</h1><p class="lesson-deck">按距離層級由近到遠探索</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>使用 deque 實作 BFS，並求未加權圖的最少邊數距離。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>使用 Queue 完成 BFS</li><li>計算層級與最短距離</li><li>判斷 BFS 的適用限制</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>Queue 維持先進先出</h2><p>廣度優先搜尋（BFS）先探索起點，再探索距離一條邊、兩條邊的頂點。Queue 的先進先出順序維持這個層級，因此 Python 應使用 deque.popleft()。</p><ul><li>起點先加入 queue 與 visited</li><li>取出 vertex 後加入所有未訪鄰居</li><li>發現鄰居時立即標記，避免重複入列</li></ul><figure class="code-block"><figcaption><span>不要用 list.pop(0)，它搬移剩餘元素需 O(n)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>from collections import deque
+
+def bfs_order(graph, start):
+    visited = {start}
+    queue = deque([start])
+    order = []
+    while queue:
+        vertex = queue.popleft()
+        order.append(vertex)
+        for neighbor in graph[vertex]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)
+    return order</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>未加權最短路徑</h2><p>在所有邊成本相同的圖中，BFS 第一次發現頂點時走過的邊數必定最少。可令 distance[neighbor] = distance[vertex] + 1，並保存 parent 還原實際路徑。</p><ul><li>distance[start] = 0</li><li>第一次發現後不再更新距離</li><li>有不同權重時不能直接使用一般 BFS</li></ul><figure class="code-block"><figcaption><span>distance 同時充當 visited，避免維護兩份狀態。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def shortest_distances(graph, start):
+    distance = {start: 0}
+    queue = deque([start])
+    while queue:
+        vertex = queue.popleft()
+        for neighbor in graph[vertex]:
+            if neighbor not in distance:
+                distance[neighbor] = distance[vertex] + 1
+                queue.append(neighbor)
+    return distance</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>成本與使用時機</h2><p>鄰接表下 BFS 時間 O(V+E)，distance、visited 與 queue 最壞使用 O(V) 空間。它適合未加權最短路徑、層級走訪與距離擴散；若只需任一可達路徑，DFS 也可能更簡潔。</p><ul><li>Queue 最寬時可能同時保存 O(V) 頂點</li><li>只會走訪 start 可達的區域</li><li>多源 BFS 可把多個起點同時以距離 0 入列</li></ul><div class="table-wrap"><table><thead><tr><th>需求</th><th>常見選擇</th></tr></thead><tbody><tr><td>任意可達路徑</td><td>DFS 或 BFS</td></tr><tr><td>未加權最短邊數</td><td>BFS</td></tr><tr><td>加權最短距離</td><td>依權重選 Dijkstra 等演算法</td></tr></tbody></table></div></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>BFS 用 Queue 按距離層級探索。</li><li><span>02</span>未加權圖中第一次發現頂點即得到最少邊數距離。</li><li><span>03</span>鄰接表下 BFS 時間 O(V+E)、空間 O(V)。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼 BFS 應在加入 queue 時標記 visited？</summary><p>若延後到取出時才標記，同一頂點可能被多個鄰居重複加入 queue。</p></details><details><summary>邊權重為 1、10、1 時，一般 BFS 能求最小總權重嗎？</summary><p>不能，BFS 最小化的是邊數，只有每條邊成本相同時才等同最小總權重。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>用 BFS 回傳 start 到 target 的最少邊數，無法到達時回傳 -1。</li><li>在網格中從多個火源同時開始 BFS，計算每格最早被火到達的時間。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-10/03-depth-first-search.html"><span>← 上一課</span><b>Depth-First Search DFS</b></a><a class="next" href="../unit-10/05-connected-components.html"><span>下一課 →</span><b>Connected Components 連通元件</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

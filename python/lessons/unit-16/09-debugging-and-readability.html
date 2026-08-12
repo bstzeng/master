@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="建立可重現、可追蹤、可修正的除錯流程。" />
+    <meta name="theme-color" content="#101713" />
+    <title>16.09 除錯、錯誤答案與可讀性｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-16-problem-solving.html">UNIT 16 / LESSON 09</a><p class="eyebrow">Problem Solving and Algorithm Design</p><h1>除錯、錯誤答案與可讀性</h1><p class="lesson-deck">縮小差異，檢查狀態與不變量</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>建立可重現、可追蹤、可修正的除錯流程。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>縮小失敗案例</li><li>追蹤狀態</li><li>改善程式表達</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>先重現再猜原因</h2><p>記錄確切輸入、預期與實際輸出，將案例縮到仍失敗的最小版本。錯誤類別常是規格誤讀、邊界、狀態更新順序或資料結構選錯。</p><ul><li>一次只改一項</li><li>確認失敗可穩定重現</li><li>區分例外、超時與 Wrong Answer</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>印出有意義狀態</h2><p>不要只印所有變數；選擇能檢查不變量的 left/right、queue、dp 列或 visited。把追蹤包在 debug 開關，修正後可關閉。</p><ul><li>比較更新前後</li><li>標記迴圈與輸入位置</li><li>assert 可立即指出不變量破壞</li></ul><figure class="code-block"><figcaption><span>結構化輸出比零散 print 易比較。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def trace_window(left,right,state,debug=False):
+    if debug: print({&#x27;left&#x27;:left,&#x27;right&#x27;:right,&#x27;state&#x27;:state})</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>可讀性降低缺陷</h2><p>使用表達角色的命名、小函式與一致區間定義，讓程式接近正確性說明。避免壓縮成難以驗證的一行，也不要過早抽象。</p><ul><li>complement 比 temp 更清楚</li><li>註解解釋為什麼而非重述程式</li><li>分離建表、求解與重建答案</li></ul><figure class="code-block"><figcaption><span>命名直接表達 Two Sum 邏輯。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>complement = target - value
+if complement in seen: return seen[complement], index</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>先取得最小可重現案例。</li><li><span>02</span>追蹤能驗證不變量的狀態。</li><li><span>03</span>清楚命名與分層能降低錯誤。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為何縮小失敗案例？</summary><p>可減少干擾並暴露真正觸發條件。</p></details><details><summary>好註解應解釋什麼？</summary><p>決策原因、限制或不直覺的不變量。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>將一段模糊變數名稱重構為角色名稱。</li><li>為 off-by-one 錯誤設計狀態追蹤。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-16/08-boundaries-and-tests.html"><span>← 上一課</span><b>邊界條件與測試案例</b></a><a class="next" href="../unit-16/10-proof-complexity-template.html"><span>下一課 →</span><b>正確性、複雜度與個人模板</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

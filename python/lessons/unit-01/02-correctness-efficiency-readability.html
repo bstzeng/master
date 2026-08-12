@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="建立評估演算法的三個角度，學會用規格、邊界測試與簡單不變量檢查正確性。" />
+    <meta name="theme-color" content="#101713" />
+    <title>01.02 正確性、效率與可讀性｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-01-algorithm-foundations.html">UNIT 01 / LESSON 02</a><p class="eyebrow">Algorithm Foundations</p><h1>正確性、效率與可讀性</h1><p class="lesson-deck">好的解法不只是在範例上跑出答案</p><div class="lesson-meta"><span>入門</span><span>20 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>建立評估演算法的三個角度，學會用規格、邊界測試與簡單不變量檢查正確性。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>區分範例通過與演算法正確</li><li>設計正常、邊界與反例測試</li><li>解釋可讀性與效率之間的合理取捨</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>正確性來自完整規格</h2><p>演算法正確，表示它對每個符合規格的輸入都能產生正確輸出，而不是只通過手邊的兩三個例子。開始寫程式前，先釐清空輸入、重複值、負數與找不到答案時該如何處理。</p><ul><li>正常案例確認主要流程</li><li>邊界案例檢查最小值、最大值與空集合</li><li>反例刻意挑戰你暗中使用的假設</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>用不變量解釋流程</h2><p>不變量（Invariant）是在演算法某個階段始終成立的敘述，例如掃描前 k 個元素後，best 一直等於其中最大值。確認它在開始時成立、每一步維持成立，並能在結束時推出答案，就得到一個簡潔的正確性說明。</p><ul><li>初始化：第一次執行前是否成立</li><li>維持：處理下一筆資料後是否仍成立</li><li>終止：迴圈結束時能否得到目標</li></ul><figure class="code-block"><figcaption><span>每輪完成後，best 都是目前已看過元素中的最大值。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def find_max(numbers):
+    if not numbers:
+        raise ValueError(&quot;numbers 不可為空&quot;)
+
+    best = numbers[0]
+    for value in numbers[1:]:
+        if value &gt; best:
+            best = value
+    return best</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>效率與可讀性都要符合情境</h2><p>效率衡量時間與記憶體成本，可讀性則讓人能檢查、修改與維護程式。資料量很小時，清楚的線性解法常比複雜最佳化更實用；資料量很大或程式反覆執行時，效率才可能成為主要限制。</p><ul><li>先保證正確，再針對實際瓶頸最佳化</li><li>用清楚名稱與小函式表達意圖</li><li>不要為了省微小成本而隱藏重要邏輯</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>通過少數範例不能證明所有輸入都正確</li><li><span>02</span>不變量可以說明迴圈為何得到正確答案</li><li><span>03</span>效率與可讀性的取捨取決於資料量及使用情境</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>搜尋測試只包含『找到目標』的案例，還缺少哪個重要類別？</summary><p>至少缺少『找不到目標』，也應檢查空資料、第一個或最後一個位置，以及重複值等邊界案例。</p></details><details><summary>find_max 迴圈的不變量是什麼？</summary><p>每輪完成後，best 是目前已掃描元素中的最大值；最後所有元素都已掃描，因此 best 是全體最大值。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>為回傳 list 最小值的函式寫出一個迴圈不變量與三類測試。</li><li>找一段自己寫過的程式，指出一項改善可讀性但不改變演算法的修改。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-01/01-data-structures-and-algorithms.html"><span>← 上一課</span><b>資料結構與演算法是什麼</b></a><a class="next" href="../unit-01/03-time-and-space-complexity.html"><span>下一課 →</span><b>時間與空間複雜度</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

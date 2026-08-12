@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="整合限制分析、基準解、演算法選型、測試、除錯、正確性與複雜度，建立完整解題流程。" />
+    <meta name="theme-color" content="#101713" />
+    <title>單元 16｜綜合解題與演算法設計｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../styles.css" />
+    <script src="../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../index.html">課程總覽</a>
+        <a class="" href="../phase-1.html">第一階段</a>
+        <a class="is-active" href="../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <section class="unit-hero">
+        <div><a class="breadcrumb" href="../phase-2.html">PHASE 02 / UNIT 16</a><p class="eyebrow">Problem Solving and Algorithm Design</p><h1>綜合解題與演算法設計</h1><p class="hero-intro">整合限制分析、基準解、演算法選型、測試、除錯、正確性與複雜度，建立完整解題流程。</p><a class="primary-button" href="#lessons">查看 10 堂課 <span>↓</span></a></div>
+        <aside><span>UNIT</span><strong>16</strong><p>面對陌生問題時，能從規格推導可行解法，驗證正確性並清楚說明取捨。</p></aside>
+      </section>
+      <section class="unit-info"><div><p class="section-index">BEFORE YOU START</p><h2>先備知識</h2><ul><li>完成前十五個單元</li><li>熟悉 Big O 與 Python 資料結構</li><li>能閱讀常見演算法程式</li></ul></div><div><p class="section-index">AFTER THIS UNIT</p><h2>完成後你能夠</h2><ul><li>能由輸入限制推測可接受複雜度</li><li>能從 Brute Force 找到瓶頸並選型</li><li>能設計測試、除錯並證明正確性</li><li>能整理可理解而非盲背的個人模板</li></ul></div></section>
+      <section class="lesson-section" id="lessons"><div class="section-head"><div><p class="section-index">LESSON LIST</p><h2>本單元課程</h2></div><p>建議依序閱讀；每一課約 15–25 分鐘，讀完後先回答理解題，再挑一題延伸練習。</p></div><div class="lesson-list">
+        <article class="lesson-row">
+          <span>01</span>
+          <div><p>基礎 · 25 分鐘</p><h3>讀題與從限制推複雜度</h3><b>先讀規格，再選工具</b></div>
+          <a href="../lessons/unit-16/01-constraints-to-complexity.html" aria-label="開始課程：讀題與從限制推複雜度">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>02</span>
+          <div><p>基礎 · 30 分鐘</p><h3>Brute Force 與瓶頸</h3><b>先建立正確基準，再消除重複工作</b></div>
+          <a href="../lessons/unit-16/02-brute-force-and-bottlenecks.html" aria-label="開始課程：Brute Force 與瓶頸">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>03</span>
+          <div><p>基礎 · 30 分鐘</p><h3>預處理、空間換時間、排序與 Hashing</h3><b>先整理資料，再大量回答</b></div>
+          <a href="../lessons/unit-16/03-preprocess-sort-hash.html" aria-label="開始課程：預處理、空間換時間、排序與 Hashing">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>04</span>
+          <div><p>基礎 · 30 分鐘</p><h3>Two Pointers vs Sliding Window</h3><b>看指標是否共同描述連續區間</b></div>
+          <a href="../lessons/unit-16/04-two-pointers-vs-window.html" aria-label="開始課程：Two Pointers vs Sliding Window">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>05</span>
+          <div><p>基礎 · 30 分鐘</p><h3>DFS、BFS 與 Union-Find 選型</h3><b>路徑、距離或只問連通</b></div>
+          <a href="../lessons/unit-16/05-dfs-bfs-union-find.html" aria-label="開始課程：DFS、BFS 與 Union-Find 選型">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>06</span>
+          <div><p>進階 · 30 分鐘</p><h3>Greedy vs DP 選型</h3><b>局部決定能否安全固定</b></div>
+          <a href="../lessons/unit-16/06-greedy-vs-dp.html" aria-label="開始課程：Greedy vs DP 選型">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>07</span>
+          <div><p>進階 · 35 分鐘</p><h3>Binary Search on Answer</h3><b>在單調可行性上搜尋最佳答案</b></div>
+          <a href="../lessons/unit-16/07-binary-search-on-answer.html" aria-label="開始課程：Binary Search on Answer">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>08</span>
+          <div><p>基礎 · 30 分鐘</p><h3>邊界條件與測試案例</h3><b>用分類與性質捕捉錯誤</b></div>
+          <a href="../lessons/unit-16/08-boundaries-and-tests.html" aria-label="開始課程：邊界條件與測試案例">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>09</span>
+          <div><p>基礎 · 30 分鐘</p><h3>除錯、錯誤答案與可讀性</h3><b>縮小差異，檢查狀態與不變量</b></div>
+          <a href="../lessons/unit-16/09-debugging-and-readability.html" aria-label="開始課程：除錯、錯誤答案與可讀性">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>10</span>
+          <div><p>進階 · 40 分鐘</p><h3>正確性、複雜度與個人模板</h3><b>把解法變成可重複流程</b></div>
+          <a href="../lessons/unit-16/10-proof-complexity-template.html" aria-label="開始課程：正確性、複雜度與個人模板">開始閱讀 →</a>
+        </article></div></section>
+      <nav class="bottom-nav"><a href="../phase-2.html">← 返回第 2 階段大綱</a><a href="../index.html">完整學習地圖 ↑</a></nav></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="理解 Dijkstra 的貪心選擇、鬆弛操作與非負權重限制，實作簡單版本。" />
+    <meta name="theme-color" content="#101713" />
+    <title>11.02 Dijkstra：以最小暫定距離擴張｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-11-classic-graph-algorithms.html">UNIT 11 / LESSON 02</a><p class="eyebrow">Classic Graph Algorithms</p><h1>Dijkstra：以最小暫定距離擴張</h1><p class="lesson-deck">先理解貪心正確性與 O(V²) 版本</p><div class="lesson-meta"><span>基礎</span><span>35 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>理解 Dijkstra 的貪心選擇、鬆弛操作與非負權重限制，實作簡單版本。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>解釋 Dijkstra 每輪選擇的頂點</li><li>使用 Relaxation 更新距離</li><li>實作並分析 O(V² + E) 版本</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>固定最近的未處理頂點</h2><p>Dijkstra 每輪從尚未固定的頂點中，選出暫定距離最小者 u；當所有邊權皆非負時，未來繞路不可能讓 u 更短，因此可把它的距離固定。接著從 u 嘗試改善所有鄰居，逐步向外擴張已確定區域。</p><ul><li>distance[start] = 0，其餘為無限大</li><li>每輪選最小未拜訪頂點</li><li>固定後不再改變其最短距離</li><li>負邊會破壞固定距離的推論</li></ul><figure class="code-block"><figcaption><span>簡單版本每輪以線性搜尋找最小暫定距離。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>distance = {&quot;A&quot;: 0, &quot;B&quot;: 5, &quot;C&quot;: float(&quot;inf&quot;)}
+visited = {&quot;A&quot;}
+unvisited = [vertex for vertex in distance if vertex not in visited]
+current = min(unvisited, key=distance.get)
+print(current)  # B</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Relaxation 鬆弛操作</h2><p>鬆弛（Relaxation）檢查經過 u 到鄰居 v 是否比已知路線更短：若 distance[u] + weight &lt; distance[v]，就更新 distance[v] 與 predecessor[v]。同一條邊可能被檢查，但只有真正變短時才更新。</p><ul><li>candidate = distance[u] + weight</li><li>只在 candidate 更小時更新</li><li>更新 predecessor[v] = u 以便重建</li><li>不可達頂點維持無限大</li></ul><figure class="code-block"><figcaption><span>Relaxation 是多種最短路徑演算法共用的核心操作。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def relax(distance, predecessor, source, target, weight):
+    candidate = distance[source] + weight
+    if candidate &lt; distance[target]:
+        distance[target] = candidate
+        predecessor[target] = source
+        return True
+    return False
+
+distance = {&quot;A&quot;: 0, &quot;B&quot;: 7}
+previous = {&quot;A&quot;: None, &quot;B&quot;: None}
+print(relax(distance, previous, &quot;A&quot;, &quot;B&quot;, 3), distance)</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>O(V²) 實作與限制</h2><p>不使用 Heap 時，每輪線性掃描所有未拜訪頂點找最小值，共需 O(V²)，再加上走訪鄰接邊 O(E)，空間為 O(V + E)。這個版本容易理解，且在鄰接矩陣或非常稠密的圖上未必差，但仍禁止負權重。</p><ul><li>時間：O(V² + E)，通常寫作 O(V²)</li><li>空間：圖加距離表為 O(V + E)</li><li>可在取出目標頂點時提前停止</li><li>遇到最小距離仍為無限大，表示剩餘頂點不可達</li></ul><figure class="code-block"><figcaption><span>線性選最小頂點的 Dijkstra，適合先理解流程。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def dijkstra_simple(graph, start):
+    distance = {vertex: float(&quot;inf&quot;) for vertex in graph}
+    distance[start] = 0
+    previous = {vertex: None for vertex in graph}
+    visited = set()
+
+    while len(visited) &lt; len(graph):
+        choices = [v for v in graph if v not in visited]
+        current = min(choices, key=distance.get)
+        if distance[current] == float(&quot;inf&quot;):
+            break
+        visited.add(current)
+        for neighbor, weight in graph[current]:
+            candidate = distance[current] + weight
+            if candidate &lt; distance[neighbor]:
+                distance[neighbor] = candidate
+                previous[neighbor] = current
+    return distance, previous</code></pre></figure><aside class="concept-callout"><b>KEY IDEA</b><p>Dijkstra 的非負限制是正確性前提，不是單純的效能建議。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Dijkstra 固定目前暫定距離最小的未處理頂點</li><li><span>02</span>Relaxation 用新路徑成本改善 distance 與 predecessor</li><li><span>03</span>簡單版本為 O(V²)，且只適用所有邊權非負的圖</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>Dijkstra 為何能固定目前距離最小的頂點？</summary><p>所有邊權非負時，經過任何尚未固定頂點再繞回來都不會產生更小成本。</p></details><details><summary>Relaxation 沒有改善距離時，是否要更新 predecessor？</summary><p>不需要；predecessor 必須對應目前最短的已知路徑，只有距離變短時才一起更新。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>手動追蹤四個頂點的 Dijkstra，每輪記錄 distance 與 visited。</li><li>修改簡單版本，指定 target 並在距離固定後提早回傳。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-11/01-weighted-graphs-and-shortest-paths.html"><span>← 上一課</span><b>加權圖與最短路徑</b></a><a class="next" href="../unit-11/03-heap-optimized-dijkstra.html"><span>下一課 →</span><b>Heap 優化 Dijkstra</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

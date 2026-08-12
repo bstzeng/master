@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="建立 Disjoint Set Union，使用路徑壓縮與按大小合併處理動態連通性。" />
+    <meta name="theme-color" content="#101713" />
+    <title>10.08 Union-Find 並查集｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-10-graph-basics.html">UNIT 10 / LESSON 08</a><p class="eyebrow">Graph Fundamentals</p><h1>Union-Find 並查集</h1><p class="lesson-deck">快速合併群組並查詢是否連通</p><div class="lesson-meta"><span>基礎</span><span>35 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>建立 Disjoint Set Union，使用路徑壓縮與按大小合併處理動態連通性。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>理解集合代表元</li><li>實作 find 與 union</li><li>用 Union-Find 偵測無向冗餘邊</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>Parent Forest 與代表元</h2><p>Union-Find 又稱 Disjoint Set Union（DSU），把互不重疊的集合表示成多棵父指標樹。find(x) 沿 parent 找到根代表元；兩點代表元相同，就表示位於同一集合。</p><ul><li>初始時每個元素各自成集合，parent[x]=x</li><li>根節點是自己的 parent</li><li>DSU 回答連通性，不保存兩點間實際路徑</li></ul><figure class="code-block"><figcaption><span>遞迴返回時直接把節點接到根，完成路徑壓縮。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>class UnionFind:
+    def __init__(self, size):
+        self.parent = list(range(size))
+        self.component_size = [1] * size
+
+    def find(self, item):
+        if self.parent[item] != item:
+            self.parent[item] = self.find(self.parent[item])
+        return self.parent[item]</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Union by Size 合併</h2><p>union(a,b) 先找到兩者根；若相同就無須合併，否則把較小樹根接到較大樹根。按大小合併限制樹高，配合路徑壓縮可讓操作攤銷成本極低。</p><ul><li>先比較 root_a 與 root_b</li><li>交換後保證 root_a 是較大集合</li><li>更新 parent 與新根的 component_size</li></ul><figure class="code-block"><figcaption><span>union 回傳 False 表示兩點原本已在同一集合。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>    def union(self, first, second):
+        root_first = self.find(first)
+        root_second = self.find(second)
+        if root_first == root_second:
+            return False
+        if self.component_size[root_first] &lt; self.component_size[root_second]:
+            root_first, root_second = root_second, root_first
+        self.parent[root_second] = root_first
+        self.component_size[root_first] += self.component_size[root_second]
+        return True
+
+    def connected(self, first, second):
+        return self.find(first) == self.find(second)</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>適用情境與複雜度</h2><p>依序讀取無向邊時，若 union 回傳 False，該邊連接了原本已連通的兩點，加入後會形成環。路徑壓縮加按大小合併讓 m 次操作耗時 O(m·α(V))，α 成長極慢，實務上近似常數；空間 O(V)。</p><ul><li>適合邊逐步加入的動態連通查詢</li><li>可計數成功 union 次數或剩餘集合數</li><li>不擅長刪邊，也不能取代 BFS 的最短路徑</li></ul><figure class="code-block"><figcaption><span>對無向邊串流，第一條合併失敗的邊就是第一條冗餘邊。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def first_redundant_edge(vertex_count, edges):
+    union_find = UnionFind(vertex_count)
+    for first, second in edges:
+        if not union_find.union(first, second):
+            return (first, second)
+    return None</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>find 取得集合代表元，union 合併兩個不同集合。</li><li><span>02</span>路徑壓縮與按大小合併使攤銷操作近似 O(1)。</li><li><span>03</span>Union-Find 適合動態連通與無向環偵測，但不提供實際路徑。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>union(a,b) 發現兩者根相同時代表什麼？</summary><p>a 與 b 原本已在同一連通集合，不需要再次合併；若它們是一條新無向邊，可能形成環。</p></details><details><summary>路徑壓縮做了什麼？</summary><p>find 返回時把沿途節點直接接到根，縮短未來查找代表元的路徑。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>維護 component_count，讓每次成功 union 後集合數減一。</li><li>給定無向邊依序加入，回報每一步兩個指定頂點是否已連通。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-10/07-topological-sort.html"><span>← 上一課</span><b>Topological Sort 拓樸排序</b></a><a class="next" href="../unit-11/01-weighted-graphs-and-shortest-paths.html"><span>下一課 →</span><b>加權圖與最短路徑</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

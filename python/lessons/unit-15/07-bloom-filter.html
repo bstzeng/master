@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="實作簡化 Bloom Filter，理解多重雜湊、假陽性、無假陰性前提與選型。" />
+    <meta name="theme-color" content="#101713" />
+    <title>15.07 Bloom Filter 與 False Positive｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-15-advanced-data-structures.html">UNIT 15 / LESSON 07</a><p class="eyebrow">Advanced Data Structures</p><h1>Bloom Filter 與 False Positive</h1><p class="lesson-deck">用少量位元快速排除一定不存在的項目</p><div class="lesson-meta"><span>進階</span><span>34 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>實作簡化 Bloom Filter，理解多重雜湊、假陽性、無假陰性前提與選型。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明 Bloom Filter 的回答語意</li><li>實作 add 與 membership</li><li>解釋位元數、雜湊數與誤判率取捨</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>回答一定沒有或可能有</h2><p>Bloom Filter 是機率型成員結構：加入元素時用 k 個雜湊位置設位元，查詢時若任一位為 0，元素一定未加入；全部為 1 只能說可能加入，因為其他元素可能碰巧設滿相同位置。</p><ul><li>False Positive：未加入卻回答可能有</li><li>標準只加不刪版本沒有 False Negative</li><li>不保存原始元素</li><li>適合在昂貴查詢前快速排除</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>多個穩定雜湊映射到 Bit Array</h2><p>下例以 hashlib 對 seed 與字串編碼產生 k 個穩定位置，教學上用 bool list 代替真正壓縮位元陣列。add 和查詢都做 k 次雜湊，時間 O(k)，空間 O(m)，m 是位元數。</p><ul><li>相同值與 seed 必須產生相同位置</li><li>m 越大通常碰撞越少</li><li>k 太少或太多都可能提高誤判</li><li>實務應使用真正 bit array 節省空間</li></ul><figure class="code-block"><figcaption><span>教學版本；add 與查詢 O(k)，bool list 不具真正位元壓縮效果。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>import hashlib
+
+class BloomFilter:
+    def __init__(self, bit_count, hash_count):
+        self.bits = [False] * bit_count
+        self.hash_count = hash_count
+    def _positions(self, value):
+        raw = str(value).encode()
+        for seed in range(self.hash_count):
+            digest = hashlib.sha256(seed.to_bytes(4, &quot;big&quot;) + raw).digest()
+            yield int.from_bytes(digest[:8], &quot;big&quot;) % len(self.bits)
+    def add(self, value):
+        for position in self._positions(value): self.bits[position] = True
+    def __contains__(self, value):
+        return all(self.bits[position] for position in self._positions(value))</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>容量規劃與刪除限制</h2><p>元素越多，位元逐漸飽和，假陽性率會提高，因此應依預期元素數 n 和可接受誤判率配置 m、k。直接把位元清零可能傷到其他元素並造成假陰性；需要刪除可用 Counting Bloom Filter，但每格計數會增加空間。</p><ul><li>Bloom 回答可能有後仍需查權威資料</li><li>超過設計容量會快速降低品質</li><li>不可直接刪位元</li><li>不容許任何誤判時使用 set 或資料庫索引</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Bloom Filter 能確定不存在，但存在回答帶有假陽性</li><li><span>02</span>操作成本 O(k)、空間 O(m)，品質取決於 m、k、n</li><li><span>03</span>標準 Bloom 不支援安全刪除，也不取代權威資料來源</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>Bloom Filter 回答 False 時，元素可能其實已加入嗎？</summary><p>在標準只新增、實作正確且狀態未損壞的前提下不會；它沒有假陰性。</p></details><details><summary>為什麼不能刪除元素時直接清除它的 k 個位元？</summary><p>那些位元可能也被其他元素共享，清零會讓其他已加入元素被錯判不存在。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>用很小 bit_count 加入多個值，實際尋找一個 False Positive。</li><li>為爬蟲 URL 去重前置檢查設計 Bloom 與權威集合的兩層流程。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-15/06-database-index-trees-and-hash.html"><span>← 上一課</span><b>B-Tree、B+ Tree 與資料庫索引</b></a><a class="next" href="../unit-15/08-count-min-sketch.html"><span>下一課 →</span><b>Count-Min Sketch</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

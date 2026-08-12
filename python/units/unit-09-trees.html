@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="從樹與二元樹的共同語言開始，學習深度與廣度走訪，再進入 BST、平衡樹、Trie 與 Heap 的結構及用途。" />
+    <meta name="theme-color" content="#101713" />
+    <title>單元 09｜樹狀資料結構｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../styles.css" />
+    <script src="../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../index.html">課程總覽</a>
+        <a class="is-active" href="../phase-1.html">第一階段</a>
+        <a class="" href="../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <section class="unit-hero">
+        <div><a class="breadcrumb" href="../phase-1.html">PHASE 01 / UNIT 09</a><p class="eyebrow">Tree Data Structures</p><h1>樹狀資料結構</h1><p class="hero-intro">從樹與二元樹的共同語言開始，學習深度與廣度走訪，再進入 BST、平衡樹、Trie 與 Heap 的結構及用途。</p><a class="primary-button" href="#lessons">查看 8 堂課 <span>↓</span></a></div>
+        <aside><span>UNIT</span><strong>09</strong><p>能把階層資料表示成樹，選擇合適走訪方式，並依查找、前綴或極值需求選用 BST、Trie 或 Heap。</p></aside>
+      </section>
+      <section class="unit-info"><div><p class="section-index">BEFORE YOU START</p><h2>先備知識</h2><ul><li>理解 Python 類別、函式、list、dict、set 與 deque</li><li>能閱讀遞迴與迭代程式</li><li>知道 Stack、Queue、Heap 與 Big O 基本概念</li></ul></div><div><p class="section-index">AFTER THIS UNIT</p><h2>完成後你能夠</h2><ul><li>使用正確術語描述樹與二元樹</li><li>實作前序、中序、後序與層序走訪</li><li>計算樹的高度、節點深度與直徑</li><li>實作 BST 的查找、插入與刪除</li><li>說明平衡如何影響樹操作成本</li><li>依需求使用 Trie 或陣列式 Heap</li></ul></div></section>
+      <section class="lesson-section" id="lessons"><div class="section-head"><div><p class="section-index">LESSON LIST</p><h2>本單元課程</h2></div><p>建議依序閱讀；每一課約 15–25 分鐘，讀完後先回答理解題，再挑一題延伸練習。</p></div><div class="lesson-list">
+        <article class="lesson-row">
+          <span>01</span>
+          <div><p>入門 · 24 分鐘</p><h3>樹與 Binary Tree 二元樹</h3><b>用節點和邊表達有層次的資料</b></div>
+          <a href="../lessons/unit-09/01-trees-and-binary-trees.html" aria-label="開始課程：樹與 Binary Tree 二元樹">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>02</span>
+          <div><p>入門進階 · 30 分鐘</p><h3>DFS 前序、中序與後序走訪</h3><b>改變處理根節點的時機，就得到三種深度優先順序</b></div>
+          <a href="../lessons/unit-09/02-dfs-tree-traversals.html" aria-label="開始課程：DFS 前序、中序與後序走訪">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>03</span>
+          <div><p>入門進階 · 26 分鐘</p><h3>BFS Level Order 層序走訪</h3><b>使用 Queue 由上到下、由左到右探索</b></div>
+          <a href="../lessons/unit-09/03-level-order-traversal.html" aria-label="開始課程：BFS Level Order 層序走訪">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>04</span>
+          <div><p>中階 · 32 分鐘</p><h3>高度、深度與直徑</h3><b>先統一定義，再用後序一次收集子樹資訊</b></div>
+          <a href="../lessons/unit-09/04-height-depth-and-diameter.html" aria-label="開始課程：高度、深度與直徑">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>05</span>
+          <div><p>中階 · 38 分鐘</p><h3>BST 查找、插入與刪除</h3><b>用排序性沿單一路徑排除子樹</b></div>
+          <a href="../lessons/unit-09/05-binary-search-tree-operations.html" aria-label="開始課程：BST 查找、插入與刪除">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>06</span>
+          <div><p>中階 · 28 分鐘</p><h3>平衡樹的基本概念</h3><b>限制高度，讓搜尋成本不因插入順序失控</b></div>
+          <a href="../lessons/unit-09/06-balanced-trees.html" aria-label="開始課程：平衡樹的基本概念">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>07</span>
+          <div><p>中階 · 32 分鐘</p><h3>Trie 字典樹</h3><b>讓共同前綴共用路徑</b></div>
+          <a href="../lessons/unit-09/07-trie.html" aria-label="開始課程：Trie 字典樹">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>08</span>
+          <div><p>中階 · 30 分鐘</p><h3>Heap 與樹的關係</h3><b>用完全二元樹形狀在陣列中維持極值</b></div>
+          <a href="../lessons/unit-09/08-heap-as-a-tree.html" aria-label="開始課程：Heap 與樹的關係">開始閱讀 →</a>
+        </article></div></section>
+      <nav class="bottom-nav"><a href="../phase-1.html">← 返回第 1 階段大綱</a><a href="../index.html">完整學習地圖 ↑</a></nav></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

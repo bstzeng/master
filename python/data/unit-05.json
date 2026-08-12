@@ -1,0 +1,316 @@
+{
+  "number": 5,
+  "phase": 1,
+  "slug": "sorting",
+  "title": "排序演算法",
+  "english": "Sorting Algorithms",
+  "summary": "從排序規格與 Python 內建工具開始，實作經典比較排序與計數排序，理解穩定性、原地操作和時間空間取捨。",
+  "goal": "能根據資料規模、分布、記憶體與穩定性需求選擇排序方法，並正確使用 Python 的 key 設計排序規則。",
+  "prerequisites": [
+    "能閱讀 Python list、函式、迴圈與切片",
+    "理解 Big O、時間與空間複雜度",
+    "知道陣列索引與遞迴的基本概念"
+  ],
+  "outcomes": [
+    "使用 sorted、list.sort 與 key 表達多欄位排序",
+    "實作 Bubble、Selection、Insertion、Merge、Quick、Heap 與 Counting Sort",
+    "判斷排序是否穩定、是否原地操作",
+    "比較最好、平均與最壞時間及額外空間",
+    "依資料特性選擇合適方法而非只背名稱"
+  ],
+  "lessons": [
+    {
+      "number": 1,
+      "slug": "sorting-concepts-and-python",
+      "title": "排序基本觀念與 Python sorted",
+      "subtitle": "先說清楚順序規則，再選擇工具",
+      "duration": "25 分鐘",
+      "difficulty": "入門",
+      "summary": "理解排序鍵、穩定與原地排序，並使用 Python 內建排序處理實務資料。",
+      "objectives": ["區分穩定與原地排序", "正確使用 sorted 與 list.sort", "用 key 表達單欄與多欄規則"],
+      "sections": [
+        {
+          "heading": "排序需要明確規格",
+          "paragraphs": ["排序（Sorting）是依比較規則重新排列資料，不只限於數字由小到大。設計前要確認排序鍵、升降冪，以及鍵相同時是否必須保留原先順序。"],
+          "bullets": ["排序鍵決定比較哪個值", "升冪與降冪必須明確", "多欄位規則要決定優先順序"]
+        },
+        {
+          "heading": "穩定與原地是不同性質",
+          "paragraphs": ["穩定排序（Stable Sort）會保留相同鍵元素的原相對順序，適合分階段排序；原地排序（In-place Sort）只使用少量額外空間修改原容器。穩定不代表原地，兩者也都不直接等於速度快。"],
+          "bullets": ["穩定性關心相同鍵的相對順序", "原地性關心額外記憶體", "需求不同時可能選擇不同演算法"],
+          "callout": "Python 的排序是穩定的，因此可先按次要鍵排序，再按主要鍵排序。"
+        },
+        {
+          "heading": "Python 內建排序與 key",
+          "paragraphs": ["sorted(iterable) 回傳新 list，list.sort() 則原地修改 list 並回傳 None；兩者都可用 key 為每個元素計算比較鍵。Python 使用穩定的 Timsort，最壞時間 O(n log n)，實務程式通常應優先使用內建工具。"],
+          "bullets": ["key 函式每個元素通常只計算一次", "reverse=True 可反轉最終順序", "tuple key 可依多欄位排序", "不要把 list.sort() 的回傳值當成結果"],
+          "code": "students = [\n    {\"name\": \"Amy\", \"score\": 90},\n    {\"name\": \"Bo\", \"score\": 75},\n    {\"name\": \"Chen\", \"score\": 90},\n]\n\nranked = sorted(students, key=lambda item: (-item[\"score\"], item[\"name\"]))",
+          "code_caption": "先依成績降冪，再依姓名升冪；sorted 不改動原 list。"
+        }
+      ],
+      "takeaways": ["排序規格包含鍵、方向與相同鍵處理", "穩定性和原地性描述不同取捨", "實務上優先使用 Python 內建穩定排序與 key"],
+      "quiz": [
+        {"question": "sorted(items) 與 items.sort() 的主要差別是什麼？", "answer": "sorted 接受任意可迭代物並回傳新 list；list.sort 原地修改該 list，回傳 None。"},
+        {"question": "穩定排序對相同 key 的元素提供什麼保證？", "answer": "它們在排序後仍保持輸入中的相對先後順序。"}
+      ],
+      "practice": ["將員工依部門升冪、薪資降冪排序，設計合適的 tuple key。", "用一組相同分數但不同到達順序的資料驗證 Python 排序穩定性。"]
+    },
+    {
+      "number": 2,
+      "slug": "bubble-sort",
+      "title": "Bubble Sort 氣泡排序",
+      "subtitle": "反覆交換相鄰逆序元素",
+      "duration": "22 分鐘",
+      "difficulty": "入門",
+      "summary": "透過相鄰比較理解排序不變量、提前結束與平方時間。",
+      "objectives": ["手動推演氣泡排序", "實作提前結束版本", "分析穩定性與複雜度"],
+      "sections": [
+        {
+          "heading": "最大值逐輪移到右側",
+          "paragraphs": ["氣泡排序（Bubble Sort）由左向右比較相鄰元素，順序相反就交換。完整一輪後，尚未排序區域的最大值會移到最右端，因此右側已排序區域每輪增加一格。"],
+          "bullets": ["只比較相鄰元素", "第 k 輪可少檢查右側 k 個位置", "迴圈不變量是右側元素已在最終位置"]
+        },
+        {
+          "heading": "用 swapped 偵測已排序",
+          "paragraphs": ["若某輪沒有發生交換，代表所有相鄰元素都已有序，可以立即結束。交換條件只在 left > right 時成立，不交換相等元素，因此這個版本維持穩定性。"],
+          "bullets": ["無交換時提前 return", "相等元素不交換以維持穩定", "直接修改輸入 list"],
+          "code": "def bubble_sort(items):\n    n = len(items)\n    for end in range(n - 1, 0, -1):\n        swapped = False\n        for index in range(end):\n            if items[index] > items[index + 1]:\n                items[index], items[index + 1] = items[index + 1], items[index]\n                swapped = True\n        if not swapped:\n            break\n    return items",
+          "code_caption": "原地且穩定；已排序輸入可提前於 O(n) 完成。"
+        },
+        {
+          "heading": "平方成本限制用途",
+          "paragraphs": ["平均與最壞情況會執行約 n²/2 次比較，因此時間 O(n²)；已排序且有 swapped 最佳為 O(n)。它只用常數個變數，額外空間 O(1)，但大型資料通常不應使用。"],
+          "bullets": ["最佳時間 O(n)", "平均與最壞時間 O(n²)", "額外空間 O(1)", "穩定且原地"]
+        }
+      ],
+      "takeaways": ["每輪會把未排序區域最大值推到右端", "swapped 可讓已排序輸入提前結束", "氣泡排序穩定且原地，但平方時間不適合大型資料"],
+      "quiz": [
+        {"question": "為何交換條件使用 > 而非 >= 有助於穩定性？", "answer": "相等鍵不交換，便不會顛倒它們原本的相對順序。"},
+        {"question": "沒有 swapped 最佳化時，已排序輸入的時間是多少？", "answer": "仍會完成巢狀比較，時間為 O(n²)。"}
+      ],
+      "practice": ["手動推演 [5, 1, 4, 2] 的每一輪結果。", "增加比較與交換計數器，比較已排序和反向排序輸入。"]
+    },
+    {
+      "number": 3,
+      "slug": "selection-sort",
+      "title": "Selection Sort 選擇排序",
+      "subtitle": "每輪選出最小值放到下一個位置",
+      "duration": "20 分鐘",
+      "difficulty": "入門",
+      "summary": "實作選擇排序，理解固定比較次數、少量交換與不穩定性。",
+      "objectives": ["描述已排序前綴不變量", "實作原地選擇排序", "解釋其不穩定原因"],
+      "sections": [
+        {
+          "heading": "從未排序區域選最小值",
+          "paragraphs": ["選擇排序（Selection Sort）把序列分成左側已排序與右側未排序區域。每輪找出未排序區域最小值，與區域第一格交換；完成第 i 輪後，前 i + 1 格就是全體最小的元素且位置正確。"],
+          "bullets": ["每輪只決定一個最終位置", "未排序區域逐輪縮小", "最多進行 n - 1 次交換"]
+        },
+        {
+          "heading": "原地實作",
+          "paragraphs": ["內層走訪只記住目前最小值索引，結束後才交換一次。即使輸入已排序，仍需掃描剩餘區域確認最小值，所以不像最佳化氣泡排序那樣能提早降為線性時間。"],
+          "bullets": ["只保存 min_index", "每輪最多交換一次", "已排序資料仍完成所有比較"],
+          "code": "def selection_sort(items):\n    for start in range(len(items) - 1):\n        min_index = start\n        for index in range(start + 1, len(items)):\n            if items[index] < items[min_index]:\n                min_index = index\n        items[start], items[min_index] = items[min_index], items[start]\n    return items",
+          "code_caption": "原地選擇排序；所有輸入情況的時間皆為 O(n²)。"
+        },
+        {
+          "heading": "少交換但通常不穩定",
+          "paragraphs": ["選擇排序最好、平均與最壞時間都是 O(n²)，額外空間 O(1)。把遠處最小值直接交換到前方可能跨越相同鍵元素並改變相對順序，因此標準版本不穩定；優點是交換次數只有 O(n)。"],
+          "bullets": ["所有情況時間 O(n²)", "額外空間 O(1)", "標準版本不穩定", "寫入昂貴時少交換可能有價值"]
+        }
+      ],
+      "takeaways": ["選擇排序每輪確定已排序前綴的一個位置", "它的比較次數不因輸入已有序而減少", "標準版本原地但不穩定，交換次數為 O(n)"],
+      "quiz": [
+        {"question": "選擇排序為何在已排序輸入仍是 O(n²)？", "answer": "每輪仍須掃描全部未排序區域，才能確認目前位置就是最小值。"},
+        {"question": "它比氣泡排序更少的是哪一種操作？", "answer": "交換；每輪最多一次，總交換數 O(n)，氣泡排序最壞可交換 O(n²) 次。"}
+      ],
+      "practice": ["用帶標籤的相同鍵資料找出標準選擇排序不穩定的反例。", "修改程式記錄比較與交換次數，測試不同排列。"]
+    },
+    {
+      "number": 4,
+      "slug": "insertion-sort",
+      "title": "Insertion Sort 插入排序",
+      "subtitle": "把下一張牌插入已排序前綴",
+      "duration": "23 分鐘",
+      "difficulty": "入門",
+      "summary": "使用搬移而非反覆交換實作插入排序，並認識近乎有序資料的優勢。",
+      "objectives": ["說明已排序前綴不變量", "實作穩定原地插入排序", "分析近乎有序資料的成本"],
+      "sections": [
+        {
+          "heading": "維持已排序前綴",
+          "paragraphs": ["插入排序（Insertion Sort）把第一個元素視為已排序，接著取出下一個 key，將較大的前綴元素向右搬，再把 key 插入空位。每輪結束後，從索引 0 到目前位置都已排序。"],
+          "bullets": ["像整理手中撲克牌", "一次把一個新元素插入前綴", "前綴在每輪結束後保持排序"]
+        },
+        {
+          "heading": "只搬移嚴格較大的元素",
+          "paragraphs": ["保存 key 後，while 迴圈將所有大於 key 的元素右移；遇到小於等於 key 的元素就停止。相等鍵不跨越彼此，因此此版本穩定，且所有操作都在原 list 內完成。"],
+          "bullets": ["先保存即將被覆蓋的 key", "搬移比逐次交換更直接", "使用 > 維持相等鍵順序"],
+          "code": "def insertion_sort(items):\n    for index in range(1, len(items)):\n        key = items[index]\n        position = index - 1\n        while position >= 0 and items[position] > key:\n            items[position + 1] = items[position]\n            position -= 1\n        items[position + 1] = key\n    return items",
+          "code_caption": "穩定且原地；近乎有序資料所需搬移較少。"
+        },
+        {
+          "heading": "成本取決於逆序程度",
+          "paragraphs": ["已排序時每個 key 只比較一次，最佳時間 O(n)；反向排序時每輪幾乎搬移整個前綴，最壞 O(n²)，平均也是 O(n²)。額外空間 O(1)，小型或近乎有序資料上常有良好表現。"],
+          "bullets": ["最佳時間 O(n)", "平均與最壞時間 O(n²)", "額外空間 O(1)", "穩定且原地"]
+        }
+      ],
+      "takeaways": ["插入排序逐步擴張已排序前綴", "只搬移嚴格較大元素可維持穩定性", "它適合小型或近乎有序資料，但最壞為 O(n²)"],
+      "quiz": [
+        {"question": "插入排序在已排序資料為何是 O(n)？", "answer": "每個 key 與前一元素比較後就停止，不需要搬移，總共只做線性次數工作。"},
+        {"question": "若 while 條件改成 items[position] >= key，穩定性會如何？", "answer": "相同鍵也會被右移，新元素可能跑到舊元素前面，因此失去穩定性。"}
+      ],
+      "practice": ["手動推演 [3, 1, 2, 5, 4] 的 key 與前綴變化。", "計算一組近乎有序輸入實際發生的搬移次數。"]
+    },
+    {
+      "number": 5,
+      "slug": "merge-sort",
+      "title": "Merge Sort 合併排序",
+      "subtitle": "分割問題，再線性合併兩個有序結果",
+      "duration": "30 分鐘",
+      "difficulty": "中階",
+      "summary": "以分治與合併實作穩定的 O(n log n) 排序，理解額外空間成本。",
+      "objectives": ["描述分割與合併流程", "實作穩定合併排序", "推導 O(n log n) 時間"],
+      "sections": [
+        {
+          "heading": "把大問題分成兩半",
+          "paragraphs": ["合併排序（Merge Sort）使用分治法：把序列分成兩半，分別排序後再合併。當序列長度小於二時本身已有序，這就是遞迴的 base case。"],
+          "bullets": ["Divide：切成左右兩半", "Conquer：遞迴排序兩半", "Combine：合併兩個有序序列"]
+        },
+        {
+          "heading": "雙指標線性合併",
+          "paragraphs": ["合併時比較左右目前最小值，取較小者放入結果，某側用完後接上另一側剩餘元素。相等時先取左側，可保留原本跨越兩半的相對順序，因此整體穩定。"],
+          "bullets": ["左右指標只向前移動", "一次合併 O(n)", "相等時取左側維持穩定"],
+          "code": "def merge_sort(items):\n    if len(items) < 2:\n        return items[:]\n    middle = len(items) // 2\n    left = merge_sort(items[:middle])\n    right = merge_sort(items[middle:])\n    merged = []\n    i = j = 0\n    while i < len(left) and j < len(right):\n        if left[i] <= right[j]:\n            merged.append(left[i]); i += 1\n        else:\n            merged.append(right[j]); j += 1\n    return merged + left[i:] + right[j:]",
+          "code_caption": "回傳新的穩定排序結果；此直覺版本使用切片與額外 list。"
+        },
+        {
+          "heading": "每層 O(n)，共有 O(log n) 層",
+          "paragraphs": ["問題每次減半，所以遞迴深度 O(log n)；同一層的所有合併合計處理 n 個元素，因此最好、平均與最壞時間都是 O(n log n)。典型陣列實作需 O(n) 額外空間，不屬於原地排序。"],
+          "bullets": ["所有情況時間 O(n log n)", "主要額外空間 O(n)", "穩定但通常非原地", "適合需要可預測最壞時間的情境"]
+        }
+      ],
+      "takeaways": ["合併排序以分治將問題反覆減半", "線性合併與相等時取左側使排序穩定", "時間固定 O(n log n)，代價是 O(n) 額外空間"],
+      "quiz": [
+        {"question": "合併排序為什麼不是 O(n²)？", "answer": "遞迴只有 O(log n) 層，而每層所有合併合計 O(n)，相乘為 O(n log n)。"},
+        {"question": "合併時相等元素先取右側可能造成什麼結果？", "answer": "右半元素可能越過原先位於左半的相同鍵元素，使排序不穩定。"}
+      ],
+      "practice": ["手動合併 [2, 5, 8] 與 [1, 5, 7]，記錄雙指標變化。", "改寫 merge_sort 接受 key 函式，注意不要反覆昂貴地計算鍵。"]
+    },
+    {
+      "number": 6,
+      "slug": "quick-sort",
+      "title": "Quick Sort 快速排序",
+      "subtitle": "用 pivot 分割，小的放左、大的放右",
+      "duration": "30 分鐘",
+      "difficulty": "中階",
+      "summary": "理解 pivot 與 partition，實作清楚版本並比較平均效率與最壞退化。",
+      "objectives": ["描述 partition 後的保證", "實作快速排序", "說明 pivot 對複雜度的影響"],
+      "sections": [
+        {
+          "heading": "Partition 建立分界",
+          "paragraphs": ["快速排序（Quick Sort）選擇一個 pivot，將其餘元素分到較小、相等與較大區域，再遞迴排序兩側。關鍵不是 pivot 一開始在哪裡，而是 partition 後能確保左側不大於它、右側不小於它。"],
+          "bullets": ["pivot 是分割基準", "每層 partition 走訪目前子序列", "遞迴只需繼續處理左右區域"]
+        },
+        {
+          "heading": "先用清楚版本理解流程",
+          "paragraphs": ["下例建立三個新 list，容易閱讀並能妥善處理大量重複值；它不是原地版本，但相等元素依走訪順序收集，因此可維持此實作的穩定性。常見原地雙指標 partition 節省空間，通常不穩定。"],
+          "bullets": ["三向分割避免對相等值反覆遞迴", "此版本配置額外 list", "原地版本的交換會改變相同鍵順序"],
+          "code": "def quick_sort(items):\n    if len(items) < 2:\n        return items[:]\n    pivot = items[len(items) // 2]\n    lower = [value for value in items if value < pivot]\n    equal = [value for value in items if value == pivot]\n    higher = [value for value in items if value > pivot]\n    return quick_sort(lower) + equal + quick_sort(higher)",
+          "code_caption": "三向分割的教學版本；回傳新 list，不是原地排序。"
+        },
+        {
+          "heading": "平衡分割決定效率",
+          "paragraphs": ["若 pivot 常把資料分得接近一半，遞迴深度 O(log n)，平均時間 O(n log n)；若每次只分出一個元素，深度 O(n)，最壞時間 O(n²)。隨機 pivot、三數取中與三向分割能降低退化風險，但不改變理論最壞上界。"],
+          "bullets": ["平均時間 O(n log n)", "最壞時間 O(n²)", "典型原地版本平均堆疊 O(log n)", "標準原地版本通常不穩定"]
+        }
+      ],
+      "takeaways": ["快速排序以 pivot 將資料分區後遞迴", "分割是否平衡決定遞迴深度", "平均效率良好，但標準原地版本不穩定且最壞 O(n²)"],
+      "quiz": [
+        {"question": "快速排序何時會退化成 O(n²)？", "answer": "當 pivot 反覆造成極不平衡分割，例如每次只排除一個元素時，遞迴深度會達 O(n)。"},
+        {"question": "教學程式為何另建 equal 區域？", "answer": "它一次收集所有等於 pivot 的元素，避免大量重複值繼續進入不必要的遞迴。"}
+      ],
+      "practice": ["比較第一個、中間與隨機 pivot 在已排序輸入上的分割結果。", "實作回傳 lower、equal、higher 的 partition 函式並單獨測試。"]
+    },
+    {
+      "number": 7,
+      "slug": "heap-and-counting-sort",
+      "title": "Heap Sort 與 Counting Sort",
+      "subtitle": "一個靠比較保證上界，一個利用有限整數範圍",
+      "duration": "35 分鐘",
+      "difficulty": "中階",
+      "summary": "比較堆積排序與計數排序的前提、實作方式，以及 O(n log n) 和 O(n + k) 的適用條件。",
+      "objectives": ["用 heapq 實作堆積式排序", "實作支援負整數的計數排序", "根據值域 k 判斷計數排序是否合適"],
+      "sections": [
+        {
+          "heading": "Heap Sort 反覆取出極值",
+          "paragraphs": ["堆積排序（Heap Sort）先建立能快速取得最小或最大值的 Heap，再反覆取出極值形成排序結果。下例使用 Python 最小堆 heapq，寫法簡潔但會複製資料；經典陣列 Heap Sort 可原地完成，通常不穩定。"],
+          "bullets": ["建堆可在 O(n) 完成", "每次 heappop 為 O(log n)", "總時間 O(n log n)", "此 heapq 版本額外空間 O(n)"],
+          "code": "import heapq\n\ndef heap_sorted(items):\n    heap = list(items)\n    heapq.heapify(heap)\n    return [heapq.heappop(heap) for _ in range(len(heap))]",
+          "code_caption": "利用最小堆回傳遞增的新 list；時間 O(n log n)、空間 O(n)。"
+        },
+        {
+          "heading": "Counting Sort 直接統計值域",
+          "paragraphs": ["計數排序（Counting Sort）不比較元素，而是統計每個整數值出現幾次，再依值域輸出。若 n 是元素數、k 是最大值與最小值的跨度，時間 O(n + k)、額外空間 O(k)；只有 k 相對可控時才划算。"],
+          "bullets": ["適用於可映射到小範圍的整數鍵", "偏移量可支援負整數", "值域很大時會浪費記憶體", "此直接重建值的版本不保留附屬資料穩定性"],
+          "code": "def counting_sort(numbers):\n    if not numbers:\n        return []\n    low, high = min(numbers), max(numbers)\n    counts = [0] * (high - low + 1)\n    for value in numbers:\n        counts[value - low] += 1\n    result = []\n    for offset, count in enumerate(counts):\n        result.extend([offset + low] * count)\n    return result",
+          "code_caption": "支援負整數；時間 O(n + k)、額外空間 O(k)，k = high - low + 1。"
+        },
+        {
+          "heading": "比較式與非比較式的界線",
+          "paragraphs": ["只透過兩兩比較的通用排序，在常見決策樹模型下最壞需要 Ω(n log n)；Heap Sort 達到這個等級。Counting Sort 使用值域資訊繞過比較下界，但必須付出 O(k) 空間，所以不是對所有資料都比 O(n log n) 排序更快。"],
+          "bullets": ["Heap Sort 不要求小值域", "Counting Sort 依賴有限離散鍵", "k 遠大於 n 時避免 Counting Sort", "要穩定排序物件需使用累積計數與反向放置版本"]
+        }
+      ],
+      "takeaways": ["Heap Sort 提供 O(n log n) 最壞時間但標準版本不穩定", "Counting Sort 以 O(n + k) 時間換取 O(k) 值域空間", "非比較排序的速度來自對資料型態與範圍的額外假設"],
+      "quiz": [
+        {"question": "一百個整數分布在 0 到十億，適合直接使用 Counting Sort 嗎？", "answer": "不適合，k 約十億而 n 只有一百，計數陣列會消耗極大量且多數無用的空間。"},
+        {"question": "heapq 版本與經典原地 Heap Sort 的空間性質相同嗎？", "answer": "不同。此版本複製 heap 並建立結果，需 O(n) 額外空間；經典陣列版本可做到 O(1) 輔助空間。"}
+      ],
+      "practice": ["以 n 與 k 比較 Counting Sort 和 O(n log n) 排序可能的適用範圍。", "用 heapq 寫出只取最小 k 個元素的函式，說明是否需要完整排序。"]
+    },
+    {
+      "number": 8,
+      "slug": "sorting-comparison",
+      "title": "排序演算法總比較",
+      "subtitle": "根據輸入與需求選方法，而不是尋找唯一冠軍",
+      "duration": "28 分鐘",
+      "difficulty": "中階",
+      "summary": "整合所有排序方法的時間、空間、穩定性與適用資料，建立實務選擇流程。",
+      "objectives": ["比較經典排序的關鍵性質", "依限制排除不合適方法", "說明內建排序通常優先的原因"],
+      "sections": [
+        {
+          "heading": "共同表格先看硬性限制",
+          "paragraphs": ["選擇排序時先看資料量、最壞時間、額外空間、穩定性與鍵值限制。表格描述本單元的典型實作；同名演算法可能因 partition、合併方式或實作細節而改變空間與穩定性。"],
+          "bullets": ["n 大時先排除 O(n²)", "需要穩定性時排除標準 Selection、Quick 與 Heap Sort", "記憶體緊張時注意 Merge 與 Counting 的額外空間"],
+          "table": {
+            "headers": ["演算法", "最佳時間", "平均／最壞時間", "額外空間", "穩定"],
+            "rows": [
+              ["Bubble", "O(n)", "O(n²)／O(n²)", "O(1)", "是"],
+              ["Selection", "O(n²)", "O(n²)／O(n²)", "O(1)", "否"],
+              ["Insertion", "O(n)", "O(n²)／O(n²)", "O(1)", "是"],
+              ["Merge", "O(n log n)", "O(n log n)／O(n log n)", "O(n)", "是"],
+              ["Quick（典型）", "O(n log n)", "O(n log n)／O(n²)", "平均 O(log n) 堆疊", "否"],
+              ["Heap（原地）", "O(n log n)", "O(n log n)／O(n log n)", "O(1)", "否"],
+              ["Counting", "O(n + k)", "O(n + k)／O(n + k)", "O(k)", "視實作"]
+            ]
+          }
+        },
+        {
+          "heading": "從資料特性做決定",
+          "paragraphs": ["小型或近乎有序資料可考慮 Insertion Sort；需要穩定且可預測的 O(n log n) 可選 Merge Sort；有限整數值域且 k 不大時 Counting Sort 可能很好。若只是一般 Python 應用，內建 Timsort 已針對真實資料與部分有序情況最佳化。"],
+          "bullets": ["近乎有序：Insertion 或 Python 內建排序", "穩定且一般資料：Merge 或內建排序", "小整數值域：評估 Counting Sort", "教學實作有助理解，但不代表應取代成熟函式庫"]
+        },
+        {
+          "heading": "排序也包含整體成本",
+          "paragraphs": ["不要只比較排序函式本身：昂貴 key 若重複計算、複製大型資料、先排序卻只查詢一次，都可能主導成本。先明確說明輸入是否可修改、是否需完整排序，以及能否只用 heap 取 Top K，才能選到真正合適的方案。"],
+          "bullets": ["只需最小或最大值時不必完整排序", "只需 Top K 可評估 heap", "不可修改輸入時需計入副本空間", "效能判斷最後應以真實資料量測驗證"]
+        }
+      ],
+      "takeaways": ["排序沒有單一最佳方法，選擇取決於資料與限制", "穩定性、原地性和最壞上界都是重要決策條件", "一般 Python 程式優先使用內建排序，特殊需求再採專門方法"],
+      "quiz": [
+        {"question": "需要保留相同分數學生的報名順序，應優先關注哪個性質？", "answer": "穩定性；穩定排序會保留相同排序鍵元素的原相對順序。"},
+        {"question": "只需要一百萬筆中的十個最大值，為何不一定要完整排序？", "answer": "可用大小為 10 的 heap 維持 Top K，通常只需 O(n log 10)，避免完整排序的 O(n log n)。"}
+      ],
+      "practice": ["為『一千萬筆、鍵為 0 到 100 的整數、記憶體足夠』選排序方法並說明理由。", "為『物件不可修改、需要穩定多欄排序』設計 Python sorted 與 key 的方案。"]
+    }
+  ]
+}

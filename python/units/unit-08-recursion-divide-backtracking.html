@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="從遞迴的終止條件與呼叫堆疊出發，進入分治法，再以回溯系統化探索子集合、排列組合、N-Queens 與迷宮。" />
+    <meta name="theme-color" content="#101713" />
+    <title>單元 08｜遞迴、分治與回溯｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../styles.css" />
+    <script src="../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../index.html">課程總覽</a>
+        <a class="is-active" href="../phase-1.html">第一階段</a>
+        <a class="" href="../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <section class="unit-hero">
+        <div><a class="breadcrumb" href="../phase-1.html">PHASE 01 / UNIT 08</a><p class="eyebrow">Recursion, Divide and Conquer, and Backtracking</p><h1>遞迴、分治與回溯</h1><p class="hero-intro">從遞迴的終止條件與呼叫堆疊出發，進入分治法，再以回溯系統化探索子集合、排列組合、N-Queens 與迷宮。</p><a class="primary-button" href="#lessons">查看 8 堂課 <span>↓</span></a></div>
+        <aside><span>UNIT</span><strong>08</strong><p>能追蹤遞迴呼叫、估算時間與空間，並依問題結構設計分治或回溯解法與有效剪枝。</p></aside>
+      </section>
+      <section class="unit-info"><div><p class="section-index">BEFORE YOU START</p><h2>先備知識</h2><ul><li>會定義 Python 函式並理解參數與回傳值</li><li>熟悉 list、set、迴圈與條件判斷</li><li>理解 Big O、樹與深度優先搜尋的基本概念</li></ul></div><div><p class="section-index">AFTER THIS UNIT</p><h2>完成後你能夠</h2><ul><li>能寫出具有明確 Base Case 的遞迴函式</li><li>能畫出遞迴樹與 Call Stack 並分析複雜度</li><li>能用分治法拆解、求解及合併子問題</li><li>能套用選擇、遞迴、撤銷的回溯框架</li><li>能以限制條件與剪枝降低無效搜尋</li></ul></div></section>
+      <section class="lesson-section" id="lessons"><div class="section-head"><div><p class="section-index">LESSON LIST</p><h2>本單元課程</h2></div><p>建議依序閱讀；每一課約 15–25 分鐘，讀完後先回答理解題，再挑一題延伸練習。</p></div><div class="lesson-list">
+        <article class="lesson-row">
+          <span>01</span>
+          <div><p>入門 · 25 分鐘</p><h3>遞迴結構、Base Case 與 Call Stack</h3><b>讓函式處理較小版本的同一問題</b></div>
+          <a href="../lessons/unit-08/01-recursion-structure.html" aria-label="開始課程：遞迴結構、Base Case 與 Call Stack">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>02</span>
+          <div><p>基礎 · 30 分鐘</p><h3>遞迴追蹤與複雜度</h3><b>用遞迴樹分清呼叫次數與最大深度</b></div>
+          <a href="../lessons/unit-08/02-tracing-and-complexity.html" aria-label="開始課程：遞迴追蹤與複雜度">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>03</span>
+          <div><p>基礎 · 25 分鐘</p><h3>Divide and Conquer 分治法</h3><b>拆解、求解，再合併互相獨立的子問題</b></div>
+          <a href="../lessons/unit-08/03-divide-and-conquer.html" aria-label="開始課程：Divide and Conquer 分治法">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>04</span>
+          <div><p>基礎 · 35 分鐘</p><h3>Merge Sort 與 Quick Sort 分治案例</h3><b>比較先切後合併與先分割後遞迴</b></div>
+          <a href="../lessons/unit-08/04-merge-sort-and-quick-sort.html" aria-label="開始課程：Merge Sort 與 Quick Sort 分治案例">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>05</span>
+          <div><p>基礎 · 30 分鐘</p><h3>Backtracking 回溯框架</h3><b>做選擇、深入探索，再撤銷選擇</b></div>
+          <a href="../lessons/unit-08/05-backtracking-framework.html" aria-label="開始課程：Backtracking 回溯框架">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>06</span>
+          <div><p>基礎 · 30 分鐘</p><h3>子集合</h3><b>每個元素都有選與不選兩條分支</b></div>
+          <a href="../lessons/unit-08/06-subsets.html" aria-label="開始課程：子集合">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>07</span>
+          <div><p>基礎 · 35 分鐘</p><h3>排列與組合</h3><b>分清順序是否重要，再選擇 used 或 start</b></div>
+          <a href="../lessons/unit-08/07-permutations-and-combinations.html" aria-label="開始課程：排列與組合">開始閱讀 →</a>
+        </article>
+        <article class="lesson-row">
+          <span>08</span>
+          <div><p>進階 · 40 分鐘</p><h3>N-Queens、迷宮與剪枝</h3><b>把限制轉成快速檢查，縮小搜尋樹</b></div>
+          <a href="../lessons/unit-08/08-n-queens-maze-and-pruning.html" aria-label="開始課程：N-Queens、迷宮與剪枝">開始閱讀 →</a>
+        </article></div></section>
+      <nav class="bottom-nav"><a href="../phase-1.html">← 返回第 1 階段大綱</a><a href="../index.html">完整學習地圖 ↑</a></nav></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="以兩字串前綴建立共同子序列與編輯距離。" />
+    <meta name="theme-color" content="#101713" />
+    <title>13.08 LCS 與 Edit Distance｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-13-dynamic-programming.html">UNIT 13 / LESSON 08</a><p class="eyebrow">Dynamic Programming</p><h1>LCS 與 Edit Distance</h1><p class="lesson-deck">用二維前綴狀態比較兩字串</p><div class="lesson-meta"><span>進階</span><span>40 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>以兩字串前綴建立共同子序列與編輯距離。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>推導 LCS</li><li>推導 Edit Distance</li><li>比較二維轉移</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>Longest Common Subsequence</h2><p>dp[i][j] 是 first 前 i 字元與 second 前 j 字元的 LCS 長度。末字元相同就接 dp[i-1][j-1]+1，否則丟棄其中一側末字元取最大。</p><ul><li>子序列不要求連續</li><li>空前綴 LCS 為 0</li><li>時間與空間 O(mn)</li></ul><figure class="code-block"><figcaption><span>多一列與一欄代表空前綴。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def lcs_length(a, b):
+    dp = [[0]*(len(b)+1) for _ in range(len(a)+1)]
+    for i in range(1, len(a)+1):
+        for j in range(1, len(b)+1):
+            dp[i][j] = dp[i-1][j-1]+1 if a[i-1]==b[j-1] else max(dp[i-1][j], dp[i][j-1])
+    return dp[-1][-1]</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Edit Distance</h2><p>dp[i][j] 是把 a 前 i 字元轉成 b 前 j 字元的最少操作數。末字元不同時，從刪除、插入、替換三種前態取最小再加一。</p><ul><li>dp[i][0]=i</li><li>相同末字元不增加成本</li><li>不同時取 min(刪、插、換)+1</li></ul><figure class="code-block"><figcaption><span>時間與空間 O(mn)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def edit_distance(a, b):
+    dp = [[0]*(len(b)+1) for _ in range(len(a)+1)]
+    for i in range(len(a)+1): dp[i][0] = i
+    for j in range(len(b)+1): dp[0][j] = j
+    for i in range(1, len(a)+1):
+        for j in range(1, len(b)+1):
+            dp[i][j] = dp[i-1][j-1] if a[i-1]==b[j-1] else 1+min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])
+    return dp[-1][-1]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>壓縮與重建</h2><p>兩題每列只依賴上一列與本列左側，可用兩列或一列將空間降為 O(min(m,n))。若要回傳實際 LCS 或編輯步驟，通常保留完整表並反向追蹤。</p><ul><li>長度答案可壓縮</li><li>重建解需要來源資訊</li><li>一維更新要保存左上角舊值</li></ul><div class="table-wrap"><table><thead><tr><th>題目</th><th>相同末字元</th><th>不同末字元</th></tr></thead><tbody><tr><td>LCS</td><td>左上+1</td><td>max(上,左)</td></tr><tr><td>Edit</td><td>左上</td><td>1+min(上,左,左上)</td></tr></tbody></table></div></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>雙字串問題常以兩個前綴長度作狀態。</li><li><span>02</span>LCS 最大化保留，Edit Distance 最小化操作。</li><li><span>03</span>只求數值可壓縮，重建通常需完整來源。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>LCS 與最長共同子字串差在哪？</summary><p>LCS 不要求字元連續，子字串要求連續。</p></details><details><summary>Edit Distance 的 dp[i][0] 為何是 i？</summary><p>把 i 個字元轉成空字串需刪除 i 次。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>由 LCS 表反向重建一個實際共同子序列。</li><li>把替換成本改為 2，修改 Edit Distance。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-13/07-grid-dp.html"><span>← 上一課</span><b>Grid、Unique Paths 與 Minimum Path Sum</b></a><a class="next" href="../unit-13/09-zero-one-knapsack.html"><span>下一課 →</span><b>0/1 Knapsack</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

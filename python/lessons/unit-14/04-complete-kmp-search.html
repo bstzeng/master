@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="整合 LPS 與雙指標搜尋，處理完整匹配後回退、重疊結果及空 Pattern 契約。" />
+    <meta name="theme-color" content="#101713" />
+    <title>14.04 KMP 完整搜尋流程｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-14-string-algorithms.html">UNIT 14 / LESSON 04</a><p class="eyebrow">Classic String Algorithms</p><h1>KMP 完整搜尋流程</h1><p class="lesson-deck">組合 LPS 與雙指標找出所有匹配</p><div class="lesson-meta"><span>進階</span><span>40 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>整合 LPS 與雙指標搜尋，處理完整匹配後回退、重疊結果及空 Pattern 契約。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>實作回傳全部位置的 KMP</li><li>處理重疊匹配與完整匹配後回退</li><li>說明 O(n + m) 時間界線</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>搜尋狀態與三種分支</h2><p>KMP 搜尋維護 text_index 與 pattern_index；相同時兩者前進，失配且 pattern_index &gt; 0 時依 LPS 回退，否則只前進 Text。這三個分支保證 Text 指標不倒退，Pattern 指標只沿已知 Border 移動。</p><ul><li>相同：兩個指標同時加一</li><li>失配且 j &gt; 0：j = lps[j - 1]</li><li>失配且 j == 0：i += 1</li><li>不要在回退分支同時增加 i</li></ul><figure class="code-block"><figcaption><span>Text 指標只向右，Pattern 指標在失配時依 LPS 回退。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>text = &quot;abxabc&quot;
+pattern = &quot;abc&quot;
+lps = [0, 0, 0]
+i = j = 0
+while i &lt; len(text) and j &lt; len(pattern):
+    if text[i] == pattern[j]:
+        i += 1
+        j += 1
+    elif j &gt; 0:
+        j = lps[j - 1]
+    else:
+        i += 1
+print(i - j, j)</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>完整實作與重疊匹配</h2><p>當 pattern_index == m 時，匹配起點為 text_index - m；若要繼續尋找重疊結果，不把 j 歸零，而是設為 lps[j - 1]。空 Pattern 的數學與函式庫契約可能不同，下例明確定義它匹配所有 n + 1 個邊界。</p><ul><li>完整匹配位置：i - m</li><li>匹配後回退可保留 Border</li><li>回傳 List 可保存重疊結果</li><li>空 Pattern 行為應在介面中記錄</li></ul><figure class="code-block"><figcaption><span>完整 KMP 會找出所有包含重疊的匹配。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def build_lps(pattern):
+    lps = [0] * len(pattern)
+    length, index = 0, 1
+    while index &lt; len(pattern):
+        if pattern[index] == pattern[length]:
+            length += 1
+            lps[index] = length
+            index += 1
+        elif length:
+            length = lps[length - 1]
+        else:
+            index += 1
+    return lps
+
+def kmp_search(text, pattern):
+    if pattern == &quot;&quot;:
+        return list(range(len(text) + 1))
+    lps = build_lps(pattern)
+    matches = []
+    text_index = pattern_index = 0
+    while text_index &lt; len(text):
+        if text[text_index] == pattern[pattern_index]:
+            text_index += 1
+            pattern_index += 1
+            if pattern_index == len(pattern):
+                matches.append(text_index - len(pattern))
+                pattern_index = lps[pattern_index - 1]
+        elif pattern_index &gt; 0:
+            pattern_index = lps[pattern_index - 1]
+        else:
+            text_index += 1
+    return matches
+
+print(kmp_search(&quot;aaaa&quot;, &quot;aa&quot;))  # [0, 1, 2]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>複雜度、適用情境與限制</h2><p>建 LPS 為 O(m)，搜尋為 O(n)，總時間 O(n + m)、額外空間 O(m) 加輸出 O(k)，且沒有雜湊碰撞。KMP 適合要求確定線性最壞界線、Pattern 有重複結構或相同 Pattern 搜尋多個 Text；一次性短字串則未必比內建搜尋更簡單。</p><ul><li>確定最壞時間 O(n + m)</li><li>相同 Pattern 可重用 LPS</li><li>精確比較，不存在碰撞</li><li>程式較暴力法複雜，需仔細測試邊界</li></ul><div class="table-wrap"><table><thead><tr><th>方法</th><th>最壞時間</th><th>預處理</th><th>風險</th></tr></thead><tbody><tr><td>暴力</td><td>O(nm)</td><td>無</td><td>重複比較</td></tr><tr><td>KMP</td><td>O(n + m)</td><td>LPS O(m)</td><td>實作邊界較多</td></tr><tr><td>Python str.find</td><td>實作相關</td><td>由執行環境處理</td><td>不展示演算法細節</td></tr></tbody></table></div><aside class="concept-callout"><b>KEY IDEA</b><p>KMP 的線性保證來自 Text 不回退，以及 Pattern 回退總量受到前進總量限制。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>KMP 以 LPS 決定失配回退位置，Text 指標不倒退</li><li><span>02</span>完整匹配後回退到 LPS 可繼續尋找重疊結果</li><li><span>03</span>建表加搜尋總時間 O(n + m)，空間 O(m)</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>找到完整匹配後，為何不一定把 pattern_index 設為 0？</summary><p>完整 Pattern 的後綴可能也是前綴，回退到 LPS 能保留這段資訊並找到重疊匹配。</p></details><details><summary>KMP 相對 Rabin–Karp 的一項保證是什麼？</summary><p>KMP 直接比較字元並有確定 O(n + m) 最壞時間，不存在雜湊碰撞造成的額外驗證。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>修改 kmp_search，只回傳第一個匹配位置並支援提早停止。</li><li>用隨機小字串比較 naive_search 與 kmp_search 的所有輸出是否一致。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-14/03-lps-table.html"><span>← 上一課</span><b>LPS Table：預先整理回退位置</b></a><a class="next" href="../unit-14/05-rabin-karp-and-rolling-hash.html"><span>下一課 →</span><b>Rabin–Karp 與 Rolling Hash</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

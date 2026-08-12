@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="用一倍與兩倍速度找中點，並用固定間距找倒數第 k 個節點。" />
+    <meta name="theme-color" content="#101713" />
+    <title>06.06 快慢指標｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-06-linked-lists.html">UNIT 06 / LESSON 06</a><p class="eyebrow">Linked Lists</p><h1>快慢指標</h1><p class="lesson-deck">利用不同速度建立節點間的位置關係</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>用一倍與兩倍速度找中點，並用固定間距找倒數第 k 個節點。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>理解快慢指標的速度關係</li><li>找出鏈結串列中點</li><li>以固定間距找倒數第 k 個節點</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>兩個指標創造相對位置</h2><p>快慢指標（Fast and Slow Pointers）讓兩個參照以不同速度或固定間距前進。它不需要先知道串列長度，常用來找中點、倒數位置與偵測環。</p><ul><li>速度型：slow 每次一步，fast 每次兩步</li><li>間距型：先讓 fast 領先 k 步，再同步前進</li><li>所有指標都沿 next 前進，不需額外陣列</li></ul><figure class="code-block"><figcaption><span>fast 到終點時，slow 恰走約一半距離。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def middle_node(head):
+    slow = head
+    fast = head
+    while fast is not None and fast.next is not None:
+        slow = slow.next
+        fast = fast.next.next
+    return slow</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>中點的偶數定義</h2><p>對奇數個節點，中點唯一；對偶數個節點，則必須決定回傳前中點或後中點。上述寫法在 fast 無法再走兩步時停止，會回傳兩個中央節點中的後一個。</p><ul><li>1 → 2 → 3 回傳 2</li><li>1 → 2 → 3 → 4 回傳 3</li><li>空串列會回傳 None</li></ul><figure class="code-block"><figcaption><span>測試偶數長度能確認題目採用哪一個中點定義。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>odd = build_linked_list([1, 2, 3])
+even = build_linked_list([1, 2, 3, 4])
+print(middle_node(odd).value)   # 2
+print(middle_node(even).value)  # 3</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>固定間距找倒數第 k 個</h2><p>先讓 fast 從 head 前進 k 步，再讓 slow 與 fast 同步前進；fast 到 None 時，slow 距離尾端正好還有 k 個節點。兩個指標各至多走 n 步，因此時間 O(n)、額外空間 O(1)。</p><ul><li>文字圖：slow=[1]，fast 領先 k 格</li><li>fast 與 slow 同速後，兩者距離保持不變</li><li>若 fast 無法先走滿 k 步，代表 k 超過串列長度</li></ul><figure class="code-block"><figcaption><span>k=1 時回傳最後一個節點，k 等於長度時回傳 head。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def kth_from_end(head, k):
+    if k &lt;= 0:
+        raise ValueError(&quot;k 必須是正整數&quot;)
+    fast = head
+    for _ in range(k):
+        if fast is None:
+            return None
+        fast = fast.next
+
+    slow = head
+    while fast is not None:
+        slow = slow.next
+        fast = fast.next
+    return slow</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>速度差可找中點，固定間距可找倒數位置。</li><li><span>02</span>偶數長度時要先確認中點採前一個或後一個。</li><li><span>03</span>快慢指標通常以 O(n) 時間、O(1) 額外空間完成。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>fast 每次兩步、slow 每次一步時，fast 到尾端為何 slow 在中點？</summary><p>兩者同時出發且 fast 速度是 slow 的兩倍；fast 走完整條鏈時，slow 約走一半距離。</p></details><details><summary>找倒數第 k 個節點時，fast 先走不到 k 步代表什麼？</summary><p>代表串列節點數少於 k，因此不存在倒數第 k 個節點。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>修改 middle_node，使偶數長度時回傳前一個中央節點。</li><li>使用固定間距指標刪除倒數第 k 個節點，並以 dummy node 處理刪除 head。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-06/05-reversing-a-linked-list.html"><span>← 上一課</span><b>反轉鏈結串列</b></a><a class="next" href="../unit-06/07-cycle-detection.html"><span>下一課 →</span><b>環狀鏈結串列偵測</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

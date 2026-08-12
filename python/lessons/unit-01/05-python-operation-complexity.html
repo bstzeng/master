@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="掌握 list、dict、set、字串與 deque 的代表性操作成本，並知道平均 O(1) 仍有前提。" />
+    <meta name="theme-color" content="#101713" />
+    <title>01.05 Python 常見操作複雜度｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-01-algorithm-foundations.html">UNIT 01 / LESSON 05</a><p class="eyebrow">Algorithm Foundations</p><h1>Python 常見操作複雜度</h1><p class="lesson-deck">相同語法看起來簡短，背後成本可能完全不同</p><div class="lesson-meta"><span>入門</span><span>25 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>掌握 list、dict、set、字串與 deque 的代表性操作成本，並知道平均 O(1) 仍有前提。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>辨認 Python 內建容器常見操作的複雜度</li><li>解釋 list 頭尾操作成本不同的原因</li><li>正確描述 dict 與 set 的平均查找成本</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>list 的索引快，搬移可能慢</h2><p>Python list 是動態陣列，依索引讀寫通常是 O(1)，走訪與搜尋是 O(n)。尾端 append 平均為攤銷 O(1)，但在開頭 insert 或 pop 會搬移其餘元素，因此是 O(n)。</p><ul><li>items[i]：O(1)</li><li>target in items：O(n)</li><li>items.append(value)：攤銷 O(1)</li><li>items.insert(0, value)：O(n)</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>dict 與 set 依賴雜湊</h2><p>dict 與 set 使用雜湊表（Hash Table），查找、加入與刪除在平均情況通常是 O(1)。碰撞、擴充與惡劣輸入會影響成本，所以嚴謹表達應註明平均 O(1)、最壞 O(n)，也要記得鍵或元素必須可雜湊。</p><ul><li>key in mapping：平均 O(1)</li><li>value in values_set：平均 O(1)</li><li>key in mapping.keys() 通常不需先建立新容器</li><li>直接搜尋 mapping 的值仍可能是 O(n)</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>平均 O(1) 不表示每一次操作時間完全相同，而是長期平均不隨元素數量線性增加。</p></aside></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>短語法也可能建立新資料</h2><p>list 切片、字串切片與串接通常會依結果長度建立新物件，因此不能只看程式碼行數判斷成本。需要頻繁從佇列左端取值時，可使用 collections.deque 的 popleft 平均 O(1)，避免 list.pop(0) 的 O(n) 搬移。</p><ul><li>items[a:b]：時間與空間皆約 O(k)</li><li>text_a + text_b：依結果長度配置新字串</li><li>list.pop(0)：O(n)</li><li>deque.popleft()：O(1)</li></ul><figure class="code-block"><figcaption><span>deque 適合需要在左右兩端頻繁加入或取出的佇列。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>from collections import deque
+
+waiting = deque([&quot;A&quot;, &quot;B&quot;, &quot;C&quot;])
+next_person = waiting.popleft()
+waiting.append(&quot;D&quot;)</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>list 的索引為 O(1)，但頭端插入或刪除為 O(n)</li><li><span>02</span>dict 與 set 的查找通常應描述為平均 O(1)</li><li><span>03</span>切片與不可變字串操作可能配置與結果等長的新物件</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼 list.pop(0) 是 O(n)？</summary><p>刪除第一個元素後，其餘元素的位置需要向前搬移，因此搬移量會隨 list 長度成長。</p></details><details><summary>要反覆判斷帳號是否已出現，list 和 set 通常選哪一個？</summary><p>通常選 set，成員查找平均 O(1)；list 成員查找需要逐筆比對，為 O(n)。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>把使用 list.pop(0) 實作的佇列改寫成 deque，並標註兩者成本。</li><li>找出一段含切片的 Python 程式，令 k 為切片長度，分析它的時間與額外空間。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-01/04-big-o-growth-rates.html"><span>← 上一課</span><b>Big O 與常見成長等級</b></a><a class="next" href="../unit-01/06-analyzing-loops-and-recursion.html"><span>下一課 →</span><b>分析迴圈與遞迴</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,145 @@
+{
+  "number": 13,
+  "phase": 2,
+  "slug": "dynamic-programming",
+  "title": "Dynamic Programming 動態規劃",
+  "english": "Dynamic Programming",
+  "summary": "以狀態與轉移保存子問題答案，系統學習序列、網格、字串、背包與區間 DP。",
+  "goal": "能辨認 DP 結構，定義 state、transition、base case 與計算順序，並分析及優化時空間。",
+  "prerequisites": ["熟悉遞迴、陣列、字串與雜湊表", "能分析時間與空間複雜度", "理解搜尋樹與組合問題"],
+  "outcomes": ["能將暴力遞迴改為記憶化或表格法", "能設計一維與二維 DP", "能辨認背包、序列與區間題型", "能以滾動變數或一維陣列優化空間"],
+  "lessons": [
+    {
+      "number": 1, "slug": "dp-foundations", "title": "DP 核心：重疊子問題與最佳子結構", "subtitle": "把重複計算保存起來", "duration": "25 分鐘", "difficulty": "入門", "summary": "辨認 DP 的兩項核心性質，從決策樹理解重複工作。", "objectives": ["辨認重疊子問題", "說明最佳子結構", "區分 DP 與一般分治"],
+      "sections": [
+        {"heading": "重疊子問題", "paragraphs": ["若遞迴樹反覆以相同參數求解相同答案，就存在重疊子問題。DP 將答案保存，使每種狀態只計算一次。"], "bullets": ["fib(5) 會多次呼叫 fib(3)", "狀態數常遠少於遞迴呼叫數"], "code": "def fib_slow(n):\n    if n <= 1: return n\n    return fib_slow(n - 1) + fib_slow(n - 2)", "code_caption": "樸素 Fibonacci 時間約 O(2ⁿ)。"},
+        {"heading": "最佳子結構", "paragraphs": ["若原問題的最佳答案能由較小問題的最佳答案組合而成，就具有最佳子結構。轉移式必須涵蓋最後一步的所有合法選擇。"], "bullets": ["先定義子問題答案代表什麼", "局部最佳不一定能組成全域最佳"], "table": {"headers": ["性質", "檢查問題"], "rows": [["重疊子問題", "相同狀態是否重算？"], ["最佳子結構", "大答案能否由小答案組成？"]]}},
+        {"heading": "DP 不是公式背誦", "paragraphs": ["DP 的工作是定義有限狀態與依賴關係，再依正確順序求值。若狀態遺漏影響未來的資訊，即使程式能跑也可能錯誤。"], "bullets": ["先寫暴力選擇有助找轉移", "時間通常是狀態數乘每狀態轉移成本", "空間取決於保存多少狀態"], "callout": "先用一句話定義 dp[state]，再寫公式。"}
+      ],
+      "takeaways": ["重疊子問題讓保存答案有價值。", "最佳子結構讓小答案能組成大答案。", "DP 複雜度可由狀態數與轉移成本估算。"],
+      "quiz": [{"question": "分治一定是 DP 嗎？", "answer": "不一定；子問題若互不重疊，就沒有保存重複答案的主要需求。"}, {"question": "狀態定義為何重要？", "answer": "它決定已保存資訊是否足以完成後續轉移。"}],
+      "practice": ["畫出 fib(5) 遞迴樹並圈出重複狀態。", "判斷二分搜尋是否有重疊子問題。"]
+    },
+    {
+      "number": 2, "slug": "memoization-vs-tabulation", "title": "Memoization 與 Tabulation", "subtitle": "自頂向下與自底向上", "duration": "30 分鐘", "difficulty": "入門", "summary": "比較記憶化搜尋與表格法的流程及取捨。", "objectives": ["實作 memoization", "實作 tabulation", "比較兩者空間與可達狀態"],
+      "sections": [
+        {"heading": "Memoization 記憶化", "paragraphs": ["記憶化保留原遞迴結構，在進入狀態時先查 cache。它只計算實際可達狀態，但仍使用 Call Stack。"], "bullets": ["快取鍵必須完整描述狀態", "先查 cache，再展開子問題"], "code": "from functools import lru_cache\n\ndef fib_memo(n):\n    @lru_cache(None)\n    def solve(k):\n        if k <= 1: return k\n        return solve(k - 1) + solve(k - 2)\n    return solve(n)", "code_caption": "時間 O(n)、cache 與堆疊空間 O(n)。"},
+        {"heading": "Tabulation 表格法", "paragraphs": ["表格法從已知 Base Case 開始，依依賴順序填出較大狀態。它沒有遞迴深度問題，通常更容易做空間優化。"], "bullets": ["先初始化最小狀態", "迴圈順序必須先算依賴項"], "code": "def fib_table(n):\n    if n <= 1: return n\n    dp = [0] * (n + 1)\n    dp[1] = 1\n    for k in range(2, n + 1):\n        dp[k] = dp[k - 1] + dp[k - 2]\n    return dp[n]", "code_caption": "時間 O(n)、空間 O(n)。"},
+        {"heading": "選擇與滾動優化", "paragraphs": ["若每個狀態只依賴前兩項，就不必保留整張表，可用兩個變數將空間降為 O(1)。需要重建解或查看所有狀態時，則保留表格。"], "bullets": ["記憶化適合狀態稀疏或轉移複雜", "表格法適合順序清楚且重視常數成本", "空間優化前先確認未來依賴"], "code": "def fib_rolling(n):\n    previous, current = 0, 1\n    for _ in range(n):\n        previous, current = current, previous + current\n    return previous", "code_caption": "時間 O(n)、額外空間 O(1)。"}
+      ],
+      "takeaways": ["Memoization 自頂向下，只算可達狀態。", "Tabulation 自底向上，避免遞迴堆疊。", "只依賴少數前態時可使用滾動變數。"],
+      "quiz": [{"question": "記憶化已用 cache，為何空間仍可能 O(n)？", "answer": "除 cache 外，最深遞迴仍保留 O(n) 個呼叫框架。"}, {"question": "何時不宜刪除完整 dp 表？", "answer": "需要重建選擇路徑或後續查詢所有狀態時。"}],
+      "practice": ["將遞迴爬樓梯改成 lru_cache。", "把只依賴前三項的 DP 優化為三個變數。"]
+    },
+    {
+      "number": 3, "slug": "state-transition-order", "title": "State、Transition、Base Case 與順序", "subtitle": "用四個問題設計 DP", "duration": "30 分鐘", "difficulty": "基礎", "summary": "建立可重複使用的 DP 設計流程。", "objectives": ["精確定義 state", "列出 transition 與 base case", "決定合法計算順序"],
+      "sections": [
+        {"heading": "先定義 State", "paragraphs": ["State 必須用一句可驗證的話描述，例如 dp[i] 是處理前 i 個元素的最佳值。索引範圍與答案位置也應同時寫清楚。"], "bullets": ["狀態要包含影響未來的資訊", "避免讓 dp[i] 同時有兩種意思"], "callout": "若無法清楚說明 dp[i]，通常還不能開始寫程式。"},
+        {"heading": "最後一步推導 Transition", "paragraphs": ["問答案最後一步可能做了什麼，再把各選擇連到較小狀態。Base Case 提供最小問題答案，也必須涵蓋空輸入。"], "bullets": ["取最大、最小或加總取決於題意", "檢查每個轉移索引是否合法", "不可能狀態可初始化為 inf 或 False"], "table": {"headers": ["設計項", "問題"], "rows": [["State", "dp[...] 代表什麼？"], ["Transition", "最後一步有哪些選擇？"], ["Base", "最小問題答案？"]]}},
+        {"heading": "依賴決定順序", "paragraphs": ["表格填寫時，依賴狀態必須先完成；若 dp[i] 依賴較小 i，就由左到右。二維 DP 則要同時檢查列與欄的方向。"], "bullets": ["畫依賴箭頭可檢查順序", "空間壓縮可能改變內層迴圈方向", "答案不一定是 dp[-1]"], "code": "def min_cost(cost):\n    dp = [0] * (len(cost) + 1)\n    for i in range(1, len(dp)):\n        dp[i] = dp[i - 1] + cost[i - 1]\n    return dp[-1]", "code_caption": "簡例展示前態先於後態計算。"}
+      ],
+      "takeaways": ["State 定義要包含索引範圍與語意。", "Transition 可由最後一步的所有選擇推導。", "計算順序必須符合依賴方向。"],
+      "quiz": [{"question": "為何不可能狀態常用 infinity？", "answer": "做最小化時它不會錯誤成為較佳候選。"}, {"question": "一維壓縮後迴圈方向可能改變嗎？", "answer": "會；方向決定本輪讀到舊狀態或已更新的新狀態。"}],
+      "practice": ["為爬樓梯寫出 state、transition、base 與順序。", "找一個答案不位於 dp[-1] 的例子並說明。"]
+    },
+    {
+      "number": 4, "slug": "fibonacci-and-climbing-stairs", "title": "Fibonacci 與 Climbing Stairs", "subtitle": "從遞迴關係到一維 DP", "duration": "25 分鐘", "difficulty": "基礎", "summary": "以兩個入門問題練習狀態轉移與 O(1) 空間。", "objectives": ["推導兩題轉移", "處理初始狀態", "使用滾動變數"],
+      "sections": [
+        {"heading": "Fibonacci 的前兩項", "paragraphs": ["fib[i] 只依賴 fib[i-1] 與 fib[i-2]，Base Case 是 0 與 1。這個模型展示 DP 如何消除重複遞迴。"], "bullets": ["transition：F(i)=F(i-1)+F(i-2)", "時間 O(n)、可用 O(1) 空間"], "code": "def fibonacci(n):\n    a, b = 0, 1\n    for _ in range(n): a, b = b, a + b\n    return a", "code_caption": "a 始終代表目前要回傳的 F(i)。"},
+        {"heading": "Climbing Stairs", "paragraphs": ["每次走一或兩階，到第 i 階的最後一步必來自 i-1 或 i-2。令 ways[i] 為到達第 i 階的方法數，兩類路徑互斥，因此相加。"], "bullets": ["ways[0]=1 表示什麼都不走的一種方式", "ways[1]=1", "方法數問題通常加總來源"], "code": "def climbing_stairs(n):\n    if n < 0: return 0\n    previous, current = 1, 1\n    for _ in range(2, n + 1):\n        previous, current = current, previous + current\n    return current", "code_caption": "時間 O(n)、空間 O(1)。"},
+        {"heading": "相同公式，不同語意", "paragraphs": ["兩題公式相似，但狀態與 Base Case 來自不同問題定義，不能只背數列。若允許步長集合改變，轉移就要加總所有合法前一階。"], "bullets": ["先說明最後一步，再寫加法", "步長為 1、3 時依賴 i-1 與 i-3", "輸入邊界要依題目定義"], "table": {"headers": ["題目", "dp[i]", "Base"], "rows": [["Fibonacci", "第 i 項", "F0=0,F1=1"], ["樓梯", "到第 i 階方法數", "ways0=1"]]}}
+      ],
+      "takeaways": ["一維相鄰轉移常可滾動優化。", "方法數問題通常加總互斥來源。", "公式相同不代表 Base Case 與語意相同。"],
+      "quiz": [{"question": "ways[0]=1 的意義？", "answer": "到達起點有一種空路徑，讓後續轉移一致。"}, {"question": "允許走 1 或 3 階時依賴哪些狀態？", "answer": "ways[i-1] 與 ways[i-3]，索引合法者相加。"}],
+      "practice": ["求每次可走 1、2、3 階的方法數。", "要求不能連續走兩次 2 階，重新設計狀態。"]
+    },
+    {
+      "number": 5, "slug": "house-robber-and-maximum-subarray", "title": "House Robber 與 Maximum Subarray", "subtitle": "選或不選，以及以目前位置結尾", "duration": "35 分鐘", "difficulty": "基礎", "summary": "比較兩種經典一維最佳化狀態。", "objectives": ["推導不相鄰選取", "理解 Kadane 狀態", "完成 O(1) 空間優化"],
+      "sections": [
+        {"heading": "House Robber", "paragraphs": ["令 dp[i] 為前 i 間房可取得的最大金額；最後一間可不偷，或偷並加上前 i-2 間最佳值。兩選項取較大者。"], "bullets": ["不偷：dp[i-1]", "偷：dp[i-2]+money", "transition：max(不偷,偷)"], "code": "def house_robber(values):\n    two_back = one_back = 0\n    for value in values:\n        two_back, one_back = one_back, max(one_back, two_back + value)\n    return one_back", "code_caption": "時間 O(n)、空間 O(1)。"},
+        {"heading": "Maximum Subarray", "paragraphs": ["令 ending_here 為必須以目前元素結尾的最大連續和；要嘛由目前元素重新開始，要嘛延續前一段。全域答案另以 best 保存。"], "bullets": ["狀態必須強調「以此結尾」", "轉移：max(value, ending_here+value)", "全負數時不能把初值設為 0"], "code": "def maximum_subarray(numbers):\n    if not numbers: raise ValueError(\"不可為空\")\n    ending_here = best = numbers[0]\n    for value in numbers[1:]:\n        ending_here = max(value, ending_here + value)\n        best = max(best, ending_here)\n    return best", "code_caption": "Kadane 演算法時間 O(n)、空間 O(1)。"},
+        {"heading": "狀態語意比較", "paragraphs": ["House Robber 的狀態回答前綴整體最佳，Maximum Subarray 則需限制結尾以維持連續性。空間都能壓縮，因為未來只依賴固定數量前態。"], "bullets": ["選取限制決定 state 要記什麼", "全域最佳與局部結尾最佳不可混用", "若需回傳索引，額外保存選擇或起點"], "table": {"headers": ["題目", "核心狀態", "時間／空間"], "rows": [["House Robber", "前 i 個最佳", "O(n)/O(1)"], ["Max Subarray", "以 i 結尾最佳", "O(n)/O(1)"]]}}
+      ],
+      "takeaways": ["不相鄰選取比較選與不選。", "連續子陣列需定義以目前位置結尾。", "只依賴固定前態時可降至 O(1) 空間。"],
+      "quiz": [{"question": "Maximum Subarray 為何另需 best？", "answer": "ending_here 只代表目前位置結尾，整體最佳可能早已出現。"}, {"question": "House Robber 偷目前房為何加 two_back？", "answer": "相鄰房不能同偷，所以只能接前兩個位置之前的最佳值。"}],
+      "practice": ["回傳 House Robber 實際選取的房屋索引。", "修改 Kadane 回傳最佳區間左右端點。"]
+    },
+    {
+      "number": 6, "slug": "coin-change-and-word-break", "title": "Coin Change 與 Word Break", "subtitle": "最少數量與可行性 DP", "duration": "35 分鐘", "difficulty": "基礎", "summary": "練習最小化與布林可行性兩種 DP。", "objectives": ["設計 Coin Change 狀態", "設計 Word Break 狀態", "選擇正確初值"],
+      "sections": [
+        {"heading": "Coin Change", "paragraphs": ["令 dp[a] 為湊出金額 a 的最少硬幣數，最後一枚為 coin 時由 dp[a-coin]+1 轉移。不可達狀態初始化為 infinity。"], "bullets": ["dp[0]=0", "對每個 amount 嘗試所有 coin", "答案仍為 inf 時回傳 -1"], "code": "def coin_change(coins, amount):\n    dp = [float('inf')] * (amount + 1); dp[0] = 0\n    for value in range(1, amount + 1):\n        for coin in coins:\n            if coin <= value: dp[value] = min(dp[value], dp[value-coin] + 1)\n    return -1 if dp[amount] == float('inf') else dp[amount]", "code_caption": "時間 O(amount·len(coins))、空間 O(amount)。"},
+        {"heading": "Word Break", "paragraphs": ["令 dp[i] 表示 text 前 i 個字元能否由字典單字切分。若存在 j 使 dp[j] 為真且 text[j:i] 在字典，就令 dp[i] 為真。"], "bullets": ["dp[0]=True 代表空前綴可切分", "set 提供平均 O(1) 單字查找", "找到一個 j 後即可停止"], "code": "def word_break(text, words):\n    words = set(words); dp = [False] * (len(text)+1); dp[0] = True\n    for end in range(1, len(text)+1):\n        dp[end] = any(dp[start] and text[start:end] in words for start in range(end))\n    return dp[-1]", "code_caption": "忽略切片成本時 O(n²)，空間 O(n)。"},
+        {"heading": "最小值與可行性", "paragraphs": ["兩題都枚舉最後一段，但聚合方式不同：Coin Change 取 min，Word Break 取 any。若需重建硬幣或單字，需為每個狀態保存 predecessor。"], "bullets": ["最佳化問題保存數值", "存在性問題保存 bool", "一維表已是常見空間界線"], "table": {"headers": ["題目", "初值", "聚合"], "rows": [["Coin Change", "inf, dp0=0", "min"], ["Word Break", "False, dp0=True", "any"]]}}
+      ],
+      "takeaways": ["不可達最小值狀態可用 infinity。", "Word Break 以可切分前綴作狀態。", "聚合運算由題目問最小值、最大值、數量或存在性決定。"],
+      "quiz": [{"question": "Coin Change 為何 dp[0]=0？", "answer": "金額零不需任何硬幣，且它是加入第一枚硬幣的合法起點。"}, {"question": "Word Break 的 dp[0] 為何是 True？", "answer": "空字串視為已完成切分，讓第一個單字可由空前綴轉移。"}],
+      "practice": ["回傳 Coin Change 的一組最少硬幣。", "限制單字最多使用一次，思考狀態需增加什麼資訊。"]
+    },
+    {
+      "number": 7, "slug": "grid-dp", "title": "Grid、Unique Paths 與 Minimum Path Sum", "subtitle": "依上方與左方狀態填表", "duration": "30 分鐘", "difficulty": "基礎", "summary": "建立網格路徑數與最小成本 DP，並壓縮為一列。", "objectives": ["定義網格二維狀態", "處理第一列與第一欄", "實作一維空間優化"],
+      "sections": [
+        {"heading": "Unique Paths", "paragraphs": ["只能向右或向下時，到 (r,c) 的路徑來自上方與左方，兩者數量相加。第一列與第一欄各只有一條路。"], "bullets": ["dp[r][c]=dp[r-1][c]+dp[r][c-1]", "時間與空間 O(rows·cols)"], "code": "def unique_paths(rows, cols):\n    dp = [[1] * cols for _ in range(rows)]\n    for r in range(1, rows):\n        for c in range(1, cols): dp[r][c] = dp[r-1][c] + dp[r][c-1]\n    return dp[-1][-1]", "code_caption": "表格索引就是所在格子。"},
+        {"heading": "Minimum Path Sum", "paragraphs": ["若格子帶成本，dp[r][c] 表示到該格的最小總成本，取上方與左方較小值再加目前成本。邊界只有單一來源，需個別初始化或使用 infinity。"], "bullets": ["起點成本要計入", "轉移使用 min 而非加總", "負值不影響此 DAG 式依賴"], "code": "def minimum_path_sum(grid):\n    rows, cols = len(grid), len(grid[0]); dp = [float('inf')] * cols\n    for r in range(rows):\n        for c in range(cols):\n            if r == c == 0: dp[c] = grid[r][c]\n            else: dp[c] = min(dp[c], dp[c-1] if c else float('inf')) + grid[r][c]\n    return dp[-1]", "code_caption": "一維 dp 時，更新前 dp[c] 是上方，dp[c-1] 是左方。"},
+        {"heading": "障礙與空間壓縮", "paragraphs": ["遇到障礙格時可把該狀態設為 0 條路徑，其他格仍從上與左累加。因每列只依賴上一列與本列左側，可將空間由 O(rows·cols) 降為 O(cols)。"], "bullets": ["內層沿左到右更新", "障礙會切斷經過該格的轉移", "可選較短維度作 dp 以降至 O(min(rows,cols))"], "table": {"headers": ["題型", "聚合", "壓縮空間"], "rows": [["路徑數", "上+左", "O(cols)"], ["最小成本", "min(上,左)+成本", "O(cols)"]]}}
+      ],
+      "takeaways": ["網格 DP 的方向決定依賴與填表順序。", "路徑數加總來源，最小成本取來源最小值。", "只依賴上一列時可壓縮成一維。"],
+      "quiz": [{"question": "一維更新時 dp[c] 更新前代表什麼？", "answer": "上一列同一欄，也就是目前格的上方狀態。"}, {"question": "障礙格的路徑數為何設 0？", "answer": "沒有合法路徑能進入或通過它。"}],
+      "practice": ["實作含障礙的 Unique Paths。", "允許右、下、右下三方向，修改轉移與空間分析。"]
+    },
+    {
+      "number": 8, "slug": "lcs-and-edit-distance", "title": "LCS 與 Edit Distance", "subtitle": "用二維前綴狀態比較兩字串", "duration": "40 分鐘", "difficulty": "進階", "summary": "以兩字串前綴建立共同子序列與編輯距離。", "objectives": ["推導 LCS", "推導 Edit Distance", "比較二維轉移"],
+      "sections": [
+        {"heading": "Longest Common Subsequence", "paragraphs": ["dp[i][j] 是 first 前 i 字元與 second 前 j 字元的 LCS 長度。末字元相同就接 dp[i-1][j-1]+1，否則丟棄其中一側末字元取最大。"], "bullets": ["子序列不要求連續", "空前綴 LCS 為 0", "時間與空間 O(mn)"], "code": "def lcs_length(a, b):\n    dp = [[0]*(len(b)+1) for _ in range(len(a)+1)]\n    for i in range(1, len(a)+1):\n        for j in range(1, len(b)+1):\n            dp[i][j] = dp[i-1][j-1]+1 if a[i-1]==b[j-1] else max(dp[i-1][j], dp[i][j-1])\n    return dp[-1][-1]", "code_caption": "多一列與一欄代表空前綴。"},
+        {"heading": "Edit Distance", "paragraphs": ["dp[i][j] 是把 a 前 i 字元轉成 b 前 j 字元的最少操作數。末字元不同時，從刪除、插入、替換三種前態取最小再加一。"], "bullets": ["dp[i][0]=i", "相同末字元不增加成本", "不同時取 min(刪、插、換)+1"], "code": "def edit_distance(a, b):\n    dp = [[0]*(len(b)+1) for _ in range(len(a)+1)]\n    for i in range(len(a)+1): dp[i][0] = i\n    for j in range(len(b)+1): dp[0][j] = j\n    for i in range(1, len(a)+1):\n        for j in range(1, len(b)+1):\n            dp[i][j] = dp[i-1][j-1] if a[i-1]==b[j-1] else 1+min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])\n    return dp[-1][-1]", "code_caption": "時間與空間 O(mn)。"},
+        {"heading": "壓縮與重建", "paragraphs": ["兩題每列只依賴上一列與本列左側，可用兩列或一列將空間降為 O(min(m,n))。若要回傳實際 LCS 或編輯步驟，通常保留完整表並反向追蹤。"], "bullets": ["長度答案可壓縮", "重建解需要來源資訊", "一維更新要保存左上角舊值"], "table": {"headers": ["題目", "相同末字元", "不同末字元"], "rows": [["LCS", "左上+1", "max(上,左)"], ["Edit", "左上", "1+min(上,左,左上)"]]}}
+      ],
+      "takeaways": ["雙字串問題常以兩個前綴長度作狀態。", "LCS 最大化保留，Edit Distance 最小化操作。", "只求數值可壓縮，重建通常需完整來源。"],
+      "quiz": [{"question": "LCS 與最長共同子字串差在哪？", "answer": "LCS 不要求字元連續，子字串要求連續。"}, {"question": "Edit Distance 的 dp[i][0] 為何是 i？", "answer": "把 i 個字元轉成空字串需刪除 i 次。"}],
+      "practice": ["由 LCS 表反向重建一個實際共同子序列。", "把替換成本改為 2，修改 Edit Distance。"]
+    },
+    {
+      "number": 9, "slug": "zero-one-knapsack", "title": "0/1 Knapsack", "subtitle": "每件物品最多選一次", "duration": "40 分鐘", "difficulty": "進階", "summary": "建立物品與容量狀態，理解一維壓縮必須反向更新。", "objectives": ["推導 0/1 背包", "完成二維與一維轉移", "說明容量反向迴圈"],
+      "sections": [
+        {"heading": "選或不選物品", "paragraphs": ["dp[i][c] 表示只看前 i 件、容量 c 的最大價值。第 i 件可不選沿用上方，或在容量足夠時選取並加上前 i-1 件的剩餘容量答案。"], "bullets": ["不選：dp[i-1][c]", "選：dp[i-1][c-weight]+value", "兩者取 max"], "code": "def knapsack_2d(weights, values, capacity):\n    n=len(weights); dp=[[0]*(capacity+1) for _ in range(n+1)]\n    for i in range(1,n+1):\n        for c in range(capacity+1):\n            dp[i][c]=dp[i-1][c]\n            if weights[i-1]<=c: dp[i][c]=max(dp[i][c],dp[i-1][c-weights[i-1]]+values[i-1])\n    return dp[n][capacity]", "code_caption": "時間 O(nC)、空間 O(nC)。"},
+        {"heading": "一維反向容量", "paragraphs": ["壓縮成 dp[c] 後，容量必須由大到小更新，讓 dp[c-weight] 仍代表上一輪、尚未使用目前物品的答案。正向更新會讓同一物品在同輪被重複使用。"], "bullets": ["外層逐物品", "內層 c 從 capacity 降到 weight", "空間降為 O(C)"], "code": "def knapsack(weights, values, capacity):\n    dp=[0]*(capacity+1)\n    for weight,value in zip(weights,values):\n        for c in range(capacity,weight-1,-1):\n            dp[c]=max(dp[c],dp[c-weight]+value)\n    return dp[capacity]", "code_caption": "時間 O(nC)、空間 O(C)。"},
+        {"heading": "狀態與限制", "paragraphs": ["0/1 的名稱表示每件物品只能取零或一次，容量 C 是偽多項式維度。若要重建物品清單，可保留二維表或額外決策資訊。"], "bullets": ["容量不是輸入位數而是數值大小", "恰好裝滿時不可達狀態需設為負無限", "價值最大與方案數的聚合不同"], "table": {"headers": ["版本", "容量方向", "空間"], "rows": [["二維", "皆可依前列", "O(nC)"], ["一維 0/1", "由大到小", "O(C)"]]}}
+      ],
+      "takeaways": ["0/1 背包比較選與不選目前物品。", "一維壓縮必須反向更新容量。", "重建選項通常需保留更多狀態。"],
+      "quiz": [{"question": "容量正向更新會發生什麼？", "answer": "本輪新值會再次被讀取，使同一物品可能選多次。"}, {"question": "O(nC) 為何稱偽多項式？", "answer": "C 是容量數值，而非表示 C 所需的位元數。"}],
+      "practice": ["回傳 0/1 背包選中的物品索引。", "改為價值恰好達標時最小重量。"]
+    },
+    {
+      "number": 10, "slug": "complete-knapsack-and-subset-sum", "title": "Complete Knapsack、Subset Sum 與 Partition", "subtitle": "用迴圈方向控制重複選取", "duration": "40 分鐘", "difficulty": "進階", "summary": "比較完全背包與 0/1 可行性背包。", "objectives": ["實作完全背包", "以布林 DP 解 Subset Sum", "轉換 Partition 問題"],
+      "sections": [
+        {"heading": "Complete Knapsack", "paragraphs": ["完全背包允許每種物品重複選取，一維 dp 的容量改為由小到大，使本輪更新值可再次參與後續容量。這正是與 0/1 背包的核心差別。"], "bullets": ["外層物品、內層容量正向", "dp[c-weight] 可已包含目前物品", "時間 O(nC)、空間 O(C)"], "code": "def complete_knapsack(weights, values, capacity):\n    dp=[0]*(capacity+1)\n    for weight,value in zip(weights,values):\n        for c in range(weight,capacity+1): dp[c]=max(dp[c],dp[c-weight]+value)\n    return dp[capacity]", "code_caption": "正向更新允許同一物品多次使用。"},
+        {"heading": "Subset Sum", "paragraphs": ["dp[s] 表示是否能用已處理元素湊出總和 s，每個元素最多一次，所以 s 必須反向更新。dp[0]=True 提供空集合起點。"], "bullets": ["轉移：dp[s] |= dp[s-value]", "反向避免重複使用 value", "時間 O(n·target)、空間 O(target)"], "code": "def subset_sum(numbers, target):\n    dp=[False]*(target+1); dp[0]=True\n    for value in numbers:\n        for total in range(target,value-1,-1): dp[total] |= dp[total-value]\n    return dp[target]", "code_caption": "布林背包只關心可達性。"},
+        {"heading": "Partition Equal Subset Sum", "paragraphs": ["若總和為 odd，就不可能分成等和兩組；若為 even，只需判斷是否存在總和 total/2 的子集合。這把分割問題化為 0/1 Subset Sum。"], "bullets": ["先做奇偶快速排除", "找到半總和子集合後，其餘元素自然是另一半", "空間沿用 O(total/2)"], "code": "def can_partition(numbers):\n    total=sum(numbers)\n    return False if total%2 else subset_sum(numbers,total//2)", "code_caption": "時間 O(n·total)、空間 O(total)。"}
+      ],
+      "takeaways": ["容量正向更新允許重複選，反向更新限制一次。", "Subset Sum 是布林型 0/1 背包。", "Equal Partition 可轉為目標為總和一半的子集合。"],
+      "quiz": [{"question": "完全背包為何正向更新？", "answer": "讓剛加入目前物品的狀態可在同輪再次使用。"}, {"question": "總和為奇數為何不能等分？", "answer": "兩組整數和相等時，總和必為該整數的兩倍，也就是偶數。"}],
+      "practice": ["計算可湊出 target 的 0/1 子集合數。", "比較 Coin Change 與 Complete Knapsack 的迴圈順序。"]
+    },
+    {
+      "number": 11, "slug": "longest-increasing-subsequence", "title": "LIS：O(n²) 與 O(n log n)", "subtitle": "從結尾狀態到 tails 二分搜尋", "duration": "40 分鐘", "difficulty": "進階", "summary": "比較標準 DP 與二分優化的 LIS。", "objectives": ["推導 O(n²) LIS", "理解 tails 語意", "用 bisect 完成 O(n log n)"],
+      "sections": [
+        {"heading": "以 i 結尾的 LIS", "paragraphs": ["dp[i] 是必須以 numbers[i] 結尾的最長遞增子序列長度。枚舉所有 j<i 且 numbers[j]<numbers[i]，由 dp[j]+1 取最大。"], "bullets": ["每個位置至少長度 1", "答案是 max(dp) 而非固定 dp[-1]", "時間 O(n²)、空間 O(n)"], "code": "def lis_quadratic(numbers):\n    if not numbers: return 0\n    dp=[1]*len(numbers)\n    for i in range(len(numbers)):\n        for j in range(i):\n            if numbers[j]<numbers[i]: dp[i]=max(dp[i],dp[j]+1)\n    return max(dp)", "code_caption": "狀態的「以 i 結尾」保證可判斷能否接續。"},
+        {"heading": "tails 的最小尾值", "paragraphs": ["tails[k] 保存長度 k+1 遞增子序列中可得到的最小尾值；尾值愈小，未來愈容易延伸。它不一定是實際 LIS，但 tails 長度就是答案。"], "bullets": ["用 lower_bound 找第一個 >= value 的位置", "替換尾值不改變目前最長長度", "value 大於所有尾值時 append"], "code": "from bisect import bisect_left\n\ndef lis_length(numbers):\n    tails=[]\n    for value in numbers:\n        index=bisect_left(tails,value)\n        if index==len(tails): tails.append(value)\n        else: tails[index]=value\n    return len(tails)", "code_caption": "每元素二分 O(log n)，總時間 O(n log n)、空間 O(n)。"},
+        {"heading": "嚴格與非嚴格遞增", "paragraphs": ["嚴格遞增使用 bisect_left，遇到相同值會替換而不延長；若允許相等，改用 bisect_right。要重建實際 LIS，需額外保存前驅與每長度代表索引。"], "bullets": ["先確認 < 還是 <=", "tails 是壓縮摘要，不直接等於答案序列", "O(n²) 版較容易重建與解釋"], "table": {"headers": ["方法", "時間", "空間"], "rows": [["結尾 DP", "O(n²)", "O(n)"], ["tails+二分", "O(n log n)", "O(n)"]]}}
+      ],
+      "takeaways": ["標準 LIS 狀態是以某位置結尾的最佳長度。", "tails 用最小尾值保留最佳延伸機會。", "嚴格與非嚴格遞增需選不同二分邊界。"],
+      "quiz": [{"question": "答案為何是 max(dp)？", "answer": "最長子序列可能在任何位置結尾，不一定是最後元素。"}, {"question": "tails 為何不一定是實際 LIS？", "answer": "替換不同長度的尾值可能來自不相容路徑，它主要保存長度資訊。"}],
+      "practice": ["為 O(n²) 版本保存 parent 並重建 LIS。", "改求最長非遞減子序列。"]
+    },
+    {
+      "number": 12, "slug": "palindrome-interval-dp-framework", "title": "回文、Interval DP 與統一解題框架", "subtitle": "以區間長度安排依賴", "duration": "45 分鐘", "difficulty": "進階", "summary": "用回文子序列介紹區間 DP，最後整理完整設計與驗證流程。", "objectives": ["定義區間狀態", "依區間長度填表", "套用 DP 統一框架"],
+      "sections": [
+        {"heading": "Longest Palindromic Subsequence", "paragraphs": ["dp[left][right] 是閉區間內最長回文子序列長度。兩端相同就包住內區間加二，否則捨棄其中一端取最大。"], "bullets": ["單字元區間 Base Case 為 1", "依區間長度由短到長", "時間與空間 O(n²)"], "code": "def longest_palindrome_subsequence(text):\n    n=len(text); dp=[[0]*n for _ in range(n)]\n    for i in range(n): dp[i][i]=1\n    for length in range(2,n+1):\n        for left in range(n-length+1):\n            right=left+length-1\n            dp[left][right]=dp[left+1][right-1]+2 if text[left]==text[right] else max(dp[left+1][right],dp[left][right-1])\n    return 0 if n==0 else dp[0][n-1]", "code_caption": "內區間必須先完成，所以長度遞增。"},
+        {"heading": "Interval DP", "paragraphs": ["區間 DP 以 [left,right] 為狀態，常枚舉分割點或比較兩端選擇。計算順序通常是區間長度遞增，因轉移依賴更短區間。"], "bullets": ["State：某區間的最佳值或方案數", "Transition：端點決策或 split", "常見成本 O(n²) 狀態乘 O(n) 分割，即 O(n³)"], "table": {"headers": ["步驟", "檢查"], "rows": [["區間", "閉區間或半開區間？"], ["Base", "空區間／單點？"], ["順序", "短區間是否先完成？"]]}},
+        {"heading": "DP 統一解題框架", "paragraphs": ["先寫暴力選擇，再依重複參數定義 state；接著列 transition、base、順序與答案位置，最後才做空間優化。用小輸入手算表格並檢查空、單一、不可達與極端案例。"], "bullets": ["1 定義狀態與索引範圍；2 寫轉移與 Base", "3 決定順序與答案；4 算狀態數×轉移成本", "5 驗證後才壓縮空間或重建路徑"], "callout": "空間優化是最後一步；先保留清楚表格以驗證正確性。"}
+      ],
+      "takeaways": ["區間 DP 常依更短區間，應按長度填表。", "狀態數乘每狀態轉移成本可估算時間。", "統一框架是 state、transition、base、order、answer、complexity。"],
+      "quiz": [{"question": "區間 DP 為何不能任意由 left 小到大、right 小到大？", "answer": "該順序可能在內區間尚未完成前就讀取它；應依實際依賴安排。"}, {"question": "DP 何時做空間優化較安全？", "answer": "完整狀態與轉移已驗證正確，且確認未來只依賴有限舊狀態後。"}],
+      "practice": ["實作最長回文子字串的布林區間 DP。", "挑一題依框架完整寫出 state、transition、base、order、answer 與複雜度。"]
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="以距離矩陣計算所有頂點對的最短路徑，理解三層迴圈順序、負邊與負環判斷。" />
+    <meta name="theme-color" content="#101713" />
+    <title>11.05 Floyd–Warshall：全點對最短路徑｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-11-classic-graph-algorithms.html">UNIT 11 / LESSON 05</a><p class="eyebrow">Classic Graph Algorithms</p><h1>Floyd–Warshall：全點對最短路徑</h1><p class="lesson-deck">用動態規劃逐步允許中繼頂點</p><div class="lesson-meta"><span>進階</span><span>40 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>以距離矩陣計算所有頂點對的最短路徑，理解三層迴圈順序、負邊與負環判斷。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>定義 Floyd–Warshall 的動態規劃轉移</li><li>正確初始化並更新距離矩陣</li><li>分析 O(V³) 時間與 O(V²) 空間限制</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>中繼頂點的動態規劃</h2><p>Floyd–Warshall 依序考慮每個頂點 k 能否作為中繼點，對每組 i、j 比較直達距離與繞經 k 的距離。轉移式為 dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])，k 必須放在最外層才能維持階段意義。</p><ul><li>狀態保存目前允許的中繼頂點集合</li><li>每輪決定是否經過新頂點 k</li><li>原地更新距離矩陣即可</li><li>k、i、j 的迴圈順序不可任意互換</li></ul><figure class="code-block"><figcaption><span>逐步允許 0、1、2 作為中繼點。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>distance = [
+    [0, 3, float(&quot;inf&quot;)],
+    [float(&quot;inf&quot;), 0, 2],
+    [5, float(&quot;inf&quot;), 0],
+]
+for middle in range(3):
+    for source in range(3):
+        for target in range(3):
+            distance[source][target] = min(
+                distance[source][target],
+                distance[source][middle] + distance[middle][target],
+            )</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>矩陣初始化與路徑</h2><p>對角線距離設為 0，存在邊的位置設為權重，其餘設為無限大；若同一對頂點有多條邊，應取最小權重。若要重建路徑，可另存 next_hop 矩陣，在改善 dist[i][j] 時更新為走向 k 路線的第一步。</p><ul><li>dist[i][i] = 0</li><li>沒有直接邊則為無限大</li><li>平行邊初始化為最小權重</li><li>無向邊要同時填入兩個方向</li></ul><figure class="code-block"><figcaption><span>複製輸入矩陣後原地執行全點對轉移。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def floyd_warshall(matrix):
+    size = len(matrix)
+    distance = [row[:] for row in matrix]
+    for middle in range(size):
+        for source in range(size):
+            for target in range(size):
+                candidate = distance[source][middle] + distance[middle][target]
+                if candidate &lt; distance[source][target]:
+                    distance[source][target] = candidate
+    return distance</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>負邊、負環與適用規模</h2><p>Floyd–Warshall 能處理負邊，但若完成後 dist[v][v] &lt; 0，就表示 v 位於或可繞行某個負環；受該負環影響的點對沒有有限最短距離。演算法固定使用 O(V³) 時間與 O(V²) 空間，適合頂點數不大、圖較稠密或全點對查詢很多的情境。</p><ul><li>允許負邊，但需檢查負環</li><li>負對角線項代表負環</li><li>時間 O(V³)，不受 E 稀少而自動改善</li><li>空間 O(V²)，大型稀疏圖通常不合適</li></ul><div class="table-wrap"><table><thead><tr><th>需求</th><th>Floyd–Warshall 評估</th></tr></thead><tbody><tr><td>所有頂點對距離</td><td>直接得到完整矩陣</td></tr><tr><td>少數單源查詢</td><td>通常過度計算</td></tr><tr><td>V 很大且 E 很少</td><td>O(V³) 通常不可接受</td></tr><tr><td>需要偵測負環</td><td>可檢查 dist[v][v] &lt; 0</td></tr></tbody></table></div><aside class="concept-callout"><b>KEY IDEA</b><p>無限大加有限值在 Python 仍是無限大，但其他語言使用固定大整數時要避免溢位。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Floyd–Warshall 逐步允許中繼頂點，計算所有頂點對距離</li><li><span>02</span>轉移式為經過 k 與不經過 k 的較小值，k 必須在最外層</li><li><span>03</span>時間 O(V³)、空間 O(V²)，完成後可用負對角線偵測負環</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼 middle 迴圈必須放在最外層？</summary><p>每一輪代表允許一組固定的中繼頂點；若順序改變，更新時可能使用尚未符合該階段定義的狀態。</p></details><details><summary>完成後 dist[v][v] 為負代表什麼？</summary><p>存在可從 v 出發並回到 v、總權重為負的循環，因此能反覆降低路徑成本。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>為四個頂點建立矩陣並逐輪記錄加入中繼點後的變化。</li><li>擴充函式保存 next_hop，重建任意起點到終點的路徑。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-11/04-bellman-ford-and-negative-cycles.html"><span>← 上一課</span><b>Bellman–Ford 與負環偵測</b></a><a class="next" href="../unit-11/06-minimum-spanning-tree-concepts.html"><span>下一課 →</span><b>Minimum Spanning Tree 基礎</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

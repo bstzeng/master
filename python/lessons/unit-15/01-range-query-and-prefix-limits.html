@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="定義區間查詢模型，複習前綴和並看懂靜態預處理在頻繁更新下的瓶頸。" />
+    <meta name="theme-color" content="#101713" />
+    <title>15.01 Range Query 與 Prefix Sum 的限制｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-15-advanced-data-structures.html">UNIT 15 / LESSON 01</a><p class="eyebrow">Advanced Data Structures</p><h1>Range Query 與 Prefix Sum 的限制</h1><p class="lesson-deck">查詢快不代表更新也快</p><div class="lesson-meta"><span>中階</span><span>28 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>定義區間查詢模型，複習前綴和並看懂靜態預處理在頻繁更新下的瓶頸。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>區分點更新與區間更新</li><li>實作半開區間前綴和</li><li>由操作比例選擇資料結構</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>先寫出操作介面</h2><p>區間查詢（Range Query）不是單一演算法，而是一類在陣列某段上求和、最小值或其他聚合的需求。選資料結構前要確認查詢區間語意、是否更新、更新單點或整段，以及運算能否由兩個前綴結果相消。</p><ul><li>Point Update：修改一個位置</li><li>Range Update：修改一整段</li><li>Range Query：聚合一段資料</li><li>半開區間 [left,right) 與 Python 切片一致</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Prefix Sum 用預處理換 O(1) 查詢</h2><p>令 prefix[i] 表示前 i 個元素總和，則 [left,right) 的和是 prefix[right] - prefix[left]。建立一次需 O(n) 時間與 O(n) 空間，之後每次區間和為 O(1)，非常適合資料固定但查詢很多的情況。</p><ul><li>prefix 長度為 n + 1</li><li>prefix[0] = 0 簡化邊界</li><li>建置 O(n)、查詢 O(1)</li></ul><figure class="code-block"><figcaption><span>range_sum 查詢半開區間 [left,right)。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def build_prefix(numbers):
+    prefix = [0]
+    for value in numbers:
+        prefix.append(prefix[-1] + value)
+    return prefix
+
+def range_sum(prefix, left, right):
+    return prefix[right] - prefix[left]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>更新使所有後綴失效</h2><p>若 numbers[i] 改變，prefix[i+1:] 都需同步調整，單次更新成為 O(n)；反覆重建也同樣昂貴。只有追加資料時可 O(1) 延伸 prefix，而一般點更新加區間和應考慮 Fenwick Tree，更多聚合或區間操作則考慮 Segment Tree。</p><ul><li>靜態多查詢：Prefix Sum</li><li>點更新加區間和：Fenwick Tree</li><li>多種聚合或複雜更新：Segment Tree</li><li>先估算更新次數 U 與查詢次數 Q</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Range Query 的選型取決於聚合、更新與區間語意</li><li><span>02</span>Prefix Sum 以 O(n) 預處理換取 O(1) 區間和</li><li><span>03</span>一般點更新會讓 Prefix Sum 的更新成本退化為 O(n)</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為何 prefix 陣列通常多配置一格？</summary><p>prefix[0]=0 代表零個元素，讓從索引 0 開始的區間也能用同一個相減公式。</p></details><details><summary>資料永不修改且有百萬次區間和查詢，應優先考慮什麼？</summary><p>Prefix Sum，因為一次 O(n) 建置後，每次查詢只需 O(1)。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>用前綴和回答 [2,7) 並手算兩個 prefix 索引。</li><li>列出三種工作負載的 U、Q 與聚合類型，再初選 Prefix、Fenwick 或 Segment Tree。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-14/08-manacher-and-selection.html"><span>← 上一課</span><b>Manacher 概念與字串演算法選型</b></a><a class="next" href="../unit-15/02-fenwick-tree.html"><span>下一課 →</span><b>Fenwick Tree 樹狀陣列</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

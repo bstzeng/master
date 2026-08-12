@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="從固定長度視窗理解增量更新，再延伸到可伸縮的動態視窗。" />
+    <meta name="theme-color" content="#101713" />
+    <title>03.05 Sliding Window 滑動視窗｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-03-arrays-and-strings.html">UNIT 03 / LESSON 05</a><p class="eyebrow">Array and String Techniques</p><h1>Sliding Window 滑動視窗</h1><p class="lesson-deck">重用相鄰區間的計算結果</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>從固定長度視窗理解增量更新，再延伸到可伸縮的動態視窗。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>辨認連續區間問題</li><li>維護固定長度視窗的統計值</li><li>理解動態視窗的擴張與收縮條件</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>相鄰區間只差兩個元素</h2><p>滑動視窗（Sliding Window）處理連續子陣列或子字串。固定長度 k 的視窗向右移一步時，只要扣除離開的元素並加入新元素，不必重新加總整個區間。</p><ul><li>視窗代表目前正在考慮的連續範圍</li><li>先建立第一個視窗，再逐步向右更新</li><li>k 必須符合 1 ≤ k ≤ 序列長度</li></ul><figure class="code-block"><figcaption><span>每次滑動只更新進入與離開視窗的兩個元素。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def maximum_window_sum(numbers, k):
+    if k &lt;= 0 or k &gt; len(numbers):
+        raise ValueError(&quot;k 必須介於 1 與陣列長度之間&quot;)
+
+    window_sum = sum(numbers[:k])
+    best = window_sum
+    for right in range(k, len(numbers)):
+        window_sum += numbers[right]
+        window_sum -= numbers[right - k]
+        best = max(best, window_sum)
+    return best
+
+print(maximum_window_sum([2, 1, 5, 1, 3, 2], 3))  # 9</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>動態視窗會依條件收縮</h2><p>視窗長度不固定時，通常讓 right 負責擴張，當視窗違反條件，再移動 left 直到恢復有效。能否使用此模式取決於條件是否具有可預測性，例如正整數總和過大時，移除左端元素一定不會讓總和更大。</p><ul><li>right 加入新元素並更新狀態</li><li>while 條件不成立時移動 left</li><li>每次狀態改變都要同步更新計數或總和</li></ul><figure class="code-block"><figcaption><span>此解法假設陣列元素皆為正整數，才能安全地依總和收縮。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def shortest_subarray_at_least(numbers, target):
+    left = 0
+    window_sum = 0
+    best = len(numbers) + 1
+    for right, value in enumerate(numbers):
+        window_sum += value
+        while window_sum &gt;= target:
+            best = min(best, right - left + 1)
+            window_sum -= numbers[left]
+            left += 1
+    return 0 if best == len(numbers) + 1 else best
+
+print(shortest_subarray_at_least([2, 3, 1, 2, 4, 3], 7))  # 2</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>判斷適用性與複雜度</h2><p>雖然動態視窗中有 for 與 while，left 和 right 都只會向右移動至多 n 次，所以時間是 O(n)，額外空間依維護狀態而定。若資料含負數，總和不再隨擴張或收縮保持單調，上述最短區間解法便可能失效。</p><ul><li>題目需關注連續區間，而非任意挑選元素</li><li>固定視窗通常維護加入與移除的差異</li><li>動態視窗必須有明確且安全的收縮規則</li></ul><aside class="concept-callout"><b>KEY IDEA</b><p>看到巢狀 while 不要立刻判定 O(n²)；應計算每個指標總共移動幾次。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>滑動視窗重用相鄰連續區間的計算結果。</li><li><span>02</span>固定視窗移除左端並加入右端，動態視窗則依條件收縮。</li><li><span>03</span>兩個邊界都只單向移動時，總時間通常是 O(n)。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>固定長度 k 的視窗右移時，總和要如何更新？</summary><p>加入新的右端元素，並扣除剛離開視窗的左端元素。</p></details><details><summary>為什麼最短總和視窗範例要求元素皆為正整數？</summary><p>正數讓擴張不會減少總和、收縮不會增加總和，因此能依總和大小安全決定移動方向。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>求長度為 k 的連續子陣列最大平均值。</li><li>在只含正整數的陣列中，求總和不超過 target 的最長連續區間。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-03/04-two-sum-with-hash-map.html"><span>← 上一課</span><b>經典題型：Two Sum</b></a><a class="next" href="../unit-03/06-longest-substring-without-repeating.html"><span>下一課 →</span><b>經典題型：最長不重複子字串</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

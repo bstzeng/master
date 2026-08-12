@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="建立範例、邊界、反例與性質測試。" />
+    <meta name="theme-color" content="#101713" />
+    <title>16.08 邊界條件與測試案例｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-16-problem-solving.html">UNIT 16 / LESSON 08</a><p class="eyebrow">Problem Solving and Algorithm Design</p><h1>邊界條件與測試案例</h1><p class="lesson-deck">用分類與性質捕捉錯誤</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>建立範例、邊界、反例與性質測試。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>分類輸入</li><li>設計最小反例</li><li>使用 oracle 測試</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>測試分類</h2><p>至少覆蓋正常、最小、最大、空、單元素、重複、已排序與反序。不是每題都適用，但應逐項判斷。</p><ul><li>索引題測第一與最後位置</li><li>數值題測零與負數</li><li>圖題測孤立點與不連通</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>針對不變量造案例</h2><p>每個演算法都有脆弱假設，例如視窗單調、二分邊界或 DP 初值。測試應直接攻擊這些假設，而非只增加隨機資料量。</p><ul><li>abba 測視窗左界不倒退</li><li>全負數測 Kadane 初值</li><li>兩元素測二分相鄰邊界</li></ul><figure class="code-block"><figcaption><span>小案例更容易定位不變量破壞。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>assert max_subarray([-5]) == -5
+assert longest_unique(&#x27;abba&#x27;) == 2</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>Oracle 與性質</h2><p>小輸入可用暴力法作 oracle，隨機產生案例比較答案。沒有唯一輸出時，改驗證必要性質，例如拓樸序中每條邊方向都正確。</p><ul><li>固定亂數種子便於重現</li><li>比較結果前先統一順序語意</li><li>測試失敗要保存最小案例</li></ul><figure class="code-block"><figcaption><span>差分測試同時檢查兩種實作。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>for case in small_cases:
+    assert optimized(case) == brute_force(case)</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>測試要涵蓋輸入類別與演算法假設。</li><li><span>02</span>小型反例比大型隨機資料容易除錯。</li><li><span>03</span>暴力 oracle 與性質驗證都很實用。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為何只測官方範例不足？</summary><p>它通常未覆蓋所有邊界與錯誤假設。</p></details><details><summary>輸出不唯一如何測？</summary><p>驗證輸出滿足規格性質，而非固定內容。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>為二分搜尋列出六個邊界案例。</li><li>用暴力法交叉測試一個滑動視窗解。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-16/07-binary-search-on-answer.html"><span>← 上一課</span><b>Binary Search on Answer</b></a><a class="next" href="../unit-16/09-debugging-and-readability.html"><span>下一課 →</span><b>除錯、錯誤答案與可讀性</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

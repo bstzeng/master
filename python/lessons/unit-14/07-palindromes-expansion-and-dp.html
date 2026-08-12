@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="區分回文子字串與子序列，以中心擴展及二維 DP 求最長回文子字串。" />
+    <meta name="theme-color" content="#101713" />
+    <title>14.07 回文：中心擴展與動態規劃｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-14-string-algorithms.html">UNIT 14 / LESSON 07</a><p class="eyebrow">Classic String Algorithms</p><h1>回文：中心擴展與動態規劃</h1><p class="lesson-deck">利用對稱性找最長回文子字串</p><div class="lesson-meta"><span>進階</span><span>45 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>區分回文子字串與子序列，以中心擴展及二維 DP 求最長回文子字串。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>區分 Substring 與 Subsequence 回文題型</li><li>實作奇偶中心擴展</li><li>建立回文區間 DP 狀態</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>回文與問題邊界</h2><p>Palindrome（回文）正讀與反讀相同；Substring（子字串）必須連續，Subsequence（子序列）則可跳過字元，兩者不能套用同一解法。單純判斷整串是否回文可用雙指標 O(n)，找最長回文子字串則要探索可能區間。</p><ul><li>&#x27;racecar&#x27; 是回文</li><li>子字串位置連續，子序列不要求連續</li><li>空字串與單字元通常都是回文</li><li>先確認題目要長度、內容或全部位置</li></ul><figure class="code-block"><figcaption><span>雙指標在 O(n) 時間、O(1) 空間判斷整個字串。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def is_palindrome(text):
+    left, right = 0, len(text) - 1
+    while left &lt; right:
+        if text[left] != text[right]:
+            return False
+        left += 1
+        right -= 1
+    return True
+
+print(is_palindrome(&quot;level&quot;))  # True</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Expand Around Center</h2><p>每個回文都能由中心向左右擴展；奇數長回文中心是一個字元，偶數長回文中心是兩字元間隙，因此需檢查 2n - 1 個中心。每次擴展最壞 O(n)，總時間 O(n²)、額外空間 O(1)。</p><ul><li>奇數中心：(i, i)</li><li>偶數中心：(i, i + 1)</li><li>左右相同就繼續向外</li><li>用最佳起點與長度避免反覆切片</li></ul><figure class="code-block"><figcaption><span>同一個 expand 函式同時處理奇數與偶數回文。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def longest_palindrome_center(text):
+    best_start, best_length = 0, 0
+    def expand(left, right):
+        while left &gt;= 0 and right &lt; len(text) and text[left] == text[right]:
+            left -= 1
+            right += 1
+        return left + 1, right - left - 1
+
+    for center in range(len(text)):
+        for left, right in ((center, center), (center, center + 1)):
+            start, length = expand(left, right)
+            if length &gt; best_length:
+                best_start, best_length = start, length
+    return text[best_start:best_start + best_length]
+
+print(longest_palindrome_center(&quot;babad&quot;))  # bab 或 aba</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>二維 DP 與方法比較</h2><p>定義 dp[left][right] 表示 text[left:right + 1] 是否回文；兩端相同，且區間長度不超過 3 或內層 dp[left + 1][right - 1] 為真時成立。填表需由短區間到長區間，時間 O(n²)、空間 O(n²)，優勢是能保留所有區間狀態供後續計數或查詢。</p><ul><li>狀態：閉區間是否回文</li><li>轉移依賴更短的內層區間</li><li>時間 O(n²)、空間 O(n²)</li><li>只求最長內容時中心擴展更省空間</li></ul><div class="table-wrap"><table><thead><tr><th>方法</th><th>時間</th><th>空間</th><th>較適合</th></tr></thead><tbody><tr><td>雙指標判斷</td><td>O(n)</td><td>O(1)</td><td>整串是否回文</td></tr><tr><td>中心擴展</td><td>O(n²)</td><td>O(1)</td><td>最長回文子字串</td></tr><tr><td>區間 DP</td><td>O(n²)</td><td>O(n²)</td><td>需要多個區間狀態</td></tr></tbody></table></div><figure class="code-block"><figcaption><span>right 由左到右，確保需要的內層狀態已計算。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def longest_palindrome_dp(text):
+    size = len(text)
+    if size == 0:
+        return &quot;&quot;
+    dp = [[False] * size for _ in range(size)]
+    best_start, best_length = 0, 1
+    for right in range(size):
+        for left in range(right + 1):
+            if text[left] == text[right] and (right - left &lt;= 2 or dp[left + 1][right - 1]):
+                dp[left][right] = True
+                length = right - left + 1
+                if length &gt; best_length:
+                    best_start, best_length = left, length
+    return text[best_start:best_start + best_length]
+
+print(longest_palindrome_dp(&quot;cbbd&quot;))  # bb</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>回文子字串必須連續，與回文子序列是不同問題</li><li><span>02</span>中心擴展檢查奇偶中心，時間 O(n²)、空間 O(1)</li><li><span>03</span>區間 DP 保存所有回文區間，時間與空間皆為 O(n²)</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼中心擴展要同時檢查 (i, i) 與 (i, i + 1)？</summary><p>前者處理奇數長回文，後者處理中心在字元間隙的偶數長回文。</p></details><details><summary>只求最長回文子字串時，中心擴展相對 DP 的主要空間優勢是什麼？</summary><p>中心擴展只需常數額外空間，DP 要保存 O(n²) 個區間狀態。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>修改中心擴展，計算字串中共有多少個回文子字串。</li><li>用隨機短字串比較中心擴展與 DP 回傳的最長長度是否一致。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-14/06-trie.html"><span>← 上一課</span><b>Trie：以共同前綴組織單字</b></a><a class="next" href="../unit-14/08-manacher-and-selection.html"><span>下一課 →</span><b>Manacher 概念與字串演算法選型</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

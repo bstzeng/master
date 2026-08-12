@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="理解 Proper Prefix、Proper Suffix 與 Border，建立 KMP 失配後不回退 Text 指標的直覺。" />
+    <meta name="theme-color" content="#101713" />
+    <title>14.02 Prefix、Suffix 與 KMP 直覺｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-14-string-algorithms.html">UNIT 14 / LESSON 02</a><p class="eyebrow">Classic String Algorithms</p><h1>Prefix、Suffix 與 KMP 直覺</h1><p class="lesson-deck">利用已匹配內容決定下一次對齊</p><div class="lesson-meta"><span>基礎</span><span>35 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>理解 Proper Prefix、Proper Suffix 與 Border，建立 KMP 失配後不回退 Text 指標的直覺。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>定義前綴、後綴與 Proper Border</li><li>找出模式字串的共同前後綴</li><li>解釋 KMP 如何重用已匹配資訊</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>前綴、後綴與 Border</h2><p>Prefix（前綴）從字串開頭取一段，Suffix（後綴）從尾端取一段；Proper Prefix／Suffix 不包含整個字串本身。若某段同時是 Proper Prefix 與 Proper Suffix，就稱為 Border，KMP 會保存最長 Border 的長度。</p><ul><li>&#x27;ababa&#x27; 的 Proper Prefix 包含 &#x27;a&#x27;、&#x27;ab&#x27;、&#x27;aba&#x27;</li><li>Proper Suffix 包含 &#x27;a&#x27;、&#x27;ba&#x27;、&#x27;aba&#x27;</li><li>最長 Border 是 &#x27;aba&#x27;，長度 3</li><li>Border 可以重疊，不要求是兩段獨立字元</li></ul><figure class="code-block"><figcaption><span>暴力列出 Border，協助建立概念；正式 LPS 不會反覆切片。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def borders(text):
+    result = []
+    for length in range(1, len(text)):
+        if text[:length] == text[-length:]:
+            result.append(text[:length])
+    return result
+
+print(borders(&quot;ababa&quot;))  # [&#x27;a&#x27;, &#x27;aba&#x27;]</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>失配時仍有可用資訊</h2><p>若 Pattern 已匹配 j 個字元後失配，已匹配區段的某個後綴可能同時等於 Pattern 前綴，因此不必把 Pattern 完全歸零。把 Pattern 移到最長 Border 對齊的位置，可以保留已知相同部分，Text 指標也不需倒退。</p><ul><li>已匹配區段是 pattern[:j]</li><li>尋找其最長 Proper Border</li><li>新 j 等於該 Border 長度</li><li>目前 Text 字元要用較短前綴重新比較</li></ul><figure class="code-block"><figcaption><span>後綴 &#x27;aba&#x27; 已知等於 Pattern 前綴，可直接保留三個匹配。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>pattern = &quot;ababaca&quot;
+matched = pattern[:5]  # ababa
+fallback = 3          # 最長 Border 是 aba
+print(matched[-fallback:], pattern[:fallback])</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>KMP 的兩個指標</h2><p>Knuth–Morris–Pratt（KMP）使用 i 指向 Text、j 指向 Pattern；相同時兩者都前進，失配且 j &gt; 0 時只把 j 回退到較短 Border，i 留在原位。每次回退都依預先計算的 LPS 表，因此搜尋階段能維持 O(n)。</p><ul><li>匹配：i += 1、j += 1</li><li>失配且 j &gt; 0：j = lps[j - 1]</li><li>失配且 j == 0：i += 1</li><li>j == m 時找到一個完整匹配</li></ul><div class="table-wrap"><table><thead><tr><th>情況</th><th>Text 指標 i</th><th>Pattern 指標 j</th></tr></thead><tbody><tr><td>字元相同</td><td>前進</td><td>前進</td></tr><tr><td>失配且 j &gt; 0</td><td>不動</td><td>回退到 Border</td></tr><tr><td>失配且 j = 0</td><td>前進</td><td>維持 0</td></tr><tr><td>完整匹配</td><td>已在下一字元</td><td>可回退找重疊</td></tr></tbody></table></div><aside class="concept-callout"><b>KEY IDEA</b><p>KMP 的核心不是跳過任意字元，而是只跳過已能由 Border 證明不必重比的對齊。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Border 是同時為 Proper Prefix 與 Proper Suffix 的字串</li><li><span>02</span>失配時可保留已匹配區段的最長 Border</li><li><span>03</span>KMP 不回退 Text 指標，而是以 LPS 回退 Pattern 指標</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>&#x27;abcab&#x27; 的最長 Proper Border 是什麼？</summary><p>&#x27;ab&#x27;，因為它同時是開頭兩字元與結尾兩字元。</p></details><details><summary>KMP 失配且 j &gt; 0 時，為什麼 i 不前進？</summary><p>目前 Text 字元尚未與回退後的新 Pattern 位置比較，它仍可能完成較短前綴的匹配。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>列出 &#x27;aabaaab&#x27; 每個前綴的最長 Border。</li><li>手動模擬 Text &#x27;abababca&#x27; 與 Pattern &#x27;ababca&#x27; 的 KMP 指標移動。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-14/01-naive-string-matching.html"><span>← 上一課</span><b>字串匹配與暴力搜尋</b></a><a class="next" href="../unit-14/03-lps-table.html"><span>下一課 →</span><b>LPS Table：預先整理回退位置</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

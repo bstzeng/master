@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="比較排列與組合的狀態設計，並用剩餘數量剪去不可能的組合分支。" />
+    <meta name="theme-color" content="#101713" />
+    <title>08.07 排列與組合｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-08-recursion-divide-backtracking.html">UNIT 08 / LESSON 07</a><p class="eyebrow">Recursion, Divide and Conquer, and Backtracking</p><h1>排列與組合</h1><p class="lesson-deck">分清順序是否重要，再選擇 used 或 start</p><div class="lesson-meta"><span>基礎</span><span>35 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>比較排列與組合的狀態設計，並用剩餘數量剪去不可能的組合分支。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>區分排列與組合</li><li>以 used 追蹤排列中已選索引</li><li>以 start 產生固定長度組合</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>排列：順序不同就是不同答案</h2><p>排列（Permutation）中 [1, 2] 與 [2, 1] 是不同答案，因此每一層都要考慮所有尚未使用的元素。used[index] 記錄某個輸入位置是否已在目前 path 中，防止同一位置重複使用。</p><ul><li>完成條件：len(path) == len(numbers)</li><li>選擇後設 used[index] = True</li><li>撤銷時 pop 並恢復 used[index] = False</li></ul><figure class="code-block"><figcaption><span>對 n 個互異元素會產生 n! 個排列。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def permutations(numbers):
+    results, path = [], []
+    used = [False] * len(numbers)
+    def backtrack():
+        if len(path) == len(numbers):
+            results.append(path.copy())
+            return
+        for index, value in enumerate(numbers):
+            if used[index]:
+                continue
+            used[index] = True
+            path.append(value)
+            backtrack()
+            path.pop()
+            used[index] = False
+    backtrack()
+    return results</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>組合：只保留選了哪些元素</h2><p>組合（Combination）不區分選取順序，所以選擇下一個元素時只向右走，避免把相同集合以不同順序重複產生。當 path 長度到達 k，就記錄答案並返回。</p><ul><li>start 限制下一個可選的最小索引</li><li>選 index 後，下一層從 index + 1 開始</li><li>[1, 2] 會產生，但不再產生 [2, 1]</li></ul><figure class="code-block"><figcaption><span>start 保證索引遞增，因此每個組合只出現一次。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def combinations(numbers, k):
+    results, path = [], []
+    def backtrack(start):
+        if len(path) == k:
+            results.append(path.copy())
+            return
+        for index in range(start, len(numbers)):
+            path.append(numbers[index])
+            backtrack(index + 1)
+            path.pop()
+    backtrack(0)
+    return results
+
+print(combinations([1, 2, 3], 2))  # [[1, 2], [1, 3], [2, 3]]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>複雜度與剩餘數量剪枝</h2><p>互異元素的全排列有 n! 個輸出，複製每個答案後時間可寫成 O(n·n!)；k 組合有 C(n,k) 個輸出，產生結果至少需 O(k·C(n,k))。組合搜尋時若剩餘元素不足以填滿 k，就可提早停止迴圈。</p><ul><li>still_needed = k - len(path)</li><li>迴圈最大起點可限制為 len(numbers) - still_needed</li><li>排列與組合的遞迴工作空間分別最多 O(n) 與 O(k)</li></ul><figure class="code-block"><figcaption><span>剪枝只排除剩餘數量不足的分支，不會漏掉可完成的組合。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def combinations_pruned(numbers, k):
+    results, path = [], []
+    def backtrack(start):
+        if len(path) == k:
+            results.append(path.copy()); return
+        needed = k - len(path)
+        last_start = len(numbers) - needed
+        for index in range(start, last_start + 1):
+            path.append(numbers[index])
+            backtrack(index + 1)
+            path.pop()
+    backtrack(0)
+    return results</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>排列在意順序，常用 used；組合不在意順序，常用 start。</li><li><span>02</span>回溯狀態必須區分輸入位置，尤其當值可能重複時。</li><li><span>03</span>安全剪枝必須能證明被略過的分支不可能完成答案。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼組合使用 start 後不會產生 [2, 1]？</summary><p>選取索引 2 後只能繼續考慮更右側索引，不能回到索引 1，因此每組元素只依索引遞增順序出現。</p></details><details><summary>全排列的時間為什麼不能低於答案數量 n! 的量級？</summary><p>演算法必須至少輸出 n! 個不同排列，而每個輸出本身還包含 n 個元素。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>產生長度為 k 的排列，也就是從 n 個元素選 k 個且順序重要。</li><li>讓排列函式處理含重複值的輸入，使用排序與同層去重避免重複答案。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-08/06-subsets.html"><span>← 上一課</span><b>子集合</b></a><a class="next" href="../unit-08/08-n-queens-maze-and-pruning.html"><span>下一課 →</span><b>N-Queens、迷宮與剪枝</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

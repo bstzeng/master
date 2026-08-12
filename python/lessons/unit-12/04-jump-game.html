@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="以最遠可達邊界解決是否能到終點，並用前綴可達不變量證明線性貪心正確。" />
+    <meta name="theme-color" content="#101713" />
+    <title>12.04 Jump Game 跳躍遊戲｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-12-greedy.html">UNIT 12 / LESSON 04</a><p class="eyebrow">Greedy Algorithms</p><h1>Jump Game 跳躍遊戲</h1><p class="lesson-deck">不用保存每條路，只追蹤目前能到達的最遠位置</p><div class="lesson-meta"><span>中階</span><span>28 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>以最遠可達邊界解決是否能到終點，並用前綴可達不變量證明線性貪心正確。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>建立 farthest 狀態</li><li>實作 O(n) 可達性判斷</li><li>用不變量說明提前失敗</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>問題只問能否到達</h2><p>給定非負整數 jumps，每格數值是從該位置最多能向右跳幾步，目標是判斷能否到最後一格。因為只問可達性，不必記住實際選了哪個落點；在目前可達位置中，保留最遠可達邊界已涵蓋所有較短選擇。</p><ul><li>輸入值必須非負</li><li>狀態是前綴能延伸到的最遠索引</li><li>較近的可達位置不會提供邊界外的額外資訊</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>掃描可達前綴</h2><p>走到 index 時，若 index &gt; farthest，表示目前可達前綴已結束而此格無法站上，立即回傳 False；否則用 index + jump 更新最遠位置。只掃描一次，時間 O(n)、額外空間 O(1)。</p><ul><li>先確認目前位置可達</li><li>farthest 只增不減</li><li>到達最後索引後可提前成功</li></ul><figure class="code-block"><figcaption><span>非空輸入判斷能否到最後一格；本介面把空輸入視為已完成。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def can_reach_end(jumps):
+    farthest = 0
+    last = len(jumps) - 1
+    for index, jump in enumerate(jumps):
+        if index &gt; farthest:
+            return False
+        farthest = max(farthest, index + jump)
+        if farthest &gt;= last:
+            return True
+    return len(jumps) == 0</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>最遠邊界是完整摘要</h2><p>處理完索引 i 後，不變量是 farthest 等於所有已處理且可達位置能延伸出的最大索引。若下一個 index 超過它，任何先前跳法都不可能跨過缺口；若它覆蓋終點，則一定存在一連串可達位置支持這個延伸。</p><ul><li>不變量摘要所有已探索選擇</li><li>無需回溯每一條跳躍路徑</li><li>局部更新不會丟失更遠可能性</li><li>若要求最少跳數，需要增加層級邊界狀態</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>可達性問題只需保存目前最遠可達索引</li><li><span>02</span>超過 farthest 的第一個索引證明存在無法跨越的缺口</li><li><span>03</span>一次掃描得到 O(n) 時間與 O(1) 空間</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>[3,2,1,0,4] 為何無法到終點？</summary><p>前三格最遠只能到索引 3，而索引 3 的跳躍為 0，farthest 無法覆蓋索引 4。</p></details><details><summary>每次真的跳到能到達最遠的位置，和只維護 farthest 完全相同嗎？</summary><p>不一定。程式沒有承諾實際落點，只摘要所有可達位置的最大覆蓋，避免過早固定路徑。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>手動追蹤 [2,3,1,1,4] 每個索引的 farthest。</li><li>擴充演算法計算到終點的最少跳數，使用 current_end 與 next_end 表示層級。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-12/03-merge-intervals.html"><span>← 上一課</span><b>區間合併</b></a><a class="next" href="../unit-12/05-fractional-knapsack.html"><span>下一課 →</span><b>Fractional Knapsack 分數背包</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

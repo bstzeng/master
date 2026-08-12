@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="區分節點深度與樹高，並用後序 DFS 在 O(n) 內計算二元樹直徑。" />
+    <meta name="theme-color" content="#101713" />
+    <title>09.04 高度、深度與直徑｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-09-trees.html">UNIT 09 / LESSON 04</a><p class="eyebrow">Tree Data Structures</p><h1>高度、深度與直徑</h1><p class="lesson-deck">先統一定義，再用後序一次收集子樹資訊</p><div class="lesson-meta"><span>中階</span><span>32 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>區分節點深度與樹高，並用後序 DFS 在 O(n) 內計算二元樹直徑。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>清楚定義深度與高度</li><li>遞迴計算樹高</li><li>以子樹高度推導直徑</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>深度向上數，高度向下數</h2><p>節點深度（Depth）是從根到該節點的距離，高度（Height）是從節點往下到最遠葉節點的距離；樹高就是根的高度。距離可以用邊數或節點數定義，兩者只差一，但整份程式必須一致。</p><ul><li>本課以節點數表示高度</li><li>空樹高度定義為 0</li><li>葉節點高度為 1</li><li>根深度可定義為 0</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>高度是左右結果加一</h2><p>根到最遠葉節點必定經過左或右子樹，因此高度等於左右高度最大值加一。這是後序問題：必須先取得兩個孩子的結果，才能計算目前節點。</p><ul><li>base case：None 回傳 0</li><li>每個節點只計算一次</li><li>時間 O(n)</li><li>呼叫堆疊 O(h)</li></ul><figure class="code-block"><figcaption><span>以節點數定義高度；單節點樹高度為 1。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def tree_height(root):
+    if root is None:
+        return 0
+    return 1 + max(tree_height(root.left), tree_height(root.right))</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>直徑不一定經過根</h2><p>直徑（Diameter）是任兩節點之間最長路徑；它可能完全位於某個子樹。後序走訪取得左右高度時，以 left_height + right_height 更新經過目前節點的邊數直徑，同時向父節點回傳高度，便能一次 O(n) 完成。</p><ul><li>經過某節點的直徑由左右高度相加</li><li>全域答案取所有節點候選最大值</li><li>時間 O(n)，堆疊 O(h)</li><li>若每個節點另算高度會退化到 O(n²)</li></ul><figure class="code-block"><figcaption><span>回傳以邊數計算的直徑；每個節點只處理一次。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def tree_diameter(root):
+    best = 0
+    def height(node):
+        nonlocal best
+        if node is None:
+            return 0
+        left = height(node.left)
+        right = height(node.right)
+        best = max(best, left + right)
+        return 1 + max(left, right)
+    height(root)
+    return best</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>深度由根往下量，高度由節點往最遠葉量</li><li><span>02</span>先統一邊數或節點數定義才能避免差一錯誤</li><li><span>03</span>後序同時回傳高度並更新直徑可在 O(n) 完成</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>本課定義下，空樹與單節點樹高度各是多少？</summary><p>空樹為 0，單節點樹為 1，因為高度以路徑上的節點數表示。</p></details><details><summary>為什麼只計算 left_height + right_height 在根節點不夠？</summary><p>最長路徑可能完全位於左或右子樹，未必經過整棵樹的根。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>改寫 tree_height，以邊數定義高度並清楚設定空樹值。</li><li>擴充直徑程式，額外記錄最長路徑的兩個端點。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-09/03-level-order-traversal.html"><span>← 上一課</span><b>BFS Level Order 層序走訪</b></a><a class="next" href="../unit-09/05-binary-search-tree-operations.html"><span>下一課 →</span><b>BST 查找、插入與刪除</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

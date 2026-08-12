@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="使用鄰接表、visited 與 Min Heap 實作 Prim，並處理不連通圖與複雜度。" />
+    <meta name="theme-color" content="#101713" />
+    <title>11.07 Prim：從一個頂點擴張 MST｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="" href="../../phase-1.html">第一階段</a>
+        <a class="is-active" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-11-classic-graph-algorithms.html">UNIT 11 / LESSON 07</a><p class="eyebrow">Classic Graph Algorithms</p><h1>Prim：從一個頂點擴張 MST</h1><p class="lesson-deck">用 Heap 選出跨越切割的最輕邊</p><div class="lesson-meta"><span>進階</span><span>40 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>使用鄰接表、visited 與 Min Heap 實作 Prim，並處理不連通圖與複雜度。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>解釋 Prim 的已連接切割</li><li>以 Heap 實作 Prim</li><li>驗證結果是否涵蓋所有頂點</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>由已連接集合向外擴張</h2><p>Prim 從任一頂點開始，維護已加入 MST 的 visited 集合，反覆選出從 visited 跨到未拜訪頂點的最輕邊。每次加入一個新頂點與其連接邊，直到涵蓋全部頂點。</p><ul><li>起點不影響 MST 最小總權重</li><li>候選必須一端已拜訪、一端未拜訪</li><li>目標是收集 V - 1 條邊</li><li>同權邊可能使具體 MST 不同</li></ul><figure class="code-block"><figcaption><span>每一步只接受連到新頂點的跨切割邊。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>visited = {&quot;A&quot;}
+candidates = [(1, &quot;A&quot;, &quot;B&quot;), (4, &quot;A&quot;, &quot;C&quot;)]
+weight, source, target = min(candidates)
+if target not in visited:
+    visited.add(target)
+print(visited)</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Heap Prim 實作</h2><p>Min Heap 保存 (weight, source, target)，取出後若 target 已在 visited 就視為過期邊並忽略；否則接受該邊，再推入 target 的所有出邊。這和 Dijkstra 都使用 Heap，但 Prim 比較單條跨切割邊權，Dijkstra 比較從起點累積的路徑距離。</p><ul><li>Heap 鍵是單條 edge weight</li><li>visited 防止循環與重複加入</li><li>每條無向邊可能以兩個方向進入鄰接表</li><li>起點虛擬邊可用 (0, None, start)</li></ul><figure class="code-block"><figcaption><span>以虛擬起點邊統一第一個頂點與後續處理。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>import heapq
+
+def prim(graph, start):
+    visited = set()
+    heap = [(0, None, start)]
+    mst_edges = []
+    total = 0
+
+    while heap and len(visited) &lt; len(graph):
+        weight, source, target = heapq.heappop(heap)
+        if target in visited:
+            continue
+        visited.add(target)
+        if source is not None:
+            mst_edges.append((source, target, weight))
+            total += weight
+        for neighbor, edge_weight in graph[target]:
+            if neighbor not in visited:
+                heapq.heappush(heap, (edge_weight, target, neighbor))
+    return mst_edges, total, visited</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>正確性、複雜度與限制</h2><p>每次選出跨越 visited 切割的最輕邊，依切割性質可安全加入 MST；使用鄰接表與二元 Heap 時為 O(E log V)，空間 O(V + E)。若最後 visited 數量小於 V，圖不連通，單次 Prim 只能取得起點所在分量的生成樹。</p><ul><li>時間：O(E log V)</li><li>空間：O(V + E)</li><li>適合鄰接表已存在、需要由節點向外探索</li><li>不連通時需回報失敗或對每個分量重跑成森林</li></ul><div class="table-wrap"><table><thead><tr><th>比較</th><th>Prim</th><th>Dijkstra</th></tr></thead><tbody><tr><td>目標</td><td>MST 總邊權最小</td><td>起點路徑距離最小</td></tr><tr><td>Heap 優先值</td><td>單條邊權</td><td>累積距離</td></tr><tr><td>負邊</td><td>MST 可處理</td><td>Dijkstra 不可處理</td></tr></tbody></table></div><aside class="concept-callout"><b>KEY IDEA</b><p>Prim 可處理負權邊，因為 MST 不依賴距離固定的非負推論。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Prim 從一個頂點開始，反覆選擇跨到未拜訪頂點的最輕邊</li><li><span>02</span>Heap Prim 使用單條邊權作優先值，時間為 O(E log V)</li><li><span>03</span>結果邊數應為 V - 1；否則原圖不連通或實作有誤</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>Prim 與 Dijkstra 都使用 Heap，優先值有何不同？</summary><p>Prim 依跨切割的單條邊權；Dijkstra 依從固定起點累積的路徑距離。</p></details><details><summary>Prim 結束後只拜訪 V - 2 個頂點，代表什麼？</summary><p>起點無法到達所有頂點，原圖不連通，因此不存在涵蓋全圖的生成樹。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>以 Heap Prim 計算一張六頂點無向圖的 MST 邊與總權重。</li><li>修改函式，在圖不連通時拋出清楚的 ValueError。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-11/06-minimum-spanning-tree-concepts.html"><span>← 上一課</span><b>Minimum Spanning Tree 基礎</b></a><a class="next" href="../unit-11/08-kruskal-union-find-and-comparison.html"><span>下一課 →</span><b>Kruskal、Union-Find 與總比較</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

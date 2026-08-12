@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="學習以一次 O(n) 預處理換取 O(1) 區間和查詢，並以差分陣列快速記錄多次區間加值。" />
+    <meta name="theme-color" content="#101713" />
+    <title>03.07 Prefix Sum 與差分陣列｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-03-arrays-and-strings.html">UNIT 03 / LESSON 07</a><p class="eyebrow">Array and String Techniques</p><h1>Prefix Sum 與差分陣列</h1><p class="lesson-deck">用預處理加速區間查詢與批次更新</p><div class="lesson-meta"><span>基礎</span><span>35 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>學習以一次 O(n) 預處理換取 O(1) 區間和查詢，並以差分陣列快速記錄多次區間加值。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>建立含前導零的前綴和</li><li>以兩個前綴值回答閉區間總和</li><li>使用差分陣列合併多次區間更新</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>Prefix Sum 前綴和</h2><p>前綴和（Prefix Sum）先累積從開頭到各位置的總和，適合原陣列不變但需要多次區間查詢的情境。建立長度 n + 1 且 prefix[0] = 0 的陣列，可讓區間公式統一而不必特判左邊界。</p><ul><li>prefix[i] 代表原陣列前 i 個元素總和</li><li>閉區間 [left, right] 的和是 prefix[right + 1] - prefix[left]</li><li>建立成本 O(n)，每次查詢 O(1)</li></ul><figure class="code-block"><figcaption><span>用 right + 1 對應「前 right + 1 個元素」。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def build_prefix_sum(numbers):
+    prefix = [0]
+    for value in numbers:
+        prefix.append(prefix[-1] + value)
+    return prefix
+
+def range_sum(prefix, left, right):
+    return prefix[right + 1] - prefix[left]
+
+numbers = [3, 1, 4, 1, 5]
+prefix = build_prefix_sum(numbers)
+print(range_sum(prefix, 1, 3))  # 1 + 4 + 1 = 6</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Difference Array 差分陣列</h2><p>差分陣列（Difference Array）適合對多個閉區間 [left, right] 加上同一數值。每次更新只在 left 記錄開始變化，並在 right + 1 記錄取消變化；全部更新完成後做一次累積，就能還原最終陣列。</p><ul><li>difference[left] += amount</li><li>若 right + 1 仍在範圍內，difference[right + 1] -= amount</li><li>累積 difference 得到每個位置的總加值</li></ul><figure class="code-block"><figcaption><span>多次區間加值先記錄端點，最後才一次展開結果。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def apply_range_additions(length, updates):
+    difference = [0] * (length + 1)
+    for left, right, amount in updates:
+        difference[left] += amount
+        difference[right + 1] -= amount
+
+    result = [0] * length
+    running = 0
+    for index in range(length):
+        running += difference[index]
+        result[index] = running
+    return result
+
+updates = [(1, 3, 2), (2, 4, 3)]
+print(apply_range_additions(5, updates))  # [0, 2, 5, 5, 3]</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>選擇預處理方向</h2><p>前綴和解決「多次讀取區間總和」，差分陣列解決「多次寫入區間增量後再取得結果」。若有 n 個元素、q 次操作，直接逐區間處理最壞可達 O(nq)，而這兩種方法通常能把總成本降為 O(n + q)。</p><ul><li>原陣列頻繁單點修改時，靜態前綴和不再方便</li><li>差分更新期間不適合立即查詢任意區間的最終值</li><li>區間是閉區間或半開區間必須從一開始統一</li></ul><div class="table-wrap"><table><thead><tr><th>技巧</th><th>主要用途</th><th>預處理／還原</th><th>單次操作</th></tr></thead><tbody><tr><td>前綴和</td><td>靜態區間和查詢</td><td>O(n)</td><td>查詢 O(1)</td></tr><tr><td>差分陣列</td><td>批次區間加值</td><td>還原 O(n)</td><td>更新 O(1)</td></tr></tbody></table></div><aside class="concept-callout"><b>KEY IDEA</b><p>公式錯誤多半來自區間定義不一致；建議把 [left, right] 是否包含端點寫在函式說明中。</p></aside></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>前綴和以 O(n) 預處理換取 O(1) 區間和查詢。</li><li><span>02</span>前導零讓閉區間公式統一為 prefix[right + 1] - prefix[left]。</li><li><span>03</span>差分陣列以端點標記，把 q 次區間更新與還原控制在 O(q + n)。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼 prefix 陣列通常比原陣列多一格？</summary><p>prefix[0] 可表示零個元素的總和，使從索引 0 開始的區間也能使用相同減法公式。</p></details><details><summary>對閉區間 [left, right] 加 amount，為什麼要在 right + 1 扣回 amount？</summary><p>扣回代表加值效果從 right 的下一個位置起停止，累積差分時便只影響指定閉區間。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>建立前綴和並回答多筆區間平均值查詢。</li><li>給定多段日期與訪客增量，用差分陣列計算每天的總訪客數。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-03/06-longest-substring-without-repeating.html"><span>← 上一課</span><b>經典題型：最長不重複子字串</b></a><a class="next" href="../unit-04/01-linear-search.html"><span>下一課 →</span><b>Linear Search 線性搜尋</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

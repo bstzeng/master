@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="理解 LIFO 與 FIFO 規則，並以 List 或 collections.deque 實作有效率的操作。" />
+    <meta name="theme-color" content="#101713" />
+    <title>02.07 Stack、Queue 與 deque｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-02-python-builtins.html">UNIT 02 / LESSON 07</a><p class="eyebrow">Python Built-in Data Structures</p><h1>Stack、Queue 與 deque</h1><p class="lesson-deck">依進出順序選擇正確的 Python 實作</p><div class="lesson-meta"><span>入門</span><span>25 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>理解 LIFO 與 FIFO 規則，並以 List 或 collections.deque 實作有效率的操作。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>用 List 或 deque 實作 Stack</li><li>用 deque 實作 Queue</li><li>比較兩種容器在兩端操作的複雜度</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>Stack：後進先出</h2><p>Stack（堆疊）遵守後進先出（LIFO），像疊盤子一樣最後放上的項目最先取走。Python 可直接用 List 尾端的 append 與 pop 實作，兩者平均或攤銷成本皆為 O(1)。</p><ul><li>push：list.append(value)</li><li>pop：list.pop()</li><li>peek：stack[-1]，先確認非空</li><li>適合復原、括號配對與深度優先搜尋</li></ul><figure class="code-block"><figcaption><span>使用 List 尾端建立簡單 Stack。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>stack = []
+stack.append(&quot;第一頁&quot;)
+stack.append(&quot;第二頁&quot;)
+current = stack.pop()
+print(current)  # 第二頁</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Queue：先進先出</h2><p>Queue（佇列）遵守先進先出（FIFO），適合排隊工作與廣度優先搜尋。List 的 pop(0) 是 O(n)，應改用 collections.deque 的 append 與 popleft，兩端操作都是 O(1)。</p><ul><li>enqueue：deque.append(value)</li><li>dequeue：deque.popleft()</li><li>不要用 List 的 pop(0) 處理大量出隊</li><li>deque 可限制 maxlen 建立固定長度緩衝區</li></ul><figure class="code-block"><figcaption><span>deque 讓 Queue 的入隊與出隊都保持常數時間。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>from collections import deque
+
+queue = deque([&quot;Amy&quot;, &quot;Bo&quot;])
+queue.append(&quot;Chen&quot;)
+next_student = queue.popleft()
+print(next_student)  # Amy</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>List 與 deque 的選型</h2><p>deque 是雙端佇列，左右兩端加入與移除皆為 O(1)，但不適合頻繁依中間索引存取。需要隨機索引與尾端操作時用 List；需要左端或兩端頻繁進出時用 deque。</p><ul><li>List 索引：O(1)，左端增刪：O(n)</li><li>deque 兩端增刪：O(1)</li><li>deque 中間索引不具 List 的常數時間優勢</li><li>單執行緒的一般 Stack 可優先用 List，語意清楚即可</li></ul><div class="table-wrap"><table><thead><tr><th>需求</th><th>建議結構</th><th>主要操作</th></tr></thead><tbody><tr><td>後進先出</td><td>List／deque</td><td>append、pop：O(1)</td></tr><tr><td>先進先出</td><td>deque</td><td>append、popleft：O(1)</td></tr><tr><td>雙端操作</td><td>deque</td><td>appendleft、popleft：O(1)</td></tr><tr><td>依索引隨機讀取</td><td>List</td><td>items[i]：O(1)</td></tr></tbody></table></div><figure class="code-block"><figcaption><span>固定長度 deque 會自動淘汰另一端最舊的資料。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>from collections import deque
+
+history = deque(maxlen=3)
+for page in [&quot;A&quot;, &quot;B&quot;, &quot;C&quot;, &quot;D&quot;]:
+    history.append(page)
+print(list(history))  # [&#x27;B&#x27;, &#x27;C&#x27;, &#x27;D&#x27;]</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>Stack 是 LIFO，List 尾端 append 與 pop 即可高效實作</li><li><span>02</span>Queue 是 FIFO，應使用 deque 的 append 與 popleft</li><li><span>03</span>deque 擅長兩端操作，List 擅長隨機索引</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼不建議以 List 的 pop(0) 實作 Queue？</summary><p>每次移除第一項都要搬動其餘元素，單次成本為 O(n)。</p></details><details><summary>只需要一般 Stack 時，List 與 deque 應如何選？</summary><p>兩者尾端操作都有效率；List 較常見且簡單，若還需要左端操作或固定 maxlen 再選 deque。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>用 List 實作檢查括號是否成對的 Stack。</li><li>用 deque 模擬服務櫃台，依到達順序處理三位顧客。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-02/06-strings.html"><span>← 上一課</span><b>String：不可變的文字序列</b></a><a class="next" href="../unit-02/08-heapq-and-choosing-structures.html"><span>下一課 →</span><b>heapq 與資料結構選型</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

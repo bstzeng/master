@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="以二元字串和 Fibonacci 比較分支遞迴的時間、堆疊深度與重複子問題。" />
+    <meta name="theme-color" content="#101713" />
+    <title>08.02 遞迴追蹤與複雜度｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-08-recursion-divide-backtracking.html">UNIT 08 / LESSON 02</a><p class="eyebrow">Recursion, Divide and Conquer, and Backtracking</p><h1>遞迴追蹤與複雜度</h1><p class="lesson-deck">用遞迴樹分清呼叫次數與最大深度</p><div class="lesson-meta"><span>基礎</span><span>30 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>以二元字串和 Fibonacci 比較分支遞迴的時間、堆疊深度與重複子問題。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>手動追蹤分支遞迴</li><li>區分遞迴樹節點數與高度</li><li>辨認重複子問題造成的浪費</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>先畫參數，再畫分支</h2><p>追蹤遞迴時，把每次函式呼叫畫成節點，子呼叫畫成下一層分支。節點總數近似總工作量，從根到最深葉節點的距離則近似同時占用的 Call Stack 深度。</p><ul><li>一個呼叫只產生一個子呼叫：通常是鏈狀</li><li>一個呼叫產生兩個子呼叫：可能形成二元樹</li><li>時間看所有節點，堆疊空間看單一路徑高度</li></ul><figure class="code-block"><figcaption><span>每層分成選 0 與選 1，深度為 length。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def binary_strings(length, prefix=&quot;&quot;):
+    if length == 0:
+        return [prefix]
+    return (
+        binary_strings(length - 1, prefix + &quot;0&quot;)
+        + binary_strings(length - 1, prefix + &quot;1&quot;)
+    )
+
+print(binary_strings(2))  # [&#x27;00&#x27;, &#x27;01&#x27;, &#x27;10&#x27;, &#x27;11&#x27;]</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>分支數決定成長速度</h2><p>長度 n 的二元字串共有 2ⁿ 個輸出，因此演算法至少要花 O(2ⁿ) 時間產生它們，最大遞迴深度是 O(n)。回傳的所有字串需大量輸出空間，但若只分析執行堆疊，額外空間仍是 O(n)。</p><ul><li>第 0 層 1 個呼叫，第 1 層 2 個，第 n 層 2ⁿ 個</li><li>輸出本身指數成長時，演算法無法是多項式時間</li><li>分析空間時應註明是否包含回傳結果</li></ul><div class="table-wrap"><table><thead><tr><th>觀察對象</th><th>二元分支結果</th></tr></thead><tbody><tr><td>呼叫總數</td><td>O(2ⁿ)</td></tr><tr><td>最大堆疊深度</td><td>O(n)</td></tr><tr><td>輸出數量</td><td>2ⁿ 個</td></tr></tbody></table></div></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>重複子問題的警訊</h2><p>樸素 Fibonacci 會反覆計算相同的 fib(k)，例如 fib(5) 的左右分支都可能再次呼叫 fib(3)。它的時間呈指數成長、堆疊深度 O(n)；之後可用記憶化或動態規劃保存答案。</p><ul><li>相同參數反覆出現在遞迴樹中，就是重複子問題</li><li>樸素 fib(n) 時間約 O(2ⁿ)</li><li>不是所有分支遞迴都能或需要用記憶化</li></ul><figure class="code-block"><figcaption><span>程式簡潔，但遞迴樹中存在大量重複呼叫。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def fibonacci(number):
+    if number &lt;= 1:
+        return number
+    return fibonacci(number - 1) + fibonacci(number - 2)
+
+print(fibonacci(6))  # 8</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>遞迴樹節點總數對應時間，樹高對應 Call Stack 空間。</li><li><span>02</span>每層固定二元分支且深度 n 時，呼叫數可能是 O(2ⁿ)。</li><li><span>03</span>相同參數重複出現，是考慮記憶化的訊號。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼二元分支遞迴有 O(2ⁿ) 呼叫，Call Stack 卻不是 O(2ⁿ)？</summary><p>分支會依序執行，堆疊同時只保留一條根到葉的路徑，所以最大深度是 O(n)。</p></details><details><summary>看見兩個遞迴呼叫就一定能斷定時間 O(2ⁿ) 嗎？</summary><p>不能，還要看子問題規模、是否有重疊、是否提早終止，以及每個節點本身的工作量。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>畫出 fibonacci(5) 的遞迴樹，圈出重複出現的參數。</li><li>分析遞迴二分搜尋的呼叫數、最大深度與額外空間。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-08/01-recursion-structure.html"><span>← 上一課</span><b>遞迴結構、Base Case 與 Call Stack</b></a><a class="next" href="../unit-08/03-divide-and-conquer.html"><span>下一課 →</span><b>Divide and Conquer 分治法</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

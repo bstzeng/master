@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="使用搬移而非反覆交換實作插入排序，並認識近乎有序資料的優勢。" />
+    <meta name="theme-color" content="#101713" />
+    <title>05.04 Insertion Sort 插入排序｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-05-sorting.html">UNIT 05 / LESSON 04</a><p class="eyebrow">Sorting Algorithms</p><h1>Insertion Sort 插入排序</h1><p class="lesson-deck">把下一張牌插入已排序前綴</p><div class="lesson-meta"><span>入門</span><span>23 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>使用搬移而非反覆交換實作插入排序，並認識近乎有序資料的優勢。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明已排序前綴不變量</li><li>實作穩定原地插入排序</li><li>分析近乎有序資料的成本</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>維持已排序前綴</h2><p>插入排序（Insertion Sort）把第一個元素視為已排序，接著取出下一個 key，將較大的前綴元素向右搬，再把 key 插入空位。每輪結束後，從索引 0 到目前位置都已排序。</p><ul><li>像整理手中撲克牌</li><li>一次把一個新元素插入前綴</li><li>前綴在每輪結束後保持排序</li></ul></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>只搬移嚴格較大的元素</h2><p>保存 key 後，while 迴圈將所有大於 key 的元素右移；遇到小於等於 key 的元素就停止。相等鍵不跨越彼此，因此此版本穩定，且所有操作都在原 list 內完成。</p><ul><li>先保存即將被覆蓋的 key</li><li>搬移比逐次交換更直接</li><li>使用 &gt; 維持相等鍵順序</li></ul><figure class="code-block"><figcaption><span>穩定且原地；近乎有序資料所需搬移較少。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def insertion_sort(items):
+    for index in range(1, len(items)):
+        key = items[index]
+        position = index - 1
+        while position &gt;= 0 and items[position] &gt; key:
+            items[position + 1] = items[position]
+            position -= 1
+        items[position + 1] = key
+    return items</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>成本取決於逆序程度</h2><p>已排序時每個 key 只比較一次，最佳時間 O(n)；反向排序時每輪幾乎搬移整個前綴，最壞 O(n²)，平均也是 O(n²)。額外空間 O(1)，小型或近乎有序資料上常有良好表現。</p><ul><li>最佳時間 O(n)</li><li>平均與最壞時間 O(n²)</li><li>額外空間 O(1)</li><li>穩定且原地</li></ul></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>插入排序逐步擴張已排序前綴</li><li><span>02</span>只搬移嚴格較大元素可維持穩定性</li><li><span>03</span>它適合小型或近乎有序資料，但最壞為 O(n²)</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>插入排序在已排序資料為何是 O(n)？</summary><p>每個 key 與前一元素比較後就停止，不需要搬移，總共只做線性次數工作。</p></details><details><summary>若 while 條件改成 items[position] &gt;= key，穩定性會如何？</summary><p>相同鍵也會被右移，新元素可能跑到舊元素前面，因此失去穩定性。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>手動推演 [3, 1, 2, 5, 4] 的 key 與前綴變化。</li><li>計算一組近乎有序輸入實際發生的搬移次數。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-05/03-selection-sort.html"><span>← 上一課</span><b>Selection Sort 選擇排序</b></a><a class="next" href="../unit-05/05-merge-sort.html"><span>下一課 →</span><b>Merge Sort 合併排序</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>

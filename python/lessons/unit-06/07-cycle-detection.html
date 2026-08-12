@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="從 visited set 推導 Floyd 快慢指標，並延伸尋找環的入口。" />
+    <meta name="theme-color" content="#101713" />
+    <title>06.07 環狀鏈結串列偵測｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../script.js" defer></script>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <a class="brand" href="../../../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
+      <nav aria-label="Python 課程選單">
+        <a class="" href="../../index.html">課程總覽</a>
+        <a class="is-active" href="../../phase-1.html">第一階段</a>
+        <a class="" href="../../phase-2.html">第二階段</a>
+      </nav>
+      <span class="header-note">PYTHON / DATA STRUCTURES / ALGORITHMS</span>
+    </header>
+    <main>
+      <article class="lesson-page">
+        <header class="lesson-hero"><a class="breadcrumb" href="../../units/unit-06-linked-lists.html">UNIT 06 / LESSON 07</a><p class="eyebrow">Linked Lists</p><h1>環狀鏈結串列偵測</h1><p class="lesson-deck">用 Floyd 演算法在常數空間判斷是否成環</p><div class="lesson-meta"><span>基礎</span><span>35 分鐘</span><span>PYTHON 3</span></div></header>
+        <section class="lesson-opening"><div><p class="section-index">WHY THIS MATTERS</p><p>從 visited set 推導 Floyd 快慢指標，並延伸尋找環的入口。</p></div><div><p class="section-index">LEARNING GOALS</p><ul><li>說明環會使一般走訪無法到達 None</li><li>實作 visited set 與 Floyd 偵測</li><li>使用相遇點找出環入口</li></ul></div></section>
+        <div class="lesson-content"><section class="content-section" id="section-1"><span class="content-index">01</span><div><h2>環讓走訪重返舊節點</h2><p>若某節點的 next 指回前方節點，串列就形成環（Cycle），一般 while current 走訪將永遠到不了 None。最直覺的方法是用 set 記錄見過的節點參照，再次遇到同一節點便確認有環。</p><ul><li>文字圖：[1] → [2] → [3] → [4] ┐，且 [4].next 回到 [2]</li><li>set 應保存節點物件，而不是 value</li><li>不同節點可以擁有相同 value，不能因此判定有環</li></ul><figure class="code-block"><figcaption><span>時間 O(n)、額外空間 O(n)，其中 n 是相遇前最多訪問的不同節點數。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def has_cycle_with_set(head):
+    visited = set()
+    current = head
+    while current is not None:
+        if current in visited:
+            return True
+        visited.add(current)
+        current = current.next
+    return False</code></pre></figure></div></section><section class="content-section" id="section-2"><span class="content-index">02</span><div><h2>Floyd 快慢指標偵測</h2><p>Floyd 環偵測讓 slow 每次一步、fast 每次兩步；若沒有環，fast 會先到 None，若有環，較快的 fast 最終會在環內追上 slow。這像兩人在圓形跑道以不同速度同向前進，速度差會逐步縮短環上的相對距離。</p><ul><li>檢查 fast 與 fast.next 後，fast 才能安全走兩步</li><li>比較 slow is fast，也就是是否為同一節點</li><li>時間 O(n)、額外空間 O(1)</li></ul><figure class="code-block"><figcaption><span>不保存 visited，仍可在常數額外空間內判斷是否有環。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def has_cycle(head):
+    slow = head
+    fast = head
+    while fast is not None and fast.next is not None:
+        slow = slow.next
+        fast = fast.next.next
+        if slow is fast:
+            return True
+    return False</code></pre></figure></div></section><section class="content-section" id="section-3"><span class="content-index">03</span><div><h2>從相遇點找環入口</h2><p>slow 與 fast 在環內相遇後，將其中一個指標移回 head，再讓兩者每次各走一步，下一次相遇的位置就是環入口。此結論來自相遇時所走距離的倍數關係，實作仍保持 O(n) 時間與 O(1) 空間。</p><ul><li>第一階段：以一倍與兩倍速度找相遇點</li><li>第二階段：finder 從 head、slow 從相遇點同速前進</li><li>無環時回傳 None，有環時回傳入口節點</li></ul><figure class="code-block"><figcaption><span>第二次相遇的節點就是 next 開始重複循環的位置。</span><button type="button" data-copy-code>複製</button></figcaption><pre><code>def find_cycle_entry(head):
+    slow = head
+    fast = head
+    while fast is not None and fast.next is not None:
+        slow = slow.next
+        fast = fast.next.next
+        if slow is fast:
+            finder = head
+            while finder is not slow:
+                finder = finder.next
+                slow = slow.next
+            return finder
+    return None</code></pre></figure></div></section></div>
+        <section class="takeaways"><p class="section-index">RECAP</p><h2>這堂課要帶走的事</h2><ol><li><span>01</span>環必須依節點身分判斷，不能只比較 value。</li><li><span>02</span>Floyd 演算法以快慢指標在 O(1) 額外空間偵測環。</li><li><span>03</span>首次相遇後從 head 與相遇點同速出發，可找出環入口。</li></ol></section>
+        <section class="quiz"><div><p class="section-index">CHECK YOURSELF</p><h2>先想一想，再看答案</h2></div><div><details><summary>為什麼 visited set 應保存節點物件，而不是節點值？</summary><p>不同節點可能有相同值；成環的定義是再次到達同一個節點物件，而不是再次看見相同資料。</p></details><details><summary>Floyd 演算法中，什麼情況可判定沒有環？</summary><p>當 fast 變成 None 或 fast.next 是 None 時，快指標已到達有限串列尾端，因此沒有環。</p></details></div></section>
+        <section class="practice"><p class="section-index">PRACTICE</p><h2>延伸練習</h2><ol><li>建立一條尾端指回第二個節點的串列，分別測試 has_cycle 與 find_cycle_entry。</li><li>延伸計算環的長度：在首次相遇後固定一個指標，另一個繞一圈並計步。</li></ol></section>
+        <nav class="lesson-nav"><a href="../unit-06/06-fast-and-slow-pointers.html"><span>← 上一課</span><b>快慢指標</b></a><a class="next" href="../unit-07/01-stack-lifo.html"><span>下一課 →</span><b>Stack：後進先出的解題模型</b></a></nav>
+      </article></main>
+
+    <footer>
+      <span>MASTER / PYTHON</span>
+      <p>Understand it. Trace it. Build it.</p>
+      <a href="../../index.html">課程總覽 ↑</a>
+    </footer>
+  </body>
+</html>
