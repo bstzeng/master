@@ -21,6 +21,7 @@ class PageParser(HTMLParser):
         self.title_count = 0
         self.speech_buttons = 0
         self.audio_sources: list[str] = []
+        self.romanization_count = 0
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         values = dict(attrs)
@@ -40,6 +41,8 @@ class PageParser(HTMLParser):
             self.speech_buttons += 1
             if values.get("data-audio"):
                 self.audio_sources.append(values["data-audio"] or "")
+        if "romanization" in (values.get("class") or "").split():
+            self.romanization_count += 1
 
 
 def main() -> None:
@@ -49,8 +52,15 @@ def main() -> None:
     audio_files = list((KOREAN_ROOT / "audio").glob("*.mp3"))
     if len(lesson_pages) != 29:
         errors.append(f"expected 29 lesson pages, found {len(lesson_pages)}")
-    if len(audio_files) != 186:
-        errors.append(f"expected 186 bundled audio files, found {len(audio_files)}")
+    manifest_path = KOREAN_ROOT / "audio" / "manifest.json"
+    if not manifest_path.exists():
+        errors.append("missing audio manifest")
+        expected_audio_count = 0
+    else:
+        import json
+        expected_audio_count = json.loads(manifest_path.read_text(encoding="utf-8"))["count"]
+    if len(audio_files) != expected_audio_count:
+        errors.append(f"expected {expected_audio_count} bundled audio files, found {len(audio_files)}")
     for audio_file in audio_files:
         if audio_file.stat().st_size <= 1_000:
             errors.append(f"{audio_file.relative_to(SITE_ROOT)}: audio file is empty")
@@ -66,6 +76,10 @@ def main() -> None:
             errors.append(f"{path.relative_to(SITE_ROOT)}: expected at least four speech controls")
         if KOREAN_ROOT / "lessons" in path.parents and len(parser.audio_sources) != parser.speech_buttons:
             errors.append(f"{path.relative_to(SITE_ROOT)}: every speech control needs bundled audio")
+        if KOREAN_ROOT / "lessons" in path.parents and parser.romanization_count * 2 != parser.speech_buttons:
+            errors.append(f"{path.relative_to(SITE_ROOT)}: every normal/slow audio pair needs one RR label")
+        if path == KOREAN_ROOT / "alphabet.html" and parser.speech_buttons != 40:
+            errors.append(f"{path.relative_to(SITE_ROOT)}: expected 21 vowel and 19 consonant controls")
         for raw_source in parser.audio_sources:
             target = (path.parent / unquote(raw_source)).resolve()
             if not target.exists():

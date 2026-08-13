@@ -60,6 +60,14 @@ h1, h2, h3 { text-wrap: balance; }
 .daily-method li { display: grid; grid-template-columns: 72px 1fr; gap: 15px; padding: 16px 0; border-bottom: 1px solid var(--dark-line); font-size: 14px; font-weight: 600; }
 .daily-method li span { color: var(--orange); font-family: "DM Mono", monospace; font-size: 9px; }
 
+.alphabet-entry { display: grid; grid-template-columns: 1fr .9fr; gap: 80px; padding: 100px max(28px, calc((100% - 1240px) / 2)); background: var(--paper-deep); }
+.alphabet-entry h2, .system-path h2, .romanization-note h2 { margin-bottom: 24px; font-family: "Gowun Batang", "Noto Sans TC", serif; font-size: clamp(38px, 4vw, 56px); line-height: 1.1; }
+.alphabet-entry > div > p:last-child { max-width: 620px; color: var(--muted); line-height: 1.9; }
+.alphabet-entry > a { display: grid; grid-template-columns: 1fr 1fr; min-height: 260px; padding: 30px; color: var(--paper); background: var(--ink); }
+.alphabet-entry > a span { align-self: center; color: var(--acid); font-family: "Gowun Batang", serif; font-size: clamp(36px, 4vw, 55px); }
+.alphabet-entry > a span:nth-child(2) { text-align: right; }
+.alphabet-entry > a b { display: flex; grid-column: 1 / -1; align-items: end; justify-content: space-between; border-top: 1px solid var(--dark-line); font-size: 14px; }
+
 .roadmap-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
 .roadmap-card { display: flex; min-height: 500px; padding: 34px; flex-direction: column; border: 1px solid var(--line); background: rgba(255,255,255,.22); }
 .roadmap-card.is-ready { color: var(--paper); background: var(--ink); }
@@ -103,6 +111,48 @@ h1, h2, h3 { text-wrap: balance; }
 .korean-unit-title { margin: 32px 0 -25px; color: var(--orange) !important; font-family: "Gowun Batang", serif; font-size: 18px !important; }
 .korean-unit-hero aside strong { color: var(--acid); }
 
+.phase-foundation-link { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 60px; padding: 72px max(28px, calc((100% - 1240px) / 2)); background: var(--paper-deep); }
+.phase-foundation-link h2 { margin-bottom: 14px; font-family: "Gowun Batang", "Noto Sans TC", serif; font-size: 42px; }
+.phase-foundation-link div > p:last-child { max-width: 700px; margin: 0; color: var(--muted); line-height: 1.8; }
+.phase-foundation-link > a { padding: 15px 20px; color: var(--paper); background: var(--ink); border-radius: 999px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+
+.alphabet-hero { min-height: 610px; }
+.system-path { display: grid; grid-template-columns: .35fr 1fr .9fr; gap: 65px; padding: 90px max(28px, calc((100% - 1240px) / 2)); color: var(--paper); background: var(--ink); }
+.system-path h2 { color: var(--acid); }
+.system-path div > p { color: rgba(247,242,232,.65); line-height: 1.85; }
+.system-path ol { margin: 0; padding: 0; list-style: none; }
+.system-path li { display: flex; gap: 18px; padding: 16px 0; border-bottom: 1px solid var(--dark-line); font-size: 14px; font-weight: 600; }
+.system-path li span { color: var(--orange); font-family: "DM Mono", monospace; font-size: 9px; }
+.alphabet-schedule { padding: 100px max(28px, calc((100% - 1240px) / 2)); background: var(--paper-deep); }
+.schedule-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.schedule-grid article { min-height: 190px; padding: 24px; border: 1px solid var(--line); background: var(--paper); }
+.schedule-grid span { color: var(--orange); font-family: "DM Mono", monospace; font-size: 9px; letter-spacing: .08em; }
+.schedule-grid b { display: block; margin-top: 45px; font-size: 15px; }
+.schedule-grid p { margin: 10px 0 0; color: var(--muted); font-family: "Gowun Batang", serif; font-size: 20px; line-height: 1.5; }
+.alphabet-system { padding: 100px max(28px, calc((100% - 1240px) / 2)); }
+.alphabet-group { padding: 50px 0; border-top: 1px solid var(--line); }
+.alphabet-group-head { display: grid; grid-template-columns: 70px 1fr; gap: 25px; margin-bottom: 30px; }
+.alphabet-group-head > span { color: var(--orange); font-family: "DM Mono", monospace; font-size: 11px; }
+.alphabet-group-head h3 { margin-bottom: 10px; font-family: "Gowun Batang", "Noto Sans TC", serif; font-size: 32px; }
+.alphabet-group-head p { max-width: 720px; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.75; }
+.alphabet-card-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.alphabet-card { overflow: hidden; border: 1px solid var(--line); background: rgba(255,255,255,.2); }
+.alphabet-card button { display: flex; width: 100%; min-height: 145px; padding: 20px; align-items: center; justify-content: space-between; color: var(--paper); background: var(--ink); border: 0; cursor: pointer; }
+.alphabet-card button:hover, .alphabet-card button:focus-visible, .alphabet-card button.is-speaking { background: var(--orange); }
+.alphabet-card button span { font-family: "Gowun Batang", serif; font-size: 68px; font-weight: 700; }
+.alphabet-card button i { display: grid; width: 30px; height: 30px; place-content: center; color: var(--ink); background: var(--acid); border-radius: 50%; font-size: 9px; font-style: normal; }
+.alphabet-card > div { display: grid; gap: 6px; min-height: 90px; padding: 15px 18px; }
+.alphabet-card > div b { color: var(--orange); font-family: "DM Mono", monospace; font-size: 15px; }
+.alphabet-card > div small { color: var(--muted); font-size: 11px; line-height: 1.6; }
+.consonant-system { background: var(--paper-deep); }
+.consonant-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.romanization-note { display: grid; grid-template-columns: .35fr 1fr .55fr; align-items: end; gap: 60px; padding: 100px max(28px, calc((100% - 1240px) / 2)); color: var(--paper); background: var(--ink); }
+.romanization-note h2 { color: var(--acid); }
+.romanization-note div > p { color: rgba(247,242,232,.68); line-height: 1.9; }
+.romanization-note div > p b { color: var(--orange); font-family: "DM Mono", monospace; }
+.romanization-note div > p a { margin-left: 4px; color: var(--acid); border-bottom: 1px solid currentColor; }
+.romanization-note > a { padding-bottom: 8px; border-bottom: 1px solid var(--paper); font-weight: 700; text-align: right; }
+
 .audio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 30px 0; }
 .audio-card { display: grid; grid-template-columns: 1fr auto; overflow: hidden; border: 1px solid var(--line); background: rgba(255,255,255,.22); }
 .speak-main { display: flex; grid-column: 1 / -1; align-items: center; justify-content: space-between; min-height: 84px; padding: 17px 20px; color: var(--paper); background: var(--ink); border: 0; cursor: pointer; text-align: left; transition: background 150ms ease; }
@@ -111,6 +161,9 @@ h1, h2, h3 { text-wrap: balance; }
 .speak-main i { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-content: center; color: var(--ink); background: var(--acid); border-radius: 50%; font-size: 11px; font-style: normal; }
 .audio-card > div { padding: 14px 0 14px 16px; }
 .audio-card > div b { display: block; font-size: 13px; line-height: 1.5; }
+.translation-line { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; }
+.romanization { display: inline-flex; align-items: center; gap: 6px; color: var(--orange); font-family: "DM Mono", monospace; font-size: 12px; font-weight: 500; }
+.romanization i { padding: 2px 4px; color: var(--paper); background: var(--orange); border-radius: 2px; font-size: 7px; font-style: normal; letter-spacing: .08em; }
 .audio-card > div small { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; line-height: 1.55; }
 .slow-button { align-self: center; margin: 0 14px; padding: 7px 9px; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 999px; cursor: pointer; font-family: "DM Mono", monospace; font-size: 9px; }
 .slow-button:hover, .slow-button:focus-visible, .slow-button.is-speaking { color: var(--paper); background: var(--orange); border-color: var(--orange); }
@@ -120,7 +173,12 @@ h1, h2, h3 { text-wrap: balance; }
 @keyframes speaking-pulse { to { box-shadow: 0 0 0 12px rgba(255,213,106,.16); } }
 
 @media (max-width: 900px) {
-  .daily-method { grid-template-columns: 1fr; gap: 34px; }
+  .daily-method, .system-path, .romanization-note { grid-template-columns: 1fr; gap: 34px; }
+  .alphabet-entry { grid-template-columns: 1fr; gap: 35px; }
+  .alphabet-card-grid, .consonant-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .schedule-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .phase-foundation-link { grid-template-columns: 1fr; align-items: start; }
+  .phase-foundation-link > a { justify-self: start; }
   .roadmap-grid, .outline-unit-grid { grid-template-columns: 1fr; }
   .outline-phase-head { grid-template-columns: 1fr; gap: 22px; }
 }
@@ -139,6 +197,17 @@ h1, h2, h3 { text-wrap: balance; }
   .outline-phase { padding-top: 70px; }
   .outline-unit { min-height: auto; padding: 24px; }
   .audio-grid { grid-template-columns: 1fr; margin-right: -16px; margin-left: -16px; }
+  .alphabet-entry { padding-top: 75px; padding-bottom: 80px; }
+  .alphabet-entry > a { min-height: 220px; padding: 24px; }
+  .alphabet-system { padding-top: 75px; padding-bottom: 80px; }
+  .alphabet-group-head { grid-template-columns: 1fr; gap: 10px; }
+  .alphabet-card-grid, .consonant-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .schedule-grid { grid-template-columns: 1fr; }
+  .schedule-grid article { min-height: 150px; }
+  .alphabet-card button { min-height: 120px; padding: 16px; }
+  .alphabet-card button span { font-size: 55px; }
+  .alphabet-card > div { min-height: 105px; padding: 13px; }
+  .romanization-note > a { text-align: left; }
   .speech-status { right: 12px; bottom: 12px; max-width: calc(100% - 24px); border-radius: 12px; }
 }
 

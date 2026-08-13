@@ -14,6 +14,7 @@ import edge_tts
 
 ROOT = Path(__file__).resolve().parent
 DATA = ROOT / "data" / "curriculum.json"
+ALPHABET_DATA = ROOT / "data" / "alphabet.json"
 DEFAULT_OUTPUT = ROOT / "audio"
 DEFAULT_VOICE = "ko-KR-SunHiNeural"
 
@@ -30,6 +31,10 @@ def collect_phrases(data: dict) -> list[str]:
             for section in lesson["sections"]:
                 for item in section.get("audio", []):
                     phrases.add(str(item.get("speak", item["text"])).strip())
+    alphabet = json.loads(ALPHABET_DATA.read_text(encoding="utf-8"))
+    for group in alphabet["vowel_groups"] + alphabet["consonant_groups"]:
+        for item in group["items"]:
+            phrases.add(str(item["speak"]).strip())
     return sorted(phrase for phrase in phrases if phrase)
 
 

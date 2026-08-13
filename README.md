@@ -14,6 +14,7 @@ Patrick 的個人學習知識庫，目前包含兩個主題：
 - `python/lessons/`：各單元的獨立課程頁
 - `korean/index.html`：零基礎韓文課程首頁
 - `korean/outline.html`：五階段、26 單元完整大綱
+- `korean/alphabet.html`：21 個母音、19 個子音與 RR 羅馬拼音系統課
 - `korean/phase-1.html`：第一階段大綱
 - `korean/units/`：第一階段 6 個單元首頁
 - `korean/lessons/`：第一階段 29 堂獨立課程頁
@@ -25,10 +26,11 @@ Patrick 的個人學習知識庫，目前包含兩個主題：
 - `python/build.py`：產生主題、階段、單元與課程頁
 - `python/check_site.py`：檢查頁面結構與站內連結
 - `korean/data/curriculum.json`：韓文完整大綱與第一階段課程內容
+- `korean/data/alphabet.json`：韓文字母的系統分組、名稱與 RR 資料
 - `korean/validate.py`：驗證大綱、單元、課程與發音資料
 - `korean/build.py`：產生韓文主題的所有靜態頁面
 - `korean/generate_audio.py`：一次產生網站內建的韓文 MP3 發音
-- `korean/audio/`：186 組內建韓文發音，不依賴裝置語音套件
+- `korean/audio/`：190 組內建韓文發音，不依賴裝置語音套件
 - `korean/check_site.py`：檢查韓文頁面結構、發音按鈕與站內連結
 
 修改內容後執行：

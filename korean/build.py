@@ -8,9 +8,12 @@ import hashlib
 import json
 from pathlib import Path
 
+from romanization import romanize
+
 
 ROOT = Path(__file__).resolve().parent
 DATA = ROOT / "data" / "curriculum.json"
+ALPHABET_DATA = ROOT / "data" / "alphabet.json"
 
 
 def esc(value: object) -> str:
@@ -19,6 +22,10 @@ def esc(value: object) -> str:
 
 def load_data() -> dict:
     return json.loads(DATA.read_text(encoding="utf-8"))
+
+
+def load_alphabet() -> dict:
+    return json.loads(ALPHABET_DATA.read_text(encoding="utf-8"))
 
 
 def audio_filename(text: str) -> str:
@@ -48,6 +55,7 @@ def header(prefix: str, active: str = "") -> str:
       <a class="brand" href="{prefix}../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot"></span><span>MASTER</span></a>
       <nav aria-label="韓文課程選單">
         <a class="{'is-active' if active == 'course' else ''}" href="{prefix}index.html">課程首頁</a>
+        <a class="{'is-active' if active == 'alphabet' else ''}" href="{prefix}alphabet.html">字母系統</a>
         <a class="{'is-active' if active == 'outline' else ''}" href="{prefix}outline.html">完整大綱</a>
         <a class="{'is-active' if active == 'phase1' else ''}" href="{prefix}phase-1.html">第一階段</a>
       </nav>
@@ -77,7 +85,7 @@ def shell(*, title: str, description: str, body: str, prefix: str, active: str =
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{prefix}styles.css" />
-    <script src="{prefix}script.js?v=audio-1" defer></script>
+    <script src="{prefix}script.js?v=alphabet-1" defer></script>
   </head>
   <body>
     {header(prefix, active)}
@@ -119,7 +127,7 @@ def build_home(data: dict) -> None:
           <h1>從看懂字母開始，<em>走進真實韓文。</em></h1>
           <p class="hero-intro">給完全零基礎的韓文學習路線。以閱讀街頭文字為主軸，搭配日常會話與基礎聽力；每天 15 分鐘，點擊每個韓文就能直接聽發音。</p>
           <div class="course-stats"><div><strong>5</strong><span>個階段</span></div><div><strong>26</strong><span>個單元</span></div><div><strong>29</strong><span>堂課已完成</span></div></div>
-          <div class="hero-actions"><a class="primary-button" href="phase-1.html">開始第一階段 <span>→</span></a><a class="text-link" href="outline.html">查看完整大綱</a></div>
+          <div class="hero-actions"><a class="primary-button" href="alphabet.html">先學完整字母表 <span>→</span></a><a class="text-link" href="phase-1.html">第一階段課程</a></div>
         </div>
         <div class="hangul-poster">
           <span class="poster-label">HANGUL / 한글 / 001</span>
@@ -133,12 +141,13 @@ def build_home(data: dict) -> None:
         <div><h2>每天只要<br />15 分鐘</h2><p>固定短時間，比偶爾一次學很多更容易把文字和聲音連起來。</p></div>
         <ol><li><span>03 MIN</span>複習昨天的聲音</li><li><span>07 MIN</span>閱讀今天的新觀念</li><li><span>03 MIN</span>點擊韓文、跟讀</li><li><span>02 MIN</span>自我測驗與街頭任務</li></ol>
       </section>
+      <section class="alphabet-entry"><div><p class="section-index">01 / SYSTEMATIC HANGUL</p><h2>先建立完整地圖，<br />再逐堂練習。</h2><p>把 21 個母音分成四組、19 個子音分成基本音與雙子音；每個字母都有 RR 羅馬拼音、字母名稱、發音與所在課程。</p></div><a href="alphabet.html"><span lang="ko">모음 21</span><span lang="ko">자음 19</span><b>打開系統字母課 →</b></a></section>
       <section class="phase-overview">
-        <div class="section-head"><div><p class="section-index">01 / ROADMAP</p><h2>五階段學習地圖</h2></div><p>第一階段已完成全部內容，其餘階段先保留清楚的大綱。之後會沿著同一條路線逐單元擴充。</p></div>
+        <div class="section-head"><div><p class="section-index">02 / ROADMAP</p><h2>五階段學習地圖</h2></div><p>第一階段已完成全部內容，其餘階段先保留清楚的大綱。之後會沿著同一條路線逐單元擴充。</p></div>
         <div class="roadmap-grid">{cards}</div>
       </section>
       <section class="course-method korean-method">
-        <div><p class="section-index">02 / LEARNING FOCUS</p><h2>看得懂，<br />也聽得到。</h2></div>
+        <div><p class="section-index">03 / LEARNING FOCUS</p><h2>看得懂，<br />也聽得到。</h2></div>
         <div class="method-grid"><article><span>50%</span><h3>閱讀</h3><p>從字母、招牌、菜單到交通資訊，建立實際可用的辨識力。</p></article><article><span>30%</span><h3>會話</h3><p>優先學會問候、點餐、購物、問路與需要幫助時的句子。</p></article><article><span>20%</span><h3>聽力</h3><p>每個韓文都可點擊播放，先抓關鍵字，再逐步適應自然語速。</p></article><article><span>—</span><h3>不學打字</h3><p>目前不安排韓文鍵盤，把時間集中在閱讀、理解、跟讀與聆聽。</p></article></div>
       </section>"""
     (ROOT / "index.html").write_text(shell(title="零基礎韓文", description="每天 15 分鐘，從韓文字母到街頭閱讀、日常會話與基礎聽力。", body=body, prefix="", active="course"), encoding="utf-8")
@@ -171,6 +180,35 @@ def build_outline(data: dict) -> None:
     (ROOT / "outline.html").write_text(shell(title="韓文完整課程大綱", description="零基礎韓文五階段、二十六單元完整學習地圖。", body=body, prefix="", active="outline"), encoding="utf-8")
 
 
+def alphabet_audio_button(letter: str, spoken: str, romanization: str, extra: str) -> str:
+    return f"""
+      <article class="alphabet-card">
+        <button type="button" lang="ko" data-speak="{esc(spoken)}" data-audio="audio/{audio_filename(spoken)}" data-rate="1" aria-label="播放韓文：{esc(letter)}"><span>{esc(letter)}</span><i>▶</i></button>
+        <div><b>{esc(romanization)}</b><small>{extra}</small></div>
+      </article>"""
+
+
+def build_alphabet_page(alphabet: dict) -> None:
+    vowel_groups = []
+    for index, group in enumerate(alphabet["vowel_groups"], 1):
+        cards = "".join(alphabet_audio_button(item["letter"], item["speak"], item["romanization"], f'{esc(item["memory"])} · {esc(item["example"])}') for item in group["items"])
+        vowel_groups.append(f'<section class="alphabet-group"><div class="alphabet-group-head"><span>V{index:02d}</span><div><h3>{esc(group["title"])}</h3><p>{esc(group["summary"])}</p></div></div><div class="alphabet-card-grid">{cards}</div></section>')
+
+    consonant_groups = []
+    for index, group in enumerate(alphabet["consonant_groups"], 1):
+        cards = "".join(alphabet_audio_button(item["letter"], item["speak"], item["onset"], f'{esc(item["name"])} · {esc(item["name_rr"])} · 收尾 {esc(item["final"])} · {esc(item["family"])}') for item in group["items"])
+        consonant_groups.append(f'<section class="alphabet-group"><div class="alphabet-group-head"><span>C{index:02d}</span><div><h3>{esc(group["title"])}</h3><p>{esc(group["summary"])}</p></div></div><div class="alphabet-card-grid consonant-grid">{cards}</div></section>')
+
+    body = f"""
+      <section class="simple-hero alphabet-hero"><a class="breadcrumb" href="index.html">KOREAN / SYSTEMATIC HANGUL</a><p class="eyebrow">21 VOWELS · 19 CONSONANTS · RR</p><h1>韓文字母系統課</h1><p class="hero-intro">先一次看懂完整字母地圖，再回到單元逐組練習。英文欄採韓國官方 Revised Romanization（RR）；它是記憶提示，真正發音仍以點擊音檔為準。</p><div class="hero-actions"><a class="primary-button" href="#vowels">先學 21 個母音 <span>↓</span></a><a class="text-link" href="#consonants">前往 19 個子音</a></div></section>
+      <section class="system-path"><p class="section-index">00 / FIXED ORDER</p><div><h2>固定四步驟，<br />不再零散背誦。</h2><p>每組都依同一個順序：辨認字形 → 看 RR 拼音 → 點擊聆聽 → 遮住答案自測。</p></div><ol><li><span>01</span>核心母音</li><li><span>02</span>延伸與複合母音</li><li><span>03</span>十四個基本子音</li><li><span>04</span>五個雙子音</li></ol></section>
+      <section class="alphabet-schedule"><div class="section-head"><div><p class="section-index">8 DAYS / 15 MIN</p><h2>八天字母記憶路線</h2></div><p>每天只處理一小組。前 5 分鐘看字形與 RR，中間 5 分鐘點擊跟讀，最後 5 分鐘遮住答案自測。</p></div><div class="schedule-grid"><article><span>DAY 01</span><b>核心母音</b><p>ㅏ ㅓ ㅗ ㅜ ㅡ ㅣ</p></article><article><span>DAY 02</span><b>Y 音母音</b><p>ㅑ ㅕ ㅛ ㅠ</p></article><article><span>DAY 03</span><b>AE／E 系列</b><p>ㅐ ㅔ ㅒ ㅖ</p></article><article><span>DAY 04</span><b>W／UI 母音</b><p>ㅘ ㅙ ㅚ ㅝ ㅞ ㅟ ㅢ</p></article><article><span>DAY 05</span><b>基本子音 A</b><p>ㄱ ㄴ ㄷ ㄹ ㅁ</p></article><article><span>DAY 06</span><b>基本子音 B</b><p>ㅂ ㅅ ㅇ ㅈ ㅊ</p></article><article><span>DAY 07</span><b>送氣子音</b><p>ㅋ ㅌ ㅍ ㅎ</p></article><article><span>DAY 08</span><b>雙子音＋總複習</b><p>ㄲ ㄸ ㅃ ㅆ ㅉ</p></article></div></section>
+      <section class="alphabet-system" id="vowels"><div class="section-head"><div><p class="section-index">01 / VOWELS</p><h2>21 個母音</h2></div><p>不是一口氣死背 21 個，而是按照「核心 → Y 音 → AE／E → W／UI」四組建立規律。</p></div>{''.join(vowel_groups)}</section>
+      <section class="alphabet-system consonant-system" id="consonants"><div class="section-head"><div><p class="section-index">02 / CONSONANTS</p><h2>19 個子音</h2></div><p>先記 14 個基本子音，再把 5 個雙子音接回各自家族；字首與收尾的 RR 可能不同。</p></div>{''.join(consonant_groups)}</section>
+      <section class="romanization-note"><p class="section-index">03 / HOW TO USE RR</p><div><h2>羅馬拼音是扶手，<br />不是終點。</h2><p>例如 ㅓ 寫作 <b>eo</b>、ㅡ 寫作 <b>eu</b>，不代表直接用英文念法拼讀。先看 RR 幫助記憶，再立刻點音檔，把視覺提示和真正韓語聲音綁在一起。字母數量與拼音依據<a href="https://www.korean.go.kr/front_eng/roman/roman_01.do" target="_blank" rel="noopener noreferrer">韓國國立國語院規則</a>。</p></div><a href="phase-1.html">進入第一階段逐堂練習 →</a></section>"""
+    (ROOT / "alphabet.html").write_text(shell(title="韓文字母系統課", description="系統化學習韓文 21 個母音、19 個子音、RR 羅馬拼音與點擊發音。", body=body, prefix="", active="alphabet"), encoding="utf-8")
+
+
 def unit_card(unit: dict) -> str:
     lessons = "".join(f'<li><a href="{lesson_href(unit, lesson)}"><span>{lesson["number"]:02d}</span>{esc(lesson["title"])}</a></li>' for lesson in unit["lessons"])
     return f"""
@@ -188,6 +226,7 @@ def build_phase_one(data: dict) -> None:
         <div><a class="breadcrumb" href="index.html">KOREAN / LEARNING MAP</a><p class="eyebrow">UNIT 01—06 · 29 LESSONS</p><h1>第一階段｜先把韓文讀出來</h1><p class="hero-intro">從音節方塊、基本母音與子音開始，學會 받침 和最常遇到的發音變化。每天 15 分鐘，依照編號完成一堂課。</p><div class="course-stats"><div><strong>6</strong><span>個單元</span></div><div><strong>29</strong><span>堂課</span></div><div><strong>15</strong><span>分鐘／天</span></div></div></div>
         <aside><span>PHASE 01</span><div class="phase-hangul" lang="ko">읽기</div><h2>看到陌生的簡單韓文時，能拆開音節、嘗試拼讀。</h2></aside>
       </section>
+      <section class="phase-foundation-link"><div><p class="section-index">00 / START HERE</p><h2>先看完整字母地圖</h2><p>用系統課掌握 21 個母音與 19 個子音的固定分組，再回來依單元練習，會比零散記憶更牢。</p></div><a href="alphabet.html">打開韓文字母系統課 <span>→</span></a></section>
       <section class="outline-section"><div class="section-head"><div><p class="section-index">01 / FULL OUTLINE</p><h2>第一階段課程</h2></div><p>每堂課先讀 3 個小段落，再點擊韓文聽正常速度與慢速，最後完成兩題自我檢查。</p></div><div class="unit-grid">{''.join(unit_card(unit) for unit in units)}</div></section>
       <section class="phase-next"><p>PHASE 01 GOAL</p><h2>完成後，你會看得出韓文的組成方式，並能拼讀常見招牌與地名。</h2><a href="{unit_href(units[0])}">從 UNIT 01 開始 <span>→</span></a></section>"""
     (ROOT / "phase-1.html").write_text(shell(title="第一階段｜先把韓文讀出來", description="韓文零基礎第一階段：字母、받침 與常見發音變化。", body=body, prefix="", active="phase1"), encoding="utf-8")
@@ -214,11 +253,12 @@ def render_audio(items: list[dict]) -> str:
     for item in items:
         text = item["text"]
         spoken = item.get("speak", text)
+        romanization = item.get("romanization") or romanize(spoken)
         note = f'<small>{esc(item["note"])}</small>' if item.get("note") else ""
         cards.append(f"""
         <article class="audio-card">
           <button class="speak-main" type="button" lang="ko" data-speak="{esc(spoken)}" data-audio="../../audio/{audio_filename(spoken)}" data-rate="1" aria-label="播放韓文：{esc(text)}"><span>{esc(text)}</span><i aria-hidden="true">▶</i></button>
-          <div><b>{esc(item.get('meaning', ''))}</b>{note}</div>
+          <div><span class="translation-line"><b>{esc(item.get('meaning', ''))}</b><span class="romanization"><i>RR</i>{esc(romanization)}</span></span>{note}</div>
           <button class="slow-button" type="button" data-speak="{esc(spoken)}" data-audio="../../audio/{audio_filename(spoken)}" data-rate="0.72" aria-label="慢速播放韓文：{esc(text)}">慢速 0.72×</button>
         </article>""")
     return f'<div class="audio-grid">{"".join(cards)}</div>'
@@ -267,8 +307,10 @@ def build_lesson_pages(data: dict) -> None:
 
 def main() -> None:
     data = load_data()
+    alphabet = load_alphabet()
     build_home(data)
     build_outline(data)
+    build_alphabet_page(alphabet)
     build_phase_one(data)
     build_unit_pages(data)
     build_lesson_pages(data)

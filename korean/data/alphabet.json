@@ -1,0 +1,82 @@
+{
+  "vowel_groups": [
+    {
+      "title": "第一組｜六個核心母音",
+      "summary": "先固定 ㅏ、ㅓ、ㅗ、ㅜ、ㅡ、ㅣ；它們是後續所有母音組合的基礎。",
+      "items": [
+        {"letter": "ㅏ", "speak": "아", "romanization": "a", "memory": "短線向右", "example": "가 ga"},
+        {"letter": "ㅓ", "speak": "어", "romanization": "eo", "memory": "短線向左", "example": "거 geo"},
+        {"letter": "ㅗ", "speak": "오", "romanization": "o", "memory": "短線向上", "example": "고 go"},
+        {"letter": "ㅜ", "speak": "우", "romanization": "u", "memory": "短線向下", "example": "구 gu"},
+        {"letter": "ㅡ", "speak": "으", "romanization": "eu", "memory": "水平長線", "example": "그 geu"},
+        {"letter": "ㅣ", "speak": "이", "romanization": "i", "memory": "垂直長線", "example": "기 gi"}
+      ]
+    },
+    {
+      "title": "第二組｜加一筆，變成 Y 音",
+      "summary": "在基本母音上多一條短線，前面就多出 y 的滑音。",
+      "items": [
+        {"letter": "ㅑ", "speak": "야", "romanization": "ya", "memory": "ㅏ 多一筆", "example": "야 ya"},
+        {"letter": "ㅕ", "speak": "여", "romanization": "yeo", "memory": "ㅓ 多一筆", "example": "여 yeo"},
+        {"letter": "ㅛ", "speak": "요", "romanization": "yo", "memory": "ㅗ 多一筆", "example": "요 yo"},
+        {"letter": "ㅠ", "speak": "유", "romanization": "yu", "memory": "ㅜ 多一筆", "example": "유 yu"}
+      ]
+    },
+    {
+      "title": "第三組｜AE／E 系列",
+      "summary": "四個字形要分清楚；現代口語裡有些聲音很接近，但拼字仍然不同。",
+      "items": [
+        {"letter": "ㅐ", "speak": "애", "romanization": "ae", "memory": "ㅏ + ㅣ", "example": "개 gae"},
+        {"letter": "ㅔ", "speak": "에", "romanization": "e", "memory": "ㅓ + ㅣ", "example": "게 ge"},
+        {"letter": "ㅒ", "speak": "얘", "romanization": "yae", "memory": "ㅑ + ㅣ", "example": "얘기 yaegi"},
+        {"letter": "ㅖ", "speak": "예", "romanization": "ye", "memory": "ㅕ + ㅣ", "example": "예매 yemae"}
+      ]
+    },
+    {
+      "title": "第四組｜W 與 UI 複合母音",
+      "summary": "先看左側是 ㅗ 還是 ㅜ，再接後面的直式母音；最後單獨記住 ㅢ。",
+      "items": [
+        {"letter": "ㅘ", "speak": "와", "romanization": "wa", "memory": "ㅗ + ㅏ", "example": "과 gwa"},
+        {"letter": "ㅙ", "speak": "왜", "romanization": "wae", "memory": "ㅗ + ㅐ", "example": "왜 wae"},
+        {"letter": "ㅚ", "speak": "외", "romanization": "oe", "memory": "ㅗ + ㅣ", "example": "외 oe"},
+        {"letter": "ㅝ", "speak": "워", "romanization": "wo", "memory": "ㅜ + ㅓ", "example": "원 won"},
+        {"letter": "ㅞ", "speak": "웨", "romanization": "we", "memory": "ㅜ + ㅔ", "example": "웨 we"},
+        {"letter": "ㅟ", "speak": "위", "romanization": "wi", "memory": "ㅜ + ㅣ", "example": "위 wi"},
+        {"letter": "ㅢ", "speak": "의", "romanization": "ui", "memory": "ㅡ + ㅣ", "example": "의 ui"}
+      ]
+    }
+  ],
+  "consonant_groups": [
+    {
+      "title": "第一組｜十四個基本子音",
+      "summary": "先依官方字母順序建立完整地圖，再用發音家族比較。",
+      "items": [
+        {"letter": "ㄱ", "name": "기역", "name_rr": "giyeok", "speak": "기역", "onset": "g", "final": "k", "family": "舌根音"},
+        {"letter": "ㄴ", "name": "니은", "name_rr": "nieun", "speak": "니은", "onset": "n", "final": "n", "family": "鼻音"},
+        {"letter": "ㄷ", "name": "디귿", "name_rr": "digeut", "speak": "디귿", "onset": "d", "final": "t", "family": "舌尖音"},
+        {"letter": "ㄹ", "name": "리을", "name_rr": "rieul", "speak": "리을", "onset": "r", "final": "l", "family": "流音"},
+        {"letter": "ㅁ", "name": "미음", "name_rr": "mieum", "speak": "미음", "onset": "m", "final": "m", "family": "鼻音"},
+        {"letter": "ㅂ", "name": "비읍", "name_rr": "bieup", "speak": "비읍", "onset": "b", "final": "p", "family": "雙唇音"},
+        {"letter": "ㅅ", "name": "시옷", "name_rr": "siot", "speak": "시옷", "onset": "s", "final": "t", "family": "摩擦音"},
+        {"letter": "ㅇ", "name": "이응", "name_rr": "ieung", "speak": "이응", "onset": "不發音", "final": "ng", "family": "喉音／鼻音"},
+        {"letter": "ㅈ", "name": "지읒", "name_rr": "jieut", "speak": "지읒", "onset": "j", "final": "t", "family": "塞擦音"},
+        {"letter": "ㅊ", "name": "치읓", "name_rr": "chieut", "speak": "치읓", "onset": "ch", "final": "t", "family": "送氣塞擦音"},
+        {"letter": "ㅋ", "name": "키읔", "name_rr": "kieuk", "speak": "키읔", "onset": "k", "final": "k", "family": "送氣舌根音"},
+        {"letter": "ㅌ", "name": "티읕", "name_rr": "tieut", "speak": "티읕", "onset": "t", "final": "t", "family": "送氣舌尖音"},
+        {"letter": "ㅍ", "name": "피읖", "name_rr": "pieup", "speak": "피읖", "onset": "p", "final": "p", "family": "送氣雙唇音"},
+        {"letter": "ㅎ", "name": "히읗", "name_rr": "hieut", "speak": "히읗", "onset": "h", "final": "t／影響鄰音", "family": "喉音"}
+      ]
+    },
+    {
+      "title": "第二組｜五個雙子音（緊音）",
+      "summary": "雙子音不是念兩次，而是把氣流收緊、聲音短而有力。",
+      "items": [
+        {"letter": "ㄲ", "name": "쌍기역", "name_rr": "ssanggiyeok", "speak": "쌍기역", "onset": "kk", "final": "k", "family": "ㄱ 家族"},
+        {"letter": "ㄸ", "name": "쌍디귿", "name_rr": "ssangdigeut", "speak": "쌍디귿", "onset": "tt", "final": "—", "family": "ㄷ 家族"},
+        {"letter": "ㅃ", "name": "쌍비읍", "name_rr": "ssangbieup", "speak": "쌍비읍", "onset": "pp", "final": "—", "family": "ㅂ 家族"},
+        {"letter": "ㅆ", "name": "쌍시옷", "name_rr": "ssangsiot", "speak": "쌍시옷", "onset": "ss", "final": "t", "family": "ㅅ 家族"},
+        {"letter": "ㅉ", "name": "쌍지읒", "name_rr": "ssangjieut", "speak": "쌍지읒", "onset": "jj", "final": "—", "family": "ㅈ 家族"}
+      ]
+    }
+  ]
+}
