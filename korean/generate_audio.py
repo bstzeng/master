@@ -59,6 +59,11 @@ async def create_audio(text: str, target: Path, voice: str, semaphore: asyncio.S
 
 async def generate(output: Path, voice: str, concurrency: int) -> None:
     data = json.loads(DATA.read_text(encoding="utf-8"))
+    units = list(data["units"])
+    for path in sorted((ROOT / "data").glob("phase-[2-5].json")):
+        units.extend(json.loads(path.read_text(encoding="utf-8")))
+    units.sort(key=lambda item: item["number"])
+    data["units"] = units
     phrases = collect_phrases(data)
     output.mkdir(parents=True, exist_ok=True)
     semaphore = asyncio.Semaphore(concurrency)

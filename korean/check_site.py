@@ -50,8 +50,11 @@ def main() -> None:
     pages = [SITE_ROOT / "index.html", *sorted(KOREAN_ROOT.rglob("*.html"))]
     lesson_pages = list((KOREAN_ROOT / "lessons").rglob("*.html"))
     audio_files = list((KOREAN_ROOT / "audio").glob("*.mp3"))
-    if len(lesson_pages) != 29:
-        errors.append(f"expected 29 lesson pages, found {len(lesson_pages)}")
+    if len(lesson_pages) != 143:
+        errors.append(f"expected 143 lesson pages, found {len(lesson_pages)}")
+    unit_pages = list((KOREAN_ROOT / "units").glob("*.html"))
+    if len(unit_pages) != 26:
+        errors.append(f"expected 26 unit pages, found {len(unit_pages)}")
     manifest_path = KOREAN_ROOT / "audio" / "manifest.json"
     if not manifest_path.exists():
         errors.append("missing audio manifest")
@@ -107,7 +110,7 @@ def main() -> None:
     if errors:
         print("\n".join(f"ERROR: {error}" for error in errors))
         raise SystemExit(1)
-    print(f"Checked {len(pages)} pages, including 29 lessons, with no broken local links.")
+    print(f"Checked {len(pages)} pages, including 143 lessons, with no broken local links.")
 
 
 if __name__ == "__main__":

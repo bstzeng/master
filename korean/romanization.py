@@ -30,6 +30,15 @@ LIAISON_RR = {
     "ㄱ": "g", "ㄲ": "kk", "ㄴ": "n", "ㄷ": "d", "ㄹ": "r", "ㅁ": "m",
     "ㅂ": "b", "ㅅ": "s", "ㅆ": "ss", "ㅈ": "j", "ㅊ": "ch", "ㅋ": "k", "ㅌ": "t", "ㅍ": "p", "ㅎ": "h",
 }
+COMPLEX_LIAISON = {
+    "ㄳ": ("k", "s"), "ㄵ": ("n", "j"), "ㄶ": ("n", ""),
+    "ㄺ": ("l", "g"), "ㄻ": ("l", "m"), "ㄼ": ("l", "b"),
+    "ㄽ": ("l", "s"), "ㄾ": ("l", "t"), "ㄿ": ("l", "p"),
+    "ㅀ": ("l", ""), "ㅄ": ("p", "s"),
+}
+VELAR_FINALS = {"ㄱ", "ㄲ", "ㄳ", "ㄺ", "ㅋ"}
+CORONAL_FINALS = {"ㄷ", "ㄵ", "ㄶ", "ㅅ", "ㅆ", "ㅈ", "ㅊ", "ㅌ", "ㅎ"}
+LABIAL_FINALS = {"ㅂ", "ㅄ", "ㄼ", "ㄿ", "ㅍ"}
 
 # The official system follows standard pronunciation for many sound changes.
 # These course words need explicit handling beyond a character-by-character pass.
@@ -72,12 +81,49 @@ def romanize_word(text: str) -> str:
             continue
         initial, vowel, final = parts
         previous_parts = decompose(text[index - 1]) if index else None
-        linked_initial = previous_parts[2] if previous_parts and initial == "ㅇ" and previous_parts[2] not in ("", "ㅇ") else ""
-        result.append(LIAISON_RR.get(linked_initial, INITIAL_RR[initial]))
+        previous_final = previous_parts[2] if previous_parts else ""
+        initial_rr = INITIAL_RR[initial]
+        if initial == "ㅇ" and previous_final:
+            if previous_final == "ㅎ":
+                initial_rr = ""
+            elif previous_final in COMPLEX_LIAISON:
+                initial_rr = COMPLEX_LIAISON[previous_final][1]
+            elif previous_final == "ㄷ" and vowel == "ㅣ":
+                initial_rr = "j"
+            elif previous_final == "ㅌ" and vowel == "ㅣ":
+                initial_rr = "ch"
+            elif previous_final in LIAISON_RR:
+                initial_rr = LIAISON_RR[previous_final]
+        elif initial == "ㄹ" and previous_final:
+            if previous_final in {"ㄴ", "ㄹ"}:
+                initial_rr = "l"
+            else:
+                initial_rr = "n"
+        elif initial == "ㄴ" and previous_final == "ㄹ":
+            initial_rr = "l"
+        result.append(initial_rr)
         result.append(VOWEL_RR[vowel])
         next_parts = decompose(text[index + 1]) if index + 1 < len(text) else None
-        if not (final and next_parts and next_parts[0] == "ㅇ" and final != "ㅇ" and final in LIAISON_RR):
-            result.append(FINAL_RR[final])
+        final_rr = FINAL_RR[final]
+        if final and next_parts:
+            next_initial, next_vowel, _ = next_parts
+            if next_initial == "ㅇ":
+                if final == "ㅎ" or final in LIAISON_RR or (final in {"ㄷ", "ㅌ"} and next_vowel == "ㅣ"):
+                    final_rr = ""
+                elif final in COMPLEX_LIAISON:
+                    final_rr = COMPLEX_LIAISON[final][0]
+            elif next_initial in {"ㄴ", "ㅁ", "ㄹ"}:
+                if final in VELAR_FINALS:
+                    final_rr = "ng"
+                elif final in CORONAL_FINALS:
+                    final_rr = "n"
+                elif final in LABIAL_FINALS:
+                    final_rr = "m"
+                elif final == "ㄴ" and next_initial == "ㄹ":
+                    final_rr = "l"
+                elif final == "ㄹ" and next_initial == "ㄴ":
+                    final_rr = "l"
+        result.append(final_rr)
     return "".join(result)
 
 

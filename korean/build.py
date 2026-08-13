@@ -21,7 +21,13 @@ def esc(value: object) -> str:
 
 
 def load_data() -> dict:
-    return json.loads(DATA.read_text(encoding="utf-8"))
+    data = json.loads(DATA.read_text(encoding="utf-8"))
+    units = list(data["units"])
+    for path in sorted((ROOT / "data").glob("phase-[2-5].json")):
+        units.extend(json.loads(path.read_text(encoding="utf-8")))
+    units.sort(key=lambda item: item["number"])
+    data["units"] = units
+    return data
 
 
 def load_alphabet() -> dict:
@@ -49,6 +55,10 @@ def lesson_href(unit: dict, lesson: dict, prefix: str = "") -> str:
     return f"{prefix}lessons/unit-{unit['number']:02d}/{lesson_filename(lesson)}"
 
 
+def phase_for_unit(data: dict, unit_number: int) -> int:
+    return next(item["phase"] for item in data["outline_units"] if item["number"] == unit_number)
+
+
 def header(prefix: str, active: str = "") -> str:
     return f"""
     <header class="site-header">
@@ -57,7 +67,6 @@ def header(prefix: str, active: str = "") -> str:
         <a class="{'is-active' if active == 'course' else ''}" href="{prefix}index.html">課程首頁</a>
         <a class="{'is-active' if active == 'alphabet' else ''}" href="{prefix}alphabet.html">字母系統</a>
         <a class="{'is-active' if active == 'outline' else ''}" href="{prefix}outline.html">完整大綱</a>
-        <a class="{'is-active' if active == 'phase1' else ''}" href="{prefix}phase-1.html">第一階段</a>
       </nav>
       <span class="header-note">KOREAN / 15 MIN A DAY</span>
     </header>"""
@@ -85,7 +94,7 @@ def shell(*, title: str, description: str, body: str, prefix: str, active: str =
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{prefix}styles.css" />
-    <script src="{prefix}script.js?v=alphabet-1" defer></script>
+    <script src="{prefix}script.js?v=complete-1" defer></script>
   </head>
   <body>
     {header(prefix, active)}
@@ -97,14 +106,19 @@ def shell(*, title: str, description: str, body: str, prefix: str, active: str =
     return "\n".join(line.rstrip() for line in document.splitlines()) + "\n"
 
 
-def phase_card(phase: dict, units: list[dict]) -> str:
-    phase_units = [unit for unit in units if unit["phase"] == phase["number"]]
-    ready = phase["number"] == 1
-    items = "".join(
-        f'<li><span>{unit["number"]:02d}</span><b>{esc(unit["title"])}</b></li>'
-        for unit in phase_units
-    )
-    action = '<a href="phase-1.html">開始第一階段 <span>→</span></a>' if ready else '<span class="coming-soon">後續製作</span>'
+def phase_card(phase: dict, outline_units: list[dict], built_units: list[dict]) -> str:
+    phase_units = [unit for unit in outline_units if unit["phase"] == phase["number"]]
+    built_by_number = {unit["number"]: unit for unit in built_units}
+    ready = all(unit["number"] in built_by_number for unit in phase_units)
+    item_rows = []
+    for unit in phase_units:
+        if unit["number"] in built_by_number:
+            title = f'<a href="{unit_href(built_by_number[unit["number"]])}">{esc(unit["title"])}</a>'
+        else:
+            title = esc(unit["title"])
+        item_rows.append(f'<li><span>{unit["number"]:02d}</span><b>{title}</b></li>')
+    items = "".join(item_rows)
+    action = f'<a href="phase-{phase["number"]}.html">查看第 {phase["number"]} 階段 <span>→</span></a>' if ready else '<span class="coming-soon">製作中</span>'
     return f"""
       <article class="roadmap-card {'is-ready' if ready else ''}">
         <div class="roadmap-card-head"><span>PHASE {phase['number']:02d}</span><span>{esc(phase['range'])}</span></div>
@@ -117,8 +131,9 @@ def phase_card(phase: dict, units: list[dict]) -> str:
 
 def build_home(data: dict) -> None:
     phases = data["phases"]
-    units = data["outline_units"]
-    cards = "".join(phase_card(phase, units) for phase in phases)
+    units = data["units"]
+    total_lessons = sum(len(unit["lessons"]) for unit in units)
+    cards = "".join(phase_card(phase, data["outline_units"], units) for phase in phases)
     body = f"""
       <section class="course-hero korean-hero">
         <div class="course-hero-copy">
@@ -126,7 +141,7 @@ def build_home(data: dict) -> None:
           <p class="eyebrow">ZERO TO DAILY KOREAN · 하루 15분</p>
           <h1>從看懂字母開始，<em>走進真實韓文。</em></h1>
           <p class="hero-intro">給完全零基礎的韓文學習路線。以閱讀街頭文字為主軸，搭配日常會話與基礎聽力；每天 15 分鐘，點擊每個韓文就能直接聽發音。</p>
-          <div class="course-stats"><div><strong>5</strong><span>個階段</span></div><div><strong>26</strong><span>個單元</span></div><div><strong>29</strong><span>堂課已完成</span></div></div>
+          <div class="course-stats"><div><strong>5</strong><span>個階段</span></div><div><strong>{len(units)}</strong><span>個單元</span></div><div><strong>{total_lessons}</strong><span>堂課已完成</span></div></div>
           <div class="hero-actions"><a class="primary-button" href="alphabet.html">先學完整字母表 <span>→</span></a><a class="text-link" href="phase-1.html">第一階段課程</a></div>
         </div>
         <div class="hangul-poster">
@@ -143,7 +158,7 @@ def build_home(data: dict) -> None:
       </section>
       <section class="alphabet-entry"><div><p class="section-index">01 / SYSTEMATIC HANGUL</p><h2>先建立完整地圖，<br />再逐堂練習。</h2><p>把 21 個母音分成四組、19 個子音分成基本音與雙子音；每個字母都有 RR 羅馬拼音、字母名稱、發音與所在課程。</p></div><a href="alphabet.html"><span lang="ko">모음 21</span><span lang="ko">자음 19</span><b>打開系統字母課 →</b></a></section>
       <section class="phase-overview">
-        <div class="section-head"><div><p class="section-index">02 / ROADMAP</p><h2>五階段學習地圖</h2></div><p>第一階段已完成全部內容，其餘階段先保留清楚的大綱。之後會沿著同一條路線逐單元擴充。</p></div>
+        <div class="section-head"><div><p class="section-index">02 / ROADMAP</p><h2>五階段學習地圖</h2></div><p>從讀出韓文、理解街頭文字，到建立句子、完成會話與整合閱讀聽力；依照階段與單元順序前進。</p></div>
         <div class="roadmap-grid">{cards}</div>
       </section>
       <section class="course-method korean-method">
@@ -155,13 +170,14 @@ def build_home(data: dict) -> None:
 
 def build_outline(data: dict) -> None:
     sections = []
+    built_by_number = {unit["number"]: unit for unit in data["units"]}
     for phase in data["phases"]:
         phase_units = [unit for unit in data["outline_units"] if unit["phase"] == phase["number"]]
         unit_cards = []
         for unit in phase_units:
             topics = "".join(f"<li>{esc(topic)}</li>" for topic in unit["topics"])
-            if phase["number"] == 1:
-                built = next(item for item in data["units"] if item["number"] == unit["number"])
+            if unit["number"] in built_by_number:
+                built = built_by_number[unit["number"]]
                 title = f'<a href="{unit_href(built)}">{esc(unit["title"])}</a>'
                 status = '<span class="status ready">已完成</span>'
             else:
@@ -174,7 +190,7 @@ def build_outline(data: dict) -> None:
           <div class="outline-unit-grid">{''.join(unit_cards)}</div>
         </section>""")
     body = f"""
-      <section class="simple-hero"><a class="breadcrumb" href="index.html">KOREAN / LEARNING MAP</a><p class="eyebrow">5 PHASES · 26 UNITS</p><h1>完整課程大綱</h1><p class="hero-intro">目標是能閱讀生活中常見的韓文、完成基本日常對話，並聽出句子裡的關鍵字。第一階段已完成，後續內容會依此順序製作。</p></section>
+      <section class="simple-hero"><a class="breadcrumb" href="index.html">KOREAN / LEARNING MAP</a><p class="eyebrow">5 PHASES · 26 UNITS</p><h1>完整課程大綱</h1><p class="hero-intro">目標是能閱讀生活中常見的韓文、完成基本日常對話，並聽出句子裡的關鍵字。全部五個階段都可依照編號進入學習。</p></section>
       <div class="full-outline">{''.join(sections)}</div>
       <section class="phase-next"><p>READY TO START?</p><h2>先把韓文字母讀出來，之後每一個路牌與菜單都會變得更清楚。</h2><a href="phase-1.html">開始第一階段 <span>→</span></a></section>"""
     (ROOT / "outline.html").write_text(shell(title="韓文完整課程大綱", description="零基礎韓文五階段、二十六單元完整學習地圖。", body=body, prefix="", active="outline"), encoding="utf-8")
@@ -219,33 +235,45 @@ def unit_card(unit: dict) -> str:
       </article>"""
 
 
-def build_phase_one(data: dict) -> None:
-    units = data["units"]
+def build_phase_page(data: dict, phase_number: int) -> None:
+    phase = next(item for item in data["phases"] if item["number"] == phase_number)
+    units = [unit for unit in data["units"] if phase_for_unit(data, unit["number"]) == phase_number]
+    total_lessons = sum(len(unit["lessons"]) for unit in units)
+    phase_words = {1: "읽기", 2: "표지판", 3: "문장", 4: "대화", 5: "통합"}
+    foundation = ""
+    if phase_number == 1:
+        foundation = '<section class="phase-foundation-link"><div><p class="section-index">00 / START HERE</p><h2>先看完整字母地圖</h2><p>用系統課掌握 21 個母音與 19 個子音的固定分組，再回來依單元練習，會比零散記憶更牢。</p></div><a href="alphabet.html">打開韓文字母系統課 <span>→</span></a></section>'
+    next_phase = phase_number + 1 if phase_number < 5 else None
+    if next_phase:
+        next_action = f'<a href="phase-{next_phase}.html">前往第 {next_phase} 階段 <span>→</span></a>'
+    else:
+        next_action = '<a href="outline.html">回到完整學習地圖 <span>→</span></a>'
     body = f"""
       <section class="phase-hero korean-phase-hero">
-        <div><a class="breadcrumb" href="index.html">KOREAN / LEARNING MAP</a><p class="eyebrow">UNIT 01—06 · 29 LESSONS</p><h1>第一階段｜先把韓文讀出來</h1><p class="hero-intro">從音節方塊、基本母音與子音開始，學會 받침 和最常遇到的發音變化。每天 15 分鐘，依照編號完成一堂課。</p><div class="course-stats"><div><strong>6</strong><span>個單元</span></div><div><strong>29</strong><span>堂課</span></div><div><strong>15</strong><span>分鐘／天</span></div></div></div>
-        <aside><span>PHASE 01</span><div class="phase-hangul" lang="ko">읽기</div><h2>看到陌生的簡單韓文時，能拆開音節、嘗試拼讀。</h2></aside>
+        <div><a class="breadcrumb" href="index.html">KOREAN / LEARNING MAP</a><p class="eyebrow">{esc(phase['range'])} · {total_lessons} LESSONS</p><h1>第 {phase_number} 階段｜{esc(phase['title'])}</h1><p class="hero-intro">{esc(phase['summary'])} 每天 15 分鐘，依照編號完成一堂課。</p><div class="course-stats"><div><strong>{len(units)}</strong><span>個單元</span></div><div><strong>{total_lessons}</strong><span>堂課</span></div><div><strong>15</strong><span>分鐘／天</span></div></div></div>
+        <aside><span>PHASE {phase_number:02d}</span><div class="phase-hangul" lang="ko">{phase_words[phase_number]}</div><h2>{esc(phase['goal'])}</h2></aside>
       </section>
-      <section class="phase-foundation-link"><div><p class="section-index">00 / START HERE</p><h2>先看完整字母地圖</h2><p>用系統課掌握 21 個母音與 19 個子音的固定分組，再回來依單元練習，會比零散記憶更牢。</p></div><a href="alphabet.html">打開韓文字母系統課 <span>→</span></a></section>
-      <section class="outline-section"><div class="section-head"><div><p class="section-index">01 / FULL OUTLINE</p><h2>第一階段課程</h2></div><p>每堂課先讀 3 個小段落，再點擊韓文聽正常速度與慢速，最後完成兩題自我檢查。</p></div><div class="unit-grid">{''.join(unit_card(unit) for unit in units)}</div></section>
-      <section class="phase-next"><p>PHASE 01 GOAL</p><h2>完成後，你會看得出韓文的組成方式，並能拼讀常見招牌與地名。</h2><a href="{unit_href(units[0])}">從 UNIT 01 開始 <span>→</span></a></section>"""
-    (ROOT / "phase-1.html").write_text(shell(title="第一階段｜先把韓文讀出來", description="韓文零基礎第一階段：字母、받침 與常見發音變化。", body=body, prefix="", active="phase1"), encoding="utf-8")
+      {foundation}
+      <section class="outline-section"><div class="section-head"><div><p class="section-index">01 / FULL OUTLINE</p><h2>第 {phase_number} 階段課程</h2></div><p>每堂課先讀 3 個小段落，再點擊韓文聽正常速度與慢速，最後完成兩題自我檢查。</p></div><div class="unit-grid">{''.join(unit_card(unit) for unit in units)}</div></section>
+      <section class="phase-next"><p>PHASE {phase_number:02d} GOAL</p><h2>{esc(phase['goal'])}</h2>{next_action}</section>"""
+    (ROOT / f"phase-{phase_number}.html").write_text(shell(title=f"第 {phase_number} 階段｜{phase['title']}", description=phase["summary"], body=body, prefix="", active="outline"), encoding="utf-8")
 
 
 def build_unit_pages(data: dict) -> None:
     for unit in data["units"]:
+        phase_number = phase_for_unit(data, unit["number"])
         lessons = "".join(f"""
         <article class="lesson-row"><span>{lesson['number']:02d}</span><div><p>ZERO BEGINNER · 15 MIN</p><h3>{esc(lesson['title'])}</h3><b>{esc(lesson['subtitle'])}</b></div><a href="../{lesson_href(unit, lesson)}">開始學習 →</a></article>""" for lesson in unit["lessons"])
         prereqs = "".join(f"<li>{esc(item)}</li>" for item in unit["prerequisites"])
         outcomes = "".join(f"<li>{esc(item)}</li>" for item in unit["outcomes"])
         body = f"""
-      <section class="unit-hero korean-unit-hero"><div><a class="breadcrumb" href="../phase-1.html">PHASE 01 / UNIT {unit['number']:02d}</a><p class="eyebrow" lang="ko">{esc(unit['korean_title'])}</p><h1>{esc(unit['title'])}</h1><p class="hero-intro">{esc(unit['summary'])}</p><a class="primary-button" href="#lessons">查看 {len(unit['lessons'])} 堂課 <span>↓</span></a></div><aside><span>UNIT</span><strong>{unit['number']:02d}</strong><p>{esc(unit['goal'])}</p></aside></section>
+      <section class="unit-hero korean-unit-hero"><div><a class="breadcrumb" href="../phase-{phase_number}.html">PHASE {phase_number:02d} / UNIT {unit['number']:02d}</a><p class="eyebrow" lang="ko">{esc(unit['korean_title'])}</p><h1>{esc(unit['title'])}</h1><p class="hero-intro">{esc(unit['summary'])}</p><a class="primary-button" href="#lessons">查看 {len(unit['lessons'])} 堂課 <span>↓</span></a></div><aside><span>UNIT</span><strong>{unit['number']:02d}</strong><p>{esc(unit['goal'])}</p></aside></section>
       <section class="unit-info"><div><p class="section-index">BEFORE YOU START</p><h2>開始之前</h2><ul>{prereqs}</ul></div><div><p class="section-index">AFTER THIS UNIT</p><h2>完成後你能夠</h2><ul>{outcomes}</ul></div></section>
       <section class="lesson-section" id="lessons"><div class="section-head"><div><p class="section-index">LESSON LIST</p><h2>本單元課程</h2></div><p>每堂約 15 分鐘。建議先聽正常速度，再用慢速確認聲音，最後不看提示自己讀一次。</p></div><div class="lesson-list">{lessons}</div></section>
-      <nav class="bottom-nav"><a href="../phase-1.html">← 返回第一階段</a><a href="../outline.html">完整學習地圖 ↑</a></nav>"""
+      <nav class="bottom-nav"><a href="../phase-{phase_number}.html">← 返回第 {phase_number} 階段</a><a href="../outline.html">完整學習地圖 ↑</a></nav>"""
         output = ROOT / "units" / unit_filename(unit)
         output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(shell(title=f"單元 {unit['number']:02d}｜{unit['title']}", description=unit["summary"], body=body, prefix="../", active="phase1"), encoding="utf-8")
+        output.write_text(shell(title=f"單元 {unit['number']:02d}｜{unit['title']}", description=unit["summary"], body=body, prefix="../", active="outline"), encoding="utf-8")
 
 
 def render_audio(items: list[dict]) -> str:
@@ -302,7 +330,7 @@ def build_lesson_pages(data: dict) -> None:
       </article>"""
         output = ROOT / "lessons" / f"unit-{unit['number']:02d}" / lesson_filename(lesson)
         output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(shell(title=f"{unit['number']:02d}.{lesson['number']:02d} {lesson['title']}", description=lesson["summary"], body=body, prefix="../../", active="phase1"), encoding="utf-8")
+        output.write_text(shell(title=f"{unit['number']:02d}.{lesson['number']:02d} {lesson['title']}", description=lesson["summary"], body=body, prefix="../../", active="outline"), encoding="utf-8")
 
 
 def main() -> None:
@@ -311,7 +339,8 @@ def main() -> None:
     build_home(data)
     build_outline(data)
     build_alphabet_page(alphabet)
-    build_phase_one(data)
+    for phase in data["phases"]:
+        build_phase_page(data, phase["number"])
     build_unit_pages(data)
     build_lesson_pages(data)
     lesson_count = sum(len(unit["lessons"]) for unit in data["units"])

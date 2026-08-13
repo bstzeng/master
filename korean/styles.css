@@ -69,6 +69,7 @@ h1, h2, h3 { text-wrap: balance; }
 .alphabet-entry > a b { display: flex; grid-column: 1 / -1; align-items: end; justify-content: space-between; border-top: 1px solid var(--dark-line); font-size: 14px; }
 
 .roadmap-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+.roadmap-card:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .roadmap-card { display: flex; min-height: 500px; padding: 34px; flex-direction: column; border: 1px solid var(--line); background: rgba(255,255,255,.22); }
 .roadmap-card.is-ready { color: var(--paper); background: var(--ink); }
 .roadmap-card-head { display: flex; justify-content: space-between; color: var(--orange); font-family: "DM Mono", monospace; font-size: 9px; letter-spacing: .08em; }
