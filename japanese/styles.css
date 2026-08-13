@@ -1,0 +1,53 @@
+@import url("../korean/styles.css");
+
+:root {
+  --ink: #612940;
+  --ink-soft: #79405a;
+  --paper: #f8f3ea;
+  --paper-deep: #eadfd7;
+  --acid: #f2c14e;
+  --orange: #d85d5d;
+  --mint: #84b6a3;
+  --muted: #75696c;
+  --line: rgba(97, 41, 64, .2);
+  --dark-line: rgba(248, 243, 234, .18);
+}
+
+body { font-family: "Noto Sans JP", "Noto Sans TC", sans-serif; }
+.course-hero h1, .section-head h2, .daily-method h2, .course-method h2,
+.phase-hero h1, .phase-hero aside h2, .unit-card h3, .simple-hero h1,
+.outline-phase h2, .outline-unit h3, .unit-hero h1, .unit-info h2,
+.lesson-row h3, .lesson-hero h1, .content-section h2, .takeaways h2,
+.practice h2, .quiz h2, .phase-next h2 { font-family: "Noto Serif JP", "Noto Sans TC", serif; }
+
+.japanese-hero { min-height: 720px; }
+.japanese-hero h1 em { color: var(--orange); font-style: normal; }
+.kana-poster { position: relative; display: flex; min-height: 550px; padding: 34px; flex-direction: column; overflow: hidden; color: var(--paper); background: var(--ink); }
+.kana-poster::before { position: absolute; inset: 0; content: ""; opacity: .35; background-image: radial-gradient(circle at 20% 10%, var(--mint) 0 1px, transparent 1px), linear-gradient(rgba(255,255,255,.065) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.065) 1px, transparent 1px); background-size: 18px 18px, 52px 52px, 52px 52px; }
+.kana-poster > p { position: relative; z-index: 1; margin: 22px 0 0; color: rgba(248,243,234,.58); font-family: "DM Mono", monospace; font-size: 9px; letter-spacing: .08em; }
+.poster-speak span, .poster-words, .phase-hangul, .alphabet-card button span, .speak-main span { font-family: "Noto Serif JP", serif; }
+.japanese-method article span { color: var(--orange); }
+.japanese-phase-hero aside { background: var(--ink); }
+.japanese-unit-title { margin: 32px 0 -25px; color: var(--orange) !important; font-family: "Noto Serif JP", serif; font-size: 18px !important; }
+.japanese-unit-hero aside strong { color: var(--acid); }
+.kana-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.special-patterns { padding: 100px max(28px, calc((100% - 1240px) / 2)); background: var(--paper-deep); }
+.pattern-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.pattern-grid article { min-height: 210px; padding: 24px; border: 1px solid var(--line); background: var(--paper); }
+.pattern-grid span { color: var(--orange); font-family: "DM Mono", monospace; font-size: 9px; }
+.pattern-grid h3 { margin: 48px 0 14px; font-family: "Noto Serif JP", serif; font-size: 24px; }
+.pattern-grid p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.8; }
+.romanization i { background: var(--orange); }
+
+@media (max-width: 900px) {
+  .kana-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .pattern-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 580px) {
+  .japanese-hero { min-height: auto; }
+  .kana-poster { min-height: 430px; margin-bottom: 45px; padding: 24px; }
+  .kana-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pattern-grid { grid-template-columns: 1fr; }
+  .pattern-grid article { min-height: 160px; }
+}

@@ -51,6 +51,9 @@ h1 em { color: var(--orange); font-style: italic; }
 .topic-card.korean-featured { background: #173f5f; border-color: #173f5f; }
 .topic-card.korean-featured .topic-label { color: #ffd56a; }
 .topic-card.korean-featured:hover .topic-arrow { background: #ffd56a; }
+.topic-card.japanese-featured { grid-column: 1 / -1; background: #612940; border-color: #612940; }
+.topic-card.japanese-featured .topic-label { color: #f2c14e; }
+.topic-card.japanese-featured:hover .topic-arrow { color: #612940; background: #f2c14e; }
 .topic-number { font-family: "Playfair Display", serif; font-size: 42px; }
 .topic-content { align-self: end; }
 .topic-label { margin-bottom: 12px; color: var(--orange); }
@@ -111,6 +114,7 @@ footer > span:last-child { justify-self: end; }
   .section-head, .purpose, .topic-hero, .route { grid-template-columns: 1fr; }
   .topic-grid { grid-template-columns: 1fr; }
   .topic-card.placeholder { grid-column: auto; }
+  .topic-card.japanese-featured { grid-column: auto; }
   .topic-card.placeholder { min-height: 300px; }
   .purpose { gap: 42px; }
   .topic-hero-copy { padding-left: 0; }

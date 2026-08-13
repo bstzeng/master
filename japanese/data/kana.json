@@ -1,0 +1,73 @@
+{
+  "hiragana_groups": [
+    {"title": "あ行｜五個核心母音", "summary": "所有假名都以這五個母音為座標。", "items": [
+      {"letter": "あ", "reading": "あ", "romaji": "a", "example": "あさ｜早上"}, {"letter": "い", "reading": "い", "romaji": "i", "example": "いえ｜家"}, {"letter": "う", "reading": "う", "romaji": "u", "example": "うえ｜上方"}, {"letter": "え", "reading": "え", "romaji": "e", "example": "えき｜車站"}, {"letter": "お", "reading": "お", "romaji": "o", "example": "おと｜聲音"}
+    ]},
+    {"title": "か行", "summary": "在五個母音前加上 k 類聲音。", "items": [
+      {"letter": "か", "reading": "か", "romaji": "ka", "example": "かさ｜雨傘"}, {"letter": "き", "reading": "き", "romaji": "ki", "example": "きた｜北方"}, {"letter": "く", "reading": "く", "romaji": "ku", "example": "くち｜嘴巴"}, {"letter": "け", "reading": "け", "romaji": "ke", "example": "けさ｜今天早上"}, {"letter": "こ", "reading": "こ", "romaji": "ko", "example": "ここ｜這裡"}
+    ]},
+    {"title": "さ行", "summary": "注意 し 使用 Hepburn 拼音 shi。", "items": [
+      {"letter": "さ", "reading": "さ", "romaji": "sa", "example": "さかな｜魚"}, {"letter": "し", "reading": "し", "romaji": "shi", "example": "した｜下方"}, {"letter": "す", "reading": "す", "romaji": "su", "example": "すし｜壽司"}, {"letter": "せ", "reading": "せ", "romaji": "se", "example": "せき｜座位"}, {"letter": "そ", "reading": "そ", "romaji": "so", "example": "そと｜外面"}
+    ]},
+    {"title": "た行", "summary": "ち 是 chi、つ 是 tsu，是重要例外。", "items": [
+      {"letter": "た", "reading": "た", "romaji": "ta", "example": "たこ｜章魚"}, {"letter": "ち", "reading": "ち", "romaji": "chi", "example": "ちか｜地下"}, {"letter": "つ", "reading": "つ", "romaji": "tsu", "example": "つき｜月亮"}, {"letter": "て", "reading": "て", "romaji": "te", "example": "て｜手"}, {"letter": "と", "reading": "と", "romaji": "to", "example": "とり｜鳥"}
+    ]},
+    {"title": "な行", "summary": "聲音規律，依 a–o 順序記憶。", "items": [
+      {"letter": "な", "reading": "な", "romaji": "na", "example": "なか｜裡面"}, {"letter": "に", "reading": "に", "romaji": "ni", "example": "にく｜肉"}, {"letter": "ぬ", "reading": "ぬ", "romaji": "nu", "example": "ぬの｜布"}, {"letter": "ね", "reading": "ね", "romaji": "ne", "example": "ねこ｜貓"}, {"letter": "の", "reading": "の", "romaji": "no", "example": "のみもの｜飲料"}
+    ]},
+    {"title": "は行", "summary": "ふ 寫作 fu；は作為助詞時讀 wa。", "items": [
+      {"letter": "は", "reading": "は", "romaji": "ha", "example": "はし｜筷子"}, {"letter": "ひ", "reading": "ひ", "romaji": "hi", "example": "ひだり｜左邊"}, {"letter": "ふ", "reading": "ふ", "romaji": "fu", "example": "ふゆ｜冬天"}, {"letter": "へ", "reading": "へ", "romaji": "he", "example": "へや｜房間"}, {"letter": "ほ", "reading": "ほ", "romaji": "ho", "example": "ほん｜書"}
+    ]},
+    {"title": "ま行", "summary": "以 m 類聲音配合五個母音。", "items": [
+      {"letter": "ま", "reading": "ま", "romaji": "ma", "example": "まえ｜前面"}, {"letter": "み", "reading": "み", "romaji": "mi", "example": "みせ｜商店"}, {"letter": "む", "reading": "む", "romaji": "mu", "example": "むこう｜對面"}, {"letter": "め", "reading": "め", "romaji": "me", "example": "め｜眼睛"}, {"letter": "も", "reading": "も", "romaji": "mo", "example": "もの｜東西"}
+    ]},
+    {"title": "や行", "summary": "現代日文只保留 や、ゆ、よ。", "items": [
+      {"letter": "や", "reading": "や", "romaji": "ya", "example": "やさい｜蔬菜"}, {"letter": "ゆ", "reading": "ゆ", "romaji": "yu", "example": "ゆき｜雪"}, {"letter": "よ", "reading": "よ", "romaji": "yo", "example": "よやく｜預約"}
+    ]},
+    {"title": "ら行", "summary": "舌尖輕觸，並非英文的強 r 音。", "items": [
+      {"letter": "ら", "reading": "ら", "romaji": "ra", "example": "らいねん｜明年"}, {"letter": "り", "reading": "り", "romaji": "ri", "example": "りんご｜蘋果"}, {"letter": "る", "reading": "る", "romaji": "ru", "example": "るす｜不在家"}, {"letter": "れ", "reading": "れ", "romaji": "re", "example": "れきし｜歷史"}, {"letter": "ろ", "reading": "ろ", "romaji": "ro", "example": "ろく｜六"}
+    ]},
+    {"title": "わ行與ん", "summary": "を 通常作助詞讀 o；ん 是獨立的一拍。", "items": [
+      {"letter": "わ", "reading": "わ", "romaji": "wa", "example": "わたし｜我"}, {"letter": "を", "reading": "を", "romaji": "o", "example": "みずを｜水（受詞）"}, {"letter": "ん", "reading": "ん", "romaji": "n", "example": "ほん｜書"}
+    ]}
+  ],
+  "katakana_groups": [
+    {"title": "ア行", "summary": "五個母音與平假名聲音相同。", "items": [
+      {"letter": "ア", "reading": "ア", "romaji": "a", "example": "アイス｜冰淇淋"}, {"letter": "イ", "reading": "イ", "romaji": "i", "example": "イタリア｜義大利"}, {"letter": "ウ", "reading": "ウ", "romaji": "u", "example": "ウール｜羊毛"}, {"letter": "エ", "reading": "エ", "romaji": "e", "example": "エリア｜區域"}, {"letter": "オ", "reading": "オ", "romaji": "o", "example": "オレンジ｜柳橙"}
+    ]},
+    {"title": "カ行", "summary": "常見於咖啡、相機等外來語。", "items": [
+      {"letter": "カ", "reading": "カ", "romaji": "ka", "example": "カメラ｜相機"}, {"letter": "キ", "reading": "キ", "romaji": "ki", "example": "キロ｜公斤／公里"}, {"letter": "ク", "reading": "ク", "romaji": "ku", "example": "クラス｜班級"}, {"letter": "ケ", "reading": "ケ", "romaji": "ke", "example": "ケーキ｜蛋糕"}, {"letter": "コ", "reading": "コ", "romaji": "ko", "example": "コーヒー｜咖啡"}
+    ]},
+    {"title": "サ行", "summary": "シ 是 shi，外觀容易與ツ混淆。", "items": [
+      {"letter": "サ", "reading": "サ", "romaji": "sa", "example": "サイズ｜尺寸"}, {"letter": "シ", "reading": "シ", "romaji": "shi", "example": "シャツ｜襯衫"}, {"letter": "ス", "reading": "ス", "romaji": "su", "example": "スープ｜湯"}, {"letter": "セ", "reading": "セ", "romaji": "se", "example": "セール｜特價"}, {"letter": "ソ", "reading": "ソ", "romaji": "so", "example": "ソース｜醬汁"}
+    ]},
+    {"title": "タ行", "summary": "チ 是 chi、ツ 是 tsu。", "items": [
+      {"letter": "タ", "reading": "タ", "romaji": "ta", "example": "タクシー｜計程車"}, {"letter": "チ", "reading": "チ", "romaji": "chi", "example": "チーズ｜起司"}, {"letter": "ツ", "reading": "ツ", "romaji": "tsu", "example": "ツアー｜旅行團"}, {"letter": "テ", "reading": "テ", "romaji": "te", "example": "テスト｜測驗"}, {"letter": "ト", "reading": "ト", "romaji": "to", "example": "トイレ｜廁所"}
+    ]},
+    {"title": "ナ行", "summary": "常見於刀、堅果、筆記等詞。", "items": [
+      {"letter": "ナ", "reading": "ナ", "romaji": "na", "example": "ナイフ｜刀子"}, {"letter": "ニ", "reading": "ニ", "romaji": "ni", "example": "ニュース｜新聞"}, {"letter": "ヌ", "reading": "ヌ", "romaji": "nu", "example": "ヌードル｜麵"}, {"letter": "ネ", "reading": "ネ", "romaji": "ne", "example": "ネクタイ｜領帶"}, {"letter": "ノ", "reading": "ノ", "romaji": "no", "example": "ノート｜筆記本"}
+    ]},
+    {"title": "ハ行", "summary": "フ 是 fu，加入圈點後會成為パ行。", "items": [
+      {"letter": "ハ", "reading": "ハ", "romaji": "ha", "example": "ハンバーガー｜漢堡"}, {"letter": "ヒ", "reading": "ヒ", "romaji": "hi", "example": "ヒント｜提示"}, {"letter": "フ", "reading": "フ", "romaji": "fu", "example": "ホテル｜飯店"}, {"letter": "ヘ", "reading": "ヘ", "romaji": "he", "example": "ヘルプ｜幫助"}, {"letter": "ホ", "reading": "ホ", "romaji": "ho", "example": "ホーム｜月台"}
+    ]},
+    {"title": "マ行", "summary": "規律的 m 類聲音。", "items": [
+      {"letter": "マ", "reading": "マ", "romaji": "ma", "example": "マップ｜地圖"}, {"letter": "ミ", "reading": "ミ", "romaji": "mi", "example": "ミルク｜牛奶"}, {"letter": "ム", "reading": "ム", "romaji": "mu", "example": "ルーム｜房間"}, {"letter": "メ", "reading": "メ", "romaji": "me", "example": "メニュー｜菜單"}, {"letter": "モ", "reading": "モ", "romaji": "mo", "example": "モデル｜模特兒"}
+    ]},
+    {"title": "ヤ行", "summary": "只保留 ヤ、ユ、ヨ。", "items": [
+      {"letter": "ヤ", "reading": "ヤ", "romaji": "ya", "example": "タイヤ｜輪胎"}, {"letter": "ユ", "reading": "ユ", "romaji": "yu", "example": "ユーザー｜使用者"}, {"letter": "ヨ", "reading": "ヨ", "romaji": "yo", "example": "ヨーグルト｜優格"}
+    ]},
+    {"title": "ラ行", "summary": "留意 ラ、リ、ル、レ、ロ的筆畫差異。", "items": [
+      {"letter": "ラ", "reading": "ラ", "romaji": "ra", "example": "ラーメン｜拉麵"}, {"letter": "リ", "reading": "リ", "romaji": "ri", "example": "リモコン｜遙控器"}, {"letter": "ル", "reading": "ル", "romaji": "ru", "example": "ルール｜規則"}, {"letter": "レ", "reading": "レ", "romaji": "re", "example": "レジ｜收銀台"}, {"letter": "ロ", "reading": "ロ", "romaji": "ro", "example": "ロッカー｜置物櫃"}
+    ]},
+    {"title": "ワ行與ン", "summary": "現代日文使用 ワ、ヲ、ン；ヲ多見於特殊表記。", "items": [
+      {"letter": "ワ", "reading": "ワ", "romaji": "wa", "example": "ワイン｜葡萄酒"}, {"letter": "ヲ", "reading": "ヲ", "romaji": "o", "example": "助詞を的片假名形"}, {"letter": "ン", "reading": "ン", "romaji": "n", "example": "パン｜麵包"}
+    ]}
+  ],
+  "special_patterns": [
+    {"title": "濁音", "items": ["が・ざ・だ・ば", "ガ・ザ・ダ・バ"]},
+    {"title": "半濁音", "items": ["ぱ・ぴ・ぷ・ぺ・ぽ", "パ・ピ・プ・ペ・ポ"]},
+    {"title": "拗音", "items": ["きゃ・しゅ・ちょ", "キャ・シュ・チョ"]},
+    {"title": "促音", "items": ["きって", "チケット"]},
+    {"title": "長音", "items": ["こうこう", "コーヒー"]}
+  ]
+}
