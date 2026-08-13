@@ -1,0 +1,148 @@
+@import url("../python/styles.css");
+
+:root {
+  --ink: #173f5f;
+  --ink-soft: #28526f;
+  --paper: #f7f2e8;
+  --paper-deep: #e9e1d3;
+  --acid: #ffd56a;
+  --orange: #eb6f58;
+  --mint: #7bc6b8;
+  --muted: #65727a;
+  --line: rgba(23, 63, 95, 0.2);
+  --dark-line: rgba(247, 242, 232, 0.18);
+}
+
+body { font-family: "Noto Sans KR", "Noto Sans TC", sans-serif; }
+h1, h2, h3 { text-wrap: balance; }
+.site-header { border-color: var(--line); }
+.brand-dot { background: var(--orange); box-shadow: 12px 0 0 var(--acid); }
+.course-hero h1,
+.section-head h2,
+.daily-method h2,
+.course-method h2,
+.phase-hero h1,
+.phase-hero aside h2,
+.unit-card h3,
+.simple-hero h1,
+.outline-phase h2,
+.outline-unit h3,
+.unit-hero h1,
+.unit-info h2,
+.lesson-row h3,
+.lesson-hero h1,
+.content-section h2,
+.takeaways h2,
+.practice h2,
+.quiz h2,
+.phase-next h2 { font-family: "Gowun Batang", "Noto Sans TC", serif; }
+
+.korean-hero { min-height: 720px; }
+.korean-hero h1 em { color: var(--orange); font-style: normal; }
+.hero-actions { display: flex; align-items: center; gap: 24px; }
+.text-link { padding: 9px 0; border-bottom: 1px solid var(--ink); font-size: 13px; font-weight: 700; }
+
+.hangul-poster { position: relative; display: flex; min-height: 550px; padding: 34px; flex-direction: column; overflow: hidden; color: var(--paper); background: var(--ink); }
+.hangul-poster::before { position: absolute; inset: 0; content: ""; opacity: .35; background-image: radial-gradient(circle at 20% 10%, var(--mint) 0 1px, transparent 1px), linear-gradient(rgba(255,255,255,.065) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.065) 1px, transparent 1px); background-size: 18px 18px, 52px 52px, 52px 52px; }
+.poster-label { position: relative; z-index: 1; font-family: "DM Mono", monospace; font-size: 10px; letter-spacing: .12em; }
+.poster-speak { position: relative; z-index: 1; display: grid; width: 300px; height: 300px; margin: auto; place-content: center; color: var(--ink); background: var(--acid); border: 0; border-radius: 50%; cursor: pointer; transition: transform 180ms ease, background 180ms ease; }
+.poster-speak:hover, .poster-speak:focus-visible { background: #ffe49a; transform: scale(1.03); }
+.poster-speak.is-speaking { animation: speaking-pulse 900ms ease-in-out infinite alternate; }
+.poster-speak span { font-family: "Gowun Batang", serif; font-size: 150px; font-weight: 700; line-height: .9; }
+.poster-speak small { margin-top: 20px; font-size: 12px; font-weight: 700; }
+.poster-words { position: relative; z-index: 1; display: flex; justify-content: space-between; padding-top: 20px; border-top: 1px solid var(--dark-line); font-family: "Gowun Batang", serif; font-size: 18px; }
+.hangul-poster > p { position: relative; z-index: 1; margin: 22px 0 0; color: rgba(247,242,232,.58); font-family: "DM Mono", monospace; font-size: 9px; letter-spacing: .08em; }
+
+.daily-method { display: grid; grid-template-columns: .35fr 1fr .9fr; gap: 65px; padding: 100px max(28px, calc((100% - 1240px) / 2)); color: var(--paper); background: var(--ink); }
+.daily-method h2 { margin-bottom: 24px; color: var(--acid); font-size: clamp(38px, 4vw, 56px); line-height: 1.08; }
+.daily-method > div > p { color: rgba(247,242,232,.66); font-size: 15px; line-height: 1.9; }
+.daily-method ol { margin: 0; padding: 0; list-style: none; }
+.daily-method li { display: grid; grid-template-columns: 72px 1fr; gap: 15px; padding: 16px 0; border-bottom: 1px solid var(--dark-line); font-size: 14px; font-weight: 600; }
+.daily-method li span { color: var(--orange); font-family: "DM Mono", monospace; font-size: 9px; }
+
+.roadmap-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+.roadmap-card { display: flex; min-height: 500px; padding: 34px; flex-direction: column; border: 1px solid var(--line); background: rgba(255,255,255,.22); }
+.roadmap-card.is-ready { color: var(--paper); background: var(--ink); }
+.roadmap-card-head { display: flex; justify-content: space-between; color: var(--orange); font-family: "DM Mono", monospace; font-size: 9px; letter-spacing: .08em; }
+.roadmap-card h3 { margin: 42px 0 14px; font-family: "Gowun Batang", serif; font-size: 38px; line-height: 1.2; }
+.roadmap-card > p { color: var(--muted); font-size: 14px; line-height: 1.8; }
+.roadmap-card.is-ready > p { color: rgba(247,242,232,.66); }
+.roadmap-card ol { margin: 22px 0 30px; padding: 0; list-style: none; }
+.roadmap-card li { display: flex; gap: 14px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.roadmap-card.is-ready li { border-color: var(--dark-line); }
+.roadmap-card li:last-child { border-bottom: 1px solid var(--line); }
+.roadmap-card.is-ready li:last-child { border-color: var(--dark-line); }
+.roadmap-card li span { color: var(--orange); font-family: "DM Mono", monospace; font-size: 9px; }
+.roadmap-card > a, .coming-soon { display: flex; justify-content: space-between; margin-top: auto; padding-top: 16px; border-top: 1px solid currentColor; font-size: 13px; font-weight: 700; }
+.coming-soon { color: var(--muted); }
+.korean-method article span { color: var(--orange); }
+
+.simple-hero { width: min(1240px, calc(100% - 56px)); margin: 0 auto; padding: 95px 0 85px; border-bottom: 1px solid var(--line); }
+.simple-hero .breadcrumb { margin-bottom: 62px; }
+.simple-hero h1 { margin-bottom: 28px; font-size: clamp(58px, 7vw, 98px); line-height: 1; letter-spacing: -.05em; }
+.full-outline { padding: 0 max(28px, calc((100% - 1240px) / 2)) 100px; }
+.outline-phase { padding: 95px 0 15px; }
+.outline-phase-head { display: grid; grid-template-columns: 1fr .7fr; align-items: end; gap: 70px; margin-bottom: 40px; }
+.outline-phase-head h2 { margin: 0; font-size: clamp(40px, 4.4vw, 62px); line-height: 1.05; }
+.outline-phase-head > p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.8; }
+.outline-phase-head > p b { display: block; margin-bottom: 8px; color: var(--orange); font-family: "DM Mono", monospace; font-size: 9px; letter-spacing: .1em; }
+.outline-unit-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.outline-unit { min-height: 320px; padding: 28px; border: 1px solid var(--line); }
+.outline-unit > div { display: flex; justify-content: space-between; color: var(--orange); font-family: "DM Mono", monospace; font-size: 9px; letter-spacing: .08em; }
+.outline-unit h3 { margin: 30px 0 12px; font-size: 29px; line-height: 1.25; }
+.outline-unit h3 a { border-bottom: 1px solid transparent; }
+.outline-unit h3 a:hover { color: var(--orange); border-color: var(--orange); }
+.outline-unit > p { color: var(--muted); font-size: 13px; line-height: 1.75; }
+.outline-unit ul { display: flex; margin: 24px 0 0; padding: 0; flex-wrap: wrap; gap: 7px; list-style: none; }
+.outline-unit li { padding: 5px 8px; border: 1px solid var(--line); border-radius: 999px; font-size: 10px; }
+.status { color: var(--muted); }
+.status.ready { color: #1e7b6a; }
+
+.korean-phase-hero aside { background: var(--ink); }
+.phase-hangul { margin: auto 0; color: var(--acid); font-family: "Gowun Batang", serif; font-size: clamp(86px, 10vw, 150px); line-height: 1; }
+.korean-unit-title { margin: 32px 0 -25px; color: var(--orange) !important; font-family: "Gowun Batang", serif; font-size: 18px !important; }
+.korean-unit-hero aside strong { color: var(--acid); }
+
+.audio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 30px 0; }
+.audio-card { display: grid; grid-template-columns: 1fr auto; overflow: hidden; border: 1px solid var(--line); background: rgba(255,255,255,.22); }
+.speak-main { display: flex; grid-column: 1 / -1; align-items: center; justify-content: space-between; min-height: 84px; padding: 17px 20px; color: var(--paper); background: var(--ink); border: 0; cursor: pointer; text-align: left; transition: background 150ms ease; }
+.speak-main:hover, .speak-main:focus-visible, .speak-main.is-speaking { background: var(--orange); }
+.speak-main span { color: inherit; font-family: "Gowun Batang", serif; font-size: clamp(29px, 3vw, 39px); font-weight: 700; line-height: 1.2; }
+.speak-main i { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-content: center; color: var(--ink); background: var(--acid); border-radius: 50%; font-size: 11px; font-style: normal; }
+.audio-card > div { padding: 14px 0 14px 16px; }
+.audio-card > div b { display: block; font-size: 13px; line-height: 1.5; }
+.audio-card > div small { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; line-height: 1.55; }
+.slow-button { align-self: center; margin: 0 14px; padding: 7px 9px; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 999px; cursor: pointer; font-family: "DM Mono", monospace; font-size: 9px; }
+.slow-button:hover, .slow-button:focus-visible, .slow-button.is-speaking { color: var(--paper); background: var(--orange); border-color: var(--orange); }
+.speech-status { position: fixed; z-index: 50; right: 20px; bottom: 20px; max-width: min(360px, calc(100% - 40px)); padding: 11px 15px; color: var(--paper); background: var(--ink); border-radius: 999px; box-shadow: 0 10px 30px rgba(23,63,95,.2); font-size: 12px; opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity 180ms ease, transform 180ms ease; }
+.speech-status.is-visible { opacity: 1; transform: translateY(0); }
+
+@keyframes speaking-pulse { to { box-shadow: 0 0 0 12px rgba(255,213,106,.16); } }
+
+@media (max-width: 900px) {
+  .daily-method { grid-template-columns: 1fr; gap: 34px; }
+  .roadmap-grid, .outline-unit-grid { grid-template-columns: 1fr; }
+  .outline-phase-head { grid-template-columns: 1fr; gap: 22px; }
+}
+
+@media (max-width: 580px) {
+  .korean-hero { min-height: auto; }
+  .hero-actions { align-items: flex-start; flex-direction: column; }
+  .hangul-poster { min-height: 430px; margin-bottom: 45px; padding: 24px; }
+  .poster-speak { width: 245px; height: 245px; }
+  .poster-speak span { font-size: 120px; }
+  .daily-method { padding-top: 75px; padding-bottom: 80px; }
+  .roadmap-card { min-height: auto; padding: 26px; }
+  .roadmap-card h3 { font-size: 34px; }
+  .simple-hero { width: min(100% - 32px, 1240px); padding: 70px 0 60px; }
+  .simple-hero h1 { font-size: 49px; }
+  .outline-phase { padding-top: 70px; }
+  .outline-unit { min-height: auto; padding: 24px; }
+  .audio-grid { grid-template-columns: 1fr; margin-right: -16px; margin-left: -16px; }
+  .speech-status { right: 12px; bottom: 12px; max-width: calc(100% - 24px); border-radius: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poster-speak, .speech-status { transition: none; }
+  .poster-speak.is-speaking { animation: none; }
+}
