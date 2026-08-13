@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import html
+import hashlib
 import json
 from pathlib import Path
 
@@ -18,6 +19,11 @@ def esc(value: object) -> str:
 
 def load_data() -> dict:
     return json.loads(DATA.read_text(encoding="utf-8"))
+
+
+def audio_filename(text: str) -> str:
+    digest = hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
+    return f"{digest}.mp3"
 
 
 def unit_filename(unit: dict) -> str:
@@ -117,7 +123,7 @@ def build_home(data: dict) -> None:
         </div>
         <div class="hangul-poster">
           <span class="poster-label">HANGUL / 한글 / 001</span>
-          <button class="poster-speak" type="button" lang="ko" data-speak="안녕하세요" data-rate="0.84" aria-label="播放韓文：안녕하세요"><span>한</span><small>點一下，聽韓文</small></button>
+          <button class="poster-speak" type="button" lang="ko" data-speak="안녕하세요" data-audio="audio/{audio_filename('안녕하세요')}" data-rate="1" aria-label="播放韓文：안녕하세요"><span>한</span><small>點一下，聽韓文</small></button>
           <div class="poster-words"><span>읽기</span><span>듣기</span><span>말하기</span></div>
           <p>READ 50% · SPEAK 30% · LISTEN 20%</p>
         </div>
@@ -211,9 +217,9 @@ def render_audio(items: list[dict]) -> str:
         note = f'<small>{esc(item["note"])}</small>' if item.get("note") else ""
         cards.append(f"""
         <article class="audio-card">
-          <button class="speak-main" type="button" lang="ko" data-speak="{esc(spoken)}" data-rate="0.84" aria-label="播放韓文：{esc(text)}"><span>{esc(text)}</span><i aria-hidden="true">▶</i></button>
+          <button class="speak-main" type="button" lang="ko" data-speak="{esc(spoken)}" data-audio="../../audio/{audio_filename(spoken)}" data-rate="1" aria-label="播放韓文：{esc(text)}"><span>{esc(text)}</span><i aria-hidden="true">▶</i></button>
           <div><b>{esc(item.get('meaning', ''))}</b>{note}</div>
-          <button class="slow-button" type="button" data-speak="{esc(spoken)}" data-rate="0.62" aria-label="慢速播放韓文：{esc(text)}">慢速 0.62×</button>
+          <button class="slow-button" type="button" data-speak="{esc(spoken)}" data-audio="../../audio/{audio_filename(spoken)}" data-rate="0.72" aria-label="慢速播放韓文：{esc(text)}">慢速 0.72×</button>
         </article>""")
     return f'<div class="audio-grid">{"".join(cards)}</div>'
 

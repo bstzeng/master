@@ -4,6 +4,7 @@ const synth = window.speechSynthesis;
 let voices = [];
 let statusTimer;
 let currentUtterance;
+let currentAudio;
 
 function refreshVoices() {
   if (synth) voices = synth.getVoices();
@@ -26,6 +27,66 @@ function stopSpeakingState() {
   speechButtons.forEach((button) => button.classList.remove("is-speaking"));
 }
 
+function stopPlayback() {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+  if (synth) synth.cancel();
+  stopSpeakingState();
+}
+
+function fallbackToSystemVoice(button, text, rate) {
+  if (!synth || typeof window.SpeechSynthesisUtterance === "undefined") {
+    stopSpeakingState();
+    showStatus("音檔載入失敗，請確認網路後重新整理頁面。");
+    return;
+  }
+
+  currentUtterance = new SpeechSynthesisUtterance(text);
+  currentUtterance.lang = "ko-KR";
+  currentUtterance.rate = rate < 0.9 ? 0.62 : 0.84;
+  const voice = koreanVoice();
+  if (voice) currentUtterance.voice = voice;
+  button.classList.add("is-speaking");
+  currentUtterance.onend = stopSpeakingState;
+  currentUtterance.onerror = () => {
+    stopSpeakingState();
+    showStatus("音檔載入失敗，請確認網路後重新整理頁面。");
+  };
+  synth.speak(currentUtterance);
+}
+
+function playBundledAudio(button, text, rate) {
+  const audioUrl = button.dataset.audio;
+  if (!audioUrl) {
+    fallbackToSystemVoice(button, text, rate);
+    return;
+  }
+
+  const audio = new Audio(audioUrl);
+  currentAudio = audio;
+  audio.preload = "auto";
+  audio.playbackRate = rate;
+  audio.preservesPitch = true;
+  audio.webkitPreservesPitch = true;
+  let usedFallback = false;
+  const fallback = () => {
+    if (usedFallback || currentAudio !== audio) return;
+    usedFallback = true;
+    currentAudio = null;
+    fallbackToSystemVoice(button, text, rate);
+  };
+  audio.addEventListener("ended", () => {
+    if (currentAudio === audio) currentAudio = null;
+    stopSpeakingState();
+  }, { once: true });
+  audio.addEventListener("error", fallback, { once: true });
+  button.classList.add("is-speaking");
+  audio.play().catch(fallback);
+  showStatus(`${rate < 0.9 ? "慢速" : "播放"}：${text}`);
+}
+
 if (synth) {
   refreshVoices();
   if (typeof synth.addEventListener === "function") {
@@ -40,25 +101,7 @@ document.addEventListener("click", (event) => {
   if (!button) return;
   const text = button.dataset.speak?.trim();
   if (!text) return;
-  if (!synth || typeof window.SpeechSynthesisUtterance === "undefined") {
-    showStatus("這個瀏覽器目前無法播放語音，請改用 Safari、Chrome 或 Edge。");
-    return;
-  }
-
-  synth.cancel();
-  stopSpeakingState();
-  currentUtterance = new SpeechSynthesisUtterance(text);
-  currentUtterance.lang = "ko-KR";
-  currentUtterance.rate = Number(button.dataset.rate || "0.84");
-  const voice = koreanVoice();
-  if (voice) currentUtterance.voice = voice;
-
-  button.classList.add("is-speaking");
-  currentUtterance.onend = stopSpeakingState;
-  currentUtterance.onerror = () => {
-    stopSpeakingState();
-    showStatus("語音播放失敗，請確認裝置已安裝韓文語音。");
-  };
-  synth.speak(currentUtterance);
-  showStatus(`${Number(currentUtterance.rate) < 0.8 ? "慢速" : "播放"}：${text}`);
+  const rate = Number(button.dataset.rate || "1");
+  stopPlayback();
+  playBundledAudio(button, text, rate);
 });

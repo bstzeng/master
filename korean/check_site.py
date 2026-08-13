@@ -20,6 +20,7 @@ class PageParser(HTMLParser):
         self.h1_count = 0
         self.title_count = 0
         self.speech_buttons = 0
+        self.audio_sources: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         values = dict(attrs)
@@ -37,14 +38,22 @@ class PageParser(HTMLParser):
             self.title_count += 1
         if tag == "button" and values.get("data-speak"):
             self.speech_buttons += 1
+            if values.get("data-audio"):
+                self.audio_sources.append(values["data-audio"] or "")
 
 
 def main() -> None:
     errors: list[str] = []
     pages = [SITE_ROOT / "index.html", *sorted(KOREAN_ROOT.rglob("*.html"))]
     lesson_pages = list((KOREAN_ROOT / "lessons").rglob("*.html"))
+    audio_files = list((KOREAN_ROOT / "audio").glob("*.mp3"))
     if len(lesson_pages) != 29:
         errors.append(f"expected 29 lesson pages, found {len(lesson_pages)}")
+    if len(audio_files) != 186:
+        errors.append(f"expected 186 bundled audio files, found {len(audio_files)}")
+    for audio_file in audio_files:
+        if audio_file.stat().st_size <= 1_000:
+            errors.append(f"{audio_file.relative_to(SITE_ROOT)}: audio file is empty")
 
     for path in pages:
         parser = PageParser()
@@ -55,6 +64,12 @@ def main() -> None:
             errors.append(f"{path.relative_to(SITE_ROOT)}: expected one title, found {parser.title_count}")
         if KOREAN_ROOT / "lessons" in path.parents and parser.speech_buttons < 4:
             errors.append(f"{path.relative_to(SITE_ROOT)}: expected at least four speech controls")
+        if KOREAN_ROOT / "lessons" in path.parents and len(parser.audio_sources) != parser.speech_buttons:
+            errors.append(f"{path.relative_to(SITE_ROOT)}: every speech control needs bundled audio")
+        for raw_source in parser.audio_sources:
+            target = (path.parent / unquote(raw_source)).resolve()
+            if not target.exists():
+                errors.append(f"{path.relative_to(SITE_ROOT)}: missing bundled audio {raw_source}")
         for raw_link in parser.links:
             parsed = urlsplit(raw_link)
             if parsed.scheme or raw_link.startswith("//"):
