@@ -77,7 +77,7 @@ def shell(*, title: str, description: str, body: str, prefix: str, active: str =
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{prefix}styles.css" />
-    <script src="{prefix}script.js" defer></script>
+    <script src="{prefix}script.js?v=audio-1" defer></script>
   </head>
   <body>
     {header(prefix, active)}
