@@ -1,10 +1,11 @@
 # MASTER
 
-Patrick 的個人學習知識庫，目前包含三個主題：
+Patrick 的個人學習知識庫，目前包含四個主題：
 
 - 「Python 資料結構與經典演算法」：兩階段、16 個單元與 131 堂獨立課程。
 - 「零基礎韓文」：五階段、26 個單元與 143 堂獨立課程，支援中文、RR 羅馬拼音與網站內建發音。
 - 「零基礎日文」：五階段、26 個單元與 143 堂獨立課程，支援中文、Hepburn 羅馬拼音與網站內建發音。
+- 「星座學習地圖」：五階段、36 個完整單元，涵蓋星座起源、十二星座人格、關係互動、基礎星盤與科學思考。
 
 ## 頁面
 
@@ -25,6 +26,11 @@ Patrick 的個人學習知識庫，目前包含三個主題：
 - `japanese/phase-1.html`～`japanese/phase-5.html`：五階段課程頁
 - `japanese/units/`：26 個單元首頁
 - `japanese/lessons/`：143 堂獨立課程頁
+- `astrology/index.html`：星座學習地圖首頁
+- `astrology/outline.html`：五階段、36 單元完整大綱
+- `astrology/phase-1.html`～`astrology/phase-5.html`：五階段課程頁
+- `astrology/units/`：36 個完整教學單元頁
+- `astrology/sources.html`：歷史、天文、心理學資料來源與使用界線
 
 ## 內容維護
 
@@ -46,6 +52,10 @@ Patrick 的個人學習知識庫，目前包含三個主題：
 - `japanese/build.py`：產生日文主題的所有靜態頁面
 - `japanese/generate_audio.py`：產生網站內建的日文 MP3
 - `japanese/check_site.py`：檢查日文頁面、羅馬拼音、音檔與連結
+- `astrology/data/`：星座課程的歷史、人格、關係與星盤內容
+- `astrology/validate.py`：驗證五階段、36 單元與完整教學結構
+- `astrology/build.py`：產生星座主題的所有靜態頁面
+- `astrology/check_site.py`：檢查星座頁面結構與站內連結
 
 修改內容後執行：
 
@@ -59,6 +69,9 @@ python3 korean/check_site.py
 python3 japanese/validate.py
 python3 japanese/build.py
 python3 japanese/check_site.py
+python3 astrology/validate.py
+python3 astrology/build.py
+python3 astrology/check_site.py
 ```
 
 需要重建語言課程音檔時，先安裝該主題的 `requirements-audio.txt`，再執行：

@@ -51,9 +51,12 @@ h1 em { color: var(--orange); font-style: italic; }
 .topic-card.korean-featured { background: #173f5f; border-color: #173f5f; }
 .topic-card.korean-featured .topic-label { color: #ffd56a; }
 .topic-card.korean-featured:hover .topic-arrow { background: #ffd56a; }
-.topic-card.japanese-featured { grid-column: 1 / -1; background: #612940; border-color: #612940; }
+.topic-card.japanese-featured { background: #612940; border-color: #612940; }
 .topic-card.japanese-featured .topic-label { color: #f2c14e; }
 .topic-card.japanese-featured:hover .topic-arrow { color: #612940; background: #f2c14e; }
+.topic-card.astrology-featured { background: #11152a; border-color: #11152a; }
+.topic-card.astrology-featured .topic-label { color: #d6a650; }
+.topic-card.astrology-featured:hover .topic-arrow { color: #11152a; background: #d6a650; }
 .topic-number { font-family: "Playfair Display", serif; font-size: 42px; }
 .topic-content { align-self: end; }
 .topic-label { margin-bottom: 12px; color: var(--orange); }
