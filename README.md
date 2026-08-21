@@ -1,11 +1,12 @@
 # MASTER
 
-Patrick 的個人學習知識庫，目前包含四個主題：
+Patrick 的個人學習知識庫，目前包含五個主題：
 
 - 「Python 資料結構與經典演算法」：兩階段、16 個單元與 131 堂獨立課程。
 - 「零基礎韓文」：五階段、26 個單元與 143 堂獨立課程，支援中文、RR 羅馬拼音與網站內建發音。
 - 「零基礎日文」：五階段、26 個單元與 143 堂獨立課程，支援中文、Hepburn 羅馬拼音與網站內建發音。
 - 「星座學習地圖」：五階段、36 個完整單元，涵蓋星座起源、十二星座人格、關係互動、基礎星盤與科學思考。
+- 「魔戒深度解說」：十階段、60 個完整單元，從創世與三大紀元讀到人物主題、影視改編與完整閱讀路線。
 
 ## 頁面
 
@@ -31,6 +32,11 @@ Patrick 的個人學習知識庫，目前包含四個主題：
 - `astrology/phase-1.html`～`astrology/phase-5.html`：五階段課程頁
 - `astrology/units/`：36 個完整教學單元頁
 - `astrology/sources.html`：歷史、天文、心理學資料來源與使用界線
+- `lotr/index.html`：魔戒深度解說首頁
+- `lotr/outline.html`：十階段、60 單元完整大綱
+- `lotr/phase-1.html`～`lotr/phase-10.html`：十階段課程頁
+- `lotr/units/`：60 個完整教學單元頁
+- `lotr/sources.html`：文本層級、資料來源與改編界線
 
 ## 內容維護
 
@@ -56,6 +62,10 @@ Patrick 的個人學習知識庫，目前包含四個主題：
 - `astrology/validate.py`：驗證五階段、36 單元與完整教學結構
 - `astrology/build.py`：產生星座主題的所有靜態頁面
 - `astrology/check_site.py`：檢查星座頁面結構與站內連結
+- `lotr/data/`：魔戒課程的年代、人物、主題與改編內容
+- `lotr/validate.py`：驗證十階段、60 單元與完整教學結構
+- `lotr/build.py`：產生魔戒主題的所有靜態頁面
+- `lotr/check_site.py`：檢查魔戒頁面結構與站內連結
 
 修改內容後執行：
 
@@ -72,6 +82,9 @@ python3 japanese/check_site.py
 python3 astrology/validate.py
 python3 astrology/build.py
 python3 astrology/check_site.py
+python3 lotr/validate.py
+python3 lotr/build.py
+python3 lotr/check_site.py
 ```
 
 需要重建語言課程音檔時，先安裝該主題的 `requirements-audio.txt`，再執行：

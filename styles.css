@@ -57,6 +57,9 @@ h1 em { color: var(--orange); font-style: italic; }
 .topic-card.astrology-featured { background: #11152a; border-color: #11152a; }
 .topic-card.astrology-featured .topic-label { color: #d6a650; }
 .topic-card.astrology-featured:hover .topic-arrow { color: #11152a; background: #d6a650; }
+.topic-card.lotr-featured { background: #172018; border-color: #172018; }
+.topic-card.lotr-featured .topic-label { color: #c7a55c; }
+.topic-card.lotr-featured:hover .topic-arrow { color: #172018; background: #c7a55c; }
 .topic-number { font-family: "Playfair Display", serif; font-size: 42px; }
 .topic-content { align-self: end; }
 .topic-label { margin-bottom: 12px; color: var(--orange); }
