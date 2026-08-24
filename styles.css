@@ -60,6 +60,9 @@ h1 em { color: var(--orange); font-style: italic; }
 .topic-card.lotr-featured { background: #172018; border-color: #172018; }
 .topic-card.lotr-featured .topic-label { color: #c7a55c; }
 .topic-card.lotr-featured:hover .topic-arrow { color: #172018; background: #c7a55c; }
+.topic-card.security-featured { background: #081723; border-color: #081723; }
+.topic-card.security-featured .topic-label { color: #42c9b1; }
+.topic-card.security-featured:hover .topic-arrow { color: #081723; background: #ff6842; }
 .topic-number { font-family: "Playfair Display", serif; font-size: 42px; }
 .topic-content { align-self: end; }
 .topic-label { margin-bottom: 12px; color: var(--orange); }

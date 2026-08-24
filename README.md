@@ -1,12 +1,13 @@
 # MASTER
 
-Patrick 的個人學習知識庫，目前包含五個主題：
+Patrick 的個人學習知識庫，目前包含六個主題：
 
 - 「Python 資料結構與經典演算法」：兩階段、16 個單元與 131 堂獨立課程。
 - 「零基礎韓文」：五階段、26 個單元與 143 堂獨立課程，支援中文、RR 羅馬拼音與網站內建發音。
 - 「零基礎日文」：五階段、26 個單元與 143 堂獨立課程，支援中文、Hepburn 羅馬拼音與網站內建發音。
 - 「星座學習地圖」：五階段、36 個完整單元，涵蓋星座起源、十二星座人格、關係互動、基礎星盤與科學思考。
 - 「魔戒深度解說」：十階段、60 個完整單元，從創世與三大紀元讀到人物主題、影視改編與完整閱讀路線。
+- 「網站攻擊與防禦」：五階段、12 個大型章節；以防守者視角理解網站攻擊面、經典漏洞、部署、偵測與復原，目前完成完整大綱與第一章。
 
 ## 頁面
 
@@ -37,6 +38,8 @@ Patrick 的個人學習知識庫，目前包含五個主題：
 - `lotr/phase-1.html`～`lotr/phase-10.html`：十階段課程頁
 - `lotr/units/`：60 個完整教學單元頁
 - `lotr/sources.html`：文本層級、資料來源與改編界線
+- `web-security/index.html`：網站攻擊與防禦的五階段、12 章完整大綱
+- `web-security/chapter-01-attack-surface.html`：第一章「網站到底會從哪裡被攻擊」完整教學
 
 ## 內容維護
 
@@ -66,6 +69,10 @@ Patrick 的個人學習知識庫，目前包含五個主題：
 - `lotr/validate.py`：驗證十階段、60 單元與完整教學結構
 - `lotr/build.py`：產生魔戒主題的所有靜態頁面
 - `lotr/check_site.py`：檢查魔戒頁面結構與站內連結
+- `web-security/data/course.py`：五階段、12 個大型章節與官方參考來源
+- `web-security/validate.py`：驗證課程大綱與章節狀態
+- `web-security/build.py`：產生完整大綱頁與第一章教學頁
+- `web-security/check_site.py`：檢查章節密度、圖片、來源、metadata 與站內連結
 
 修改內容後執行：
 
@@ -85,6 +92,9 @@ python3 astrology/check_site.py
 python3 lotr/validate.py
 python3 lotr/build.py
 python3 lotr/check_site.py
+python3 web-security/validate.py
+python3 web-security/build.py
+python3 web-security/check_site.py
 ```
 
 需要重建語言課程音檔時，先安裝該主題的 `requirements-audio.txt`，再執行：
