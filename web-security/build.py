@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Build the defensive web-security outline and first chapter."""
+"""Build the defensive web-security outline and completed large chapters."""
 
 from __future__ import annotations
 
@@ -12,6 +12,8 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
 from data.course import CHAPTERS, PHASES, SOURCES  # noqa: E402
+from data.chapter_02 import SOURCES as CHAPTER_02_SOURCES, body as chapter_02_body  # noqa: E402
+from data.chapter_03 import SOURCES as CHAPTER_03_SOURCES, body as chapter_03_body  # noqa: E402
 
 
 def esc(value) -> str:
@@ -46,7 +48,7 @@ def shell(*, title: str, description: str, body: str, prefix: str = "", active: 
     <div class="reading-progress" aria-hidden="true"><span></span></div>
     <header class="site-header">
       <a class="brand" href="{prefix}../index.html" aria-label="回到 MASTER 首頁"><span class="brand-mark">M</span><span>MASTER</span></a>
-      <nav aria-label="網站攻擊與防禦課程選單"><a class="{'is-active' if active == 'outline' else ''}" href="{prefix}index.html">完整大綱</a><a class="{'is-active' if active == 'chapter' else ''}" href="{prefix}chapter-01-attack-surface.html">第一章</a></nav>
+      <nav aria-label="網站攻擊與防禦課程選單"><a class="{'is-active' if active == 'outline' else ''}" href="{prefix}index.html">完整大綱</a><a class="{'is-active' if active == 'chapter-1' else ''}" href="{prefix}chapter-01-attack-surface.html">01</a><a class="{'is-active' if active == 'chapter-2' else ''}" href="{prefix}chapter-02-http-request.html">02</a><a class="{'is-active' if active == 'chapter-3' else ''}" href="{prefix}chapter-03-information-exposure.html">03</a></nav>
       <span class="header-note">WEB SECURITY / DEFENDER'S VIEW</span>
     </header>
     <main>{body}</main>
@@ -60,7 +62,7 @@ def shell(*, title: str, description: str, body: str, prefix: str = "", active: 
 def chapter_card(chapter: dict) -> str:
     tags = "".join(f"<li>{esc(topic)}</li>" for topic in chapter["topics"])
     if chapter["ready"]:
-        action = f'<a class="card-action" href="{chapter["href"]}">閱讀完整第一章 <span>→</span></a>'
+        action = f'<a class="card-action" href="{chapter["href"]}">閱讀完整第 {chapter["number"]} 章 <span>→</span></a>'
         state = "is-ready"
         state_label = "AVAILABLE NOW"
     else:
@@ -77,13 +79,13 @@ def build_outline() -> None:
         phase_sections.append(f'''<section class="phase" id="phase-{phase['number']}"><div class="phase-head"><div><p class="section-index">PHASE {phase['number']:02d} / {esc(phase['english'])}</p><h2>{esc(phase['title'])}</h2></div><p>{esc(phase['summary'])}</p></div><div class="chapter-grid">{cards}</div></section>''')
     body = f'''
       <section class="outline-hero">
-        <div class="outline-copy"><a class="breadcrumb" href="../index.html">MASTER / TOPIC 06</a><p class="eyebrow">WEB ATTACK & DEFENSE · DEFENDER-LED COURSE</p><h1>看懂攻擊路徑，<br /><em>才能守住自己的站。</em></h1><p class="hero-intro">從攻擊者視角理解網站，但所有操作只用在自己的系統或刻意建立的本機練習環境。這次不拆成大量短頁：全課程只有 12 個大型章節，每頁完成一個可以實際拿去保護網站的能力。</p><div class="course-stats"><div><strong>12</strong><span>大型章節</span></div><div><strong>50–120</strong><span>分鐘／章</span></div><div><strong>1</strong><span>章目前完成</span></div></div><a class="primary-button" href="chapter-01-attack-surface.html">先看第一章品質 <span>→</span></a></div>
+        <div class="outline-copy"><a class="breadcrumb" href="../index.html">MASTER / TOPIC 06</a><p class="eyebrow">WEB ATTACK & DEFENSE · DEFENDER-LED COURSE</p><h1>看懂攻擊路徑，<br /><em>才能守住自己的站。</em></h1><p class="hero-intro">從攻擊者視角理解網站，但所有操作只用在自己的系統或刻意建立的本機練習環境。這次不拆成大量短頁：全課程只有 12 個大型章節，每頁完成一個可以實際拿去保護網站的能力。</p><div class="course-stats"><div><strong>12</strong><span>大型章節</span></div><div><strong>50–120</strong><span>分鐘／章</span></div><div><strong>3</strong><span>章目前完成</span></div></div><a class="primary-button" href="chapter-01-attack-surface.html">從第一章開始 <span>→</span></a></div>
         <figure class="hero-image"><button class="zoom-image" type="button" data-image="assets/og.png" data-alt="網站攻擊與防禦的分層伺服器主視覺"><img src="assets/og.png" alt="網站攻擊與防禦的分層伺服器主視覺" /><span>點擊放大 ↗</span></button><figcaption>GPT 原創主視覺｜精確技術標示由網頁元件另外呈現</figcaption></figure>
       </section>
       <section class="course-contract"><p class="section-index">00 / COURSE CONTRACT</p><div><h2>學攻擊，是為了把防禦做對。</h2><p>課程會解釋攻擊成立條件、資料流與可觀察跡象；示範限制在本機練習程式，不提供對外部目標的掃描、入侵、繞過偵測或維持存取步驟。</p></div><ol><li><span>01</span><b>先畫系統</b><p>不知道資產與信任邊界，就不知道該守哪裡。</p></li><li><span>02</span><b>再理解失敗</b><p>追蹤輸入在哪一層失去控制，而不是只背漏洞名稱。</p></li><li><span>03</span><b>最後驗證防禦</b><p>以測試、日誌和檢查表確認修正真的生效。</p></li></ol></section>
       <nav class="phase-nav" aria-label="快速前往課程階段">{''.join(f'<a href="#phase-{phase["number"]}"><span>{phase["number"]:02d}</span>{esc(phase["title"])}</a>' for phase in PHASES)}</nav>
       <div class="full-outline">{''.join(phase_sections)}</div>
-      <section class="density-promise"><div><p class="section-index">01 / NEW CONTENT STANDARD</p><h2>這次每一頁，<br />就是一整章。</h2></div><div class="density-list"><p>第一章包含 8 個連續段落、3 組程式化技術圖、1 張 GPT 原創插畫、資產盤點範本、風險排序、5 題測驗與可直接執行的網站作業。</p><ul><li>不再為每個小名詞拆頁</li><li>圖像服務理解，不只是裝飾</li><li>每個觀念都回到自家網站</li><li>來源、界線與可驗證結果並列</li></ul><a href="chapter-01-attack-surface.html">閱讀第一章 →</a></div></section>'''
+      <section class="density-promise"><div><p class="section-index">01 / NEW CONTENT STANDARD</p><h2>這次每一頁，<br />就是一整章。</h2></div><div class="density-list"><p>目前完成的三章都包含 8 個連續段落、大字程式化技術圖、1 張 GPT 原創插畫、實際範本、5 題測驗與可直接執行的自家網站作業。</p><ul><li>不再為每個小名詞拆頁</li><li>圖像服務理解，不只是裝飾</li><li>每個觀念都回到自家網站</li><li>來源、界線與可驗證結果並列</li></ul><a href="chapter-01-attack-surface.html">從第一章開始 →</a></div></section>'''
     (ROOT / "index.html").write_text(shell(title="網站攻擊與防禦｜完整大綱", description="12 個大型章節，從攻擊面、登入與經典網站漏洞學到部署、偵測與事件復原。", body=body), encoding="utf-8")
 
 
@@ -125,15 +127,33 @@ def build_chapter_one() -> None:
 
         <section class="sources"><div><p class="section-index">PRIMARY REFERENCES</p><h2>本章依據</h2><p>課程將官方框架轉成個人架站可執行的語言；來源用來支持攻擊面、威脅建模與風險管理方法。</p></div><ul>{source_cards}</ul></section>
 
-        <nav class="chapter-nav"><a href="index.html"><span>← 回到</span><b>12 章完整大綱</b></a><span class="next"><small>NEXT CHAPTER</small><b>網路與 HTTP 攻擊基礎</b><i>大綱確認後製作</i></span></nav>
+        <nav class="chapter-nav"><a href="index.html"><span>← 回到</span><b>12 章完整大綱</b></a><a class="next" href="chapter-02-http-request.html"><small>NEXT CHAPTER →</small><b>網路與 HTTP 攻擊基礎</b><i>繼續閱讀</i></a></nav>
       </article>'''
-    (ROOT / "chapter-01-attack-surface.html").write_text(shell(title="第一章｜網站到底會從哪裡被攻擊", description="從資產、入口、資料流、信任邊界與風險排序，完成自己的網站攻擊面地圖。", body=body, active="chapter", image="assets/chapter-01-attack-surface.png"), encoding="utf-8")
+    (ROOT / "chapter-01-attack-surface.html").write_text(shell(title="第一章｜網站到底會從哪裡被攻擊", description="從資產、入口、資料流、信任邊界與風險排序，完成自己的網站攻擊面地圖。", body=body, active="chapter-1", image="assets/chapter-01-attack-surface.png"), encoding="utf-8")
+
+
+def render_source_cards(sources: list[dict]) -> str:
+    return "".join(f'<li><a href="{esc(source["url"])}" target="_blank" rel="noreferrer"><b>{esc(source["title"])}</b><span>{esc(source["note"])}</span></a></li>' for source in sources)
+
+
+def build_chapter_two() -> None:
+    body = chapter_02_body(render_source_cards(CHAPTER_02_SOURCES))
+    page = shell(title="第二章｜網路與 HTTP 攻擊基礎", description="沿著一次網站請求理解 DNS、TLS、HTTP、Proxy、Cookie 與 Session 的安全責任。", body=body, active="chapter-2", image="assets/chapter-02-http-request.png")
+    (ROOT / "chapter-02-http-request.html").write_text(page, encoding="utf-8")
+
+
+def build_chapter_three() -> None:
+    body = chapter_03_body(render_source_cards(CHAPTER_03_SOURCES))
+    page = shell(title="第三章｜情報蒐集與資訊外洩", description="從網域、前端程式、錯誤訊息、備份檔與 Git 歷史建立自己網站的公開暴露清單。", body=body, active="chapter-3", image="assets/chapter-03-information-exposure.png")
+    (ROOT / "chapter-03-information-exposure.html").write_text(page, encoding="utf-8")
 
 
 def main() -> None:
     build_outline()
     build_chapter_one()
-    print("Built web-security outline and complete chapter 01.")
+    build_chapter_two()
+    build_chapter_three()
+    print("Built web-security outline and complete chapters 01–03.")
 
 
 if __name__ == "__main__":

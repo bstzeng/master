@@ -1,0 +1,65 @@
+"""Complete chapter 03: public information exposure."""
+
+SOURCES = [
+    {
+        "title": "OWASP WSTG｜Review Web Page Content for Information Leakage",
+        "url": "https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/01-Information_Gathering/05-Review_Web_Page_Content_for_Information_Leakage",
+        "note": "HTML 註解、前端程式、Source Map、Redirect Body 與文件 Metadata 外洩。",
+    },
+    {
+        "title": "OWASP｜Error Handling Cheat Sheet",
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html",
+        "note": "對外泛化錯誤、集中例外處理與對內保留可追蹤診斷資訊。",
+    },
+    {
+        "title": "IETF｜RFC 9309: Robots Exclusion Protocol",
+        "url": "https://www.rfc-editor.org/rfc/rfc9309.html",
+        "note": "robots.txt 是爬蟲協議，不是授權控制；列出的路徑本身公開可見。",
+    },
+    {
+        "title": "GitHub Docs｜Remediating a Leaked Secret",
+        "url": "https://docs.github.com/en/code-security/tutorials/remediate-leaked-secrets/remediating-a-leaked-secret",
+        "note": "外洩 Secret 的撤銷、輪替、影響評估、稽核、歷史清理與預防。",
+    },
+]
+
+
+def body(source_cards: str) -> str:
+    return f'''
+      <article class="chapter-page">
+        <header class="chapter-hero"><div class="chapter-hero-copy"><a class="breadcrumb" href="index.html">COURSE OUTLINE / CHAPTER 03</a><p class="eyebrow">WHAT THE INTERNET CAN SEE</p><h1>情報蒐集與資訊外洩</h1><p class="chapter-deck">攻擊者不一定先突破防線，很多時候只是先把你主動放到網路上的碎片拼起來。從網域、測試環境、前端程式、錯誤訊息、備份檔到 Git 歷史，學會用防守者方式看見自己已經透露了什麼。</p><div class="chapter-meta"><span>55–75 分鐘</span><span>8 個完整段落</span><span>公開暴露面</span><span>不掃描外部目標</span></div></div><figure class="chapter-cover"><button class="zoom-image" type="button" data-image="assets/chapter-03-information-exposure.png" data-alt="網域、程式碼、錯誤訊息與檔案構成網站公開資訊面的主視覺"><img src="assets/chapter-03-information-exposure.png" alt="網域、程式碼、錯誤訊息與檔案構成網站公開資訊面的主視覺" /><span>點擊放大 ↗</span></button><figcaption>GPT 原創概念圖：單一資訊可能影響有限，多個公開碎片卻能快速縮小攻擊者的猜測範圍。</figcaption></figure></header>
+
+        <section class="chapter-opening"><div><p class="section-index">LEARNING OUTCOME</p><p>完成本章後，你能建立自己網站的外部暴露清單，分辨必要公開資訊與不必要線索，檢查前端、錯誤、檔案和版本控制，並把發現轉成移除、泛化、輪替或持續監控的行動。</p></div><div><p class="section-index">SAFE PRACTICE BOUNDARY</p><p>盤點範圍只限你擁有或獲得明確授權的網域、原始碼與平台帳號。本章使用既有資產清單、瀏覽器與管理後台，不提供對陌生目標的列舉、字典猜測、掃描或規避封鎖方式。</p></div></section>
+
+        <div class="chapter-layout">
+          <aside class="chapter-toc"><p>本章內容</p><ol><li><a href="#part-1"><span>01</span>資訊碎片如何降低攻擊成本</a></li><li><a href="#part-2"><span>02</span>被動觀察與主動測試界線</a></li><li><a href="#part-3"><span>03</span>網域與環境暴露</a></li><li><a href="#part-4"><span>04</span>前端程式與 Source Map</a></li><li><a href="#part-5"><span>05</span>錯誤訊息與除錯資訊</a></li><li><a href="#part-6"><span>06</span>備份、設定與忘記的檔案</a></li><li><a href="#part-7"><span>07</span>Git 與 Secret 外洩</a></li><li><a href="#part-8"><span>08</span>建立暴露面檢查流程</a></li></ol><a href="#assignment">前往本章作業 ↓</a></aside>
+
+          <div class="chapter-content">
+            <section class="lesson-part" id="part-1"><div class="part-label"><span>01</span><p>REDUCE THE UNKNOWN</p></div><h2>情報的價值，在於把「不知道」變少</h2><p>一個伺服器名稱、一段 HTML 註解或一個套件版本，單獨看可能不等於漏洞；但它們能回答攻擊者的重要問題：正式環境在哪裡、使用什麼框架、管理介面可能叫什麼、哪一套錯誤處理正在運作、哪個舊系統還沒下線。碎片彼此交叉後，就能把大量嘗試縮小成幾條更可能成功的路徑。</p><p>防守者的目標不是把所有技術名稱藏起來。Security by obscurity 不能取代修補與授權；真正要做的是移除沒有業務用途、卻會暴露敏感資料、精確版本、內部路徑、帳號格式、控制面位置或有效憑證的資訊，並確保必要公開資訊即使被看見也不會直接取得權限。</p><div class="exposure-map" role="img" aria-label="網域、前端、錯誤、檔案和版本控制碎片匯聚成攻擊假設"><div><span>PUBLIC FRAGMENT</span><b>DOMAIN</b><p>環境與服務名稱</p></div><div><span>PUBLIC FRAGMENT</span><b>FRONTEND</b><p>路由、欄位、版本</p></div><div><span>PUBLIC FRAGMENT</span><b>ERRORS</b><p>路徑、例外、架構</p></div><div><span>PUBLIC FRAGMENT</span><b>FILES + GIT</b><p>備份、設定、歷史</p></div><article><span>COMBINED RESULT</span><b>LOWER UNCERTAINTY</b><p>更少猜測、更精確的攻擊路徑</p></article></div><p class="diagram-caption"><b>圖 1｜資訊外洩的累積效果</b> 風險不只看一個欄位是否敏感，也要看它能否與其他公開資訊組合。</p></section>
+
+            <section class="lesson-part" id="part-2"><div class="part-label"><span>02</span><p>KNOW THE BOUNDARY</p></div><h2>先做被動盤點；主動互動必須有授權</h2><p>對自己的網站而言，被動盤點可以從現有架構圖、DNS 管理介面、部署平台、搜尋結果、公開頁面和原始碼檢視開始，不額外對服務送出大量或刻意變形的請求。主動測試則會與目標互動，例如枚舉路徑、嘗試不同檔名、探測服務或故意觸發錯誤；即使技術上容易，也需要明確範圍、時間、允許方法與停止條件。</p><p>「網站公開」只表示一般使用者可以接觸既有內容，不代表任何人獲准測試它。這門課把主動練習限制在自己的本機環境或明確授權系統。若你是網站擁有者，仍應先確認代管商、公司政策與第三方服務條款，因為你的應用可能共用其他人的基礎設施。</p><div class="boundary-lanes"><article><span>PASSIVE / START HERE</span><h3>整理已知資訊</h3><ul><li>自己的 DNS 與平台清單</li><li>公開頁面與搜尋結果</li><li>自己的 Repository 與部署設定</li><li>已產生的錯誤與日誌</li></ul></article><article><span>ACTIVE / AUTHORIZATION FIRST</span><h3>會改變服務互動</h3><ul><li>列舉未知路徑或檔名</li><li>探測 Port 與服務</li><li>刻意送出異常輸入</li><li>提高請求量或繞過控制</li></ul></article></div><aside class="chapter-callout"><b>本章原則</b><p>先把「我們已經知道卻沒整理」的資訊收齊，往往就能找到多數暴露問題；不需要先把自己的站當成陌生目標攻擊。</p></aside></section>
+
+            <section class="lesson-part" id="part-3"><div class="part-label"><span>03</span><p>MAP EVERY ENVIRONMENT</p></div><h2>主網域之外，測試與舊環境也屬於正式風險</h2><p>資產盤點不只列 `www`。還要包含網域註冊商、DNS Zone、郵件、API、管理入口、測試、預覽、舊版、第三方 SaaS 自訂網域和已經「理論上下線」的服務。測試環境常複製正式資料或功能，卻使用較弱的密碼、較寬鬆的錯誤輸出與較少監控，成為繞路入口。</p><p>每個名稱都要有擁有者、用途、環境、資料類型、外部可達性、到期日與下線方式。DNS 記錄刪除不一定代表平台資源已釋放；平台專案刪除也不代表搜尋索引、憑證記錄或文件連結立刻消失。真正的下線需要同時處理名稱、服務、資料、Secret、監控與第三方綁定。</p><div class="environment-map"><article class="production"><span>PRODUCTION</span><b>www / api</b><p>正式流量、正式資料、完整監控</p></article><article><span>STAGING</span><b>stage / preview</b><p>測試功能，不應複製未遮罩個資</p></article><article><span>CONTROL</span><b>admin / ci</b><p>限制來源、強身分、完整稽核</p></article><article class="retire"><span>RETIRE</span><b>old / demo</b><p>指定到期日並完成下線清單</p></article></div><div class="definition"><b>每個環境的最小欄位</b><p>名稱、擁有者、用途、託管位置、公開入口、資料等級、登入方式、Secret、日誌、備份、到期日、下線狀態。</p></div></section>
+
+            <section class="lesson-part" id="part-4"><div class="part-label"><span>04</span><p>THE FRONTEND IS PUBLIC</p></div><h2>送到瀏覽器的程式，就不能當成秘密</h2><p>HTML、CSS、JavaScript、註解、公開設定與 Source Map 都會到使用者裝置。前端必須知道 API 路徑和畫面欄位，但不應包含私密 API Key、管理憑證、內部 IP、未公開個資或能繞過伺服器授權的判斷。把字串混淆、壓縮或藏在 Bundle 中，只會增加閱讀成本，不會讓它變成 Secret。</p><p>OWASP WSTG 特別提醒檢查 HTML 註解、Metadata、Redirect Body、JavaScript 變數與 Source Map。Source Map 對除錯很有價值，也可能公開原始檔名、目錄、原始程式與預期 API 結構；是否部署應依風險決定，至少不要把 Secret 或未公開後端邏輯交給它保護。</p><div class="leak-layers"><article><span>VISIBLE UI</span><b>頁面文字與連結</b><p>任何訪客都能直接看見</p></article><article><span>PAGE SOURCE</span><b>HTML 註解與 Metadata</b><p>畫面沒顯示也已傳到瀏覽器</p></article><article><span>JS BUNDLE</span><b>API 路徑與公開設定</b><p>壓縮不是保密控制</p></article><article><span>SOURCE MAP</span><b>原始結構與除錯內容</b><p>依正式環境需求決定是否發布</p></article></div><p class="diagram-caption"><b>圖 2｜前端的四層可見面</b> 瀏覽器必須取得的內容應假設能被完整讀取；真正的權限與 Secret 保留在伺服器端。</p></section>
+
+            <section class="lesson-part" id="part-5"><div class="part-label"><span>05</span><p>FAIL WITHOUT LEAKING</p></div><h2>對使用者說得剛好；對維護者記得足夠</h2><p>錯誤處理同時服務兩個對象。外部使用者需要知道請求未完成、接下來能做什麼，以及可供客服查詢的事件編號；內部維護者則需要例外類型、堆疊、服務、版本、請求脈絡與時間。把完整診斷直接回傳瀏覽器，會洩漏檔案路徑、資料表、查詢、套件版本或內部服務名稱。</p><p>應用程式應使用全域錯誤處理，對外回傳一致且泛化的訊息，對內寫入受保護日誌並建立 correlation ID。日誌本身也不應記錄密碼、完整 Token、Session ID 或不必要個資。正確做法不是「完全沒有錯誤資訊」，而是讓診斷資訊只出現在需要且獲准的人能接觸的位置。</p><div class="error-split"><div class="error-event"><span>UNEXPECTED EVENT</span><b>Exception</b><p>由集中處理器接住</p></div><i>→</i><article><span>PUBLIC RESPONSE</span><b>發生錯誤，請稍後再試</b><p>狀態碼＋安全訊息＋事件編號</p></article><article><span>PROTECTED LOG</span><b>完整診斷脈絡</b><p>例外、服務、時間、追蹤資訊；排除 Secret</p></article></div><p class="diagram-caption"><b>圖 3｜一個錯誤，兩種輸出</b> 外部訊息可操作但不洩密；內部日誌詳細但受權限、保存期限與遮罩規則保護。</p></section>
+
+            <section class="lesson-part" id="part-6"><div class="part-label"><span>06</span><p>REMOVE FORGOTTEN ARTIFACTS</p></div><h2>備份檔、設定檔與舊產物不該跟網站一起發布</h2><p>常見外洩不是複雜漏洞，而是部署目錄多了一份 `.bak`、壓縮檔、設定範例、測試資料、Office 文件、資料庫匯出或舊版靜態網站。Web Server 只知道檔案位於可公開目錄，不會理解它是維護者「暫時放著」的備份。檔名沒有被頁面連結，也不等於具備存取控制。</p><p>防守應從建置流程處理：正式發布只允許明確列出的產物；Secret、Source、測試、備份和工作檔放在 Web Root 外；Object Storage 預設私有；部署完成後比對實際產物清單；下線時連同 CDN Cache、備份分享連結和舊 Bucket 一起處理。</p><div class="artifact-grid"><article class="allow"><span>PUBLISH</span><b>必要靜態產物</b><p>HTML、CSS、JS、已核准圖片</p></article><article><span>KEEP PRIVATE</span><b>設定與 Secret</b><p>環境變數、私鑰、連線憑證</p></article><article><span>KEEP PRIVATE</span><b>Source 與 Source Map</b><p>依正式除錯需求與風險決定</p></article><article><span>REMOVE</span><b>備份與舊檔</b><p>壓縮檔、DB 匯出、.bak、.old</p></article><article><span>REVIEW</span><b>文件 Metadata</b><p>作者、軟體、版本、內部名稱</p></article><article><span>VERIFY</span><b>實際部署清單</b><p>發布後與 Allowlist 比對</p></article></div><aside class="chapter-callout"><b>robots.txt 不是保護牆</b><p>RFC 9309 明確指出 Robots Exclusion Protocol 不是授權控制。列在 `robots.txt` 的路徑本身公開可見；真正敏感內容需要登入、授權或根本不對外發布。</p></aside></section>
+
+            <section class="lesson-part" id="part-7"><div class="part-label"><span>07</span><p>REVOKE BEFORE CLEANUP</p></div><h2>Secret 一旦公開，先視為已被取得</h2><p>API Key、Token、私鑰或密碼若進入公開 Repository，即使幾分鐘後刪除，仍可能已被自動系統或其他人取得。新的 Commit 只刪除目前版本，舊值仍可能存在 Git 歷史、Fork、快取、CI Log 或已下載副本。GitHub 的修復指引強調，最重要的第一步是向 Secret 提供者撤銷或失效舊值，而不是只刪檔案。</p><p>處理順序應是：辨認種類與擁有者、評估權限和使用紀錄、撤銷或輪替、更新依賴服務、檢查未授權使用、清理程式與必要歷史、開啟 Secret Scanning／Push Protection，最後記錄事件。重寫 Git 歷史可能影響所有協作者，應評估後協調執行；它不能取代撤銷。</p><div class="response-timeline"><article><span>01 / CONTAIN</span><b>撤銷或失效</b><p>先讓舊 Secret 無法再使用</p></article><i>→</i><article><span>02 / RESTORE</span><b>產生並更新新值</b><p>縮小權限，恢復依賴服務</p></article><i>→</i><article><span>03 / INVESTIGATE</span><b>檢查使用紀錄</b><p>確認暴露期間是否遭濫用</p></article><i>→</i><article><span>04 / CLEAN</span><b>移除與清理歷史</b><p>協調 Repository 與其他副本</p></article><i>→</i><article><span>05 / PREVENT</span><b>掃描與 Push Protection</b><p>阻止相同事件再次發生</p></article></div><p class="diagram-caption"><b>圖 4｜Secret 事件的正確順序</b> 「先撤銷，後清理」能先停止權限；只把字串從最新版本刪掉並不會讓它失效。</p></section>
+
+            <section class="lesson-part" id="part-8"><div class="part-label"><span>08</span><p>MAKE EXPOSURE REVIEW ROUTINE</p></div><h2>把外部視角放進每次發布，而不是一年檢查一次</h2><p>外露面會隨每次新增子網域、環境、Bundle、第三方工具、文件下載與部署設定改變。建立一份短而可重複的 Review：誰擁有新入口、是否必要公開、是否包含敏感欄位、錯誤是否泛化、產物是否符合 Allowlist、Secret 是否由平台安全注入、到期與下線由誰負責。</p><p>你可以在 CI/CD 加入 Secret Scanning、產物清單與 Source Map 規則，但自動化不是最後判斷者。每次重大變更仍需要人檢查業務語意：某個公開 API Key 是否真的被供應商限制來源？某份 PDF Metadata 是否洩漏內部專案？某個 Demo 是否還在使用正式資料？最後把發現連回第一章的資產與攻擊面地圖。</p><div class="inventory-wrap"><table><thead><tr><th>暴露類型</th><th>需要回答</th><th>安全狀態</th><th>處理方式</th></tr></thead><tbody><tr><td><b>網域／環境</b><span>Domain</span></td><td>誰擁有？用途與到期日？</td><td>有擁有者、完整登入與監控</td><td>保留、限制或下線</td></tr><tr><td><b>前端產物</b><span>HTML／JS／Map</span></td><td>是否包含 Secret、內部路徑或多餘原始碼？</td><td>只含公開必要資訊</td><td>移除、改由伺服器處理</td></tr><tr><td><b>錯誤與日誌</b><span>Error</span></td><td>外部是否泛化？內部是否可追蹤且遮罩？</td><td>雙通道、事件編號</td><td>集中處理、遮罩</td></tr><tr><td><b>檔案與版本庫</b><span>Files／Git</span></td><td>是否有備份、設定、Secret 或舊歷史？</td><td>Allowlist 發布、掃描啟用</td><td>撤銷、輪替、清理</td></tr></tbody></table></div></section>
+          </div>
+        </div>
+
+        <section class="assignment" id="assignment"><div><p class="section-index">FIELD ASSIGNMENT</p><h2>用 35 分鐘完成自己的外露面檢查</h2><p>只檢查自己的網域、平台與 Repository；使用既有頁面、管理後台和瀏覽器即可。</p></div><ol><li><span>00–10</span><p><b>整理環境</b>從自己的 DNS 與託管平台列出正式、測試、預覽、舊版與控制面。</p></li><li><span>10–18</span><p><b>檢查前端</b>閱讀自己頁面的 Source、Bundle 設定與 Source Map 發布狀態，不記錄敏感值。</p></li><li><span>18–26</span><p><b>檢查錯誤與產物</b>確認既有 404／錯誤頁不洩漏診斷，發布目錄只含核准檔案。</p></li><li><span>26–35</span><p><b>檢查 Git 與行動</b>查看 Secret Scanning 狀態，挑出三項移除、泛化、輪替或監控工作。</p></li></ol></section>
+
+        <section class="self-check"><div><p class="section-index">CHECK YOUR MODEL</p><h2>先回答，再展開。</h2></div><div><details><summary>公開版本號一定是漏洞嗎？</summary><p>不一定，但精確版本能降低攻擊者判斷成本。優先修補與安全設定，再移除沒有業務用途的版本曝光；不能只靠隱藏版本假裝安全。</p></details><details><summary>把管理路徑寫進 robots.txt 能保護它嗎？</summary><p>不能。robots.txt 是給合作型爬蟲的規則，不是授權控制，而且內容公開。管理功能仍需強身分驗證、伺服器授權、來源限制與日誌。</p></details><details><summary>前端 API Key 是否全部都算 Secret？</summary><p>要看供應商設計。有些 Key 本來就是公開識別符，但必須限制可用來源、API、額度和權限；能取得敏感資料或管理資源的憑證絕不能交給前端。</p></details><details><summary>刪除含 Secret 的最新 Commit 就安全了嗎？</summary><p>不是。Secret 可能仍在 Git 歷史、Fork、快取或已下載副本。應先撤銷或輪替並檢查使用紀錄，再協調清理程式與必要歷史。</p></details><details><summary>錯誤頁是否應該完全不提供資訊？</summary><p>不需要。使用者仍要知道操作失敗與下一步；可提供泛化訊息和事件編號。完整例外與脈絡留在受保護、已遮罩的內部日誌。</p></details></div></section>
+
+        <section class="chapter-recap"><p class="section-index">CHAPTER 03 / RECAP</p><h2>真正要減少的，<br />是沒有必要的公開線索。</h2><div><article><span>01</span><p>資訊碎片能彼此組合，降低攻擊者的不確定性；評估時要看累積效果。</p></article><article><span>02</span><p>送到瀏覽器的 HTML、JavaScript 與 Source Map 都應視為公開，不能負責保護 Secret。</p></article><article><span>03</span><p>錯誤處理要對外泛化、對內可追蹤；發布流程只允許必要產物進入公開目錄。</p></article><article><span>04</span><p>Secret 外洩後先撤銷與輪替，再稽核、清理歷史並建立掃描與 Push Protection。</p></article></div></section>
+
+        <section class="sources"><div><p class="section-index">PRIMARY REFERENCES</p><h2>本章依據</h2><p>以 OWASP 的資訊外洩與錯誤處理測試、IETF robots.txt 標準和 GitHub Secret 修復流程建立防守檢查。</p></div><ul>{source_cards}</ul></section>
+
+        <nav class="chapter-nav"><a href="chapter-02-http-request.html"><span>← PREVIOUS</span><b>網路與 HTTP 攻擊基礎</b></a><span class="next"><small>NEXT CHAPTER</small><b>帳號、密碼與登入攻擊</b><i>依大綱順序製作</i></span></nav>
+      </article>'''

@@ -57,7 +57,8 @@ CHAPTERS = [
         "summary": "沿著一次瀏覽器請求走過 DNS、TLS、CDN、Cookie、Session 與 API，理解每一層的責任。",
         "topics": ["DNS／Port", "TLS／HTTPS", "HTTP", "Cookie／Session", "Reverse Proxy"],
         "duration": "60–80 分鐘",
-        "ready": False,
+        "ready": True,
+        "href": "chapter-02-http-request.html",
     },
     {
         "number": 3,
@@ -66,7 +67,8 @@ CHAPTERS = [
         "summary": "檢查子網域、錯誤頁、備份檔、Git、版本資訊與測試環境如何讓攻擊者少走很多路。",
         "topics": ["外部可見面", "子網域", "錯誤訊息", "備份與 Git", "版本洩漏"],
         "duration": "55–75 分鐘",
-        "ready": False,
+        "ready": True,
+        "href": "chapter-03-information-exposure.html",
     },
     {
         "number": 4,

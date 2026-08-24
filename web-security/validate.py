@@ -9,14 +9,16 @@ def main() -> None:
     assert len(CHAPTERS) == 12, "expected twelve large chapters"
     assert [chapter["number"] for chapter in CHAPTERS] == list(range(1, 13))
     assert sorted(number for phase in PHASES for number in phase["chapters"]) == list(range(1, 13))
-    assert [chapter["number"] for chapter in CHAPTERS if chapter["ready"]] == [1]
+    assert [chapter["number"] for chapter in CHAPTERS if chapter["ready"]] == [1, 2, 3]
     assert CHAPTERS[0]["href"] == "chapter-01-attack-surface.html"
+    assert CHAPTERS[1]["href"] == "chapter-02-http-request.html"
+    assert CHAPTERS[2]["href"] == "chapter-03-information-exposure.html"
     for chapter in CHAPTERS:
         assert chapter["title"] and chapter["english"] and chapter["summary"] and chapter["duration"]
         assert len(chapter["topics"]) == 5
     assert len(SOURCES) >= 4
     assert all(source["url"].startswith("https://") for source in SOURCES)
-    print("Validated 5 phases, 12 large chapters, and 4 primary references.")
+    print("Validated 5 phases, 12 large chapters, and completed chapters 01–03.")
 
 
 if __name__ == "__main__":

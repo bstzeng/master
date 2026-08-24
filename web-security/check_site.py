@@ -27,7 +27,7 @@ class Inspector(HTMLParser):
         classes = set(values.get("class", "").split())
         if tag == "a" and values.get("href"):
             self.hrefs.append(values["href"])
-            if "cheatsheetseries.owasp.org" in values["href"] or "nist.gov" in values["href"] or "cisa.gov" in values["href"]:
+            if any(domain in values["href"] for domain in ("owasp.org", "nist.gov", "cisa.gov", "rfc-editor.org", "developer.mozilla.org", "docs.github.com")):
                 self.source_links += 1
         if tag in {"img", "script"} and values.get("src"):
             self.srcs.append(values["src"])
@@ -63,7 +63,7 @@ def check_local(reference: str, page: Path) -> None:
 
 def main() -> None:
     pages = sorted(ROOT.glob("*.html"))
-    assert [page.name for page in pages] == ["chapter-01-attack-surface.html", "index.html"]
+    assert [page.name for page in pages] == ["chapter-01-attack-surface.html", "chapter-02-http-request.html", "chapter-03-information-exposure.html", "index.html"]
     inspectors = {}
     for page in pages:
         inspector = Inspector()
@@ -78,14 +78,17 @@ def main() -> None:
             check_local(reference, page)
 
     outline = inspectors["index.html"]
-    chapter = inspectors["chapter-01-attack-surface.html"]
     assert outline.chapter_cards == 12
-    assert chapter.lesson_parts == 8
-    assert chapter.details == 5
-    assert chapter.source_links == 4
+    for chapter_name in ("chapter-01-attack-surface.html", "chapter-02-http-request.html", "chapter-03-information-exposure.html"):
+        chapter = inspectors[chapter_name]
+        assert chapter.lesson_parts == 8, f"{chapter_name} must have 8 lesson parts"
+        assert chapter.details == 5, f"{chapter_name} must have 5 self-check questions"
+        assert chapter.source_links == 4, f"{chapter_name} must have 4 primary source links"
     assert (ROOT / "assets" / "og.png").exists()
     assert (ROOT / "assets" / "chapter-01-attack-surface.png").exists()
-    print("Checked 2 pages, 12 chapter cards, 8 lesson parts, 5 questions, 4 sources, and local assets.")
+    assert (ROOT / "assets" / "chapter-02-http-request.png").exists()
+    assert (ROOT / "assets" / "chapter-03-information-exposure.png").exists()
+    print("Checked 4 pages, 12 chapter cards, and 3 complete chapters with 8 parts, 5 questions, and 4 sources each.")
 
 
 if __name__ == "__main__":
