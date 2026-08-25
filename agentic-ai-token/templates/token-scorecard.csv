@@ -1,0 +1,2 @@
+run_id,task_type,prompt_version,tool_bundle,agent_count,model_route,stage,input_tokens,cached_tokens,reasoning_tokens,output_tokens,tool_calls,tool_result_bytes,retries,latency_ms,success,must_have_score,quality_score,notes
+example-001,research,v1,research-basic,1,balanced,retrieval,8200,4100,0,380,2,15200,0,4200,true,1.0,0.92,replace with your own run

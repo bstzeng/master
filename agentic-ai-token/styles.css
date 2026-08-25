@@ -1,0 +1,109 @@
+@import url("../web-security/styles.css");
+
+:root {
+  --navy: #11142d;
+  --navy-2: #1b2144;
+  --navy-3: #29305b;
+  --paper: #f5f1e8;
+  --paper-2: #e8e3f3;
+  --ink: #181b34;
+  --muted: #65677c;
+  --teal: #63e1d1;
+  --teal-dark: #3458b5;
+  --orange: #ff7c6b;
+  --yellow: #d9ff74;
+  --line: rgba(24, 27, 52, .2);
+  --dark-line: rgba(245, 241, 232, .18);
+}
+
+::selection { color: var(--navy); background: var(--yellow); }
+.brand-mark { background: var(--yellow); }
+.outline-copy h1 em { color: var(--orange); }
+.primary-button span, .card-action, .chapter-toc > a { color: var(--teal); }
+.chapter-card.is-ready { background: linear-gradient(145deg, var(--navy), #171e42); }
+.chapter-card:nth-child(even).is-ready { background: linear-gradient(145deg, #171a38, #232b58); }
+.chapter-cover .zoom-image, .hero-image .zoom-image { border: 1px solid rgba(24, 27, 52, .28); }
+.chapter-cover img, .hero-image img { filter: saturate(.94) contrast(1.02); }
+
+.lesson-code {
+  margin: 31px 0 0;
+  padding: 24px 27px;
+  overflow-x: auto;
+  border-left: 5px solid var(--teal);
+  color: #ebf9f7;
+  background: #0d1026;
+  font: 14px/1.85 var(--mono);
+  white-space: pre-wrap;
+}
+
+.optimization-workshop {
+  display: grid;
+  grid-template-columns: .7fr 1.3fr;
+  gap: 75px;
+  width: min(1240px, calc(100% - 56px));
+  margin: 20px auto 0;
+  padding: 78px;
+  color: var(--paper);
+  background: var(--navy-2);
+}
+.optimization-workshop h2 {
+  margin: 0;
+  font: 900 clamp(35px, 4vw, 57px)/1.15 var(--serif);
+  letter-spacing: -.04em;
+}
+.workshop-grid { display: grid; gap: 1px; background: var(--dark-line); }
+.workshop-grid article { min-height: 150px; padding: 24px; background: var(--navy); }
+.workshop-grid span { color: var(--orange); font: 500 11px/1 var(--mono); letter-spacing: .12em; }
+.workshop-grid p { margin: 38px 0 0; color: rgba(245,241,232,.72); font-size: 15px; line-height: 1.8; }
+.workshop-grid .optimized { border-left: 5px solid var(--teal); }
+.workshop-grid .optimized span { color: var(--teal); }
+.workshop-grid .result { background: #2d3470; }
+.workshop-grid .result span { color: var(--yellow); }
+
+.token-lab {
+  display: grid;
+  grid-template-columns: .62fr 1.38fr;
+  gap: 85px;
+  padding: 100px max(28px, calc((100% - 1320px) / 2));
+  color: var(--paper);
+  background: var(--navy);
+}
+.token-lab h2, .resource-library h2 {
+  margin: 0 0 22px;
+  font: 900 clamp(37px, 4vw, 57px)/1.15 var(--serif);
+  letter-spacing: -.04em;
+}
+.token-lab > div > p:last-child { color: rgba(245,241,232,.65); font-size: 15px; line-height: 1.85; }
+.token-calculator { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--dark-line); }
+.token-calculator label { display: grid; gap: 22px; padding: 21px; color: rgba(245,241,232,.7); background: var(--navy-2); font-size: 12px; }
+.token-calculator input { width: 100%; padding: 13px; border: 1px solid var(--dark-line); border-radius: 0; color: var(--paper); background: #0d1026; font: 500 17px/1 var(--mono); }
+.token-calculator output { display: grid; grid-column: 1 / -1; padding: 28px; color: var(--navy); background: var(--yellow); }
+.token-calculator output span, .token-calculator output small { font: 500 10px/1.4 var(--mono); letter-spacing: .1em; }
+.token-calculator output strong { margin: 13px 0 8px; font: 500 clamp(38px, 5vw, 70px)/1 var(--mono); }
+
+.resource-library {
+  display: grid;
+  grid-template-columns: .55fr 1.45fr;
+  gap: 85px;
+  padding: 100px max(28px, calc((100% - 1320px) / 2));
+  background: var(--paper-2);
+}
+.resource-library > div > p:last-child { color: var(--muted); line-height: 1.8; }
+.resource-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--line); }
+.resource-grid a { min-height: 210px; padding: 25px; background: var(--paper); transition: color 160ms ease, background 160ms ease; }
+.resource-grid a:hover { color: var(--paper); background: var(--navy); }
+.resource-grid span { color: var(--orange); font: 500 11px/1 var(--mono); }
+.resource-grid b { display: block; margin: 62px 0 9px; font: 900 24px/1.2 var(--serif); }
+.resource-grid p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+.resource-grid a:hover p { color: rgba(245,241,232,.66); }
+
+@media (max-width: 900px) {
+  .optimization-workshop, .token-lab, .resource-library { grid-template-columns: 1fr; gap: 40px; }
+  .optimization-workshop { padding: 55px 35px; }
+}
+
+@media (max-width: 560px) {
+  .optimization-workshop { width: min(100% - 32px, 1240px); padding: 40px 22px; }
+  .token-calculator, .resource-grid { grid-template-columns: 1fr; }
+  .token-calculator output { grid-column: auto; }
+}
