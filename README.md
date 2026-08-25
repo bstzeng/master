@@ -7,7 +7,7 @@ Patrick 的個人學習知識庫，目前包含六個主題：
 - 「零基礎日文」：五階段、26 個單元與 143 堂獨立課程，支援中文、Hepburn 羅馬拼音與網站內建發音。
 - 「星座學習地圖」：五階段、36 個完整單元，涵蓋星座起源、十二星座人格、關係互動、基礎星盤與科學思考。
 - 「魔戒深度解說」：十階段、60 個完整單元，從創世與三大紀元讀到人物主題、影視改編與完整閱讀路線。
-- 「網站攻擊與防禦」：五階段、12 個大型章節；以防守者視角理解網站攻擊面、經典漏洞、部署、偵測與復原，目前完成完整大綱與前三章。
+- 「網站攻擊與防禦」：五階段、12 個完整大型章節；以防守者視角理解網站攻擊面、經典漏洞、部署、偵測與復原。
 
 ## 頁面
 
@@ -42,6 +42,7 @@ Patrick 的個人學習知識庫，目前包含六個主題：
 - `web-security/chapter-01-attack-surface.html`：第一章「網站到底會從哪裡被攻擊」完整教學
 - `web-security/chapter-02-http-request.html`：第二章「網路與 HTTP 攻擊基礎」完整教學
 - `web-security/chapter-03-information-exposure.html`：第三章「情報蒐集與資訊外洩」完整教學
+- `web-security/chapter-04-identity.html`～`chapter-12-incident-response.html`：登入、授權、注入、瀏覽器、檔案、API、部署、可用性與事件應變完整教學
 
 ## 內容維護
 
@@ -73,8 +74,10 @@ Patrick 的個人學習知識庫，目前包含六個主題：
 - `lotr/check_site.py`：檢查魔戒頁面結構與站內連結
 - `web-security/data/course.py`：五階段、12 個大型章節與官方參考來源
 - `web-security/data/chapter_02.py`、`chapter_03.py`：第二、三章完整內容與官方來源
+- `web-security/data/chapters_04_06.py`～`chapters_10_12.py`：第四至十二章完整內容與官方來源
+- `web-security/data/chapter_factory.py`：第四至十二章共用的大型章節頁面產生器
 - `web-security/validate.py`：驗證課程大綱與章節狀態
-- `web-security/build.py`：產生完整大綱頁與第一章教學頁
+- `web-security/build.py`：產生完整大綱與全部 12 章教學頁
 - `web-security/check_site.py`：檢查章節密度、圖片、來源、metadata 與站內連結
 
 修改內容後執行：

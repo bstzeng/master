@@ -61,5 +61,5 @@ def body(source_cards: str) -> str:
 
         <section class="sources"><div><p class="section-index">PRIMARY REFERENCES</p><h2>本章依據</h2><p>以 OWASP 的資訊外洩與錯誤處理測試、IETF robots.txt 標準和 GitHub Secret 修復流程建立防守檢查。</p></div><ul>{source_cards}</ul></section>
 
-        <nav class="chapter-nav"><a href="chapter-02-http-request.html"><span>← PREVIOUS</span><b>網路與 HTTP 攻擊基礎</b></a><span class="next"><small>NEXT CHAPTER</small><b>帳號、密碼與登入攻擊</b><i>依大綱順序製作</i></span></nav>
+        <nav class="chapter-nav"><a href="chapter-02-http-request.html"><span>← PREVIOUS</span><b>網路與 HTTP 攻擊基礎</b></a><a class="next" href="chapter-04-identity.html"><small>NEXT CHAPTER →</small><b>帳號、密碼與登入攻擊</b><i>繼續閱讀</i></a></nav>
       </article>'''

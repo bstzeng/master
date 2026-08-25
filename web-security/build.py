@@ -14,6 +14,12 @@ sys.path.insert(0, str(ROOT))
 from data.course import CHAPTERS, PHASES, SOURCES  # noqa: E402
 from data.chapter_02 import SOURCES as CHAPTER_02_SOURCES, body as chapter_02_body  # noqa: E402
 from data.chapter_03 import SOURCES as CHAPTER_03_SOURCES, body as chapter_03_body  # noqa: E402
+from data.chapter_factory import body as complete_chapter_body  # noqa: E402
+from data.chapters_04_06 import CHAPTERS_04_06  # noqa: E402
+from data.chapters_07_09 import CHAPTERS_07_09  # noqa: E402
+from data.chapters_10_12 import CHAPTERS_10_12  # noqa: E402
+
+COMPLETE_CHAPTERS = CHAPTERS_04_06 + CHAPTERS_07_09 + CHAPTERS_10_12
 
 
 def esc(value) -> str:
@@ -22,6 +28,8 @@ def esc(value) -> str:
 
 def shell(*, title: str, description: str, body: str, prefix: str = "", active: str = "outline", image: str = "assets/og.png") -> str:
     image_url = f"https://bstzeng.github.io/master/web-security/{image}"
+    active_number = int(active.split("-")[1]) if active.startswith("chapter-") else 0
+    group_active = lambda first, last: "is-active" if first <= active_number <= last else ""
     return f'''<!doctype html>
 <html lang="zh-Hant">
   <head>
@@ -48,7 +56,7 @@ def shell(*, title: str, description: str, body: str, prefix: str = "", active: 
     <div class="reading-progress" aria-hidden="true"><span></span></div>
     <header class="site-header">
       <a class="brand" href="{prefix}../index.html" aria-label="回到 MASTER 首頁"><span class="brand-mark">M</span><span>MASTER</span></a>
-      <nav aria-label="網站攻擊與防禦課程選單"><a class="{'is-active' if active == 'outline' else ''}" href="{prefix}index.html">完整大綱</a><a class="{'is-active' if active == 'chapter-1' else ''}" href="{prefix}chapter-01-attack-surface.html">01</a><a class="{'is-active' if active == 'chapter-2' else ''}" href="{prefix}chapter-02-http-request.html">02</a><a class="{'is-active' if active == 'chapter-3' else ''}" href="{prefix}chapter-03-information-exposure.html">03</a></nav>
+      <nav aria-label="網站攻擊與防禦課程選單"><a class="{'is-active' if active == 'outline' else ''}" href="{prefix}index.html">完整大綱</a><a class="{group_active(1, 3)}" href="{prefix}chapter-01-attack-surface.html">01–03</a><a class="{group_active(4, 5)}" href="{prefix}chapter-04-identity.html">04–05</a><a class="{group_active(6, 9)}" href="{prefix}chapter-06-injection.html">06–09</a><a class="{group_active(10, 11)}" href="{prefix}chapter-10-deployment-security.html">10–11</a><a class="{group_active(12, 12)}" href="{prefix}chapter-12-incident-response.html">12</a></nav>
       <span class="header-note">WEB SECURITY / DEFENDER'S VIEW</span>
     </header>
     <main>{body}</main>
@@ -79,13 +87,13 @@ def build_outline() -> None:
         phase_sections.append(f'''<section class="phase" id="phase-{phase['number']}"><div class="phase-head"><div><p class="section-index">PHASE {phase['number']:02d} / {esc(phase['english'])}</p><h2>{esc(phase['title'])}</h2></div><p>{esc(phase['summary'])}</p></div><div class="chapter-grid">{cards}</div></section>''')
     body = f'''
       <section class="outline-hero">
-        <div class="outline-copy"><a class="breadcrumb" href="../index.html">MASTER / TOPIC 06</a><p class="eyebrow">WEB ATTACK & DEFENSE · DEFENDER-LED COURSE</p><h1>看懂攻擊路徑，<br /><em>才能守住自己的站。</em></h1><p class="hero-intro">從攻擊者視角理解網站，但所有操作只用在自己的系統或刻意建立的本機練習環境。這次不拆成大量短頁：全課程只有 12 個大型章節，每頁完成一個可以實際拿去保護網站的能力。</p><div class="course-stats"><div><strong>12</strong><span>大型章節</span></div><div><strong>50–120</strong><span>分鐘／章</span></div><div><strong>3</strong><span>章目前完成</span></div></div><a class="primary-button" href="chapter-01-attack-surface.html">從第一章開始 <span>→</span></a></div>
+        <div class="outline-copy"><a class="breadcrumb" href="../index.html">MASTER / TOPIC 06</a><p class="eyebrow">WEB ATTACK & DEFENSE · DEFENDER-LED COURSE</p><h1>看懂攻擊路徑，<br /><em>才能守住自己的站。</em></h1><p class="hero-intro">從攻擊者視角理解網站，但所有操作只用在自己的系統或刻意建立的本機練習環境。這次不拆成大量短頁：全課程只有 12 個大型章節，每頁完成一個可以實際拿去保護網站的能力。</p><div class="course-stats"><div><strong>12</strong><span>大型章節</span></div><div><strong>50–120</strong><span>分鐘／章</span></div><div><strong>12 / 12</strong><span>全課程完成</span></div></div><a class="primary-button" href="chapter-01-attack-surface.html">從第一章開始 <span>→</span></a></div>
         <figure class="hero-image"><button class="zoom-image" type="button" data-image="assets/og.png" data-alt="網站攻擊與防禦的分層伺服器主視覺"><img src="assets/og.png" alt="網站攻擊與防禦的分層伺服器主視覺" /><span>點擊放大 ↗</span></button><figcaption>GPT 原創主視覺｜精確技術標示由網頁元件另外呈現</figcaption></figure>
       </section>
       <section class="course-contract"><p class="section-index">00 / COURSE CONTRACT</p><div><h2>學攻擊，是為了把防禦做對。</h2><p>課程會解釋攻擊成立條件、資料流與可觀察跡象；示範限制在本機練習程式，不提供對外部目標的掃描、入侵、繞過偵測或維持存取步驟。</p></div><ol><li><span>01</span><b>先畫系統</b><p>不知道資產與信任邊界，就不知道該守哪裡。</p></li><li><span>02</span><b>再理解失敗</b><p>追蹤輸入在哪一層失去控制，而不是只背漏洞名稱。</p></li><li><span>03</span><b>最後驗證防禦</b><p>以測試、日誌和檢查表確認修正真的生效。</p></li></ol></section>
       <nav class="phase-nav" aria-label="快速前往課程階段">{''.join(f'<a href="#phase-{phase["number"]}"><span>{phase["number"]:02d}</span>{esc(phase["title"])}</a>' for phase in PHASES)}</nav>
       <div class="full-outline">{''.join(phase_sections)}</div>
-      <section class="density-promise"><div><p class="section-index">01 / NEW CONTENT STANDARD</p><h2>這次每一頁，<br />就是一整章。</h2></div><div class="density-list"><p>目前完成的三章都包含 8 個連續段落、大字程式化技術圖、1 張 GPT 原創插畫、實際範本、5 題測驗與可直接執行的自家網站作業。</p><ul><li>不再為每個小名詞拆頁</li><li>圖像服務理解，不只是裝飾</li><li>每個觀念都回到自家網站</li><li>來源、界線與可驗證結果並列</li></ul><a href="chapter-01-attack-surface.html">從第一章開始 →</a></div></section>'''
+      <section class="density-promise"><div><p class="section-index">01 / COMPLETE COURSE STANDARD</p><h2>每一頁，<br />就是一整章。</h2></div><div class="density-list"><p>全 12 章都包含 8 個連續段落、大字程式化技術圖、1 張 GPT 原創插畫、實際範本、5 題測驗與可直接執行的自家網站作業。</p><ul><li>不為每個小名詞拆頁</li><li>圖像服務理解，不只是裝飾</li><li>每個觀念都回到自家網站</li><li>來源、界線與可驗證結果並列</li></ul><a href="chapter-01-attack-surface.html">從第一章開始 →</a></div></section>'''
     (ROOT / "index.html").write_text(shell(title="網站攻擊與防禦｜完整大綱", description="12 個大型章節，從攻擊面、登入與經典網站漏洞學到部署、偵測與事件復原。", body=body), encoding="utf-8")
 
 
@@ -148,12 +156,26 @@ def build_chapter_three() -> None:
     (ROOT / "chapter-03-information-exposure.html").write_text(page, encoding="utf-8")
 
 
+def build_complete_chapters() -> None:
+    for chapter in COMPLETE_CHAPTERS:
+        chapter_content = complete_chapter_body(chapter, render_source_cards(chapter["sources"]))
+        page = shell(
+            title=f'{chapter["number"]:02d}｜{chapter["title"]}',
+            description=chapter["description"],
+            body=chapter_content,
+            active=f'chapter-{chapter["number"]}',
+            image=f'assets/{chapter["image"]}',
+        )
+        (ROOT / f'chapter-{chapter["number"]:02d}-{chapter["slug"]}.html').write_text(page, encoding="utf-8")
+
+
 def main() -> None:
     build_outline()
     build_chapter_one()
     build_chapter_two()
     build_chapter_three()
-    print("Built web-security outline and complete chapters 01–03.")
+    build_complete_chapters()
+    print("Built web-security outline and complete chapters 01–12.")
 
 
 if __name__ == "__main__":

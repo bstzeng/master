@@ -276,6 +276,24 @@ td span { margin-top: 5px; color: var(--muted); font-size: 12px; }
 .response-timeline b { font-size: 15px; }
 .response-timeline p { font-size: 12px; }
 
+/* Chapters 04–12: reusable large-label teaching diagrams. */
+.teaching-visual { display: grid; gap: 1px; margin-top: 38px; padding: 1px; color: var(--paper); background: var(--dark-line); }
+.teaching-visual article { position: relative; display: flex; min-width: 0; min-height: 205px; flex-direction: column; padding: 24px; overflow: hidden; background: var(--navy); }
+.teaching-visual article::before { position: absolute; inset: 0 auto 0 0; width: 4px; content: ""; background: transparent; }
+.teaching-visual article.safe::before { background: var(--teal); }
+.teaching-visual article.alert::before { background: var(--orange); }
+.teaching-visual span { color: var(--orange); font: 500 13px/1.35 var(--mono); letter-spacing: .055em; }
+.teaching-visual article.safe span { color: var(--teal); }
+.teaching-visual b { display: block; margin-top: auto; color: var(--paper); font: 700 21px/1.28 var(--serif); letter-spacing: -.02em; overflow-wrap: anywhere; }
+.teaching-visual p { margin: 12px 0 0; color: rgba(244,239,223,.74); font-size: 14px; line-height: 1.65; }
+.visual-grid, .visual-matrix, .visual-split { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.visual-flow { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.visual-flow article:not(:last-child)::after { position: absolute; z-index: 2; top: 50%; right: -15px; width: 29px; height: 29px; border: 1px solid var(--dark-line); border-radius: 50%; color: var(--orange); background: var(--navy); content: "→"; font: 18px/27px var(--mono); text-align: center; transform: translateY(-50%); }
+.visual-stack { grid-template-columns: 1fr; }
+.visual-stack article { display: grid; min-height: 128px; grid-template-columns: 150px minmax(150px, .55fr) 1fr; align-items: center; gap: 24px; }
+.visual-stack b, .visual-stack p { margin: 0; }
+.visual-stack article + article { border-top: 1px solid var(--dark-line); }
+
 .assignment, .self-check, .chapter-recap, .sources { width: min(1240px, calc(100% - 56px)); margin: 0 auto; }
 .assignment { display: grid; grid-template-columns: .75fr 1.25fr; gap: 80px; margin-top: 18px; padding: 75px; color: var(--paper); background: var(--navy); }
 .assignment h2, .self-check h2, .sources h2 { margin-bottom: 20px; font: 900 clamp(35px, 4vw, 55px)/1.12 var(--serif); letter-spacing: -.04em; }
@@ -345,6 +363,8 @@ footer > span:last-child { justify-self: end; }
   .tls-envelope > div { min-height: auto; }
   .message-pair, .cookie-card { grid-template-columns: 1fr; }
   .response-grid { grid-template-columns: repeat(3, 1fr); }
+  .visual-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .visual-flow article:nth-child(2)::after { display: none; }
   .leak-layers { grid-template-columns: repeat(2, 1fr); }
   .error-split { grid-template-columns: 1fr; }
   .error-split > i { min-height: 32px; transform: rotate(90deg); }
@@ -386,7 +406,10 @@ footer > span:last-child { justify-self: end; }
   .data-zone, .trust-zone { grid-template-columns: 1fr; }
   .trust-zone .flow-line { transform: rotate(90deg); }
   .risk-board { grid-template-columns: 1fr; }
-  .tls-tunnel, .message-meaning, .cookie-card ul, .exposure-map, .boundary-lanes, .environment-map, .leak-layers, .artifact-grid, .response-grid { grid-template-columns: 1fr; }
+  .tls-tunnel, .message-meaning, .cookie-card ul, .exposure-map, .boundary-lanes, .environment-map, .leak-layers, .artifact-grid, .response-grid, .visual-grid, .visual-matrix, .visual-split, .visual-flow { grid-template-columns: 1fr; }
+  .teaching-visual article { min-height: 175px; }
+  .visual-flow article::after { display: none; }
+  .visual-stack article { min-height: 175px; grid-template-columns: 1fr; align-content: end; gap: 14px; }
   .exposure-map > article { grid-column: auto; }
   .url-anatomy { display: grid; grid-template-columns: 1fr; }
   .url-anatomy i { min-height: 35px; }

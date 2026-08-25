@@ -77,7 +77,8 @@ CHAPTERS = [
         "summary": "從密碼重複使用、暴力嘗試、重設流程到 Session 冒用，建立不只靠密碼的登入防線。",
         "topics": ["Credential Stuffing", "密碼雜湊", "Session", "MFA", "異常登入"],
         "duration": "70–90 分鐘",
-        "ready": False,
+        "ready": True,
+        "href": "chapter-04-identity.html",
     },
     {
         "number": 5,
@@ -86,7 +87,8 @@ CHAPTERS = [
         "summary": "辨認水平越權、垂直越權與多租戶資料外洩，讓每一筆請求都接受伺服器端授權。",
         "topics": ["Authentication", "Authorization", "IDOR", "管理權限", "資料隔離"],
         "duration": "60–80 分鐘",
-        "ready": False,
+        "ready": True,
+        "href": "chapter-05-authorization.html",
     },
     {
         "number": 6,
@@ -95,7 +97,8 @@ CHAPTERS = [
         "summary": "用安全的本機示範理解 SQL、NoSQL、Command 與 Template Injection 的共同根源和修正方式。",
         "topics": ["SQL Injection", "Command Injection", "Template Injection", "參數化", "最小權限"],
         "duration": "80–100 分鐘",
-        "ready": False,
+        "ready": True,
+        "href": "chapter-06-injection.html",
     },
     {
         "number": 7,
@@ -104,7 +107,8 @@ CHAPTERS = [
         "summary": "理解瀏覽器如何解讀內容、攜帶登入狀態與限制來源，正確使用編碼、CSP、SameSite 與 CORS。",
         "topics": ["XSS", "CSRF", "CSP", "SameSite", "CORS／Clickjacking"],
         "duration": "80–100 分鐘",
-        "ready": False,
+        "ready": True,
+        "href": "chapter-07-browser-security.html",
     },
     {
         "number": 8,
@@ -113,7 +117,8 @@ CHAPTERS = [
         "summary": "從偽造檔案類型、任意路徑到公開下載權限，設計隔離、重新命名與內容驗證。",
         "topics": ["File Upload", "MIME", "Path Traversal", "下載授權", "隔離儲存"],
         "duration": "65–85 分鐘",
-        "ready": False,
+        "ready": True,
+        "href": "chapter-08-file-security.html",
     },
     {
         "number": 9,
@@ -122,7 +127,8 @@ CHAPTERS = [
         "summary": "保護 URL 預覽、Webhook、雲端 Metadata、API 欄位與內網服務，不讓伺服器替攻擊者越界。",
         "topics": ["SSRF", "Webhook", "API Key", "Mass Assignment", "網路隔離"],
         "duration": "70–90 分鐘",
-        "ready": False,
+        "ready": True,
+        "href": "chapter-09-ssrf-api.html",
     },
     {
         "number": 10,
@@ -131,7 +137,8 @@ CHAPTERS = [
         "summary": "涵蓋 DNS、TLS、SSH、容器、IAM、Secret、第三方套件與 CI/CD，減少部署層留下的入口。",
         "topics": ["DNS／TLS", "SSH", "Cloud IAM", "Secret", "供應鏈／CI/CD"],
         "duration": "90–120 分鐘",
-        "ready": False,
+        "ready": True,
+        "href": "chapter-10-deployment-security.html",
     },
     {
         "number": 11,
@@ -140,7 +147,8 @@ CHAPTERS = [
         "summary": "辨認流量攻擊、昂貴請求、爬蟲與功能濫用，用限速、快取、佇列和資源上限控制成本。",
         "topics": ["DoS／DDoS", "Bot", "Rate Limit", "Cache／Queue", "資源上限"],
         "duration": "60–80 分鐘",
-        "ready": False,
+        "ready": True,
+        "href": "chapter-11-availability.html",
     },
     {
         "number": 12,
@@ -149,7 +157,8 @@ CHAPTERS = [
         "summary": "把登入、權限、流量與系統日誌變成告警，完成隔離、金鑰輪替、備份還原與自家網站改善清單。",
         "topics": ["Security Log", "告警", "事件應變", "備份還原", "安全基準"],
         "duration": "90–120 分鐘",
-        "ready": False,
+        "ready": True,
+        "href": "chapter-12-incident-response.html",
     },
 ]
 

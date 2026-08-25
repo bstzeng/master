@@ -18,6 +18,7 @@ class Inspector(HTMLParser):
         self.lesson_parts = 0
         self.details = 0
         self.source_links = 0
+        self.teaching_visuals = 0
         self.meta_names = set()
         self.meta_properties = set()
         self.images_without_alt = []
@@ -39,6 +40,8 @@ class Inspector(HTMLParser):
             self.chapter_cards += 1
         if "lesson-part" in classes:
             self.lesson_parts += 1
+        if "teaching-visual" in classes:
+            self.teaching_visuals += 1
         if tag == "details":
             self.details += 1
         if tag == "meta":
@@ -63,7 +66,21 @@ def check_local(reference: str, page: Path) -> None:
 
 def main() -> None:
     pages = sorted(ROOT.glob("*.html"))
-    assert [page.name for page in pages] == ["chapter-01-attack-surface.html", "chapter-02-http-request.html", "chapter-03-information-exposure.html", "index.html"]
+    chapter_names = [
+        "chapter-01-attack-surface.html",
+        "chapter-02-http-request.html",
+        "chapter-03-information-exposure.html",
+        "chapter-04-identity.html",
+        "chapter-05-authorization.html",
+        "chapter-06-injection.html",
+        "chapter-07-browser-security.html",
+        "chapter-08-file-security.html",
+        "chapter-09-ssrf-api.html",
+        "chapter-10-deployment-security.html",
+        "chapter-11-availability.html",
+        "chapter-12-incident-response.html",
+    ]
+    assert [page.name for page in pages] == sorted(chapter_names + ["index.html"])
     inspectors = {}
     for page in pages:
         inspector = Inspector()
@@ -79,16 +96,22 @@ def main() -> None:
 
     outline = inspectors["index.html"]
     assert outline.chapter_cards == 12
-    for chapter_name in ("chapter-01-attack-surface.html", "chapter-02-http-request.html", "chapter-03-information-exposure.html"):
+    for chapter_name in chapter_names:
         chapter = inspectors[chapter_name]
         assert chapter.lesson_parts == 8, f"{chapter_name} must have 8 lesson parts"
         assert chapter.details == 5, f"{chapter_name} must have 5 self-check questions"
         assert chapter.source_links == 4, f"{chapter_name} must have 4 primary source links"
+    for chapter_name in chapter_names[3:]:
+        assert inspectors[chapter_name].teaching_visuals == 8, f"{chapter_name} must have 8 large teaching visuals"
     assert (ROOT / "assets" / "og.png").exists()
-    assert (ROOT / "assets" / "chapter-01-attack-surface.png").exists()
-    assert (ROOT / "assets" / "chapter-02-http-request.png").exists()
-    assert (ROOT / "assets" / "chapter-03-information-exposure.png").exists()
-    print("Checked 4 pages, 12 chapter cards, and 3 complete chapters with 8 parts, 5 questions, and 4 sources each.")
+    image_names = [
+        "chapter-01-attack-surface.png", "chapter-02-http-request.png", "chapter-03-information-exposure.png",
+        "chapter-04-identity.png", "chapter-05-authorization.png", "chapter-06-injection.png",
+        "chapter-07-browser-security.png", "chapter-08-file-security.png", "chapter-09-ssrf-api.png",
+        "chapter-10-deployment-security.png", "chapter-11-availability.png", "chapter-12-incident-response.png",
+    ]
+    assert all((ROOT / "assets" / image_name).exists() for image_name in image_names)
+    print("Checked 13 pages, 12 chapter cards, and all 12 chapters with 8 parts, 5 questions, and 4 sources each.")
 
 
 if __name__ == "__main__":
