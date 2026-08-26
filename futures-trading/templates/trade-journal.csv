@@ -1,0 +1,3 @@
+strategy_version,date,session,market,contract_month,direction,strategy,regime,setup,trigger,planned_entry,planned_stop,planned_target,planned_risk_amount,planned_contracts,order_type,actual_entry,actual_exit,actual_contracts,fees_taxes,entry_slippage,exit_slippage,gross_pnl,net_pnl,actual_R,max_favorable_excursion_R,max_adverse_excursion_R,exit_reason,followed_plan,process_grade,data_complete,pretrade_image,posttrade_image,observation,hypothesis,emotion,rule_deviation,next_process_change
+v1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+

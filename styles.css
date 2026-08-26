@@ -66,6 +66,9 @@ h1 em { color: var(--orange); font-style: italic; }
 .topic-card.token-featured { background: #151936; border-color: #151936; }
 .topic-card.token-featured .topic-label { color: #63e1d1; }
 .topic-card.token-featured:hover .topic-arrow { color: #151936; background: #d9ff74; }
+.topic-card.futures-featured { background: #102b2a; border-color: #102b2a; }
+.topic-card.futures-featured .topic-label { color: #78d4c4; }
+.topic-card.futures-featured:hover .topic-arrow { color: #102b2a; background: #e7c96f; }
 .topic-number { font-family: "Playfair Display", serif; font-size: 42px; }
 .topic-content { align-self: end; }
 .topic-label { margin-bottom: 12px; color: var(--orange); }

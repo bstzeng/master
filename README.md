@@ -1,6 +1,6 @@
 # MASTER
 
-Patrick 的個人學習知識庫，目前包含六個主題：
+Patrick 的個人學習知識庫，目前包含八個主題：
 
 - 「Python 資料結構與經典演算法」：兩階段、16 個單元與 131 堂獨立課程。
 - 「零基礎韓文」：五階段、26 個單元與 143 堂獨立課程，支援中文、RR 羅馬拼音與網站內建發音。
@@ -8,6 +8,8 @@ Patrick 的個人學習知識庫，目前包含六個主題：
 - 「星座學習地圖」：五階段、36 個完整單元，涵蓋星座起源、十二星座人格、關係互動、基礎星盤與科學思考。
 - 「魔戒深度解說」：十階段、60 個完整單元，從創世與三大紀元讀到人物主題、影視改編與完整閱讀路線。
 - 「網站攻擊與防禦」：五階段、12 個完整大型章節；以防守者視角理解網站攻擊面、經典漏洞、部署、偵測與復原。
+- 「Agentic AI 省 Token」：五階段、12 個完整大型章節；從成本量測、Context 與工具迴圈，到模型路由、多 Agent、快取與正式環境治理。
+- 「期貨交易入門」：五階段、12 個完整長篇章節；從契約、保證金與下單，到多空策略、部位風控、日誌與紙上交易。
 
 ## 頁面
 
@@ -43,6 +45,11 @@ Patrick 的個人學習知識庫，目前包含六個主題：
 - `web-security/chapter-02-http-request.html`：第二章「網路與 HTTP 攻擊基礎」完整教學
 - `web-security/chapter-03-information-exposure.html`：第三章「情報蒐集與資訊外洩」完整教學
 - `web-security/chapter-04-identity.html`～`chapter-12-incident-response.html`：登入、授權、注入、瀏覽器、檔案、API、部署、可用性與事件應變完整教學
+- `agentic-ai-token/index.html`：Agentic AI 省 Token 的五階段、12 章完整大綱
+- `agentic-ai-token/chapter-01-token-cost-map.html`～`chapter-12-production-playbook.html`：完整大型章節
+- `futures-trading/index.html`：期貨交易入門的五階段、12 章完整大綱與損益估算器
+- `futures-trading/chapter-01-futures-foundations.html`～`chapter-12-trade-lifecycle.html`：契約、操作、策略、風控與完整紙上交易
+- `futures-trading/templates/`：契約規格卡、風險計算表、交易計畫與交易日誌
 
 ## 內容維護
 
@@ -79,6 +86,12 @@ Patrick 的個人學習知識庫，目前包含六個主題：
 - `web-security/validate.py`：驗證課程大綱與章節狀態
 - `web-security/build.py`：產生完整大綱與全部 12 章教學頁
 - `web-security/check_site.py`：檢查章節密度、圖片、來源、metadata 與站內連結
+- `agentic-ai-token/data/`：Agentic AI 省 Token 的完整章節內容與官方來源
+- `agentic-ai-token/build.py`、`validate.py`、`check_site.py`：產生並檢查 12 個大型章節
+- `futures-trading/data/`：期貨課程五階段、12 章內容與官方來源
+- `futures-trading/build.py`：產生完整大綱與全部 12 個長篇章節
+- `futures-trading/validate.py`：檢查每章 8 段、5 題與至少 5,000 可見字元
+- `futures-trading/check_site.py`：檢查 13 個頁面的站內連結與圖片資產
 
 修改內容後執行：
 
@@ -101,6 +114,12 @@ python3 lotr/check_site.py
 python3 web-security/validate.py
 python3 web-security/build.py
 python3 web-security/check_site.py
+python3 agentic-ai-token/build.py
+python3 agentic-ai-token/validate.py
+python3 agentic-ai-token/check_site.py
+python3 futures-trading/build.py
+python3 futures-trading/validate.py
+python3 futures-trading/check_site.py
 ```
 
 需要重建語言課程音檔時，先安裝該主題的 `requirements-audio.txt`，再執行：
