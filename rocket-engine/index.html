@@ -1,0 +1,1100 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="用一支 72 秒的 HTML 動畫影片看懂火箭發動機：牛頓第三定律、推進劑供應、燃燒室壓力、拉瓦爾噴嘴與推力公式。" />
+    <meta name="theme-color" content="#1c1410" />
+    <title>火箭發動機原理｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #1c1410;
+        --bg-2: #261b15;
+        --paper: #f1efe7;
+        --muted: rgba(241, 239, 231, 0.62);
+        --line: rgba(241, 239, 231, 0.16);
+        --fire: #ff7043;
+        --acid: #d9ff43;
+        --ice: #7cc7ff;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body { margin: 0; overflow-x: hidden; color: var(--paper); background: var(--bg); font-family: "Noto Sans TC", sans-serif; -webkit-font-smoothing: antialiased; }
+      a { color: inherit; text-decoration: none; }
+      h1, h2, h3, p { margin-top: 0; }
+
+      .site-header { display: flex; justify-content: space-between; align-items: center; width: min(1240px, calc(100% - 32px)); min-height: 76px; margin: 0 auto; border-bottom: 1px solid var(--line); }
+      .brand { display: inline-flex; align-items: center; gap: 11px; font-family: "DM Mono", monospace; font-size: 16px; font-weight: 500; letter-spacing: .18em; }
+      .brand-dot { width: 11px; height: 11px; background: var(--fire); border-radius: 50%; box-shadow: 12px 0 0 var(--acid); }
+      .header-back { padding-bottom: 3px; border-bottom: 1px solid var(--paper); font-family: "DM Mono", monospace; font-size: 11px; letter-spacing: .12em; }
+
+      main { width: min(1240px, calc(100% - 32px)); margin: 0 auto; }
+      .intro { display: grid; grid-template-columns: 1fr .7fr; gap: 60px; align-items: end; padding: 70px 0 40px; }
+      .eyebrow { margin-bottom: 18px; color: var(--fire); font-family: "DM Mono", monospace; font-size: 12px; letter-spacing: .14em; }
+      h1 { margin-bottom: 0; font-family: "Playfair Display", "Noto Sans TC", serif; font-size: clamp(40px, 6vw, 80px); line-height: 1.05; letter-spacing: -.03em; }
+      h1 em { color: var(--fire); }
+      .intro > p { margin-bottom: 6px; color: var(--muted); font-size: 16px; line-height: 1.9; }
+
+      .player { position: relative; overflow: hidden; background: #07090c; border: 1px solid var(--line); border-radius: 14px; }
+      .player canvas { display: block; width: 100%; aspect-ratio: 16 / 9; cursor: pointer; }
+      .big-play { position: absolute; inset: 0 0 58px; display: grid; place-items: center; border: 0; background: rgba(7, 9, 12, .35); cursor: pointer; transition: opacity 200ms ease; }
+      .big-play span { display: grid; width: 92px; height: 92px; place-items: center; padding-left: 8px; color: #1c1410; background: var(--fire); border-radius: 50%; font-size: 38px; box-shadow: 0 0 0 10px rgba(255, 112, 67, .2); }
+      .player.is-playing .big-play { opacity: 0; pointer-events: none; }
+      .controls { display: flex; align-items: center; gap: 12px; height: 58px; padding: 0 14px; background: #0f1216; border-top: 1px solid var(--line); }
+      .controls button, .controls select { height: 34px; padding: 0 12px; color: var(--paper); background: transparent; border: 1px solid var(--line); border-radius: 8px; font: 500 13px "DM Mono", monospace; cursor: pointer; }
+      .controls button:hover, .controls select:hover { border-color: var(--fire); }
+      .controls select option { color: #111; }
+      #play-btn { width: 44px; padding: 0; font-size: 15px; }
+      .time { min-width: 96px; color: var(--muted); font: 12px "DM Mono", monospace; }
+      .seek { flex: 1; min-width: 60px; accent-color: var(--fire); cursor: pointer; }
+
+      .chapters { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin: 16px 0 0; padding: 0; list-style: none; }
+      .chapters button { width: 100%; height: 100%; padding: 14px; color: var(--paper); text-align: left; background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px; font: inherit; cursor: pointer; transition: border-color 160ms ease, background 160ms ease; }
+      .chapters button:hover { border-color: rgba(255, 112, 67, .6); }
+      .chapters button.is-active { background: #3a2317; border-color: var(--fire); }
+      .chapters small { display: block; margin-bottom: 6px; color: var(--fire); font: 11px "DM Mono", monospace; letter-spacing: .08em; }
+      .chapters b { font-size: 14px; font-weight: 700; }
+
+      section.block { padding: 90px 0 20px; }
+      .section-index { margin-bottom: 14px; color: var(--acid); font: 12px "DM Mono", monospace; letter-spacing: .14em; }
+      section.block h2 { margin-bottom: 36px; font-family: "Playfair Display", "Noto Sans TC", serif; font-size: clamp(32px, 4vw, 52px); letter-spacing: -.02em; }
+      .points { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+      .points article { padding: 30px; background: var(--bg); }
+      .points span { color: var(--fire); font: 12px "DM Mono", monospace; }
+      .points h3 { margin: 26px 0 10px; font-size: 21px; }
+      .points p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.85; }
+
+      .calc { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; padding: 34px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px; }
+      .calc label { display: grid; gap: 8px; margin-bottom: 22px; font-size: 14px; }
+      .calc label span { display: flex; justify-content: space-between; color: var(--muted); }
+      .calc label output { color: var(--paper); font-family: "DM Mono", monospace; }
+      .calc input[type="range"] { width: 100%; accent-color: var(--fire); }
+      .calc-result { display: flex; flex-direction: column; justify-content: center; gap: 18px; }
+      .formula { font: 500 clamp(17px, 2vw, 22px) "DM Mono", monospace; }
+      .formula i { color: var(--fire); font-style: normal; }
+      .result-num { font-family: "Playfair Display", serif; font-size: clamp(44px, 6vw, 72px); line-height: 1; }
+      .result-num small { font-size: .4em; color: var(--muted); }
+      .bars { display: grid; gap: 8px; }
+      .bar { height: 12px; background: rgba(241, 239, 231, .08); border-radius: 6px; overflow: hidden; }
+      .bar i { display: block; height: 100%; border-radius: 6px; transition: width 160ms ease; }
+      .bar-label { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; }
+      .calc-note { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.8; }
+
+      footer { display: flex; justify-content: space-between; width: min(1240px, calc(100% - 32px)); margin: 90px auto 0; padding: 36px 0; color: var(--muted); border-top: 1px solid var(--line); font: 10px "DM Mono", monospace; letter-spacing: .08em; }
+
+      @media (max-width: 880px) {
+        .intro, .calc { grid-template-columns: 1fr; gap: 24px; }
+        .chapters { grid-template-columns: repeat(3, 1fr); }
+        .points { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 560px) {
+        .intro { padding-top: 44px; }
+        .chapters { grid-template-columns: repeat(2, 1fr); }
+        .controls { gap: 8px; padding: 0 8px; }
+        .time { min-width: 0; font-size: 11px; }
+        #speed { display: none; }
+        .big-play span { width: 64px; height: 64px; font-size: 26px; }
+        .calc { padding: 22px; }
+        footer { flex-direction: column; gap: 8px; }
+      }
+      @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot" aria-hidden="true"></span><span>MASTER</span></a>
+      <a class="header-back" href="../index.html#topics">← 所有主題</a>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">ROCKET ENGINE / 72 SEC DEMO</p>
+          <h1 id="page-title">火箭為什麼<br /><em>能飛上太空？</em></h1>
+        </div>
+        <p>這是一支用 HTML Canvas 即時繪製的動畫影片，六個段落依序拆解火箭發動機：從牛頓第三定律、推進劑供應、燃燒室壓力，到拉瓦爾噴嘴把氣體加速到超音速，最後用推力公式算出升空需要的力量。</p>
+      </section>
+
+      <div class="player" id="player">
+        <canvas id="stage" width="1280" height="720" aria-label="火箭發動機原理動畫影片"></canvas>
+        <button class="big-play" id="big-play" type="button" aria-label="播放影片"><span aria-hidden="true">▶</span></button>
+        <div class="controls">
+          <button id="play-btn" type="button" aria-label="播放">▶</button>
+          <span class="time" id="time">0:00 / 1:12</span>
+          <input class="seek" id="seek" type="range" min="0" max="72" step="0.01" value="0" aria-label="影片進度" />
+          <select id="speed" aria-label="播放速度">
+            <option value="0.5">0.5×</option>
+            <option value="1" selected>1×</option>
+            <option value="1.5">1.5×</option>
+            <option value="2">2×</option>
+          </select>
+          <button id="fs-btn" type="button" aria-label="全螢幕">⛶</button>
+        </div>
+      </div>
+      <ol class="chapters" id="chapters"></ol>
+
+      <section class="block" aria-labelledby="points-title">
+        <p class="section-index">01 / KEY IDEAS</p>
+        <h2 id="points-title">影片裡的六個重點</h2>
+        <div class="points">
+          <article><span>01</span><h3>作用力與反作用力</h3><p>火箭不是「推著空氣」前進，而是把大量氣體往後高速丟出去；氣體被往後推，火箭就被往前推。所以在真空中一樣能加速。</p></article>
+          <article><span>02</span><h3>推進劑 = 燃料 + 氧化劑</h3><p>太空沒有氧氣，火箭必須自己帶氧化劑（例如液態氧）。渦輪泵把燃料和氧化劑以極高壓力送進燃燒室。</p></article>
+          <article><span>03</span><h3>燃燒室的壓力不平衡</h3><p>燃燒後的氣體溫度超過 3,000 °C、壓力可達數十至數百大氣壓。前端封閉、後端開口，壓力推前壁卻沒有對應的後壁，淨力就是推力。</p></article>
+          <article><span>04</span><h3>拉瓦爾噴嘴</h3><p>先收斂、再擴張。次音速氣體在收斂段加速，在最窄的喉部剛好達到音速（Mach 1），進入擴張段後繼續加速成超音速。</p></article>
+          <article><span>05</span><h3>推力公式</h3><p>F = ṁ·vₑ + (pₑ − pₐ)·Aₑ。前項是動量推力，每秒噴出越多、噴得越快推力越大；後項是出口壓力與外界壓力差造成的壓力推力。</p></article>
+          <article><span>06</span><h3>推重比 &gt; 1 才能升空</h3><p>推力必須大於火箭總重量，多出來的部分才會產生向上加速度。燃料越燒越少、火箭越來越輕，加速度也越來越大。</p></article>
+        </div>
+      </section>
+
+      <section class="block" aria-labelledby="calc-title">
+        <p class="section-index">02 / TRY IT</p>
+        <h2 id="calc-title">自己算一次推力</h2>
+        <div class="calc">
+          <div>
+            <label><span>質量流率 ṁ <output id="o-mdot"></output></span><input id="mdot" type="range" min="50" max="2500" step="10" value="300" /></label>
+            <label><span>排氣速度 vₑ <output id="o-ve"></output></span><input id="ve" type="range" min="1500" max="4500" step="50" value="3000" /></label>
+            <label><span>出口壓力 pₑ <output id="o-pe"></output></span><input id="pe" type="range" min="0" max="150" step="1" value="70" /></label>
+            <label><span>外界壓力 pₐ <output id="o-pa"></output></span><input id="pa" type="range" min="0" max="101" step="1" value="101" /></label>
+            <label><span>噴嘴出口面積 Aₑ <output id="o-ae"></output></span><input id="ae" type="range" min="0.1" max="10" step="0.1" value="1.2" /></label>
+          </div>
+          <div class="calc-result">
+            <p class="formula">F = <i>ṁ·vₑ</i> + (pₑ − pₐ)·Aₑ</p>
+            <p class="result-num" id="thrust">0 <small>kN</small></p>
+            <div class="bars">
+              <div class="bar-label"><span>動量推力 ṁ·vₑ</span><span id="t-mom"></span></div>
+              <div class="bar"><i id="b-mom" style="background: var(--fire)"></i></div>
+              <div class="bar-label"><span>壓力推力 (pₑ − pₐ)·Aₑ</span><span id="t-prs"></span></div>
+              <div class="bar"><i id="b-prs" style="background: var(--ice)"></i></div>
+            </div>
+            <p class="calc-note" id="calc-note"></p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>MASTER / ROCKET ENGINE DEMO</span>
+      <span>數值為教學用近似值，非特定發動機規格</span>
+    </footer>
+
+    <script>
+      (() => {
+        // ---------- 基本設定 ----------
+        const W = 1280, H = 720;
+        const canvas = document.getElementById("stage");
+        const ctx = canvas.getContext("2d");
+        const DPR = Math.min(2, window.devicePixelRatio || 1);
+        canvas.width = W * DPR;
+        canvas.height = H * DPR;
+
+        const FONT = '"Noto Sans TC", sans-serif';
+        const MONO = '"DM Mono", monospace';
+        const C = { fire: "#ff7043", acid: "#d9ff43", ice: "#7cc7ff", paper: "#f1efe7", muted: "rgba(241,239,231,.6)", steel: "#9aa3ad", dark: "#07090c" };
+
+        const SCENES = [
+          { title: "牛頓第三定律", dur: 10, draw: sceneNewton, subs: [[0, 4.8, "放開吹飽的氣球：空氣往後衝，氣球就往前飛。"], [4.8, 10, "火箭也一樣：把氣體往後推，氣體就把火箭往前推。"]] },
+          { title: "推進劑供應", dur: 12, draw: sceneFeed, subs: [[0, 4, "太空沒有氧氣，所以火箭要同時攜帶燃料與氧化劑。"], [4, 8, "渦輪泵把兩種推進劑加壓，高速送進噴注器。"], [8, 12, "推進劑在燃燒室混合點火，再從噴嘴高速噴出。"]] },
+          { title: "燃燒室：壓力不平衡", dur: 12, draw: sceneChamber, subs: [[0, 4, "燃燒產生超過 3000°C 的高溫氣體，壓力急速上升。"], [4, 8, "上下兩側的壓力互相抵消……"], [8, 12, "但前壁被推、後方卻是開口 → 留下向前的淨力，這就是推力。"]] },
+          { title: "拉瓦爾噴嘴", dur: 14, draw: sceneNozzle, subs: [[0, 4.5, "收斂段：通道變窄，次音速氣體被擠得越來越快。"], [4.5, 9, "喉部：最窄的地方，氣流剛好達到音速 Mach 1。"], [9, 14, "擴張段：超音速氣體膨脹，壓力與溫度下降，速度繼續上升。"]] },
+          { title: "推力公式", dur: 12, draw: sceneFormula, subs: [[0, 4, "推力 = 每秒噴出的質量 × 排氣速度，再加上壓力差的貢獻。"], [4, 8, "例如每秒噴出 300 kg、速度 3000 m/s……"], [8, 12, "推力約 900 kN，相當於舉起約 92 噸的重量。"]] },
+          { title: "升空", dur: 12, draw: sceneLiftoff, subs: [[0, 3, "點火倒數……"], [3, 8, "推力大於重量，多出來的力讓火箭向上加速。"], [8, 12, "把推進劑燒成高溫高壓氣體，再用噴嘴加速往後噴 —— 這就是火箭發動機。"]] },
+        ];
+        let acc = 0;
+        SCENES.forEach((s) => { s.start = acc; acc += s.dur; });
+        const TOTAL = acc;
+
+        // ---------- 工具函式 ----------
+        const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+        const lerp = (a, b, k) => a + (b - a) * k;
+        const ease = (k) => { k = clamp(k); return k * k * (3 - 2 * k); };
+        const fade = (t, start, dur = 0.6) => ease((t - start) / dur);
+        const fract = (v) => v - Math.floor(v);
+        const rnd = (i) => fract(Math.sin(i * 127.1 + 311.7) * 43758.5453);
+        const tri = (v) => 1 - 4 * Math.abs(fract(v) - 0.5); // -1..1 三角波（彈跳用）
+
+        function text(str, x, y, { size = 24, color = C.paper, align = "left", weight = 500, font = FONT, alpha = 1, base = "alphabetic" } = {}) {
+          if (alpha <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.fillStyle = color;
+          ctx.font = `${weight} ${size}px ${font}`;
+          ctx.textAlign = align;
+          ctx.textBaseline = base;
+          ctx.fillText(str, x, y);
+          ctx.restore();
+        }
+
+        function arrow(x1, y1, x2, y2, color, width = 6, alpha = 1) {
+          if (alpha <= 0) return;
+          const ang = Math.atan2(y2 - y1, x2 - x1);
+          const head = width * 3.2;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.strokeStyle = color;
+          ctx.fillStyle = color;
+          ctx.lineWidth = width;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2 - Math.cos(ang) * head * 0.8, y2 - Math.sin(ang) * head * 0.8);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(x2, y2);
+          ctx.lineTo(x2 - Math.cos(ang - 0.45) * head, y2 - Math.sin(ang - 0.45) * head);
+          ctx.lineTo(x2 - Math.cos(ang + 0.45) * head, y2 - Math.sin(ang + 0.45) * head);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+
+        function label(str, x, y, color, alpha) {
+          if (alpha <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.font = `700 20px ${FONT}`;
+          const w = ctx.measureText(str).width + 26;
+          ctx.fillStyle = "rgba(7,9,12,.78)";
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1.5;
+          roundRect(x - w / 2, y - 20, w, 36, 18);
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+          text(str, x, y + 5, { size: 20, weight: 700, align: "center", color, alpha });
+        }
+
+        function roundRect(x, y, w, h, r) {
+          ctx.beginPath();
+          ctx.moveTo(x + r, y);
+          ctx.arcTo(x + w, y, x + w, y + h, r);
+          ctx.arcTo(x + w, y + h, x, y + h, r);
+          ctx.arcTo(x, y + h, x, y, r);
+          ctx.arcTo(x, y, x + w, y, r);
+          ctx.closePath();
+        }
+
+        // 熱度 0..1 → 顏色（白黃 → 橘 → 暗紅）
+        function heatColor(h, a = 1) {
+          const stops = [[0, [150, 40, 30]], [0.45, [255, 112, 50]], [0.75, [255, 190, 80]], [1, [255, 248, 210]]];
+          h = clamp(h);
+          for (let i = 1; i < stops.length; i++) {
+            if (h <= stops[i][0]) {
+              const [p0, c0] = stops[i - 1], [p1, c1] = stops[i];
+              const k = (h - p0) / (p1 - p0);
+              return `rgba(${Math.round(lerp(c0[0], c1[0], k))},${Math.round(lerp(c0[1], c1[1], k))},${Math.round(lerp(c0[2], c1[2], k))},${a})`;
+            }
+          }
+          return `rgba(255,248,210,${a})`;
+        }
+
+        function background(top = "#0b0f15", bottom = "#141019") {
+          const g = ctx.createLinearGradient(0, 0, 0, H);
+          g.addColorStop(0, top);
+          g.addColorStop(1, bottom);
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, W, H);
+          ctx.save();
+          ctx.strokeStyle = "rgba(255,255,255,.035)";
+          ctx.lineWidth = 1;
+          for (let x = 0; x <= W; x += 64) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+          for (let y = 0; y <= H; y += 64) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+          ctx.restore();
+        }
+
+        // ---------- 噴嘴幾何與流場 ----------
+        // u: 0 = 噴注器, 0.33 = 燃燒室尾端, 0.5 = 喉部, 1 = 噴嘴出口, >1 = 尾焰
+        function radius(u) {
+          if (u < 0.33) return 1;
+          if (u < 0.5) { const k = (u - 0.33) / 0.17; return 1 - 0.62 * (0.5 - 0.5 * Math.cos(Math.PI * k)); }
+          if (u <= 1) { const k = (u - 0.5) / 0.5; return 0.38 + 0.92 * (1 - Math.pow(1 - k, 1.8)); }
+          return 1.3 + (u - 1) * 1.1;
+        }
+        function mach(u) {
+          if (u < 0.33) return 0.1 + 0.1 * (u / 0.33);
+          if (u < 0.5) { const k = (u - 0.33) / 0.17; return 0.2 + 0.8 * k * k; }
+          if (u <= 1) { const k = (u - 0.5) / 0.5; return 1 + 2 * (1 - Math.pow(1 - k, 1.6)); }
+          return 3;
+        }
+        const temp = (u) => 1 / (1 + 0.2 * mach(u) ** 2); // 等熵關係 (γ = 1.4)
+        const pres = (u) => Math.pow(temp(u), 3.5);
+        const vel = (u) => (mach(u) * Math.sqrt(temp(u))) / 1.8;
+
+        // 依速度建立「相位 → 位置」查表，讓粒子在喉部之後自然加速
+        const U0 = 0.02, U1 = 1.45, N = 600;
+        const invU = (() => {
+          const us = [], tau = [0];
+          for (let i = 0; i <= N; i++) us.push(lerp(U0, U1, i / N));
+          for (let i = 1; i <= N; i++) tau.push(tau[i - 1] + (us[i] - us[i - 1]) / Math.max(0.09, vel(us[i])));
+          const total = tau[N], out = [];
+          let j = 0;
+          for (let i = 0; i <= N; i++) {
+            const target = (i / N) * total;
+            while (j < N && tau[j + 1] < target) j++;
+            const k = (target - tau[j]) / Math.max(1e-9, tau[j + 1] - tau[j]);
+            out.push(lerp(us[j], us[Math.min(N, j + 1)], clamp(k)));
+          }
+          return out;
+        })();
+        const phaseToU = (ph) => invU[Math.round(clamp(ph) * N)];
+
+        function enginePath(x0, cy, L, R, uMax = 1) {
+          ctx.beginPath();
+          for (let i = 0; i <= 100; i++) { const u = (i / 100) * uMax; ctx.lineTo(x0 + u * L, cy - radius(u) * R); }
+          for (let i = 100; i >= 0; i--) { const u = (i / 100) * uMax; ctx.lineTo(x0 + u * L, cy + radius(u) * R); }
+          ctx.closePath();
+        }
+
+        function drawEngine(x0, cy, L, R, { glow = 0, alpha = 1, fill = "rgba(20,24,30,.9)" } = {}) {
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          enginePath(x0, cy, L, R);
+          ctx.fillStyle = fill;
+          ctx.fill();
+          if (glow > 0) {
+            ctx.save();
+            enginePath(x0, cy, L, R);
+            ctx.clip();
+            const g = ctx.createLinearGradient(x0, 0, x0 + L, 0);
+            g.addColorStop(0, `rgba(255,220,140,${0.55 * glow})`);
+            g.addColorStop(0.33, `rgba(255,150,60,${0.5 * glow})`);
+            g.addColorStop(0.55, `rgba(255,110,50,${0.3 * glow})`);
+            g.addColorStop(1, `rgba(200,60,40,${0.12 * glow})`);
+            ctx.fillStyle = g;
+            ctx.fillRect(x0, cy - R * 1.4, L, R * 2.8);
+            ctx.restore();
+          }
+          // 金屬外壁
+          ctx.strokeStyle = C.steel;
+          ctx.lineWidth = Math.max(4, R * 0.07);
+          ctx.lineJoin = "round";
+          for (const side of [-1, 1]) {
+            ctx.beginPath();
+            for (let i = 0; i <= 100; i++) { const u = i / 100; ctx.lineTo(x0 + u * L, cy + side * radius(u) * R); }
+            ctx.stroke();
+          }
+          // 噴注器板
+          ctx.fillStyle = "#c9ced4";
+          ctx.fillRect(x0 - R * 0.12, cy - R - ctx.lineWidth / 2, R * 0.14, 2 * R + ctx.lineWidth);
+          ctx.restore();
+        }
+
+        function flowParticles(x0, cy, L, R, t, { count = 260, period = 2.4, alpha = 1, uLimit = U1, size = 3 } = {}) {
+          ctx.save();
+          ctx.globalCompositeOperation = "lighter";
+          for (let i = 0; i < count; i++) {
+            const ph = fract(rnd(i) + t / period);
+            const u = phaseToU(ph);
+            if (u > uLimit) continue;
+            const s = (rnd(i + 999) * 2 - 1) * 0.88;
+            const x = x0 + u * L;
+            const y = cy + s * radius(u) * R + Math.sin(t * 9 + i) * (u < 0.33 ? 3 : 0.6);
+            let a = alpha * (u > 1 ? clamp(1 - (u - 1) / (U1 - 1)) : 1) * clamp(ph * 12);
+            ctx.fillStyle = heatColor(temp(Math.min(u, 1)) * 1.1 - 0.1, a * 0.85);
+            const sz = Math.max(2.2, size * (0.7 + vel(u) * 0.5));
+            ctx.fillRect(x - sz, y - sz * 0.5, sz * (1 + vel(u) * 2.2), sz);
+          }
+          ctx.restore();
+        }
+
+        // ---------- 火箭外形 ----------
+        function drawRocket(cx, cy, s, flame, t, angle = 0) {
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(angle);
+          ctx.scale(s, s);
+          // 尾焰（朝 +x）
+          if (flame > 0) {
+            ctx.save();
+            ctx.globalCompositeOperation = "lighter";
+            const len = 190 * flame * (0.92 + 0.08 * Math.sin(t * 40));
+            const g = ctx.createLinearGradient(185, 0, 185 + len, 0);
+            g.addColorStop(0, "rgba(255,250,220,.95)");
+            g.addColorStop(0.35, "rgba(255,170,70,.8)");
+            g.addColorStop(1, "rgba(255,80,40,0)");
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.moveTo(182, -30);
+            ctx.quadraticCurveTo(185 + len * 0.55, -44 * flame, 185 + len, 0);
+            ctx.quadraticCurveTo(185 + len * 0.55, 44 * flame, 182, 30);
+            ctx.closePath();
+            ctx.fill();
+            for (let i = 0; i < 70; i++) {
+              const ph = fract(rnd(i + 40) + t * 1.7);
+              const x = 185 + ph * len * 1.25;
+              const y = (rnd(i + 90) - 0.5) * (40 + ph * 90) * flame;
+              ctx.fillStyle = heatColor(1 - ph, (1 - ph) * 0.8 * flame);
+              ctx.beginPath();
+              ctx.arc(x, y, 2.5 + ph * 5, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            ctx.restore();
+          }
+          // 尾翼
+          ctx.fillStyle = "#c2461f";
+          for (const side of [-1, 1]) {
+            ctx.beginPath();
+            ctx.moveTo(90, side * 40);
+            ctx.lineTo(165, side * 88);
+            ctx.lineTo(165, side * 40);
+            ctx.closePath();
+            ctx.fill();
+          }
+          // 噴嘴
+          ctx.fillStyle = "#4b525b";
+          ctx.beginPath();
+          ctx.moveTo(150, -20);
+          ctx.lineTo(186, -32);
+          ctx.lineTo(186, 32);
+          ctx.lineTo(150, 20);
+          ctx.closePath();
+          ctx.fill();
+          // 箭體
+          const bg = ctx.createLinearGradient(0, -40, 0, 40);
+          bg.addColorStop(0, "#fbfaf5");
+          bg.addColorStop(0.55, "#dcd8cc");
+          bg.addColorStop(1, "#a9a598");
+          ctx.fillStyle = bg;
+          ctx.beginPath();
+          ctx.moveTo(160, -40);
+          ctx.lineTo(-140, -40);
+          ctx.quadraticCurveTo(-215, -30, -250, 0);
+          ctx.quadraticCurveTo(-215, 30, -140, 40);
+          ctx.lineTo(160, 40);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = C.fire;
+          ctx.fillRect(-60, -40, 16, 80);
+          ctx.fillStyle = "#1d3d5c";
+          ctx.beginPath();
+          ctx.arc(-150, 0, 15, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#8b8e92";
+          ctx.lineWidth = 4;
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // ---------- 場景 1：牛頓第三定律 ----------
+        function sceneNewton(t) {
+          background();
+          // 前半：氣球
+          const bA = 1 - fade(t, 4.4, 0.8);
+          if (bA > 0) {
+            ctx.save();
+            ctx.globalAlpha = bA;
+            const k = ease((t - 0.8) / 3.6);
+            const bx = lerp(760, 360, k) + Math.sin(t * 14) * 6 * k;
+            const by = 330 + Math.sin(t * 9) * 10 * k;
+            const size = lerp(1, 0.62, k);
+            // 噴出的空氣
+            if (t > 0.8) {
+              for (let i = 0; i < 60; i++) {
+                const ph = fract(rnd(i) + t * 1.4);
+                const x = bx + 150 * size + ph * 260;
+                const y = by + (rnd(i + 5) - 0.5) * (18 + ph * 90);
+                ctx.fillStyle = `rgba(124,199,255,${(1 - ph) * 0.8})`;
+                ctx.beginPath();
+                ctx.arc(x, y, 3 + ph * 4, 0, Math.PI * 2);
+                ctx.fill();
+              }
+            }
+            const g = ctx.createRadialGradient(bx - 40 * size, by - 40 * size, 10, bx, by, 150 * size);
+            g.addColorStop(0, "#ff9d7a");
+            g.addColorStop(1, "#d9401c");
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.ellipse(bx, by, 140 * size, 110 * size, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(bx + 132 * size, by - 12);
+            ctx.lineTo(bx + 160 * size, by - 8);
+            ctx.lineTo(bx + 160 * size, by + 8);
+            ctx.lineTo(bx + 132 * size, by + 12);
+            ctx.fill();
+            ctx.restore();
+            const aA = fade(t, 1.3) * bA;
+            arrow(bx - 170 * size, by, bx - 170 * size - 150, by, C.acid, 8, aA);
+            text("氣球往前", bx - 170 * size - 75, by - 26, { size: 22, weight: 700, align: "center", color: C.acid, alpha: aA });
+            arrow(bx + 190 * size, by + 150, bx + 190 * size + 170, by + 150, C.ice, 8, aA);
+            text("空氣往後", bx + 190 * size + 85, by + 186, { size: 22, weight: 700, align: "center", color: C.ice, alpha: aA });
+          }
+          // 後半：火箭
+          const rA = fade(t, 4.8, 0.8);
+          if (rA > 0) {
+            ctx.save();
+            ctx.globalAlpha = rA;
+            const drift = ease((t - 5.6) / 4.4) * -140;
+            drawRocket(620 + drift, 330, 1.05, fade(t, 5.2, 0.5), t);
+            ctx.restore();
+            const aA = fade(t, 6.2) * rA;
+            const rx = 620 + ease((t - 5.6) / 4.4) * -140;
+            arrow(rx - 290, 330, rx - 470, 330, C.acid, 10, aA);
+            text("推力（反作用力）", rx - 380, 290, { size: 24, weight: 700, align: "center", color: C.acid, alpha: aA });
+            arrow(rx + 240, 470, rx + 480, 470, C.fire, 10, fade(t, 6.8) * rA);
+            text("高速排出的氣體（作用力）", rx + 360, 515, { size: 24, weight: 700, align: "center", color: C.fire, alpha: fade(t, 6.8) * rA });
+            text("F火箭→氣體 = − F氣體→火箭", 640, 610, { size: 30, weight: 500, font: MONO, align: "center", alpha: fade(t, 7.6) * rA });
+          }
+        }
+
+        // ---------- 場景 2：推進劑供應 ----------
+        function sceneFeed(t) {
+          background();
+          const ex0 = 720, ecy = 360, eL = 470, eR = 92;
+          const pump = { x: 540, y: 360 };
+          const fuelPath = [[330, 215], [440, 215], [440, 330], [pump.x - 30, 330], [pump.x + 30, 330], [640, 330], [640, 320], [ex0 - 14, 320]];
+          const oxPath = [[330, 505], [440, 505], [440, 390], [pump.x - 30, 390], [pump.x + 30, 390], [640, 390], [640, 400], [ex0 - 14, 400]];
+
+          const tankA = fade(t, 0.2);
+          // 儲槽
+          function tank(x, y, color, liquid, name, sub, a) {
+            ctx.save();
+            ctx.globalAlpha = a;
+            ctx.fillStyle = "rgba(255,255,255,.05)";
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            roundRect(x, y, 230, 150, 30);
+            ctx.fill();
+            ctx.stroke();
+            ctx.save();
+            roundRect(x, y, 230, 150, 30);
+            ctx.clip();
+            const lvl = y + 150 - 150 * liquid;
+            ctx.fillStyle = color + "99";
+            ctx.beginPath();
+            ctx.moveTo(x, lvl);
+            for (let i = 0; i <= 230; i += 10) ctx.lineTo(x + i, lvl + Math.sin(i / 25 + t * 3) * 4);
+            ctx.lineTo(x + 230, y + 150);
+            ctx.lineTo(x, y + 150);
+            ctx.fill();
+            ctx.restore();
+            ctx.restore();
+            text(name, x + 115, y + 64, { size: 26, weight: 700, align: "center", alpha: a });
+            text(sub, x + 115, y + 98, { size: 18, align: "center", color: C.muted, alpha: a });
+          }
+          const drain = ease(t / 12) * 0.25;
+          tank(100, 140, "#ff9a4d", 0.8 - drain, "燃料槽", "煤油 / 液氫 / 甲烷", tankA);
+          tank(100, 430, "#5fb4ff", 0.85 - drain, "氧化劑槽", "液態氧 LOX", tankA);
+
+          // 管線
+          const pipeA = fade(t, 1.4);
+          function pipe(path, color) {
+            ctx.save();
+            ctx.globalAlpha = pipeA;
+            ctx.strokeStyle = "#3a4048";
+            ctx.lineWidth = 16;
+            ctx.lineJoin = "round";
+            ctx.beginPath();
+            path.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+            ctx.stroke();
+            ctx.strokeStyle = color + "55";
+            ctx.lineWidth = 8;
+            ctx.stroke();
+            ctx.restore();
+          }
+          pipe(fuelPath, "#ff9a4d");
+          pipe(oxPath, "#5fb4ff");
+
+          // 管內流動
+          function flow(path, color, speed) {
+            const segs = [];
+            let len = 0;
+            for (let i = 1; i < path.length; i++) {
+              const d = Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]);
+              segs.push([len, d, path[i - 1], path[i]]);
+              len += d;
+            }
+            const on = fade(t, 2.2);
+            ctx.save();
+            ctx.globalAlpha = on;
+            ctx.fillStyle = color;
+            for (let i = 0; i < 40; i++) {
+              const pos = fract(i / 40 + t * speed) * len;
+              const seg = segs.find(([s, d]) => pos >= s && pos <= s + d) || segs[segs.length - 1];
+              const k = (pos - seg[0]) / seg[1];
+              const x = lerp(seg[2][0], seg[3][0], k), y = lerp(seg[2][1], seg[3][1], k);
+              // 過了渦輪泵後流速加快的視覺：點變長
+              ctx.beginPath();
+              ctx.arc(x, y, x > pump.x ? 4.5 : 3, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            ctx.restore();
+          }
+          flow(fuelPath, "#ffc38a", 0.35);
+          flow(oxPath, "#a9d8ff", 0.35);
+
+          // 渦輪泵
+          const pA = fade(t, 3.2);
+          ctx.save();
+          ctx.globalAlpha = pA;
+          ctx.fillStyle = "#252a31";
+          ctx.strokeStyle = C.acid;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(pump.x, pump.y, 62, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.translate(pump.x, pump.y);
+          ctx.rotate(t * 9);
+          ctx.fillStyle = C.acid;
+          for (let i = 0; i < 6; i++) {
+            ctx.rotate(Math.PI / 3);
+            ctx.beginPath();
+            ctx.moveTo(6, -4);
+            ctx.quadraticCurveTo(34, -18, 48, -2);
+            ctx.lineTo(8, 5);
+            ctx.fill();
+          }
+          ctx.restore();
+          label("渦輪泵：加壓到數百大氣壓", pump.x, 250, C.acid, fade(t, 4));
+
+          // 發動機
+          const eA = fade(t, 5.5);
+          const fire = fade(t, 8, 0.8);
+          if (fire > 0) flowParticles(ex0, ecy, eL, eR, t, { count: 200, alpha: fire, period: 1.8, size: 2.6 });
+          drawEngine(ex0, ecy, eL, eR, { glow: fire, alpha: eA, fill: "rgba(20,24,30,.55)" });
+          label("噴注器", ex0 - 10, 220, "#e7e2d4", fade(t, 6));
+          label("燃燒室", ex0 + eL * 0.17, 520, C.fire, fade(t, 7));
+          label("噴嘴", ex0 + eL * 0.78, 530, C.fire, fade(t, 8.2));
+          arrow(ex0 + eL + 40, 620, ex0 + eL + 170, 620, C.fire, 7, fade(t, 9));
+          text("高速排氣", ex0 + eL + 105, 660, { size: 20, weight: 700, align: "center", color: C.fire, alpha: fade(t, 9) });
+        }
+
+        // ---------- 場景 3：燃燒室壓力 ----------
+        function sceneChamber(t) {
+          background("#0d0b0e", "#1b0f0c");
+          const x0 = 170, cy = 360, L = 1420, R = 175;
+          const heat = fade(t, 0.3, 2.5);
+          drawEngine(x0, cy, L, R, { glow: heat * 0.8, fill: "rgba(24,20,22,.95)" });
+
+          // 噴注器噴霧 + 燃燒氣體分子
+          ctx.save();
+          enginePath(x0, cy, L, R);
+          ctx.clip();
+          ctx.globalCompositeOperation = "lighter";
+          for (let i = 0; i < 14; i++) {
+            const yy = cy - R * 0.85 + (i / 13) * R * 1.7;
+            for (let j = 0; j < 6; j++) {
+              const ph = fract(j / 6 + t * 1.6 + rnd(i) * 0.3);
+              ctx.fillStyle = (i % 2 ? "rgba(124,199,255," : "rgba(255,170,90,") + (1 - ph) * 0.9 + ")";
+              ctx.beginPath();
+              ctx.arc(x0 + 12 + ph * 110, yy + Math.sin(ph * 6 + i) * 6, 3.5 * (1 - ph) + 1, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+          const n = Math.round(40 + 130 * heat);
+          for (let i = 0; i < n; i++) {
+            const sp = 0.25 + rnd(i + 3) * 0.5;
+            const x = x0 + 120 + (0.5 + 0.5 * tri(rnd(i) + t * sp * 0.6)) * (L * 0.33 - 130);
+            const y = cy + tri(rnd(i + 50) + t * sp) * (R - 14);
+            ctx.fillStyle = heatColor(0.65 + 0.35 * rnd(i + 8), 0.9);
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          // 往喉部流出的氣體
+          flowParticles(x0, cy, L, R, t, { count: 160, alpha: heat * 0.7, period: 2.8, uLimit: 1, size: 3 });
+          ctx.restore();
+
+          // 壓力 / 溫度儀表
+          const gA = fade(t, 1);
+          const gx = 1080, gy = 150;
+          ctx.save();
+          ctx.globalAlpha = gA;
+          ctx.fillStyle = "rgba(7,9,12,.8)";
+          ctx.strokeStyle = "rgba(241,239,231,.25)";
+          roundRect(gx - 150, gy - 90, 300, 170, 16);
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+          const pressure = Math.round(97 * ease(t / 4));
+          const temperature = Math.round(3300 * ease(t / 3.5));
+          text("燃燒室壓力", gx - 125, gy - 48, { size: 18, color: C.muted, alpha: gA });
+          text(`${pressure} bar`, gx + 125, gy - 48, { size: 26, weight: 700, align: "right", font: MONO, color: C.acid, alpha: gA });
+          text("燃氣溫度", gx - 125, gy + 10, { size: 18, color: C.muted, alpha: gA });
+          text(`${temperature.toLocaleString()} °C`, gx + 125, gy + 10, { size: 26, weight: 700, align: "right", font: MONO, color: C.fire, alpha: gA });
+          text("≈ 家用瓦斯爐火焰的 2 倍溫度", gx, gy + 56, { size: 15, color: C.muted, align: "center", alpha: gA });
+
+          // 壓力箭頭：上下抵消
+          const vA = fade(t, 4);
+          for (let i = 0; i < 4; i++) {
+            const x = x0 + 150 + i * 105;
+            arrow(x, cy - 60, x, cy - R + 18, C.ice, 5, vA);
+            arrow(x, cy + 60, x, cy + R - 18, C.ice, 5, vA);
+          }
+          label("上下壓力大小相等、方向相反 → 抵消", x0 + 300, cy - R - 42, C.ice, vA);
+
+          // 前壁 vs 開口
+          const fA = fade(t, 8);
+          for (let i = -1; i <= 1; i++) arrow(x0 + 100, cy + i * 90, x0 + 12, cy + i * 90, C.acid, 7, fA);
+          ctx.save();
+          ctx.globalAlpha = fA * (0.55 + 0.45 * Math.sin(t * 6));
+          ctx.strokeStyle = C.acid;
+          ctx.setLineDash([10, 10]);
+          ctx.lineWidth = 3;
+          const tx = x0 + L * 0.5;
+          ctx.beginPath();
+          ctx.moveTo(tx, cy - radius(0.5) * R);
+          ctx.lineTo(tx, cy + radius(0.5) * R);
+          ctx.stroke();
+          ctx.restore();
+          text("此處是開口：沒有牆壁可推", tx, cy + radius(0.5) * R + 44, { size: 20, weight: 700, align: "center", color: C.acid, alpha: fA });
+          arrow(x0 + 250, cy + R + 100, x0 + 30, cy + R + 100, C.acid, 12, fade(t, 9));
+          text("向前的淨力 = 推力", x0 + 280, cy + R + 108, { size: 26, weight: 700, color: C.acid, alpha: fade(t, 9) });
+        }
+
+        // ---------- 場景 4：拉瓦爾噴嘴 ----------
+        function sceneNozzle(t) {
+          background();
+          const x0 = 150, cy = 250, L = 980, R = 118;
+          flowParticles(x0, cy, L, R, t, { count: 380, period: 2.2, size: 2.6 });
+          drawEngine(x0, cy, L, R, { glow: 0.6, fill: "rgba(20,24,30,.5)" });
+
+          const th = x0 + L * 0.5;
+          // 區段標籤
+          const s1 = fade(t, 0.3), s2 = fade(t, 4.5), s3 = fade(t, 9);
+          const hi = (a, b) => (t >= a && t < b ? 1 : 0.45);
+          label("收斂段 · 次音速 M < 1", x0 + L * 0.3, 70, C.ice, s1 * hi(0, 4.5));
+          label("喉部 · 音速 M = 1", th, cy + radius(0.5) * R + 42, C.acid, s2 * hi(4.5, 9));
+          label("擴張段 · 超音速 M > 1", x0 + L * 0.8, 70, C.fire, s3 * hi(9, 14));
+
+          // 目前 Mach 數讀值（依播放進度掃描）
+          const scanU = t < 4.5 ? lerp(0.1, 0.46, ease(t / 4.5)) : t < 9 ? 0.5 : lerp(0.5, 1, ease((t - 9) / 4.5));
+          const sx = x0 + scanU * L;
+          ctx.save();
+          ctx.strokeStyle = "rgba(241,239,231,.7)";
+          ctx.lineWidth = 2;
+          ctx.setLineDash([6, 6]);
+          ctx.beginPath();
+          ctx.moveTo(sx, 110);
+          ctx.lineTo(sx, 660);
+          ctx.stroke();
+          ctx.restore();
+          text(`Mach ${mach(scanU).toFixed(2)}`, sx + 10, 128, { size: 20, weight: 700, font: MONO });
+
+          // 下方曲線圖
+          const gy0 = 450, gy1 = 650;
+          ctx.save();
+          ctx.strokeStyle = "rgba(241,239,231,.25)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x0, gy1);
+          ctx.lineTo(x0 + L, gy1);
+          ctx.moveTo(x0, gy0);
+          ctx.lineTo(x0, gy1);
+          ctx.stroke();
+          ctx.setLineDash([4, 6]);
+          ctx.beginPath();
+          ctx.moveTo(th, gy0);
+          ctx.lineTo(th, gy1);
+          ctx.stroke();
+          ctx.restore();
+          const reveal = clamp(0.1 + t / 12);
+          const curves = [
+            ["速度 v", vel, C.acid, 0],
+            ["壓力 p", pres, C.ice, 1],
+            ["溫度 T", (u) => (temp(u) - 0.3) / 0.7, C.fire, 2],
+          ];
+          for (const [name, fn, color, idx] of curves) {
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            for (let i = 0; i <= 200 * reveal; i++) {
+              const u = i / 200;
+              ctx.lineTo(x0 + u * L, gy1 - clamp(fn(u)) * (gy1 - gy0 - 14));
+            }
+            ctx.stroke();
+            ctx.restore();
+            text(name, x0 + L + 18, gy0 + 30 + idx * 36, { size: 20, weight: 700, color });
+          }
+          text("沿噴嘴方向 →", x0 + L, gy1 + 30, { size: 15, align: "right", color: C.muted });
+        }
+
+        // ---------- 場景 5：推力公式 ----------
+        function sceneFormula(t) {
+          background();
+          // 左側小發動機
+          const x0 = 70, cy = 390, L = 360, R = 58;
+          flowParticles(x0, cy, L, R, t, { count: 160, period: 1.8, size: 2 });
+          drawEngine(x0, cy, L, R, { glow: 0.8, fill: "rgba(20,24,30,.5)" });
+          const ea = fade(t, 1.5);
+          arrow(x0 + L + 20, cy + 120, x0 + L + 150, cy + 120, C.fire, 6, ea);
+          text("ṁ, vₑ", x0 + L + 85, cy + 160, { size: 22, weight: 700, font: MONO, align: "center", color: C.fire, alpha: ea });
+          arrow(x0 + 120, cy - 120, x0 - 10, cy - 120, C.acid, 8, ea);
+          text("F", x0 + 150, cy - 110, { size: 30, weight: 700, font: MONO, color: C.acid, alpha: ea });
+
+          // 公式
+          const fx = 560, fy = 190;
+          const a0 = fade(t, 0.2);
+          ctx.save();
+          ctx.font = `500 50px ${MONO}`;
+          const parts = [["F = ", C.paper], ["ṁ·vₑ", C.fire], [" + ", C.paper], ["(pₑ − pₐ)·Aₑ", C.ice]];
+          let cx = fx;
+          const hlMom = t >= 1.5 && t < 8 ? 1 : 0, hlPrs = t >= 2.8 && t < 4 ? 1 : 0;
+          for (const [s, col] of parts) {
+            const w = ctx.measureText(s).width;
+            if ((col === C.fire && hlMom) || (col === C.ice && hlPrs)) {
+              ctx.fillStyle = col + "33";
+              roundRect(cx - 8, fy - 52, w + 16, 70, 12);
+              ctx.fill();
+            }
+            ctx.globalAlpha = a0;
+            ctx.fillStyle = col;
+            ctx.fillText(s, cx, fy);
+            ctx.globalAlpha = 1;
+            cx += w;
+          }
+          ctx.restore();
+          text("動量推力：每秒噴出的質量 × 排氣速度", fx, fy + 60, { size: 22, color: C.fire, alpha: fade(t, 1.5) });
+          text("壓力推力：出口壓力與外界壓力差 × 出口面積（真空中更大）", fx, fy + 98, { size: 22, color: C.ice, alpha: fade(t, 2.8) });
+
+          // 範例計算
+          const ca = fade(t, 4.2);
+          ctx.save();
+          ctx.globalAlpha = ca;
+          ctx.fillStyle = "rgba(7,9,12,.7)";
+          ctx.strokeStyle = "rgba(241,239,231,.2)";
+          roundRect(fx, 350, 650, 250, 18);
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+          const k1 = ease((t - 4.4) / 1.6), k2 = ease((t - 5.6) / 1.6), k3 = ease((t - 8) / 2);
+          text("範例", fx + 30, 395, { size: 18, color: C.muted, alpha: ca });
+          text(`ṁ = ${Math.round(300 * k1)} kg/s`, fx + 30, 445, { size: 30, font: MONO, color: C.fire, alpha: fade(t, 4.4) });
+          text(`vₑ = ${Math.round(3000 * k2).toLocaleString()} m/s`, fx + 330, 445, { size: 30, font: MONO, color: C.fire, alpha: fade(t, 5.6) });
+          const F = Math.round(900 * k3);
+          text(`F ≈ ${F} kN`, fx + 30, 530, { size: 54, weight: 700, font: MONO, color: C.acid, alpha: fade(t, 8) });
+          text(`≈ 舉起 ${Math.round(91.8 * k3)} 噸`, fx + 380, 528, { size: 26, weight: 700, color: C.paper, alpha: fade(t, 9) });
+          text("（此例忽略壓力推力，並以海平面 pₑ ≈ pₐ 估算）", fx + 30, 575, { size: 16, color: C.muted, alpha: fade(t, 9) });
+        }
+
+        // ---------- 場景 6：升空 ----------
+        function sceneLiftoff(t) {
+          const climb = Math.max(0, t - 3);
+          const alt = 0.5 * 1.6 * climb * climb * 40; // 畫面位移（像素）
+          const sky = clamp(alt / 3200);
+          const top = `rgb(${Math.round(lerp(40, 4, sky))},${Math.round(lerp(70, 6, sky))},${Math.round(lerp(110, 16, sky))})`;
+          const bot = `rgb(${Math.round(lerp(120, 10, sky))},${Math.round(lerp(90, 12, sky))},${Math.round(lerp(80, 28, sky))})`;
+          background(top, bot);
+          // 星星
+          ctx.save();
+          ctx.globalAlpha = sky;
+          ctx.fillStyle = "#fff";
+          for (let i = 0; i < 120; i++) {
+            const x = rnd(i) * W, y = fract(rnd(i + 200) + alt / 4000) * H;
+            ctx.fillRect(x, y, 2, 2);
+          }
+          ctx.restore();
+
+          const camFollow = Math.max(0, alt - 60);
+          const groundY = 640 + camFollow;
+          // 地面與發射台
+          if (groundY < H + 200) {
+            ctx.fillStyle = "#2a2622";
+            ctx.fillRect(0, groundY, W, H);
+            ctx.fillStyle = "#4a4540";
+            ctx.fillRect(560, groundY - 30, 160, 30);
+            ctx.fillStyle = "#555";
+            ctx.fillRect(740, groundY - 520, 22, 520);
+            for (let y = groundY - 500; y < groundY; y += 40) ctx.fillRect(700, y, 60, 6);
+          }
+          const rocketY = 640 - 30 - 255 - alt + camFollow;
+          const ign = fade(t, 2.4, 0.5);
+          // 煙霧
+          if (ign > 0 && groundY < H + 150) {
+            ctx.save();
+            for (let i = 0; i < 90; i++) {
+              const ph = fract(rnd(i) + (t - 2.4) * 0.35);
+              const side = rnd(i + 7) < 0.5 ? -1 : 1;
+              const x = 640 + side * ph * (200 + rnd(i + 3) * 420);
+              const y = groundY - 20 - ph * 80 * rnd(i + 11);
+              ctx.fillStyle = `rgba(220,215,205,${(1 - ph) * 0.35 * ign})`;
+              ctx.beginPath();
+              ctx.arc(x, y, 20 + ph * 60, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            ctx.restore();
+          }
+          drawRocket(640, rocketY, 0.9, ign * 1.15, t, Math.PI / 2);
+
+          // 倒數
+          if (t < 3) {
+            const n = 3 - Math.floor(t);
+            const k = fract(t);
+            text(n > 0 && t < 2.4 ? String(n) : "點火！", 640, 200, { size: 110 - k * 20, weight: 700, font: t < 2.4 ? MONO : FONT, align: "center", color: t < 2.4 ? C.paper : C.fire, alpha: 1 - k * 0.6 });
+          }
+
+          // 力的箭頭
+          const fa = fade(t, 3.4) * (1 - fade(t, 9.5));
+          arrow(460, 420, 460, 200, C.fire, 10, fa);
+          text("推力 F", 440, 320, { size: 26, weight: 700, align: "right", color: C.fire, alpha: fa });
+          arrow(820, 260, 820, 420, C.ice, 10, fa);
+          text("重量 W", 845, 350, { size: 26, weight: 700, color: C.ice, alpha: fa });
+          text("F > W → 向上加速", 1000, 500, { size: 34, weight: 700, align: "center", color: C.acid, alpha: fa });
+
+          // 高度與速度讀數
+          const ra = fade(t, 3.2);
+          const altKm = (0.5 * 15 * climb * climb) / 1000;
+          text(`高度 ${altKm.toFixed(2)} km`, 1240, 50, { size: 22, weight: 500, font: MONO, align: "right", alpha: ra });
+          text(`速度 ${Math.round(15 * climb * 3.6)} km/h`, 1240, 84, { size: 22, weight: 500, font: MONO, align: "right", alpha: ra });
+
+          // 結尾字卡
+          const ea = fade(t, 9.4, 0.9);
+          if (ea > 0) {
+            ctx.save();
+            ctx.globalAlpha = ea * 0.75;
+            ctx.fillStyle = "#07090c";
+            ctx.fillRect(0, 0, W, H);
+            ctx.restore();
+            text("推進劑  →  高溫高壓燃氣  →  噴嘴加速  →  推力", 640, 330, { size: 36, weight: 700, align: "center", alpha: ea });
+            text("ROCKET ENGINE · MASTER", 640, 390, { size: 18, font: MONO, align: "center", color: C.fire, alpha: ea });
+          }
+        }
+
+        // ---------- 播放器 ----------
+        const player = document.getElementById("player");
+        const playBtn = document.getElementById("play-btn");
+        const bigPlay = document.getElementById("big-play");
+        const seek = document.getElementById("seek");
+        const timeEl = document.getElementById("time");
+        const speedSel = document.getElementById("speed");
+        const chaptersEl = document.getElementById("chapters");
+        seek.max = TOTAL;
+
+        let time = 0, playing = false, last = 0, dragging = false;
+        const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+
+        SCENES.forEach((s, i) => {
+          const li = document.createElement("li");
+          const b = document.createElement("button");
+          b.type = "button";
+          b.innerHTML = `<small>${String(i + 1).padStart(2, "0")} · ${fmt(s.start)}</small><b>${s.title}</b>`;
+          b.addEventListener("click", () => { poster = false; time = s.start + 0.001; setPlaying(true); });
+          li.appendChild(b);
+          chaptersEl.appendChild(li);
+        });
+        const chapterBtns = [...chaptersEl.querySelectorAll("button")];
+
+        let poster = true; // 封面停在有畫面的瞬間，第一次播放從頭開始
+        function setPlaying(v) {
+          if (v && (poster || time >= TOTAL - 0.01)) time = 0;
+          if (v) poster = false;
+          playing = v;
+          player.classList.toggle("is-playing", v);
+          playBtn.textContent = v ? "❚❚" : "▶";
+          playBtn.setAttribute("aria-label", v ? "暫停" : "播放");
+          last = performance.now();
+        }
+        const toggle = () => setPlaying(!playing);
+        playBtn.addEventListener("click", toggle);
+        bigPlay.addEventListener("click", toggle);
+        canvas.addEventListener("click", toggle);
+        seek.addEventListener("input", () => { dragging = true; poster = false; time = +seek.value; });
+        seek.addEventListener("change", () => { dragging = false; });
+        document.getElementById("fs-btn").addEventListener("click", () => {
+          if (document.fullscreenElement) document.exitFullscreen();
+          else if (player.requestFullscreen) player.requestFullscreen();
+        });
+        document.addEventListener("keydown", (e) => {
+          if (e.target.closest("input, select")) return;
+          if (e.code === "Space" || e.key === "k") { e.preventDefault(); toggle(); }
+          if (e.key.startsWith("Arrow")) poster = false;
+          if (e.key === "ArrowRight") time = Math.min(TOTAL, time + 5);
+          if (e.key === "ArrowLeft") time = Math.max(0, time - 5);
+        });
+
+        function currentScene() {
+          for (let i = SCENES.length - 1; i >= 0; i--) if (time >= SCENES[i].start) return i;
+          return 0;
+        }
+
+        function render() {
+          const idx = currentScene();
+          const scene = SCENES[idx];
+          const lt = Math.min(scene.dur, time - scene.start);
+          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+          ctx.globalAlpha = 1;
+          ctx.globalCompositeOperation = "source-over";
+          scene.draw(lt);
+
+          // 轉場：每段開頭淡入
+          const inA = 1 - clamp(lt / 0.45);
+          if (inA > 0 && idx > 0) { ctx.fillStyle = `rgba(0,0,0,${inA})`; ctx.fillRect(0, 0, W, H); }
+
+          // 段落標題
+          text(`${String(idx + 1).padStart(2, "0")} / 06`, 40, 50, { size: 16, font: MONO, color: C.fire });
+          text(scene.title, 40, 84, { size: 28, weight: 700 });
+
+          // 字幕
+          const sub = scene.subs.find(([a, b]) => lt >= a && lt < b) || (lt >= scene.dur ? scene.subs[scene.subs.length - 1] : null);
+          if (sub) {
+            const sa = clamp((lt - sub[0]) / 0.3);
+            ctx.save();
+            ctx.font = `500 26px ${FONT}`;
+            const w = ctx.measureText(sub[2]).width + 44;
+            ctx.globalAlpha = sa;
+            ctx.fillStyle = "rgba(0,0,0,.62)";
+            roundRect(640 - w / 2, 672, w, 44, 10);
+            ctx.fill();
+            ctx.restore();
+            text(sub[2], 640, 703, { size: 26, align: "center", alpha: sa });
+          }
+
+          // 進度條
+          ctx.fillStyle = "rgba(255,255,255,.12)";
+          ctx.fillRect(0, H - 4, W, 4);
+          ctx.fillStyle = C.fire;
+          ctx.fillRect(0, H - 4, (W * time) / TOTAL, 4);
+
+          if (!dragging) seek.value = time;
+          timeEl.textContent = `${fmt(time)} / ${fmt(TOTAL)}`;
+          chapterBtns.forEach((b, i) => b.classList.toggle("is-active", i === idx));
+        }
+
+        function loop(now) {
+          if (playing) {
+            const dt = Math.min(0.1, (now - last) / 1000);
+            time += dt * +speedSel.value;
+            if (time >= TOTAL) { time = TOTAL; setPlaying(false); }
+          }
+          last = now;
+          render();
+          requestAnimationFrame(loop);
+        }
+        time = 6.5;
+        requestAnimationFrame((n) => { last = n; loop(n); });
+
+        // ---------- 推力計算器 ----------
+        const $ = (id) => document.getElementById(id);
+        function calc() {
+          const mdot = +$("mdot").value, ve = +$("ve").value, pe = +$("pe").value, pa = +$("pa").value, ae = +$("ae").value;
+          $("o-mdot").textContent = `${mdot} kg/s`;
+          $("o-ve").textContent = `${ve.toLocaleString()} m/s`;
+          $("o-pe").textContent = `${pe} kPa`;
+          $("o-pa").textContent = pa === 0 ? "0 kPa（真空）" : pa === 101 ? "101 kPa（海平面）" : `${pa} kPa`;
+          $("o-ae").textContent = `${ae.toFixed(1)} m²`;
+          const mom = (mdot * ve) / 1000; // kN
+          const prs = (pe - pa) * ae; // kPa·m² = kN
+          const F = mom + prs;
+          $("thrust").innerHTML = `${Math.round(F).toLocaleString()} <small>kN · 約 ${Math.max(0, F / 9.81).toFixed(1)} 噸力</small>`;
+          $("t-mom").textContent = `${Math.round(mom).toLocaleString()} kN`;
+          $("t-prs").textContent = `${prs >= 0 ? "+" : ""}${Math.round(prs).toLocaleString()} kN`;
+          const max = Math.max(Math.abs(mom), Math.abs(prs), 1);
+          $("b-mom").style.width = `${(Math.abs(mom) / max) * 100}%`;
+          $("b-prs").style.width = `${(Math.abs(prs) / max) * 100}%`;
+          $("b-prs").style.background = prs < 0 ? "#ff5a5a" : "var(--ice)";
+          $("calc-note").textContent = prs < 0
+            ? "出口壓力低於外界壓力（過度膨脹），壓力項變成負值，推力被扣掉。這就是真空用的大噴嘴不適合在海平面使用的原因。"
+            : pa === 0
+              ? "在真空中外界壓力為 0，壓力推力全部變成正貢獻，所以同一具發動機在太空中推力更大。"
+              : "動量推力通常占絕大部分；想要更大推力，就要每秒噴出更多、噴得更快。";
+        }
+        ["mdot", "ve", "pe", "pa", "ae"].forEach((id) => $(id).addEventListener("input", calc));
+        calc();
+      })();
+    </script>
+  </body>
+</html>
