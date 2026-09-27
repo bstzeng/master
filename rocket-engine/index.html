@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="用一支 72 秒的 HTML 動畫影片看懂火箭發動機：牛頓第三定律、推進劑供應、燃燒室壓力、拉瓦爾噴嘴與推力公式。" />
+    <meta name="description" content="用一支 75 秒、有旁白與音效的 HTML 動畫影片看懂火箭發動機：牛頓第三定律、推進劑供應、燃燒室壓力、拉瓦爾噴嘴與推力公式。" />
     <meta name="theme-color" content="#1c1410" />
     <title>火箭發動機原理｜MASTER</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -47,7 +47,7 @@
       .controls button, .controls select { height: 34px; padding: 0 12px; color: var(--paper); background: transparent; border: 1px solid var(--line); border-radius: 8px; font: 500 13px "DM Mono", monospace; cursor: pointer; }
       .controls button:hover, .controls select:hover { border-color: var(--fire); }
       .controls select option { color: #111; }
-      #play-btn { width: 44px; padding: 0; font-size: 15px; }
+      #play-btn, #mute-btn { width: 44px; padding: 0; font-size: 15px; }
       .time { min-width: 96px; color: var(--muted); font: 12px "DM Mono", monospace; }
       .seek { flex: 1; min-width: 60px; accent-color: var(--fire); cursor: pointer; }
 
@@ -112,10 +112,10 @@
     <main>
       <section class="intro" aria-labelledby="page-title">
         <div>
-          <p class="eyebrow">ROCKET ENGINE / 72 SEC DEMO</p>
+          <p class="eyebrow">ROCKET ENGINE / 75 SEC DEMO</p>
           <h1 id="page-title">火箭為什麼<br /><em>能飛上太空？</em></h1>
         </div>
-        <p>這是一支用 HTML Canvas 即時繪製的動畫影片，六個段落依序拆解火箭發動機：從牛頓第三定律、推進劑供應、燃燒室壓力，到拉瓦爾噴嘴把氣體加速到超音速，最後用推力公式算出升空需要的力量。</p>
+        <p>這是一支用 HTML Canvas 即時繪製、附中文旁白與音效的動畫影片（記得開聲音），六個段落依序拆解火箭發動機：從牛頓第三定律、推進劑供應、燃燒室壓力，到拉瓦爾噴嘴把氣體加速到超音速，最後用推力公式算出升空需要的力量。</p>
       </section>
 
       <div class="player" id="player">
@@ -123,14 +123,15 @@
         <button class="big-play" id="big-play" type="button" aria-label="播放影片"><span aria-hidden="true">▶</span></button>
         <div class="controls">
           <button id="play-btn" type="button" aria-label="播放">▶</button>
-          <span class="time" id="time">0:00 / 1:12</span>
-          <input class="seek" id="seek" type="range" min="0" max="72" step="0.01" value="0" aria-label="影片進度" />
+          <span class="time" id="time">0:00 / 1:15</span>
+          <input class="seek" id="seek" type="range" min="0" max="75" step="0.01" value="0" aria-label="影片進度" />
           <select id="speed" aria-label="播放速度">
             <option value="0.5">0.5×</option>
             <option value="1" selected>1×</option>
             <option value="1.5">1.5×</option>
             <option value="2">2×</option>
           </select>
+          <button id="mute-btn" type="button" aria-label="靜音" aria-pressed="false">🔊</button>
           <button id="fs-btn" type="button" aria-label="全螢幕">⛶</button>
         </div>
       </div>
@@ -180,6 +181,7 @@
       <span>數值為教學用近似值，非特定發動機規格</span>
     </footer>
 
+    <script src="narration.js"></script>
     <script>
       (() => {
         // ---------- 基本設定 ----------
@@ -194,14 +196,14 @@
         const MONO = '"DM Mono", monospace';
         const C = { fire: "#ff7043", acid: "#d9ff43", ice: "#7cc7ff", paper: "#f1efe7", muted: "rgba(241,239,231,.6)", steel: "#9aa3ad", dark: "#07090c" };
 
-        const SCENES = [
-          { title: "牛頓第三定律", dur: 10, draw: sceneNewton, subs: [[0, 4.8, "放開吹飽的氣球：空氣往後衝，氣球就往前飛。"], [4.8, 10, "火箭也一樣：把氣體往後推，氣體就把火箭往前推。"]] },
-          { title: "推進劑供應", dur: 12, draw: sceneFeed, subs: [[0, 4, "太空沒有氧氣，所以火箭要同時攜帶燃料與氧化劑。"], [4, 8, "渦輪泵把兩種推進劑加壓，高速送進噴注器。"], [8, 12, "推進劑在燃燒室混合點火，再從噴嘴高速噴出。"]] },
-          { title: "燃燒室：壓力不平衡", dur: 12, draw: sceneChamber, subs: [[0, 4, "燃燒產生超過 3000°C 的高溫氣體，壓力急速上升。"], [4, 8, "上下兩側的壓力互相抵消……"], [8, 12, "但前壁被推、後方卻是開口 → 留下向前的淨力，這就是推力。"]] },
-          { title: "拉瓦爾噴嘴", dur: 14, draw: sceneNozzle, subs: [[0, 4.5, "收斂段：通道變窄，次音速氣體被擠得越來越快。"], [4.5, 9, "喉部：最窄的地方，氣流剛好達到音速 Mach 1。"], [9, 14, "擴張段：超音速氣體膨脹，壓力與溫度下降，速度繼續上升。"]] },
-          { title: "推力公式", dur: 12, draw: sceneFormula, subs: [[0, 4, "推力 = 每秒噴出的質量 × 排氣速度，再加上壓力差的貢獻。"], [4, 8, "例如每秒噴出 300 kg、速度 3000 m/s……"], [8, 12, "推力約 900 kN，相當於舉起約 92 噸的重量。"]] },
-          { title: "升空", dur: 12, draw: sceneLiftoff, subs: [[0, 3, "點火倒數……"], [3, 8, "推力大於重量，多出來的力讓火箭向上加速。"], [8, 12, "把推進劑燒成高溫高壓氣體，再用噴嘴加速往後噴 —— 這就是火箭發動機。"]] },
-        ];
+        // 字幕、旁白與場景長度來自 narration.js（由 data/narration.json 產生）
+        const NARRATION = (window.ROCKET_NARRATION || { scenes: [] }).scenes;
+        const SCENES = [sceneNewton, sceneFeed, sceneChamber, sceneNozzle, sceneFormula, sceneLiftoff].map((draw, i) => ({
+          draw,
+          title: NARRATION[i] ? NARRATION[i].title : "",
+          dur: NARRATION[i] ? NARRATION[i].dur : 12,
+          subs: NARRATION[i] ? NARRATION[i].subs : [],
+        }));
         let acc = 0;
         SCENES.forEach((s) => { s.start = acc; acc += s.dur; });
         const TOTAL = acc;
@@ -987,6 +989,7 @@
           playBtn.textContent = v ? "❚❚" : "▶";
           playBtn.setAttribute("aria-label", v ? "暫停" : "播放");
           last = performance.now();
+          if (v) sound.unlock(); // 瀏覽器要求聲音必須由使用者操作啟動
         }
         const toggle = () => setPlaying(!playing);
         playBtn.addEventListener("click", toggle);
@@ -1004,12 +1007,193 @@
           if (e.key.startsWith("Arrow")) poster = false;
           if (e.key === "ArrowRight") time = Math.min(TOTAL, time + 5);
           if (e.key === "ArrowLeft") time = Math.max(0, time - 5);
+          if (e.key === "m") sound.toggleMute();
         });
 
         function currentScene() {
           for (let i = SCENES.length - 1; i >= 0; i--) if (time >= SCENES[i].start) return i;
           return 0;
         }
+
+        // ---------- 聲音：MP3 旁白 + Web Audio 即時合成音效 ----------
+        const sound = (() => {
+          const muteBtn = document.getElementById("mute-btn");
+          let muted = false;
+          try { muted = localStorage.getItem("rocket-muted") === "1"; } catch (e) {}
+
+          // 旁白：每句一個 MP3，依影片時間對齊播放
+          const clips = [];
+          SCENES.forEach((scene) => scene.subs.forEach((sub) => {
+            if (!sub.audio) return;
+            const el = new Audio(sub.audio);
+            el.preload = "auto";
+            const clip = { start: scene.start + sub.start, duration: sub.duration, el, broken: false };
+            el.addEventListener("error", () => { clip.broken = true; });
+            clips.push(clip);
+          }));
+
+          function syncNarration() {
+            let speaking = false;
+            for (const c of clips) {
+              const local = time - c.start;
+              const active = playing && !muted && !c.broken && local >= 0 && local < c.duration;
+              if (active) {
+                speaking = true;
+                c.el.playbackRate = +speedSel.value;
+                if (c.el.paused) {
+                  c.el.currentTime = local;
+                  c.el.play().catch(() => {});
+                } else if (Math.abs(c.el.currentTime - local) > 0.5) {
+                  c.el.currentTime = local; // 拖曳進度後重新對齊
+                }
+              } else if (!c.el.paused) {
+                c.el.pause();
+              }
+            }
+            return speaking;
+          }
+
+          // 音效：噪音與振盪器即時合成，不需要額外音檔
+          let actx = null, master = null;
+          const layers = {};
+          function noiseBuffer(brown) {
+            const len = actx.sampleRate * 2, buf = actx.createBuffer(1, len, actx.sampleRate), d = buf.getChannelData(0);
+            let lastOut = 0;
+            for (let i = 0; i < len; i++) {
+              const white = Math.random() * 2 - 1;
+              if (brown) { lastOut = (lastOut + 0.02 * white) / 1.02; d[i] = lastOut * 3.5; } else d[i] = white;
+            }
+            return buf;
+          }
+          function noiseLayer(buf, type, freq, q) {
+            const src = actx.createBufferSource(), filter = actx.createBiquadFilter(), gain = actx.createGain();
+            src.buffer = buf;
+            src.loop = true;
+            filter.type = type;
+            filter.frequency.value = freq;
+            filter.Q.value = q;
+            gain.gain.value = 0;
+            src.connect(filter).connect(gain).connect(master);
+            src.start();
+            return { gain, filter };
+          }
+          function init() {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return;
+            actx = new AC();
+            master = actx.createGain();
+            master.gain.value = 0.5;
+            master.connect(actx.destination);
+            const white = noiseBuffer(false), brown = noiseBuffer(true);
+            layers.rumble = noiseLayer(brown, "lowpass", 160, 0.7); // 燃燒低頻轟鳴
+            layers.hiss = noiseLayer(white, "bandpass", 2600, 0.8); // 高速排氣嘶聲
+            layers.air = noiseLayer(white, "bandpass", 900, 1.4); // 氣球洩氣
+            const osc = actx.createOscillator(), osc2 = actx.createOscillator(), lp = actx.createBiquadFilter(), g = actx.createGain();
+            osc.type = "sawtooth";
+            osc2.type = "triangle";
+            lp.type = "lowpass";
+            lp.frequency.value = 1200;
+            g.gain.value = 0;
+            osc.connect(lp);
+            osc2.connect(lp);
+            lp.connect(g).connect(master);
+            osc.start();
+            osc2.start();
+            layers.pump = { gain: g, osc, osc2 }; // 渦輪泵運轉聲
+          }
+          function unlock() {
+            if (!actx) init();
+            if (actx && actx.state === "suspended") actx.resume();
+          }
+
+          // 各場景的音效層音量（0..1）
+          function levels(idx, lt) {
+            const L = { rumble: 0, hiss: 0, air: 0, pump: 0 };
+            if (idx === 0) {
+              L.air = lt > 0.8 && lt < 4.6 ? 0.9 * (1 - ease((lt - 0.8) / 3.8)) + 0.1 : 0;
+              L.rumble = 0.5 * fade(lt, 5.2, 0.5);
+              L.hiss = 0.12 * fade(lt, 5.2, 0.5);
+            } else if (idx === 1) {
+              L.pump = 0.14 * fade(lt, 3.2);
+              L.rumble = 0.6 * fade(lt, 8, 0.8);
+              L.hiss = 0.12 * fade(lt, 8, 0.8);
+            } else if (idx === 2) {
+              L.rumble = 0.7 * fade(lt, 0.3, 2.5);
+              L.hiss = 0.22 * fade(lt, 0.3, 2.5);
+            } else if (idx === 3) {
+              L.rumble = 0.45;
+              L.hiss = 0.3;
+            } else if (idx === 4) {
+              L.rumble = 0.4;
+              L.hiss = 0.1;
+            } else if (idx === 5) {
+              const ign = fade(lt, 2.4, 0.4);
+              const away = 1 - 0.6 * clamp((lt - 3) / 8);
+              const end = 1 - fade(lt, 9.4, 2);
+              L.rumble = ign * away * end;
+              L.hiss = 0.3 * ign * away * end;
+            }
+            return L;
+          }
+
+          function beep(freq, dur, vol = 0.25) {
+            const o = actx.createOscillator(), g = actx.createGain(), t0 = actx.currentTime;
+            o.frequency.value = freq;
+            g.gain.setValueAtTime(vol, t0);
+            g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+            o.connect(g).connect(master);
+            o.start(t0);
+            o.stop(t0 + dur);
+          }
+          function boom() {
+            const src = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain(), t0 = actx.currentTime;
+            src.buffer = noiseBuffer(true);
+            f.type = "lowpass";
+            f.frequency.setValueAtTime(900, t0);
+            f.frequency.exponentialRampToValueAtTime(90, t0 + 1.6);
+            g.gain.setValueAtTime(1.2, t0);
+            g.gain.exponentialRampToValueAtTime(0.001, t0 + 1.8);
+            src.connect(f).connect(g).connect(master);
+            src.start(t0);
+            src.stop(t0 + 1.9);
+          }
+          // 單發音效：播放中時間正向跨過某個時間點才觸發（拖曳時不觸發）
+          const cues = [];
+          const liftoff = SCENES[5];
+          if (liftoff) {
+            [0.05, 1, 2].forEach((t) => cues.push({ at: liftoff.start + t, fire: () => beep(880, 0.18) }));
+            cues.push({ at: liftoff.start + 2.4, fire: () => { beep(1320, 0.35, 0.2); boom(); } });
+          }
+
+          function update(prev) {
+            const speaking = syncNarration();
+            if (!actx) return;
+            const idx = currentScene();
+            const lt = Math.min(SCENES[idx].dur, time - SCENES[idx].start);
+            const on = playing && !muted ? 1 : 0;
+            const duck = speaking ? 0.55 : 1; // 旁白時音效自動降低
+            const L = levels(idx, lt);
+            const now = actx.currentTime;
+            for (const key of Object.keys(layers)) layers[key].gain.gain.setTargetAtTime(L[key] * on * duck, now, 0.08);
+            layers.pump.osc.frequency.setTargetAtTime(60 + 110 * L.pump / 0.14, now, 0.3);
+            layers.pump.osc2.frequency.setTargetAtTime(120 + 220 * L.pump / 0.14, now, 0.3);
+            layers.rumble.filter.frequency.setTargetAtTime(120 + 180 * L.rumble, now, 0.2);
+            if (on && time > prev && time - prev < 0.5) {
+              for (const c of cues) if (prev < c.at && time >= c.at) c.fire();
+            }
+          }
+
+          function setMuted(v) {
+            muted = v;
+            muteBtn.textContent = v ? "🔇" : "🔊";
+            muteBtn.setAttribute("aria-label", v ? "取消靜音" : "靜音");
+            muteBtn.setAttribute("aria-pressed", String(v));
+            try { localStorage.setItem("rocket-muted", v ? "1" : "0"); } catch (e) {}
+          }
+          muteBtn.addEventListener("click", () => { setMuted(!muted); unlock(); });
+          setMuted(muted);
+          return { unlock, update, toggleMute: () => setMuted(!muted) };
+        })();
 
         function render() {
           const idx = currentScene();
@@ -1029,18 +1213,18 @@
           text(scene.title, 40, 84, { size: 28, weight: 700 });
 
           // 字幕
-          const sub = scene.subs.find(([a, b]) => lt >= a && lt < b) || (lt >= scene.dur ? scene.subs[scene.subs.length - 1] : null);
+          const sub = scene.subs.find((x) => lt >= x.start && lt < x.end) || (lt >= scene.dur ? scene.subs[scene.subs.length - 1] : null);
           if (sub) {
-            const sa = clamp((lt - sub[0]) / 0.3);
+            const sa = clamp((lt - sub.start) / 0.3);
             ctx.save();
             ctx.font = `500 26px ${FONT}`;
-            const w = ctx.measureText(sub[2]).width + 44;
+            const w = ctx.measureText(sub.text).width + 44;
             ctx.globalAlpha = sa;
             ctx.fillStyle = "rgba(0,0,0,.62)";
             roundRect(640 - w / 2, 672, w, 44, 10);
             ctx.fill();
             ctx.restore();
-            text(sub[2], 640, 703, { size: 26, align: "center", alpha: sa });
+            text(sub.text, 640, 703, { size: 26, align: "center", alpha: sa });
           }
 
           // 進度條
@@ -1055,6 +1239,7 @@
         }
 
         function loop(now) {
+          const prev = time;
           if (playing) {
             const dt = Math.min(0.1, (now - last) / 1000);
             time += dt * +speedSel.value;
@@ -1062,6 +1247,7 @@
           }
           last = now;
           render();
+          sound.update(prev);
           requestAnimationFrame(loop);
         }
         time = 6.5;

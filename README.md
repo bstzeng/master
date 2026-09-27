@@ -10,7 +10,7 @@ Patrick 的個人學習知識庫，目前包含九個主題：
 - 「網站攻擊與防禦」：五階段、12 個完整大型章節；以防守者視角理解網站攻擊面、經典漏洞、部署、偵測與復原。
 - 「Agentic AI 省 Token」：五階段、12 個完整大型章節；從成本量測、Context 與工具迴圈，到模型路由、多 Agent、快取與正式環境治理。
 - 「期貨交易入門」：五階段、12 個完整長篇章節；從契約、保證金與下單，到多空策略、部位風控、日誌與紙上交易。
-- 「火箭發動機原理」：一支 72 秒、6 段的 HTML Canvas 動畫影片，搭配重點整理與推力計算器。
+- 「火箭發動機原理」：一支 75 秒、6 段的 HTML Canvas 動畫影片，附中文 MP3 旁白與即時合成音效，搭配重點整理與推力計算器。
 
 ## 頁面
 
@@ -51,7 +51,7 @@ Patrick 的個人學習知識庫，目前包含九個主題：
 - `futures-trading/index.html`：期貨交易入門的五階段、12 章完整大綱與損益估算器
 - `futures-trading/chapter-01-futures-foundations.html`～`chapter-12-trade-lifecycle.html`：契約、操作、策略、風控與完整紙上交易
 - `futures-trading/templates/`：契約規格卡、風險計算表、交易計畫與交易日誌
-- `rocket-engine/index.html`：火箭發動機原理動畫影片（單一檔案，含播放器、章節、重點與推力計算器）
+- `rocket-engine/index.html`：火箭發動機原理動畫影片（播放器、章節、旁白、音效、重點與推力計算器）
 
 ## 內容維護
 
@@ -94,6 +94,8 @@ Patrick 的個人學習知識庫，目前包含九個主題：
 - `futures-trading/build.py`：產生完整大綱與全部 12 個長篇章節
 - `futures-trading/validate.py`：檢查每章 8 段、5 題與至少 5,000 可見字元
 - `futures-trading/check_site.py`：檢查 13 個頁面的站內連結與圖片資產
+- `rocket-engine/data/narration.json`：火箭影片的場景長度、字幕與旁白文字
+- `rocket-engine/generate_audio.py`：產生 `rocket-engine/audio/` 旁白 MP3，並重建 `rocket-engine/narration.js`（旁白超過字幕時段會報錯）
 
 修改內容後執行：
 
@@ -129,7 +131,10 @@ python3 futures-trading/check_site.py
 ```bash
 python3 korean/generate_audio.py
 python3 japanese/generate_audio.py
+python3 rocket-engine/generate_audio.py
 ```
+
+只修改火箭影片字幕、還沒產生音檔時，可執行 `python3 rocket-engine/generate_audio.py --manifest-only`；沒有 MP3 的句子只顯示字幕，音效照常播放。
 
 ## 本機預覽
 
