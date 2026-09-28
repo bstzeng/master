@@ -1394,8 +1394,28 @@
               c.data
                 .then((data) => new Promise((ok, fail) => actx.decodeAudioData(data, ok, fail)))
                 .then((buf) => { c.buffer = buf; })
-                .catch(() => { c.el = new Audio(c.url); }); // 直接開本機檔案時無法解碼，改用 <audio> 播放
+                .catch(() => { // 直接開本機檔案時無法解碼，改用 <audio> 播放
+                  c.el = new Audio(c.url);
+                  c.el.preload = "auto";
+                  c.el.addEventListener("error", () => { c.failed = true; });
+                  c.el.load();
+                });
             }
+          }
+
+          // 這句旁白準備好了沒（已解碼、<audio> 已可播放，或確定載入失敗）
+          const clipReady = (c) => c.buffer || c.failed || (c.el && c.el.readyState >= 3);
+
+          // 像影片播放器的緩衝：目前時間要播的旁白還沒載入好，就先停住畫面等它
+          function ready(t) {
+            if (muted || !actx) return true;
+            for (const c of clips) {
+              if (t < c.start - 0.05 || t >= c.start + c.duration || clipReady(c)) continue;
+              if (!c.waitSince) c.waitSince = performance.now();
+              if (performance.now() - c.waitSince > 8000) { c.failed = true; continue; } // 網路太慢就跳過這句，不要整支卡住
+              return false;
+            }
+            return true;
           }
 
           function stopClip(c) {
@@ -1413,7 +1433,7 @@
               if (!active) { stopClip(c); continue; }
               if (c.buffer) {
                 const heard = c.node ? (actx.currentTime - c.t0) * c.rate : 0;
-                if (!c.node || c.rate !== rate || Math.abs(heard - local) > 0.3) { // 拖曳進度或改速度後重新對齊
+                if (!c.node || c.rate !== rate || Math.abs(heard - local) > 0.5) { // 拖曳進度或改速度後重新對齊
                   stopClip(c);
                   const node = actx.createBufferSource();
                   node.buffer = c.buffer;
@@ -1427,9 +1447,9 @@
               } else if (c.el) {
                 c.el.playbackRate = rate;
                 if (c.el.paused) {
-                  c.el.currentTime = local;
+                  if (c.el.readyState >= 1) c.el.currentTime = local;
                   c.el.play().catch(() => {});
-                } else if (Math.abs(c.el.currentTime - local) > 0.5) {
+                } else if (c.el.readyState >= 3 && !c.el.seeking && Math.abs(c.el.currentTime - local) > 0.5) {
                   c.el.currentTime = local;
                 }
               }
@@ -1602,7 +1622,7 @@
           }
           muteBtn.addEventListener("click", () => { setMuted(!muted); unlock(); });
           setMuted(muted);
-          return { unlock, update, toggleMute: () => setMuted(!muted) };
+          return { unlock, update, ready, toggleMute: () => setMuted(!muted) };
         })();
 
         function render() {
@@ -1655,15 +1675,33 @@
           chapterBtns.forEach((b, i) => b.classList.toggle("is-active", i === idx));
         }
 
+        // 旁白還在載入時，右上角顯示提示
+        function loadingBadge() {
+          ctx.save();
+          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = "rgba(0,0,0,.65)";
+          roundRect(W - 200, 24, 170, 44, 22);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.font = `700 20px ${FONT}`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("旁白載入中…", W - 115, 47);
+          ctx.restore();
+        }
+
         function loop(now) {
           const prev = time;
-          if (playing) {
+          const waiting = playing && !sound.ready(time);
+          if (playing && !waiting) {
             const dt = Math.min(0.1, (now - last) / 1000);
             time += dt * +speedSel.value;
             if (time >= TOTAL) { time = TOTAL; setPlaying(false); }
           }
           last = now;
           render();
+          if (waiting) loadingBadge();
           sound.update(prev);
           requestAnimationFrame(loop);
         }
