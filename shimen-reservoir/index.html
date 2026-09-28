@@ -1378,40 +1378,67 @@
           let muted = false;
           try { muted = localStorage.getItem("reservoir-muted") === "1"; } catch (e) {}
 
-          // 旁白：每句一個 MP3，依影片時間對齊播放
+          // 旁白：每句一個 MP3。解碼後和音效在同一個 AudioContext 裡當成兩條音軌同時混音，
+          // 由播放按鈕解鎖一次就好，手機瀏覽器也不會把後面的旁白擋掉。
           const clips = [];
           SCENES.forEach((scene) => scene.subs.forEach((sub) => {
             if (!sub.audio) return;
-            const el = new Audio(sub.audio);
-            el.preload = "auto";
-            const clip = { start: scene.start + sub.start, duration: sub.duration, el, broken: false };
-            el.addEventListener("error", () => { clip.broken = true; });
-            clips.push(clip);
+            // 頁面一載入就先下載，按播放時只需要解碼，第一句才不會被切掉開頭
+            const data = fetch(sub.audio).then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); });
+            data.catch(() => {});
+            clips.push({ start: scene.start + sub.start, duration: sub.duration, url: sub.audio, data, buffer: null, node: null, rate: 1, t0: 0, el: null });
           }));
+
+          function loadClips() {
+            for (const c of clips) {
+              c.data
+                .then((data) => new Promise((ok, fail) => actx.decodeAudioData(data, ok, fail)))
+                .then((buf) => { c.buffer = buf; })
+                .catch(() => { c.el = new Audio(c.url); }); // 直接開本機檔案時無法解碼，改用 <audio> 播放
+            }
+          }
+
+          function stopClip(c) {
+            if (c.node) { try { c.node.stop(); } catch (e) {} c.node = null; }
+            if (c.el && !c.el.paused) c.el.pause();
+          }
 
           function syncNarration() {
             let speaking = false;
+            const rate = +speedSel.value;
             for (const c of clips) {
               const local = time - c.start;
-              const active = playing && !muted && !c.broken && local >= 0 && local < c.duration;
-              if (active) {
-                speaking = true;
-                c.el.playbackRate = +speedSel.value;
+              const active = playing && !muted && local >= 0 && local < c.duration;
+              if (active) speaking = true;
+              if (!active) { stopClip(c); continue; }
+              if (c.buffer) {
+                const heard = c.node ? (actx.currentTime - c.t0) * c.rate : 0;
+                if (!c.node || c.rate !== rate || Math.abs(heard - local) > 0.3) { // 拖曳進度或改速度後重新對齊
+                  stopClip(c);
+                  const node = actx.createBufferSource();
+                  node.buffer = c.buffer;
+                  node.playbackRate.value = rate;
+                  node.connect(voice);
+                  node.start(0, local);
+                  c.node = node;
+                  c.rate = rate;
+                  c.t0 = actx.currentTime - local / rate;
+                }
+              } else if (c.el) {
+                c.el.playbackRate = rate;
                 if (c.el.paused) {
                   c.el.currentTime = local;
                   c.el.play().catch(() => {});
                 } else if (Math.abs(c.el.currentTime - local) > 0.5) {
-                  c.el.currentTime = local; // 拖曳進度後重新對齊
+                  c.el.currentTime = local;
                 }
-              } else if (!c.el.paused) {
-                c.el.pause();
               }
             }
             return speaking;
           }
 
           // 音效：噪音與振盪器即時合成，不需要額外音檔
-          let actx = null, master = null, brownBuf = null;
+          let actx = null, master = null, voice = null, brownBuf = null;
           const layers = {};
           function noiseBuffer(brown) {
             const len = actx.sampleRate * 2, buf = actx.createBuffer(1, len, actx.sampleRate), d = buf.getChannelData(0);
@@ -1441,6 +1468,10 @@
             master = actx.createGain();
             master.gain.value = 0.5;
             master.connect(actx.destination);
+            voice = actx.createGain(); // 旁白音軌，和音效音軌分開
+            voice.gain.value = 1;
+            voice.connect(actx.destination);
+            loadClips();
             const white = noiseBuffer(false);
             brownBuf = noiseBuffer(true);
             layers.rain = noiseLayer(white, "bandpass", 3200, 0.5); // 雨聲
@@ -1553,7 +1584,7 @@
             const idx = currentScene();
             const lt = Math.min(SCENES[idx].dur, time - SCENES[idx].start);
             const on = playing && !muted ? 1 : 0;
-            const duck = speaking ? 0.55 : 1; // 旁白時音效自動降低
+            const duck = speaking ? 0.35 : 1; // 旁白時音效自動降低，讓人聲更清楚
             const L = levels(idx, lt);
             const now = actx.currentTime;
             for (const key of Object.keys(layers)) layers[key].gain.gain.setTargetAtTime(L[key] * on * duck, now, 0.08);
