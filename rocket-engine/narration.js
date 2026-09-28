@@ -138,8 +138,8 @@ window.ROCKET_NARRATION = {
           "start": 0,
           "end": 3,
           "text": "點火倒數……",
-          "audio": null,
-          "duration": 0
+          "audio": "audio/s6-1.mp3",
+          "duration": 2.712
         },
         {
           "start": 3,
