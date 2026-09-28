@@ -1,0 +1,1649 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="給小一小朋友看的 90 秒動畫影片：跟著小水滴滴滴認識石門水庫怎麼存水、防淹水、洩洪、供水和發電，附中文旁白與音效。" />
+    <meta name="theme-color" content="#eaf6ff" />
+    <title>滴滴遊石門水庫｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #eaf6ff;
+        --bg-2: #ffffff;
+        --ink: #12314a;
+        --muted: rgba(18, 49, 74, 0.68);
+        --line: rgba(18, 49, 74, 0.14);
+        --water: #2f8fe0;
+        --sun: #ffc83d;
+        --coral: #ff7a59;
+        --leaf: #3fa65a;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body { margin: 0; overflow-x: hidden; color: var(--ink); background: var(--bg); font-family: "Noto Sans TC", sans-serif; -webkit-font-smoothing: antialiased; }
+      a { color: inherit; }
+      h1, h2, h3, p { margin-top: 0; }
+
+      .site-header { display: flex; justify-content: space-between; align-items: center; width: min(1240px, calc(100% - 32px)); min-height: 76px; margin: 0 auto; border-bottom: 1px solid var(--line); }
+      .brand { display: inline-flex; align-items: center; gap: 11px; font-family: "DM Mono", monospace; font-size: 16px; font-weight: 500; letter-spacing: .18em; text-decoration: none; }
+      .brand-dot { width: 11px; height: 11px; background: var(--water); border-radius: 50%; box-shadow: 12px 0 0 var(--sun); }
+      .header-back { padding-bottom: 3px; border-bottom: 1px solid var(--ink); font-family: "DM Mono", monospace; font-size: 11px; letter-spacing: .12em; text-decoration: none; }
+
+      main { width: min(1240px, calc(100% - 32px)); margin: 0 auto; }
+      .intro { display: grid; grid-template-columns: 1fr .7fr; gap: 60px; align-items: end; padding: 70px 0 40px; }
+      .eyebrow { margin-bottom: 18px; color: var(--water); font-family: "DM Mono", monospace; font-size: 12px; letter-spacing: .14em; }
+      h1 { margin-bottom: 0; font-size: clamp(40px, 6vw, 76px); font-weight: 900; line-height: 1.12; letter-spacing: -.02em; }
+      h1 em { color: var(--water); font-style: normal; }
+      .intro > p { margin-bottom: 6px; color: var(--muted); font-size: 16px; line-height: 1.9; }
+
+      .player { position: relative; overflow: hidden; background: #ffffff; border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 18px 40px rgba(18, 49, 74, .12); }
+      .player canvas { display: block; width: 100%; aspect-ratio: 16 / 9; cursor: pointer; background: #bfe6ff; }
+      .big-play { position: absolute; inset: 0 0 58px; display: grid; place-items: center; border: 0; background: rgba(18, 49, 74, .18); cursor: pointer; transition: opacity 200ms ease; }
+      .big-play span { display: grid; width: 96px; height: 96px; place-items: center; padding-left: 8px; color: #ffffff; background: var(--water); border-radius: 50%; font-size: 40px; box-shadow: 0 0 0 12px rgba(47, 143, 224, .25); }
+      .player.is-playing .big-play { opacity: 0; pointer-events: none; }
+      .controls { display: flex; align-items: center; gap: 12px; height: 58px; padding: 0 14px; background: #ffffff; border-top: 1px solid var(--line); }
+      .controls button, .controls select { height: 34px; padding: 0 12px; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 8px; font: 500 13px "DM Mono", monospace; cursor: pointer; }
+      .controls button:hover, .controls select:hover { border-color: var(--water); }
+      #play-btn, #mute-btn { width: 44px; padding: 0; font-size: 15px; }
+      .time { min-width: 96px; color: var(--muted); font: 12px "DM Mono", monospace; }
+      .seek { flex: 1; min-width: 60px; accent-color: var(--water); cursor: pointer; }
+
+      .chapters { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin: 16px 0 0; padding: 0; list-style: none; }
+      .chapters button { width: 100%; height: 100%; padding: 14px; color: var(--ink); text-align: left; background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; font: inherit; cursor: pointer; transition: border-color 160ms ease, background 160ms ease; }
+      .chapters button:hover { border-color: rgba(47, 143, 224, .6); }
+      .chapters button.is-active { background: #d6ecff; border-color: var(--water); }
+      .chapters small { display: block; margin-bottom: 6px; color: var(--water); font: 11px "DM Mono", monospace; letter-spacing: .08em; }
+      .chapters b { font-size: 14px; font-weight: 700; }
+
+      section.block { padding: 90px 0 20px; }
+      .section-index { margin-bottom: 14px; color: var(--coral); font: 12px "DM Mono", monospace; letter-spacing: .14em; }
+      section.block h2 { margin-bottom: 36px; font-size: clamp(30px, 4vw, 48px); font-weight: 900; }
+      .points { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+      .points article { padding: 28px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 16px; }
+      .points span { color: var(--water); font: 12px "DM Mono", monospace; }
+      .points h3 { margin: 18px 0 10px; font-size: 22px; }
+      .points p { margin: 0; font-size: 17px; line-height: 1.8; }
+      .points .parent { margin-top: 14px; padding-top: 14px; color: var(--muted); border-top: 1px dashed var(--line); font-size: 14px; line-height: 1.8; }
+      .points .parent b { color: var(--coral); font-weight: 700; }
+
+      footer { display: flex; justify-content: space-between; gap: 16px; width: min(1240px, calc(100% - 32px)); margin: 90px auto 0; padding: 36px 0; color: var(--muted); border-top: 1px solid var(--line); font: 10px "DM Mono", monospace; letter-spacing: .08em; }
+
+      @media (max-width: 880px) {
+        .intro { grid-template-columns: 1fr; gap: 24px; }
+        .chapters { grid-template-columns: repeat(4, 1fr); }
+        .points { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 560px) {
+        .intro { padding-top: 44px; }
+        .chapters { grid-template-columns: repeat(2, 1fr); }
+        .controls { gap: 8px; padding: 0 8px; }
+        .time { min-width: 0; font-size: 11px; }
+        #speed { display: none; }
+        .big-play span { width: 64px; height: 64px; font-size: 26px; }
+        footer { flex-direction: column; gap: 8px; }
+      }
+      @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot" aria-hidden="true"></span><span>MASTER</span></a>
+      <a class="header-back" href="../index.html#topics">← 所有主題</a>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">SHIMEN RESERVOIR / 90 SEC KIDS VIDEO</p>
+          <h1 id="page-title">跟著滴滴<br /><em>遊石門水庫</em></h1>
+        </div>
+        <p>給小一小朋友看的動畫影片（記得開聲音）。小水滴「滴滴」從天上落下，流進大漢溪，一路帶大家認識石門水庫：下大雨時怎麼存水、水太滿時怎麼洩洪、沒下雨時怎麼供水，還有水怎麼發電、灌溉稻田。</p>
+      </section>
+
+      <div class="player" id="player">
+        <canvas id="stage" width="1280" height="720" aria-label="滴滴遊石門水庫動畫影片"></canvas>
+        <button class="big-play" id="big-play" type="button" aria-label="播放影片"><span aria-hidden="true">▶</span></button>
+        <div class="controls">
+          <button id="play-btn" type="button" aria-label="播放">▶</button>
+          <span class="time" id="time">0:00 / 1:30</span>
+          <input class="seek" id="seek" type="range" min="0" max="90" step="0.01" value="0" aria-label="影片進度" />
+          <select id="speed" aria-label="播放速度">
+            <option value="0.5">0.5×</option>
+            <option value="1" selected>1×</option>
+            <option value="1.5">1.5×</option>
+            <option value="2">2×</option>
+          </select>
+          <button id="mute-btn" type="button" aria-label="靜音" aria-pressed="false">🔊</button>
+          <button id="fs-btn" type="button" aria-label="全螢幕">⛶</button>
+        </div>
+      </div>
+      <ol class="chapters" id="chapters"></ol>
+
+      <section class="block" aria-labelledby="points-title">
+        <p class="section-index">01 / KEY IDEAS</p>
+        <h2 id="points-title">影片裡的七個重點</h2>
+        <div class="points">
+          <article><span>01</span><h3>小水滴的旅行</h3><p>雨水落在山上，流進小溪、再流進大河。</p><p class="parent"><b>家長小知識：</b>石門水庫蓋在大漢溪上，大漢溪是淡水河最大的支流；水庫範圍橫跨桃園市大溪、龍潭、復興三區。</p></article>
+          <article><span>02</span><h3>這裡是石門水庫</h3><p>水壩像一道大牆，把河水擋下來，變成一個大大的湖。</p><p class="parent"><b>家長小知識：</b>石門水庫在 1964 年完工，是臺灣第一座多功能水庫，同時負責灌溉、發電、供水、防洪和觀光。</p></article>
+          <article><span>03</span><h3>下大雨的時候</h3><p>颱風下大雨時，水庫先把雨水存起來，下游就比較不會淹水。</p><p class="parent"><b>家長小知識：</b>颱風來之前，水庫有時會先放掉一些水，騰出空間來裝颱風帶來的雨水。</p></article>
+          <article><span>04</span><h3>水太滿了：洩洪</h3><p>水庫快裝滿時，會打開大水門把水放出去，這叫做「洩洪」。聽到警報，要離河邊遠遠的！</p><p class="parent"><b>家長小知識：</b>放水時下游河水會在短時間內變高變急。水庫會發布放水通知，請大家不要到下游河道、溪床戲水、釣魚或露營。</p></article>
+          <article><span>05</span><h3>沒下雨的時候</h3><p>好久沒下雨時，水庫把存起來的水慢慢放出來，大家才有水喝、有水洗澡。</p><p class="parent"><b>家長小知識：</b>石門水庫平均每天供水約 80 萬立方公尺，供應桃園市、新北市和新竹縣湖口鄉的用水。</p></article>
+          <article><span>06</span><h3>發電和種稻</h3><p>水往下衝能轉動大輪子來發電；水也流到田裡，讓稻子長大。</p><p class="parent"><b>家長小知識：</b>石門大圳把水庫的水送到桃園龍潭、中壢、楊梅、平鎮、八德和新竹湖口一帶的農田。</p></article>
+          <article><span>07</span><h3>一起愛惜水</h3><p>水庫的水得來不容易。刷牙用杯子裝水、洗手時記得關水龍頭，一起節約用水！</p><p class="parent"><b>家長小知識：</b>假日可以帶孩子到石門水庫走走，親眼看看水壩和溢洪道。</p></article>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>MASTER / SHIMEN RESERVOIR KIDS VIDEO</span>
+      <span>資料參考：<a href="https://www.wra.gov.tw/News_Content.aspx?n=3254&amp;s=19369">經濟部水利署・石門水庫簡介</a>；動畫為教學示意，非實際比例</span>
+    </footer>
+
+    <script src="narration.js"></script>
+    <script>
+      (() => {
+        // ---------- 基本設定 ----------
+        const W = 1280, H = 720;
+        const canvas = document.getElementById("stage");
+        const ctx = canvas.getContext("2d");
+        const DPR = Math.min(2, window.devicePixelRatio || 1);
+        canvas.width = W * DPR;
+        canvas.height = H * DPR;
+
+        const FONT = '"Noto Sans TC", sans-serif';
+        const MONO = '"DM Mono", monospace';
+        const C = {
+          ink: "#12314a", white: "#ffffff", water: "#2f8fe0", water2: "#6cc3ff", deep: "#1b6cc0",
+          grass: "#7ccf6b", grass2: "#58b35a", dirt: "#c49a6c", dirt2: "#a67c52", dam: "#d3d7de", dam2: "#a7adb8",
+          sun: "#ffc83d", coral: "#ff7a59", red: "#ff4d4d", pink: "#ff9bb3", leaf: "#3fa65a",
+        };
+
+        // 字幕、旁白與場景長度來自 narration.js（由 data/narration.json 產生）
+        const NARRATION = (window.RESERVOIR_NARRATION || { scenes: [] }).scenes;
+        const SCENES = [sceneJourney, sceneDam, sceneStorm, sceneRelease, sceneDrought, scenePower, sceneEnding].map((draw, i) => ({
+          draw,
+          title: NARRATION[i] ? NARRATION[i].title : "",
+          dur: NARRATION[i] ? NARRATION[i].dur : 12,
+          subs: NARRATION[i] ? NARRATION[i].subs : [],
+        }));
+        let acc = 0;
+        SCENES.forEach((s) => { s.start = acc; acc += s.dur; });
+        const TOTAL = acc;
+
+        // ---------- 工具函式 ----------
+        const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+        const lerp = (a, b, k) => a + (b - a) * k;
+        const ease = (k) => { k = clamp(k); return k * k * (3 - 2 * k); };
+        const fade = (t, start, dur = 0.6) => ease((t - start) / dur);
+        const fract = (v) => v - Math.floor(v);
+        const rnd = (i) => fract(Math.sin(i * 127.1 + 311.7) * 43758.5453);
+        // 彈出效果：0 → 稍微超過 1 → 1
+        const pop = (t, start, dur = 0.5) => { const k = clamp((t - start) / dur) - 1; return 1 + 2.70158 * k * k * k + 1.70158 * k * k; };
+
+        function text(str, x, y, { size = 24, color = C.ink, align = "left", weight = 700, font = FONT, alpha = 1, base = "alphabetic", stroke = null } = {}) {
+          if (alpha <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.font = `${weight} ${size}px ${font}`;
+          ctx.textAlign = align;
+          ctx.textBaseline = base;
+          if (stroke) { ctx.lineWidth = size * 0.18; ctx.lineJoin = "round"; ctx.strokeStyle = stroke; ctx.strokeText(str, x, y); }
+          ctx.fillStyle = color;
+          ctx.fillText(str, x, y);
+          ctx.restore();
+        }
+
+        function roundRect(x, y, w, h, r) {
+          ctx.beginPath();
+          ctx.moveTo(x + r, y);
+          ctx.arcTo(x + w, y, x + w, y + h, r);
+          ctx.arcTo(x + w, y + h, x, y + h, r);
+          ctx.arcTo(x, y + h, x, y, r);
+          ctx.arcTo(x, y, x + w, y, r);
+          ctx.closePath();
+        }
+
+        // 圓角標籤；scale 用來做彈出動畫
+        function pill(str, x, y, { bg = C.white, color = C.ink, size = 26, alpha = 1, scale = 1, border = null } = {}) {
+          if (alpha <= 0 || scale <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.translate(x, y);
+          ctx.scale(scale, scale);
+          ctx.font = `900 ${size}px ${FONT}`;
+          const w = ctx.measureText(str).width + size * 1.2, h = size * 1.7;
+          ctx.fillStyle = "rgba(18,49,74,.18)";
+          roundRect(-w / 2 + 3, -h / 2 + 5, w, h, h / 2);
+          ctx.fill();
+          ctx.fillStyle = bg;
+          roundRect(-w / 2, -h / 2, w, h, h / 2);
+          ctx.fill();
+          if (border) { ctx.lineWidth = 4; ctx.strokeStyle = border; ctx.stroke(); }
+          ctx.fillStyle = color;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(str, 0, 2);
+          ctx.restore();
+        }
+
+        function arrow(x1, y1, x2, y2, color, width = 8, alpha = 1) {
+          if (alpha <= 0) return;
+          const ang = Math.atan2(y2 - y1, x2 - x1), head = width * 3;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.strokeStyle = color;
+          ctx.fillStyle = color;
+          ctx.lineWidth = width;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2 - Math.cos(ang) * head * 0.8, y2 - Math.sin(ang) * head * 0.8);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(x2, y2);
+          ctx.lineTo(x2 - Math.cos(ang - 0.5) * head, y2 - Math.sin(ang - 0.5) * head);
+          ctx.lineTo(x2 - Math.cos(ang + 0.5) * head, y2 - Math.sin(ang + 0.5) * head);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+
+        function poly(points) {
+          ctx.beginPath();
+          points.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+          ctx.closePath();
+        }
+
+        function mixColor(a, b, k) {
+          const pa = a.match(/\w\w/g).map((h) => parseInt(h, 16)), pb = b.match(/\w\w/g).map((h) => parseInt(h, 16));
+          return `rgb(${pa.map((v, i) => Math.round(lerp(v, pb[i], clamp(k)))).join(",")})`;
+        }
+
+        // ---------- 背景元素 ----------
+        function sky(top, bottom) {
+          const g = ctx.createLinearGradient(0, 0, 0, H);
+          g.addColorStop(0, top);
+          g.addColorStop(1, bottom);
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, W, H);
+        }
+        // storm 0..1：晴天 → 暴風雨天空
+        function weatherSky(storm = 0, warm = 0) {
+          const top = storm > 0 ? mixColor("#7cc8ff", "#4d5a6e", storm) : mixColor("#7cc8ff", "#ffb35c", warm);
+          const bottom = storm > 0 ? mixColor("#dff3ff", "#8a95a6", storm) : mixColor("#dff3ff", "#fff1c9", warm);
+          sky(top, bottom);
+        }
+
+        function sunShape(x, y, r, t, alpha = 1) {
+          if (alpha <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.translate(x, y);
+          ctx.rotate(t * 0.4);
+          ctx.fillStyle = "rgba(255,200,61,.45)";
+          for (let i = 0; i < 12; i++) {
+            ctx.rotate(Math.PI / 6);
+            ctx.beginPath();
+            ctx.moveTo(-10, -r - 8);
+            ctx.lineTo(0, -r - 38 - 6 * Math.sin(t * 4 + i));
+            ctx.lineTo(10, -r - 8);
+            ctx.fill();
+          }
+          ctx.restore();
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.fillStyle = C.sun;
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        function cloud(x, y, s = 1, dark = 0, alpha = 1) {
+          if (alpha <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.fillStyle = mixColor("#ffffff", "#6b7485", dark);
+          for (const [dx, dy, r] of [[-60, 10, 38], [-20, -14, 50], [30, -6, 44], [70, 12, 34], [0, 20, 40]]) {
+            ctx.beginPath();
+            ctx.arc(x + dx * s, y + dy * s, r * s, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+
+        function rain(amount, t, { x0 = 0, x1 = W, y0 = 60, y1 = H } = {}) {
+          if (amount <= 0.01) return;
+          ctx.save();
+          ctx.strokeStyle = "rgba(210,235,255,.75)";
+          ctx.lineWidth = 2.5;
+          ctx.lineCap = "round";
+          const n = Math.round(220 * amount);
+          ctx.beginPath();
+          for (let i = 0; i < n; i++) {
+            const speed = 1.3 + rnd(i + 5) * 0.6;
+            const k = fract(rnd(i + 3) + t * speed);
+            const x = x0 + rnd(i) * (x1 - x0) - k * 60;
+            const y = y0 + k * (y1 - y0);
+            ctx.moveTo(x, y);
+            ctx.lineTo(x - 7, y + 22);
+          }
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        function lightning(t, at) {
+          const k = (t - at) / 0.35;
+          if (k < 0 || k > 1) return;
+          ctx.save();
+          ctx.fillStyle = `rgba(255,255,255,${0.55 * (1 - k)})`;
+          ctx.fillRect(0, 0, W, H);
+          ctx.strokeStyle = `rgba(255,236,120,${1 - k})`;
+          ctx.lineWidth = 7;
+          ctx.lineJoin = "round";
+          poly([[900, 90], [860, 170], [900, 175], [850, 270], [880, 272], [830, 350]]);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        function farMountains(tint = 0) {
+          ctx.fillStyle = mixColor("#a8d8c0", "#6f7d86", tint);
+          poly([[0, 330], [120, 190], [250, 290], [390, 170], [560, 300], [720, 200], [880, 300], [1040, 180], [1180, 280], [1280, 220], [1280, 560], [0, 560]]);
+          ctx.fill();
+          ctx.fillStyle = mixColor("#86c8a2", "#5c6a70", tint);
+          poly([[0, 400], [170, 280], [330, 380], [520, 290], [700, 390], [900, 300], [1100, 380], [1280, 320], [1280, 600], [0, 600]]);
+          ctx.fill();
+        }
+
+        function tree(x, y, s = 1) {
+          ctx.fillStyle = "#8a5a3b";
+          ctx.fillRect(x - 5 * s, y - 30 * s, 10 * s, 30 * s);
+          ctx.fillStyle = C.leaf;
+          ctx.beginPath();
+          ctx.arc(x, y - 44 * s, 24 * s, 0, Math.PI * 2);
+          ctx.arc(x - 16 * s, y - 32 * s, 16 * s, 0, Math.PI * 2);
+          ctx.arc(x + 16 * s, y - 32 * s, 16 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        function house(x, y, s, color, lit = 0) {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.scale(s, s);
+          ctx.fillStyle = "#fff8ec";
+          ctx.fillRect(-36, -54, 72, 54);
+          ctx.fillStyle = color;
+          poly([[-46, -50], [0, -92], [46, -50]]);
+          ctx.fill();
+          ctx.fillStyle = "#8a5a3b";
+          ctx.fillRect(-10, -30, 20, 30);
+          ctx.fillStyle = lit > 0 ? mixColor("#9fd3ff", "#ffe066", lit) : "#9fd3ff";
+          ctx.fillRect(14, -42, 16, 16);
+          ctx.fillRect(-30, -42, 16, 16);
+          if (lit > 0) {
+            ctx.fillStyle = `rgba(255,224,102,${0.35 * lit})`;
+            ctx.beginPath();
+            ctx.arc(22, -34, 22, 0, Math.PI * 2);
+            ctx.arc(-22, -34, 22, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+
+        // 小朋友或釣魚的叔叔；walk 是走路相位
+        function person(x, y, s, { color = C.coral, walk = 0, rod = false, happy = true, arms = 0 } = {}) {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.scale(s, s);
+          ctx.strokeStyle = C.ink;
+          ctx.lineWidth = 5;
+          ctx.lineCap = "round";
+          const leg = Math.sin(walk) * 10;
+          ctx.beginPath();
+          ctx.moveTo(0, -24); ctx.lineTo(-6 + leg, 0);
+          ctx.moveTo(0, -24); ctx.lineTo(6 - leg, 0);
+          ctx.stroke();
+          ctx.fillStyle = color;
+          roundRect(-12, -56, 24, 34, 8);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(-10, -48); ctx.lineTo(-20, -30 - arms * 26);
+          ctx.moveTo(10, -48); ctx.lineTo(20, -30 - arms * 26);
+          ctx.stroke();
+          if (rod) {
+            ctx.strokeStyle = "#6b4a2f";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(18, -34); ctx.lineTo(62, -86);
+            ctx.stroke();
+            ctx.strokeStyle = "rgba(18,49,74,.5)";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(62, -86); ctx.lineTo(70, 20);
+            ctx.stroke();
+          }
+          ctx.fillStyle = "#ffd9b3";
+          ctx.beginPath();
+          ctx.arc(0, -70, 15, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = C.ink;
+          ctx.beginPath();
+          ctx.arc(-5, -72, 2.2, 0, Math.PI * 2);
+          ctx.arc(5, -72, 2.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          if (happy) ctx.arc(0, -67, 5, 0.2 * Math.PI, 0.8 * Math.PI);
+          else { ctx.moveTo(-4, -63); ctx.lineTo(4, -63); }
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        function bulb(x, y, s, lit) {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.scale(s, s);
+          if (lit > 0) {
+            const g = ctx.createRadialGradient(0, 0, 10, 0, 0, 120);
+            g.addColorStop(0, `rgba(255,230,120,${0.8 * lit})`);
+            g.addColorStop(1, "rgba(255,230,120,0)");
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.arc(0, 0, 120, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.fillStyle = lit > 0 ? mixColor("#eef3f7", "#ffe066", lit) : "#eef3f7";
+          ctx.strokeStyle = C.ink;
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(0, 0, 42, Math.PI * 0.8, Math.PI * 2.2);
+          ctx.lineTo(16, 56);
+          ctx.lineTo(-16, 56);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = C.dam2;
+          ctx.fillRect(-18, 56, 36, 22);
+          ctx.restore();
+        }
+
+        function faucet(x, y, s, flow, t) {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.scale(s, s);
+          if (flow > 0) {
+            ctx.fillStyle = "rgba(108,195,255,.85)";
+            const len = 150 * flow;
+            ctx.fillRect(38, 20, 16, len);
+            ctx.fillStyle = "rgba(255,255,255,.7)";
+            for (let i = 0; i < 4; i++) ctx.fillRect(42, 20 + fract(t * 2 + i / 4) * len, 4, 12);
+          }
+          ctx.fillStyle = "#b8c2cc";
+          ctx.strokeStyle = C.ink;
+          ctx.lineWidth = 4;
+          roundRect(-60, -18, 120, 36, 14);
+          ctx.fill();
+          ctx.stroke();
+          roundRect(30, -4, 32, 30, 8);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = C.red;
+          roundRect(-18, -48, 36, 26, 10);
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // ---------- 主角：小水滴「滴滴」 ----------
+        function drop(x, y, s = 1, { t = 0, wave = 0, mood = "happy", alpha = 1, tilt = 0, squash = 0 } = {}) {
+          if (alpha <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.translate(x, y);
+          ctx.rotate(tilt);
+          ctx.scale(s * (1 + squash * 0.25), s * (1 - squash * 0.25));
+          // 身體
+          ctx.beginPath();
+          ctx.moveTo(0, -64);
+          ctx.bezierCurveTo(14, -42, 42, -18, 42, 8);
+          ctx.arc(0, 8, 42, 0, Math.PI, false);
+          ctx.bezierCurveTo(-42, -18, -14, -42, 0, -64);
+          const g = ctx.createRadialGradient(-14, -6, 6, 0, 8, 60);
+          g.addColorStop(0, "#9fdcff");
+          g.addColorStop(1, "#2f8fe0");
+          ctx.fillStyle = g;
+          ctx.fill();
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = C.deep;
+          ctx.stroke();
+          // 反光
+          ctx.fillStyle = "rgba(255,255,255,.75)";
+          ctx.beginPath();
+          ctx.ellipse(-20, -10, 6, 12, 0.5, 0, Math.PI * 2);
+          ctx.fill();
+          // 眼睛（偶爾眨眼）
+          const blink = fract(t / 3.1 + 0.3) > 0.95 ? 0.15 : 1;
+          ctx.fillStyle = C.ink;
+          for (const ex of [-14, 14]) {
+            ctx.beginPath();
+            ctx.ellipse(ex, 4, 6, 8 * blink, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          if (blink === 1) {
+            ctx.fillStyle = C.white;
+            ctx.beginPath();
+            ctx.arc(-12, 1, 2.2, 0, Math.PI * 2);
+            ctx.arc(16, 1, 2.2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          // 臉頰
+          ctx.fillStyle = "rgba(255,155,179,.7)";
+          ctx.beginPath();
+          ctx.arc(-26, 20, 6, 0, Math.PI * 2);
+          ctx.arc(26, 20, 6, 0, Math.PI * 2);
+          ctx.fill();
+          // 嘴巴
+          ctx.strokeStyle = C.ink;
+          ctx.fillStyle = C.ink;
+          ctx.lineWidth = 3;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          if (mood === "wow") { ctx.ellipse(0, 24, 5, 7, 0, 0, Math.PI * 2); ctx.fill(); }
+          else { ctx.arc(0, 16, 10, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke(); }
+          // 揮手
+          if (wave > 0) {
+            const a = 0.9 + 0.55 * Math.sin(t * 10) * wave;
+            ctx.strokeStyle = C.deep;
+            ctx.lineWidth = 7;
+            ctx.beginPath();
+            ctx.moveTo(38, 0);
+            ctx.lineTo(38 + 26 * Math.cos(a), -26 * Math.sin(a));
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        // ---------- 水庫場景共用的地形 ----------
+        // 左邊是水庫（湖），中間是水壩，右邊是下游的河和村莊
+        const BASIN = [[0, 236], [60, 250], [160, 400], [260, 540], [330, 570], [566, 570], [612, 226], [0, 226]];
+        const DAM = [[566, 572], [612, 226], [652, 226], [722, 572]];
+        const levelY = (L) => 570 - L * 330;
+        const RED_LINE = 0.93;
+
+        function valleyGround(tint = 0) {
+          // 左側山坡（水庫底）
+          ctx.fillStyle = mixColor("#7ccf6b", "#5d7a5a", tint);
+          poly([[0, 236], [60, 250], [160, 400], [260, 540], [330, 570], [566, 570], [566, 720], [0, 720]]);
+          ctx.fill();
+          ctx.fillStyle = mixColor("#c49a6c", "#7d6a58", tint);
+          poly([[0, 300], [60, 300], [160, 430], [260, 560], [330, 590], [566, 590], [566, 720], [0, 720]]);
+          ctx.fill();
+          // 右側下游
+          ctx.fillStyle = mixColor("#7ccf6b", "#5d7a5a", tint);
+          poly([[700, 572], [760, 540], [1280, 540], [1280, 720], [700, 720]]);
+          ctx.fill();
+          ctx.fillStyle = mixColor("#c49a6c", "#7d6a58", tint);
+          ctx.fillRect(700, 640, 580, 80);
+          ctx.fillRect(540, 570, 200, 150); // 水壩底下的地基
+        }
+
+        function lake(L, t, tint = 0) {
+          if (L <= 0) return;
+          const y = levelY(L);
+          ctx.save();
+          poly(BASIN);
+          ctx.clip();
+          const g = ctx.createLinearGradient(0, y, 0, 570);
+          g.addColorStop(0, mixColor("#6cc3ff", "#5a7fa0", tint));
+          g.addColorStop(1, mixColor("#1b6cc0", "#2c4a68", tint));
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          for (let x = 0; x <= 620; x += 20) ctx.lineTo(x, y + Math.sin(x * 0.04 + t * 3) * 4);
+          ctx.lineTo(620, 600);
+          ctx.lineTo(0, 600);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = "rgba(255,255,255,.55)";
+          ctx.lineWidth = 3;
+          for (let i = 0; i < 6; i++) {
+            const wx = 80 + i * 85 + Math.sin(t + i) * 10, wy = y + 30 + (i % 3) * 40;
+            if (wy > 560) continue;
+            ctx.beginPath();
+            ctx.moveTo(wx - 14, wy);
+            ctx.quadraticCurveTo(wx, wy - 6, wx + 14, wy);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        // grow：水壩從地面長出來的比例；gate：大水門打開的比例
+        function dam(grow = 1, gate = 0, tint = 0) {
+          if (grow <= 0) return;
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(540, lerp(572, 180, grow), 200, 600);
+          ctx.clip();
+          const g = ctx.createLinearGradient(566, 0, 722, 0);
+          g.addColorStop(0, mixColor("#d3d7de", "#8e949e", tint));
+          g.addColorStop(1, mixColor("#a7adb8", "#6d737c", tint));
+          ctx.fillStyle = g;
+          poly(DAM);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(18,49,74,.25)";
+          ctx.lineWidth = 2;
+          for (let y = 280; y < 572; y += 58) {
+            const k = (y - 226) / 346;
+            ctx.beginPath();
+            ctx.moveTo(lerp(612, 566, k), y);
+            ctx.lineTo(lerp(652, 722, k), y);
+            ctx.stroke();
+          }
+          ctx.strokeStyle = C.ink;
+          ctx.lineWidth = 3;
+          poly(DAM);
+          ctx.stroke();
+          // 壩頂的大水門
+          ctx.fillStyle = "#56606e";
+          ctx.fillRect(606, 196, 6, 34);
+          ctx.fillRect(652, 196, 6, 34);
+          ctx.fillStyle = C.coral;
+          ctx.strokeStyle = C.ink;
+          const gy = 202 - gate * 34;
+          ctx.fillRect(612, gy, 40, 26);
+          ctx.strokeRect(612, gy, 40, 26);
+          ctx.restore();
+        }
+
+        // 洩洪：水從壩頂沿著溢洪道衝到下游
+        function spill(amount, t) {
+          if (amount <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= clamp(amount * 1.5);
+          ctx.lineCap = "round";
+          ctx.strokeStyle = "rgba(108,195,255,.95)";
+          ctx.lineWidth = 26 * amount;
+          ctx.beginPath();
+          ctx.moveTo(640, 232);
+          ctx.quadraticCurveTo(700, 380, 730, 590);
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(255,255,255,.9)";
+          ctx.lineWidth = 5;
+          ctx.setLineDash([22, 26]);
+          ctx.lineDashOffset = -t * 260;
+          ctx.beginPath();
+          ctx.moveTo(640, 232);
+          ctx.quadraticCurveTo(700, 380, 730, 590);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          // 水花
+          ctx.fillStyle = "rgba(255,255,255,.85)";
+          for (let i = 0; i < 18; i++) {
+            const k = fract(rnd(i) + t * 1.8);
+            const x = 735 + (rnd(i + 2) - 0.3) * 120 * k;
+            const y = 596 - Math.sin(k * Math.PI) * 60 * rnd(i + 4) * amount;
+            ctx.beginPath();
+            ctx.arc(x, y, (1 - k) * 10 + 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+
+        // 下游：河流（rise 越大水越高），dry 讓河床乾掉
+        function downstream(t, { rise = 0, dry = 0, lit = 0, tint = 0, houses = true } = {}) {
+          if (houses) {
+            tree(800, 552, 0.9);
+            house(880, 552, 0.95, C.coral, lit);
+            tree(960, 548, 0.8);
+            house(1040, 552, 1.05, "#4fb0e8", lit);
+            house(1160, 552, 0.95, "#b18cf0", lit);
+            tree(1240, 550, 0.9);
+          }
+          const top = 606 - rise * 26;
+          if (dry < 1) {
+            ctx.save();
+            ctx.globalAlpha *= 1 - dry;
+            ctx.fillStyle = mixColor("#4aa7ee", "#4a6d8c", tint);
+            ctx.beginPath();
+            ctx.moveTo(700, top);
+            for (let x = 700; x <= 1280; x += 20) ctx.lineTo(x, top + Math.sin(x * 0.05 - t * 4) * (2 + rise * 3));
+            ctx.lineTo(1280, 640);
+            ctx.lineTo(700, 640);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = "rgba(255,255,255,.6)";
+            ctx.lineWidth = 3;
+            const speed = 60 + rise * 200;
+            for (let i = 0; i < 8; i++) {
+              const x = 700 + fract(i / 8 + t * speed / 580) * 580;
+              ctx.beginPath();
+              ctx.moveTo(x, top + 14);
+              ctx.lineTo(x + 26 + rise * 20, top + 14);
+              ctx.stroke();
+            }
+            ctx.restore();
+          }
+          if (dry > 0) {
+            ctx.save();
+            ctx.globalAlpha *= dry;
+            ctx.fillStyle = "#d9b98a";
+            ctx.fillRect(700, 600, 580, 40);
+            ctx.strokeStyle = "#a67c52";
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 9; i++) {
+              const x = 730 + i * 62;
+              ctx.beginPath();
+              ctx.moveTo(x, 604); ctx.lineTo(x + 12, 618); ctx.lineTo(x + 4, 636);
+              ctx.moveTo(x + 12, 618); ctx.lineTo(x + 28, 624);
+              ctx.stroke();
+            }
+            ctx.restore();
+          }
+        }
+
+        function valleyMountains(tint) {
+          farMountains(tint);
+        }
+
+        function sceneBase(t, { L, grow = 1, gate = 0, tint = 0, storm = 0, warm = 0, rise = 0, dry = 0, lit = 0, rainAmt = 0 }) {
+          weatherSky(storm, warm);
+          valleyMountains(tint);
+          valleyGround(tint);
+          lake(L, t, tint);
+          downstream(t, { rise, dry, lit, tint });
+          dam(grow, gate, tint);
+          if (rainAmt > 0) rain(rainAmt, t);
+        }
+
+        // ---------- 第 1 段：小水滴的旅行 ----------
+        const riverPt = (u) => {
+          const P = [[250, 470], [640, 440], [560, 660], [1030, 600]];
+          const m = 1 - u;
+          return [
+            m * m * m * P[0][0] + 3 * m * m * u * P[1][0] + 3 * m * u * u * P[2][0] + u * u * u * P[3][0],
+            m * m * m * P[0][1] + 3 * m * m * u * P[1][1] + 3 * m * u * u * P[2][1] + u * u * u * P[3][1],
+          ];
+        };
+        function sceneJourney(t) {
+          const rainAmt = 0.55 * (1 - fade(t, 3.6, 1.2));
+          weatherSky(0.35 * (1 - fade(t, 3.6, 1.2)));
+          sunShape(1110, 110, 50, t, fade(t, 4.2, 1));
+          farMountains(0);
+          ctx.fillStyle = C.grass;
+          poly([[0, 430], [260, 400], [520, 450], [800, 470], [1280, 500], [1280, 720], [0, 720]]);
+          ctx.fill();
+          // 河（越往下游越寬）
+          ctx.lineCap = "round";
+          for (let i = 0; i < 60; i++) {
+            const a = riverPt(i / 60), b = riverPt((i + 1) / 60);
+            ctx.strokeStyle = C.water;
+            ctx.lineWidth = 22 + i * 0.9;
+            ctx.beginPath();
+            ctx.moveTo(a[0], a[1]);
+            ctx.lineTo(b[0], b[1]);
+            ctx.stroke();
+          }
+          ctx.strokeStyle = "rgba(255,255,255,.55)";
+          ctx.lineWidth = 3;
+          ctx.setLineDash([16, 30]);
+          ctx.lineDashOffset = -t * 90;
+          ctx.beginPath();
+          for (let i = 0; i <= 60; i++) { const p = riverPt(i / 60); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }
+          ctx.stroke();
+          ctx.setLineDash([]);
+          tree(120, 440, 1.1);
+          tree(420, 420, 0.9);
+          tree(900, 470, 1);
+          tree(1200, 505, 1.1);
+          pill("大漢溪", 760, 520, { bg: C.white, color: C.water, size: 26, scale: pop(t, 5.2) });
+
+          // 一道大牆從右邊出現
+          const wallX = lerp(1400, 1110, ease((t - 8.6) / 1.2));
+          if (wallX < 1300) {
+            ctx.fillStyle = C.dam2;
+            ctx.fillRect(wallX, 150, 300, 600);
+            ctx.strokeStyle = "rgba(18,49,74,.3)";
+            ctx.lineWidth = 3;
+            for (let y = 190; y < 720; y += 60) { ctx.beginPath(); ctx.moveTo(wallX, y); ctx.lineTo(W, y); ctx.stroke(); }
+            ctx.strokeStyle = C.ink;
+            ctx.strokeRect(wallX, 150, 300, 600);
+          }
+
+          // 雲和雨
+          cloud(250, 110, 1.2, 0.45 * (1 - fade(t, 3.6, 1.2)));
+          cloud(620, 90, 0.9, 0.4 * (1 - fade(t, 3.6, 1.2)), 1 - fade(t, 4, 1.2) * 0.6);
+          cloud(900, 130, 0.8, 0.4 * (1 - fade(t, 3.6, 1.2)), 1 - fade(t, 4, 1.2) * 0.7);
+          rain(rainAmt, t, { y0: 150 });
+
+          // 滴滴
+          let x = 250, y = 420, squash = 0, tilt = 0;
+          const fall = clamp((t - 0.6) / 1.4);
+          if (t < 2) { y = lerp(120, 420, fall * fall); }
+          else if (t < 2.6) { squash = Math.sin(((t - 2) / 0.6) * Math.PI) * 0.8; }
+          if (t >= 4.8) {
+            const u = ease((t - 4.8) / 3.8) * 0.93;
+            [x, y] = riverPt(u);
+            y -= 34;
+            tilt = Math.sin(t * 6) * 0.08;
+          }
+          const surprised = t > 9.4;
+          drop(x, y, 0.95, { t, wave: t > 2.6 && t < 4.6 ? 1 : 0, mood: surprised ? "wow" : "happy", alpha: fade(t, 0.3, 0.4), tilt, squash });
+          text("嗨！", x + 60, y - 70, { size: 40, weight: 900, color: C.coral, stroke: C.white, alpha: fade(t, 2.6, 0.3) * (1 - fade(t, 4.4, 0.3)) });
+          // 問號
+          const q = pop(t, 9.6);
+          if (q > 0) {
+            ctx.save();
+            ctx.translate(x + 10, y - 130);
+            ctx.scale(q, q);
+            ctx.fillStyle = C.white;
+            ctx.beginPath();
+            ctx.arc(0, 0, 38, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = C.ink;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            ctx.restore();
+            text("？", x + 10, y - 114, { size: 48 * q, weight: 900, color: C.coral, align: "center" });
+          }
+        }
+
+        // ---------- 第 2 段：這裡是石門水庫 ----------
+        function sceneDam(t) {
+          const grow = ease((t - 0.3) / 2.2);
+          const L = 0.03 + 0.6 * ease((t - 4) / 3.6);
+          sceneBase(t, { L, grow });
+          sunShape(1130, 100, 44, t);
+          cloud(900, 110, 0.7);
+          pill("水壩", 632, 150, { bg: C.coral, color: C.white, size: 30, scale: pop(t, 2.2) });
+          drop(320, levelY(L) - 40 + Math.sin(t * 2.5) * 5, 0.8, { t, mood: t > 4 && t < 6 ? "wow" : "happy", wave: t > 6 && t < 7.6 ? 1 : 0 });
+          if (t > 4.5 && t < 8.5) arrow(470, levelY(L) + 80, 470, levelY(L) + 20, C.white, 8, fade(t, 4.5) * (1 - fade(t, 7.8)));
+
+          // 石門水庫招牌
+          const s = pop(t, 8.2, 0.6);
+          if (s > 0) {
+            ctx.save();
+            ctx.translate(250, 170);
+            ctx.scale(s, s);
+            ctx.fillStyle = "#8a5a3b";
+            ctx.fillRect(-120, 20, 12, 70);
+            ctx.fillRect(108, 20, 12, 70);
+            ctx.fillStyle = C.white;
+            ctx.strokeStyle = C.water;
+            ctx.lineWidth = 6;
+            roundRect(-170, -70, 340, 110, 22);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+            text("石門水庫", 250, 170 - 5 * s, { size: 58 * s, weight: 900, color: C.water, align: "center" });
+            text("桃園", 250, 200, { size: 26 * s, weight: 700, color: C.coral, align: "center" });
+            for (let i = 0; i < 6; i++) {
+              const a = (i / 6) * Math.PI * 2 + t;
+              text("✦", 250 + Math.cos(a) * 210, 150 + Math.sin(a) * 90, { size: 22, color: C.sun, align: "center", alpha: fade(t, 8.4) });
+            }
+          }
+        }
+
+        // ---------- 第 3 段：下大雨的時候 ----------
+        function sceneStorm(t) {
+          const clear = fade(t, 9, 3);
+          const storm = 1 - clear * 0.85;
+          const L = 0.62 + 0.18 * ease((t - 3.5) / 5);
+          sceneBase(t, { L, storm, tint: storm * 0.5 });
+          // 山上的雨水流進水庫
+          const inflow = 1 - fade(t, 9, 2);
+          if (inflow > 0) {
+            ctx.save();
+            ctx.globalAlpha *= inflow;
+            ctx.strokeStyle = C.water2;
+            ctx.lineWidth = 12;
+            ctx.lineCap = "round";
+            ctx.setLineDash([26, 18]);
+            ctx.lineDashOffset = -t * 120;
+            ctx.beginPath();
+            ctx.moveTo(20, 238);
+            ctx.lineTo(60, 252);
+            ctx.lineTo(160, 402);
+            ctx.lineTo(Math.min(250, 160 + 90 * (levelY(L) < 530 ? 0.5 : 1)), levelY(L) - 4);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+          }
+          for (const [x, y, s] of [[180, 90, 1.2], [520, 70, 1.1], [860, 100, 1.3], [1150, 80, 1]]) cloud(x + Math.sin(t * 0.5 + x) * 10, y, s, 0.8 * storm, 1 - clear * 0.7);
+          rain(0.95 * (1 - clear * 0.95), t, { y0: 120 });
+          lightning(t, 0.9);
+          lightning(t, 5.6);
+          sunShape(1130, 100, 44, t, fade(t, 10, 1.5));
+
+          drop(330, levelY(L) - 40 + Math.sin(t * 3) * 6, 0.8, { t, mood: t < 4 ? "wow" : "happy" });
+          pill("存起來！", 420, levelY(L) - 110, { bg: C.water, color: C.white, size: 28, scale: pop(t, 4.6) * (1 - fade(t, 8.6, 0.4)) });
+          arrow(520, levelY(L) + 50, 520, levelY(L) - 8, C.white, 8, fade(t, 4.6) * (1 - fade(t, 8.6)));
+
+          // 下游平安
+          const safe = fade(t, 8.8, 0.5);
+          if (safe > 0) {
+            person(960, 556, 0.8, { color: C.sun, arms: 0.5 + 0.5 * Math.sin(t * 8), walk: 0 });
+            person(1100, 556, 0.8, { color: C.pink, arms: 0.5 + 0.5 * Math.sin(t * 8 + 1) });
+            pill("✓ 不淹水", 1040, 410, { bg: C.leaf, color: C.white, size: 30, scale: pop(t, 9.2) });
+          }
+        }
+
+        // ---------- 第 4 段：水太滿了怎麼辦？（洩洪） ----------
+        function sceneRelease(t) {
+          const clear = fade(t, 7, 4);
+          const storm = 0.8 * (1 - clear);
+          const gate = ease((t - 4.1) / 1);
+          const flow = fade(t, 4.5, 0.6);
+          const L = 0.8 + 0.15 * ease(t / 3.8) - 0.08 * ease((t - 5) / 7);
+          const rise = ease((t - 5) / 4);
+          sceneBase(t, { L, gate, storm, tint: storm * 0.5, rise });
+          spill(flow, t);
+          cloud(200, 90, 1.1, storm, 1 - clear * 0.8);
+          cloud(560, 70, 1, storm, 1 - clear * 0.8);
+          rain(0.6 * (1 - clear), t, { y0: 120 });
+          sunShape(1130, 100, 44, t, fade(t, 10, 1.5));
+
+          // 滿水位紅線
+          const warn = fade(t, 1.2, 0.4) * (1 - fade(t, 7.5, 0.6));
+          if (warn > 0) {
+            const blinkA = 0.55 + 0.45 * Math.sin(t * 9);
+            ctx.save();
+            ctx.globalAlpha *= warn;
+            ctx.strokeStyle = C.red;
+            ctx.lineWidth = 5;
+            ctx.setLineDash([18, 12]);
+            ctx.beginPath();
+            ctx.moveTo(40, levelY(RED_LINE));
+            ctx.lineTo(606, levelY(RED_LINE));
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+            pill("快滿了！", 440, levelY(RED_LINE) - 50, { bg: C.red, color: C.white, size: 28, alpha: warn * blinkA + warn * 0.3 });
+          }
+          pill("大水門打開！", 632, 150, { bg: C.coral, color: C.white, size: 26, scale: pop(t, 4.2) * (1 - fade(t, 8, 0.4)) });
+
+          // 大字：洩洪
+          const big = pop(t, 8.2, 0.6) * (1 - fade(t, 12, 0.5));
+          if (big > 0) {
+            ctx.save();
+            ctx.translate(360, 160);
+            ctx.scale(big, big);
+            ctx.fillStyle = C.white;
+            ctx.strokeStyle = C.water;
+            ctx.lineWidth = 8;
+            roundRect(-150, -80, 300, 140, 36);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+            text("洩洪", 360, 184, { size: 96 * big, weight: 900, color: C.water, align: "center" });
+          }
+
+          // 河邊的人：聽到警報就離開
+          const leave = ease((t - 12.6) / 3);
+          person(lerp(830, 1210, leave), lerp(580, 556, leave), 0.75, { color: C.sun, walk: leave > 0 && leave < 1 ? t * 12 : 0, happy: true });
+          person(lerp(930, 1250, leave), lerp(582, 556, leave), 0.8, { color: "#5b7bd5", walk: leave > 0 && leave < 1 ? t * 12 + 2 : 0, rod: leave === 0, happy: true });
+
+          // 警報
+          const alarm = fade(t, 12, 0.3);
+          if (alarm > 0) {
+            ctx.save();
+            ctx.globalAlpha *= alarm;
+            ctx.fillStyle = "#56606e";
+            ctx.fillRect(776, 400, 10, 150);
+            const on = Math.sin(t * 12) > 0;
+            ctx.fillStyle = on ? C.red : "#ffb3b3";
+            ctx.beginPath();
+            ctx.arc(781, 392, 20, Math.PI, 0);
+            ctx.fill();
+            if (on) {
+              ctx.fillStyle = "rgba(255,77,77,.3)";
+              ctx.beginPath();
+              ctx.arc(781, 386, 54, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            ctx.strokeStyle = C.red;
+            ctx.lineWidth = 4;
+            for (let i = 1; i <= 3; i++) {
+              ctx.globalAlpha = alarm * (0.4 + 0.6 * fract(t * 2 - i / 3));
+              ctx.beginPath();
+              ctx.arc(800, 392, 16 * i + 10, -0.6, 0.6);
+              ctx.stroke();
+            }
+            ctx.restore();
+            pill("⚠ 遠離河邊！", 1000, 380, { bg: C.sun, color: C.ink, size: 32, scale: pop(t, 12.4), border: C.red });
+          }
+          drop(150, levelY(L) - 40 + Math.sin(t * 3) * 6, 0.75, { t, mood: t > 3 && t < 6 ? "wow" : "happy" });
+        }
+
+        // ---------- 第 5 段：沒下雨的時候 ----------
+        function sceneDrought(t) {
+          const release = fade(t, 4.4, 0.8);
+          const L = 0.46 - 0.05 * ease((t - 4.4) / 6);
+          const dry = 1 - ease((t - 4.8) / 2.6);
+          sceneBase(t, { L, warm: 0.55 * (1 - fade(t, 8, 2)), dry, rise: -0.3 });
+          sunShape(1100, 110, 62, t);
+          pill("好乾喔…", 1000, 400, { bg: C.white, color: C.dirt2, size: 26, scale: pop(t, 1.4) * (1 - fade(t, 4.6, 0.4)) });
+          // 水庫底部放水
+          if (release > 0) {
+            ctx.save();
+            ctx.globalAlpha *= release;
+            ctx.fillStyle = "#56606e";
+            ctx.fillRect(700, 530, 30, 22);
+            ctx.strokeStyle = "rgba(108,195,255,.95)";
+            ctx.lineWidth = 16;
+            ctx.lineCap = "round";
+            ctx.beginPath();
+            ctx.moveTo(730, 541);
+            ctx.quadraticCurveTo(770, 545, 790, 606);
+            ctx.stroke();
+            ctx.restore();
+            pill("慢慢放水", 640, 150, { bg: C.water, color: C.white, size: 26, scale: pop(t, 4.6) * (1 - fade(t, 8, 0.4)) });
+          }
+          drop(320, levelY(L) - 40 + Math.sin(t * 2) * 4, 0.8, { t, mood: t < 4.4 ? "wow" : "happy", wave: t > 5 && t < 7 ? 1 : 0 });
+
+          // 家裡：有水喝、有水洗澡
+          const panel = ease((t - 7.8) / 0.8);
+          if (panel > 0) {
+            const px = lerp(1320, 780, panel);
+            ctx.save();
+            ctx.fillStyle = "rgba(18,49,74,.18)";
+            roundRect(px + 6, 118, 460, 330, 28);
+            ctx.fill();
+            ctx.fillStyle = "#fffdf6";
+            ctx.strokeStyle = C.water;
+            ctx.lineWidth = 6;
+            roundRect(px, 110, 460, 330, 28);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+            // 水龍頭與杯子
+            faucet(px + 90, 190, 0.8, fade(t, 8.6, 0.4), t);
+            const fill = ease((t - 8.8) / 2.5);
+            ctx.save();
+            ctx.strokeStyle = C.ink;
+            ctx.lineWidth = 4;
+            ctx.fillStyle = "rgba(108,195,255,.9)";
+            ctx.fillRect(px + 102, 380 - 60 * fill, 56, 60 * fill);
+            ctx.strokeRect(px + 100, 318, 60, 64);
+            ctx.restore();
+            text("喝水", px + 130, 420, { size: 24, align: "center" });
+            // 浴缸
+            ctx.save();
+            ctx.fillStyle = C.white;
+            ctx.strokeStyle = C.ink;
+            ctx.lineWidth = 4;
+            roundRect(px + 230, 300, 190, 80, 30);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = "rgba(108,195,255,.9)";
+            ctx.fillRect(px + 240, 310, 170, 16);
+            ctx.restore();
+            drop(px + 325, 292, 0.55, { t, alpha: fade(t, 9.2), wave: 1 });
+            for (let i = 0; i < 7; i++) {
+              const k = fract(rnd(i) + t * 0.4);
+              ctx.fillStyle = `rgba(255,255,255,${0.9 * (1 - k)})`;
+              ctx.strokeStyle = `rgba(108,195,255,${1 - k})`;
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.arc(px + 250 + rnd(i + 1) * 150, 300 - k * 90, 8 + rnd(i + 2) * 8, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.stroke();
+            }
+            text("洗澡", px + 325, 420, { size: 24, align: "center" });
+          }
+        }
+
+        // ---------- 第 6 段：水還會做什麼 ----------
+        const PIPE = [[330, 330], [650, 540]];
+        function scenePower(t) {
+          weatherSky(0);
+          sunShape(1150, 90, 44, t);
+          farMountains(0);
+          ctx.fillStyle = C.grass;
+          poly([[0, 330], [360, 330], [700, 560], [1280, 470], [1280, 720], [0, 720]]);
+          ctx.fill();
+          // 高處的水庫
+          ctx.fillStyle = C.water;
+          poly([[0, 250], [340, 250], [360, 330], [0, 330]]);
+          ctx.fill();
+          ctx.fillStyle = C.dam2;
+          poly([[340, 230], [372, 230], [372, 340], [350, 340]]);
+          ctx.fill();
+          // 壓力水管
+          ctx.strokeStyle = "#56606e";
+          ctx.lineWidth = 34;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(PIPE[0][0], PIPE[0][1]);
+          ctx.lineTo(PIPE[1][0], PIPE[1][1]);
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(108,195,255,.9)";
+          ctx.lineWidth = 20;
+          ctx.setLineDash([30, 20]);
+          ctx.lineDashOffset = -t * 300;
+          ctx.beginPath();
+          ctx.moveTo(PIPE[0][0], PIPE[0][1]);
+          ctx.lineTo(PIPE[1][0], PIPE[1][1]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // 發電廠與大輪子
+          ctx.fillStyle = "#fff8ec";
+          ctx.strokeStyle = C.ink;
+          ctx.lineWidth = 4;
+          ctx.fillRect(600, 450, 220, 170);
+          ctx.strokeRect(600, 450, 220, 170);
+          ctx.fillStyle = C.coral;
+          poly([[590, 452], [710, 400], [830, 452]]);
+          ctx.fill();
+          ctx.stroke();
+          const spin = fade(t, 1.2, 1.5);
+          const ang = t * 5 * spin;
+          ctx.save();
+          ctx.translate(680, 545);
+          ctx.rotate(ang);
+          ctx.strokeStyle = C.deep;
+          ctx.lineWidth = 8;
+          ctx.beginPath();
+          ctx.arc(0, 0, 56, 0, Math.PI * 2);
+          ctx.stroke();
+          for (let i = 0; i < 8; i++) {
+            ctx.rotate(Math.PI / 4);
+            ctx.fillStyle = C.water;
+            ctx.fillRect(-6, -56, 12, 30);
+          }
+          ctx.fillStyle = C.ink;
+          ctx.beginPath();
+          ctx.arc(0, 0, 10, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          pill("大輪子", 540, 600, { bg: C.water, color: C.white, size: 22, scale: pop(t, 1.6) });
+          // 發電機
+          ctx.fillStyle = "#56606e";
+          ctx.fillRect(680, 541, 90, 8);
+          ctx.fillStyle = C.sun;
+          ctx.strokeStyle = C.ink;
+          roundRect(740, 505, 70, 80, 12);
+          ctx.fill();
+          ctx.stroke();
+          text("⚡", 775, 560, { size: 36, align: "center", color: C.ink });
+
+          // 電線與燈泡
+          const lit = fade(t, 4.8, 0.4);
+          ctx.strokeStyle = C.ink;
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(810, 520);
+          ctx.quadraticCurveTo(900, 380, 990, 360);
+          ctx.stroke();
+          if (lit > 0) {
+            ctx.strokeStyle = `rgba(255,200,61,${lit})`;
+            ctx.lineWidth = 8;
+            ctx.setLineDash([12, 16]);
+            ctx.lineDashOffset = -t * 120;
+            ctx.beginPath();
+            ctx.moveTo(810, 520);
+            ctx.quadraticCurveTo(900, 380, 990, 360);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
+          bulb(1010, 270, 1.1, lit);
+          house(1160, 505, 0.9, "#4fb0e8", lit);
+          house(1240, 495, 0.75, C.coral, lit);
+          pill("發電！", 1010, 150, { bg: C.sun, color: C.ink, size: 30, scale: pop(t, 5) });
+
+          // 水流到稻田
+          const irrig = fade(t, 8, 0.8);
+          const grow = ease((t - 8.6) / 2.6);
+          ctx.fillStyle = "#b8864f";
+          ctx.fillRect(860, 610, 420, 110);
+          if (irrig > 0) {
+            ctx.fillStyle = `rgba(108,195,255,${0.9 * irrig})`;
+            ctx.fillRect(820, 596, 460 * irrig, 18);
+            ctx.fillStyle = `rgba(108,195,255,${0.45 * irrig})`;
+            ctx.fillRect(860, 620, 420, 100);
+          }
+          for (let r = 0; r < 3; r++) {
+            for (let i = 0; i < 12; i++) {
+              const x = 880 + i * 34 + r * 10, y = 650 + r * 26;
+              const h = 10 + 34 * grow;
+              ctx.strokeStyle = C.leaf;
+              ctx.lineWidth = 3;
+              ctx.beginPath();
+              ctx.moveTo(x, y);
+              ctx.lineTo(x - 6, y - h);
+              ctx.moveTo(x, y);
+              ctx.lineTo(x + 6, y - h * 0.9);
+              ctx.stroke();
+              if (grow > 0.8) {
+                ctx.fillStyle = C.sun;
+                ctx.beginPath();
+                ctx.arc(x - 6, y - h, 3, 0, Math.PI * 2);
+                ctx.fill();
+              }
+            }
+          }
+          pill("稻田", 1070, 590, { bg: C.leaf, color: C.white, size: 22, scale: pop(t, 8.8) });
+
+          // 滴滴：溜滑梯衝下水管，再流到田裡
+          if (t < 3.4) {
+            const k = ease((t - 0.3) / 2.8);
+            drop(lerp(PIPE[0][0], PIPE[1][0], k), lerp(PIPE[0][1], PIPE[1][1], k) - 44, 0.6, { t, mood: "wow", tilt: 0.5, alpha: 1 - fade(t, 3, 0.4) });
+            text("咻～", lerp(PIPE[0][0], PIPE[1][0], k) - 70, lerp(PIPE[0][1], PIPE[1][1], k) - 80, { size: 34, weight: 900, color: C.coral, stroke: C.white, alpha: fade(t, 0.4, 0.3) * (1 - fade(t, 2.8, 0.3)) });
+          }
+          if (t > 8) {
+            const k = ease((t - 8) / 2.4);
+            drop(lerp(840, 1160, k), 572 + Math.sin(t * 6) * 3, 0.55, { t, alpha: fade(t, 8, 0.4), wave: t > 10.4 ? 1 : 0 });
+          }
+        }
+
+        // ---------- 第 7 段：一起愛惜水 ----------
+        function sceneEnding(t) {
+          sky("#bfe6ff", "#fff6dc");
+          ctx.fillStyle = C.grass;
+          poly([[0, 560], [320, 530], [700, 560], [1000, 530], [1280, 555], [1280, 720], [0, 720]]);
+          ctx.fill();
+          for (let i = 0; i < 26; i++) {
+            const k = fract(rnd(i) + t * 0.15);
+            ctx.fillStyle = [C.sun, C.coral, C.water, C.leaf, C.pink][i % 5];
+            ctx.globalAlpha = 0.6;
+            ctx.fillRect(rnd(i + 9) * W, k * 560, 10, 10);
+            ctx.globalAlpha = 1;
+          }
+
+          // 四張功能卡片
+          const cardsOut = fade(t, 4, 0.6);
+          const cards = [["存水", "drop"], ["防淹水", "house"], ["洩洪", "spill"], ["發電", "bulb"]];
+          cards.forEach(([name, icon], i) => {
+            const s = pop(t, 0.3 + i * 0.6, 0.5) * (1 - cardsOut);
+            if (s <= 0) return;
+            const cx = 250 + i * 260, cy = 290;
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.scale(s, s);
+            ctx.fillStyle = "rgba(18,49,74,.15)";
+            roundRect(-100 + 5, -110 + 8, 200, 220, 30);
+            ctx.fill();
+            ctx.fillStyle = C.white;
+            ctx.strokeStyle = C.water;
+            ctx.lineWidth = 5;
+            roundRect(-100, -110, 200, 220, 30);
+            ctx.fill();
+            ctx.stroke();
+            if (icon === "drop") drop(0, -10, 0.75, { t });
+            if (icon === "house") { house(0, 20, 1.1, C.coral); text("✓", 50, -50, { size: 44, color: C.leaf, align: "center", weight: 900 }); }
+            if (icon === "spill") {
+              ctx.fillStyle = C.dam2;
+              poly([[-50, 40], [-20, -60], [10, -60], [50, 40]]);
+              ctx.fill();
+              ctx.strokeStyle = C.water2;
+              ctx.lineWidth = 12;
+              ctx.lineCap = "round";
+              ctx.beginPath();
+              ctx.moveTo(0, -54);
+              ctx.quadraticCurveTo(40, -10, 56, 40);
+              ctx.stroke();
+            }
+            if (icon === "bulb") bulb(0, -20, 0.8, 1);
+            text(name, 0, 90, { size: 32, align: "center", weight: 900 });
+            ctx.restore();
+          });
+
+          // 關好水龍頭
+          const tap = fade(t, 4.2, 0.5) * (1 - fade(t, 8, 0.5));
+          if (tap > 0) {
+            ctx.save();
+            ctx.globalAlpha *= tap;
+            faucet(520, 220, 1.3, 1 - ease((t - 4.8) / 1.2), t);
+            ctx.restore();
+            const done = pop(t, 6.2);
+            if (done > 0) text("✓", 610, 470, { size: 90 * done, color: C.leaf, align: "center", weight: 900 });
+            pill("節約用水", 520, 560, { bg: C.water, color: C.white, size: 32, scale: pop(t, 6), alpha: tap });
+            drop(880, 440, 1, { t, wave: 1, alpha: tap });
+          }
+
+          // 結尾：滴滴說再見
+          const end = fade(t, 8, 0.6);
+          if (end > 0) {
+            drop(640, 330 + Math.sin(t * 3) * 8, 1.7, { t, wave: 1, alpha: end });
+            text("下次見！", 640, 150, { size: 64, weight: 900, color: C.coral, stroke: C.white, align: "center", alpha: end });
+            text("SHIMEN RESERVOIR · MASTER", 640, 520, { size: 20, font: MONO, weight: 500, color: C.deep, align: "center", alpha: end });
+          }
+        }
+
+        // ---------- 播放器 ----------
+        const player = document.getElementById("player");
+        const playBtn = document.getElementById("play-btn");
+        const bigPlay = document.getElementById("big-play");
+        const seek = document.getElementById("seek");
+        const timeEl = document.getElementById("time");
+        const speedSel = document.getElementById("speed");
+        const chaptersEl = document.getElementById("chapters");
+        seek.max = TOTAL;
+
+        let time = 0, playing = false, last = 0, dragging = false;
+        const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+
+        SCENES.forEach((s, i) => {
+          const li = document.createElement("li");
+          const b = document.createElement("button");
+          b.type = "button";
+          b.innerHTML = `<small>${String(i + 1).padStart(2, "0")} · ${fmt(s.start)}</small><b>${s.title}</b>`;
+          b.addEventListener("click", () => { poster = false; time = s.start + 0.001; setPlaying(true); });
+          li.appendChild(b);
+          chaptersEl.appendChild(li);
+        });
+        const chapterBtns = [...chaptersEl.querySelectorAll("button")];
+
+        let poster = true; // 封面停在有畫面的瞬間，第一次播放從頭開始
+        function setPlaying(v) {
+          if (v && (poster || time >= TOTAL - 0.01)) time = 0;
+          if (v) poster = false;
+          playing = v;
+          player.classList.toggle("is-playing", v);
+          playBtn.textContent = v ? "❚❚" : "▶";
+          playBtn.setAttribute("aria-label", v ? "暫停" : "播放");
+          last = performance.now();
+          if (v) sound.unlock(); // 瀏覽器要求聲音必須由使用者操作啟動
+        }
+        const toggle = () => setPlaying(!playing);
+        playBtn.addEventListener("click", toggle);
+        bigPlay.addEventListener("click", toggle);
+        canvas.addEventListener("click", toggle);
+        seek.addEventListener("input", () => { dragging = true; poster = false; time = +seek.value; });
+        seek.addEventListener("change", () => { dragging = false; });
+        document.getElementById("fs-btn").addEventListener("click", () => {
+          if (document.fullscreenElement) document.exitFullscreen();
+          else if (player.requestFullscreen) player.requestFullscreen();
+        });
+        document.addEventListener("keydown", (e) => {
+          if (e.target.closest("input, select")) return;
+          if (e.code === "Space" || e.key === "k") { e.preventDefault(); toggle(); }
+          if (e.key.startsWith("Arrow")) poster = false;
+          if (e.key === "ArrowRight") time = Math.min(TOTAL, time + 5);
+          if (e.key === "ArrowLeft") time = Math.max(0, time - 5);
+          if (e.key === "m") sound.toggleMute();
+        });
+
+        function currentScene() {
+          for (let i = SCENES.length - 1; i >= 0; i--) if (time >= SCENES[i].start) return i;
+          return 0;
+        }
+
+        // ---------- 聲音：MP3 旁白 + Web Audio 即時合成音效 ----------
+        const sound = (() => {
+          const muteBtn = document.getElementById("mute-btn");
+          let muted = false;
+          try { muted = localStorage.getItem("reservoir-muted") === "1"; } catch (e) {}
+
+          // 旁白：每句一個 MP3，依影片時間對齊播放
+          const clips = [];
+          SCENES.forEach((scene) => scene.subs.forEach((sub) => {
+            if (!sub.audio) return;
+            const el = new Audio(sub.audio);
+            el.preload = "auto";
+            const clip = { start: scene.start + sub.start, duration: sub.duration, el, broken: false };
+            el.addEventListener("error", () => { clip.broken = true; });
+            clips.push(clip);
+          }));
+
+          function syncNarration() {
+            let speaking = false;
+            for (const c of clips) {
+              const local = time - c.start;
+              const active = playing && !muted && !c.broken && local >= 0 && local < c.duration;
+              if (active) {
+                speaking = true;
+                c.el.playbackRate = +speedSel.value;
+                if (c.el.paused) {
+                  c.el.currentTime = local;
+                  c.el.play().catch(() => {});
+                } else if (Math.abs(c.el.currentTime - local) > 0.5) {
+                  c.el.currentTime = local; // 拖曳進度後重新對齊
+                }
+              } else if (!c.el.paused) {
+                c.el.pause();
+              }
+            }
+            return speaking;
+          }
+
+          // 音效：噪音與振盪器即時合成，不需要額外音檔
+          let actx = null, master = null, brownBuf = null;
+          const layers = {};
+          function noiseBuffer(brown) {
+            const len = actx.sampleRate * 2, buf = actx.createBuffer(1, len, actx.sampleRate), d = buf.getChannelData(0);
+            let lastOut = 0;
+            for (let i = 0; i < len; i++) {
+              const white = Math.random() * 2 - 1;
+              if (brown) { lastOut = (lastOut + 0.02 * white) / 1.02; d[i] = lastOut * 3.5; } else d[i] = white;
+            }
+            return buf;
+          }
+          function noiseLayer(buf, type, freq, q) {
+            const src = actx.createBufferSource(), filter = actx.createBiquadFilter(), gain = actx.createGain();
+            src.buffer = buf;
+            src.loop = true;
+            filter.type = type;
+            filter.frequency.value = freq;
+            filter.Q.value = q;
+            gain.gain.value = 0;
+            src.connect(filter).connect(gain).connect(master);
+            src.start();
+            return { gain, filter };
+          }
+          function init() {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return;
+            actx = new AC();
+            master = actx.createGain();
+            master.gain.value = 0.5;
+            master.connect(actx.destination);
+            const white = noiseBuffer(false);
+            brownBuf = noiseBuffer(true);
+            layers.rain = noiseLayer(white, "bandpass", 3200, 0.5); // 雨聲
+            layers.stream = noiseLayer(brownBuf, "bandpass", 520, 0.6); // 溪水、放水聲
+            layers.roar = noiseLayer(brownBuf, "lowpass", 380, 0.7); // 洩洪的大水聲
+            // 蟬叫：高頻振盪器加上快速的音量起伏
+            const cic = actx.createOscillator(), am = actx.createGain(), lfo = actx.createOscillator(), lfoGain = actx.createGain(), cg = actx.createGain();
+            cic.frequency.value = 4300;
+            lfo.frequency.value = 26;
+            lfoGain.gain.value = 0.5;
+            am.gain.value = 0.5;
+            cg.gain.value = 0;
+            lfo.connect(lfoGain).connect(am.gain);
+            cic.connect(am).connect(cg).connect(master);
+            cic.start();
+            lfo.start();
+            layers.cicada = { gain: cg };
+            // 大輪子轉動的嗡嗡聲
+            const hum = actx.createOscillator(), lp = actx.createBiquadFilter(), hg = actx.createGain();
+            hum.type = "sawtooth";
+            hum.frequency.value = 70;
+            lp.type = "lowpass";
+            lp.frequency.value = 420;
+            hg.gain.value = 0;
+            hum.connect(lp).connect(hg).connect(master);
+            hum.start();
+            layers.hum = { gain: hg, osc: hum };
+          }
+          function unlock() {
+            if (!actx) init();
+            if (actx && actx.state === "suspended") actx.resume();
+          }
+
+          // 各場景的音效層音量（0..1）
+          function levels(idx, lt) {
+            const L = { rain: 0, stream: 0, roar: 0, cicada: 0, hum: 0 };
+            if (idx === 0) {
+              L.rain = 0.35 * (1 - fade(lt, 3.6, 1.2));
+              L.stream = 0.45 * fade(lt, 4.8, 0.6);
+            } else if (idx === 1) {
+              L.stream = 0.2 + 0.25 * fade(lt, 4, 0.5) * (1 - fade(lt, 7.8, 1));
+            } else if (idx === 2) {
+              L.rain = 0.8 * (1 - fade(lt, 9, 3) * 0.9);
+              L.stream = 0.35 * (1 - fade(lt, 9, 2));
+            } else if (idx === 3) {
+              L.rain = 0.5 * (1 - fade(lt, 7, 4));
+              L.roar = 0.8 * fade(lt, 4.4, 0.5) * (1 - 0.4 * fade(lt, 12, 1));
+            } else if (idx === 4) {
+              L.cicada = 0.12 * (1 - 0.6 * fade(lt, 4.4, 1));
+              L.stream = 0.35 * fade(lt, 4.4, 0.8) + 0.15 * fade(lt, 8.6, 0.4);
+            } else if (idx === 5) {
+              L.stream = 0.3 * fade(lt, 0.2, 0.4) * (1 - fade(lt, 3.5, 1)) + 0.3 * fade(lt, 8, 0.8);
+              L.hum = 0.16 * fade(lt, 1.2, 1.5) * (1 - 0.5 * fade(lt, 8, 1));
+            }
+            return L;
+          }
+
+          // 單音：可滑音，delay 秒後播放
+          function tone(freq, dur, vol = 0.25, type = "sine", freqEnd = freq, delay = 0) {
+            const o = actx.createOscillator(), g = actx.createGain(), t0 = actx.currentTime + delay;
+            o.type = type;
+            o.frequency.setValueAtTime(freq, t0);
+            if (freqEnd !== freq) o.frequency.exponentialRampToValueAtTime(freqEnd, t0 + dur);
+            g.gain.setValueAtTime(0.0001, t0);
+            g.gain.exponentialRampToValueAtTime(vol, t0 + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+            o.connect(g).connect(master);
+            o.start(t0);
+            o.stop(t0 + dur + 0.05);
+          }
+          function noiseBurst(dur, vol, type, f0, f1 = f0) {
+            const src = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain(), t0 = actx.currentTime;
+            src.buffer = brownBuf;
+            f.type = type;
+            f.frequency.setValueAtTime(f0, t0);
+            f.frequency.exponentialRampToValueAtTime(f1, t0 + dur);
+            g.gain.setValueAtTime(vol, t0);
+            g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+            src.connect(f).connect(g).connect(master);
+            src.start(t0);
+            src.stop(t0 + dur + 0.05);
+          }
+          const sfx = {
+            drip: () => tone(1400, 0.18, 0.35, "sine", 480),
+            pop: () => tone(520, 0.12, 0.25, "sine", 980),
+            dengdeng: () => { tone(660, 0.2, 0.25, "triangle"); tone(990, 0.45, 0.25, "triangle", 990, 0.22); },
+            thunder: () => noiseBurst(1.8, 0.7, "lowpass", 500, 70), // 小聲、不嚇人的雷
+            birds: () => { for (let i = 0; i < 3; i++) tone(2600, 0.08, 0.1, "sine", 3600, i * 0.12); },
+            clank: () => { noiseBurst(0.15, 0.6, "bandpass", 1800); tone(140, 0.3, 0.3, "square", 90); },
+            siren: () => { tone(620, 0.5, 0.1, "triangle", 880); tone(880, 0.5, 0.1, "triangle", 620, 0.5); },
+            whoosh: () => noiseBurst(1, 0.5, "bandpass", 300, 2400),
+            ding: () => { tone(1320, 0.9, 0.22); tone(1980, 0.6, 0.08); },
+            jingle: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.35, 0.2, "triangle", f, i * 0.14)),
+          };
+          // 單發音效：播放中時間正向跨過某個時間點才觸發（拖曳時不觸發）
+          const CUES = [
+            [0, 2, "drip"], [0, 9.6, "pop"],
+            [1, 8.2, "dengdeng"],
+            [2, 0.9, "thunder"], [2, 5.6, "thunder"], [2, 10.6, "birds"], [2, 11.4, "birds"],
+            [3, 4.1, "clank"], [3, 8.2, "pop"], [3, 12.1, "siren"], [3, 13.1, "siren"], [3, 14.1, "siren"], [3, 15.1, "siren"],
+            [4, 4.4, "clank"], [4, 9.2, "drip"],
+            [5, 0.3, "whoosh"], [5, 4.8, "ding"], [5, 8.8, "pop"],
+            [6, 0.3, "pop"], [6, 0.9, "pop"], [6, 1.5, "pop"], [6, 2.1, "pop"], [6, 6.2, "ding"], [6, 8.2, "jingle"],
+          ];
+          const cues = CUES.filter(([i]) => SCENES[i]).map(([i, at, name]) => ({ at: SCENES[i].start + at, fire: sfx[name] }));
+
+          function update(prev) {
+            const speaking = syncNarration();
+            if (!actx) return;
+            const idx = currentScene();
+            const lt = Math.min(SCENES[idx].dur, time - SCENES[idx].start);
+            const on = playing && !muted ? 1 : 0;
+            const duck = speaking ? 0.55 : 1; // 旁白時音效自動降低
+            const L = levels(idx, lt);
+            const now = actx.currentTime;
+            for (const key of Object.keys(layers)) layers[key].gain.gain.setTargetAtTime(L[key] * on * duck, now, 0.08);
+            if (on && time > prev && time - prev < 0.5) {
+              for (const c of cues) if (prev < c.at && time >= c.at) c.fire();
+            }
+          }
+
+          function setMuted(v) {
+            muted = v;
+            muteBtn.textContent = v ? "🔇" : "🔊";
+            muteBtn.setAttribute("aria-label", v ? "取消靜音" : "靜音");
+            muteBtn.setAttribute("aria-pressed", String(v));
+            try { localStorage.setItem("reservoir-muted", v ? "1" : "0"); } catch (e) {}
+          }
+          muteBtn.addEventListener("click", () => { setMuted(!muted); unlock(); });
+          setMuted(muted);
+          return { unlock, update, toggleMute: () => setMuted(!muted) };
+        })();
+
+        function render() {
+          const idx = currentScene();
+          const scene = SCENES[idx];
+          const lt = Math.min(scene.dur, time - scene.start);
+          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+          ctx.globalAlpha = 1;
+          ctx.globalCompositeOperation = "source-over";
+          scene.draw(lt);
+
+          // 轉場：每段開頭從白色淡入
+          const inA = 1 - clamp(lt / 0.45);
+          if (inA > 0 && idx > 0) { ctx.fillStyle = `rgba(255,255,255,${inA})`; ctx.fillRect(0, 0, W, H); }
+
+          // 段落標題
+          ctx.save();
+          ctx.font = `900 28px ${FONT}`;
+          const tw = ctx.measureText(scene.title).width;
+          ctx.fillStyle = "rgba(255,255,255,.85)";
+          roundRect(24, 22, tw + 112, 50, 25);
+          ctx.fill();
+          ctx.restore();
+          text(`${String(idx + 1).padStart(2, "0")}`, 44, 57, { size: 22, font: MONO, weight: 500, color: C.water });
+          text(scene.title, 84, 58, { size: 28, weight: 900 });
+
+          // 字幕（小朋友看的大字幕）
+          const sub = scene.subs.find((x) => lt >= x.start && lt < x.end) || (lt >= scene.dur ? scene.subs[scene.subs.length - 1] : null);
+          if (sub) {
+            const sa = clamp((lt - sub.start) / 0.3);
+            ctx.save();
+            ctx.font = `700 34px ${FONT}`;
+            const w = ctx.measureText(sub.text).width + 56;
+            ctx.globalAlpha = sa;
+            ctx.fillStyle = "rgba(18,49,74,.78)";
+            roundRect(640 - w / 2, 648, w, 56, 28);
+            ctx.fill();
+            ctx.restore();
+            text(sub.text, 640, 688, { size: 34, align: "center", color: C.white, alpha: sa });
+          }
+
+          // 進度條
+          ctx.fillStyle = "rgba(18,49,74,.12)";
+          ctx.fillRect(0, H - 5, W, 5);
+          ctx.fillStyle = C.water;
+          ctx.fillRect(0, H - 5, (W * time) / TOTAL, 5);
+
+          if (!dragging) seek.value = time;
+          timeEl.textContent = `${fmt(time)} / ${fmt(TOTAL)}`;
+          chapterBtns.forEach((b, i) => b.classList.toggle("is-active", i === idx));
+        }
+
+        function loop(now) {
+          const prev = time;
+          if (playing) {
+            const dt = Math.min(0.1, (now - last) / 1000);
+            time += dt * +speedSel.value;
+            if (time >= TOTAL) { time = TOTAL; setPlaying(false); }
+          }
+          last = now;
+          render();
+          sound.update(prev);
+          requestAnimationFrame(loop);
+        }
+        // 封面：滴滴剛落地揮手；網址加 ?t=秒數 可以直接看某個畫面
+        const startAt = parseFloat(new URLSearchParams(location.search).get("t"));
+        time = Number.isFinite(startAt) ? clamp(startAt, 0, TOTAL) : 3.2;
+        if (Number.isFinite(startAt)) poster = false;
+        render();
+        if (document.fonts) document.fonts.ready.then(render);
+        requestAnimationFrame((n) => { last = n; loop(n); });
+      })();
+    </script>
+  </body>
+</html>

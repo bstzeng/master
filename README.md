@@ -1,6 +1,6 @@
 # MASTER
 
-Patrick 的個人學習知識庫，目前包含九個主題：
+Patrick 的個人學習知識庫，目前包含十個主題：
 
 - 「Python 資料結構與經典演算法」：兩階段、16 個單元與 131 堂獨立課程。
 - 「零基礎韓文」：五階段、26 個單元與 143 堂獨立課程，支援中文、RR 羅馬拼音與網站內建發音。
@@ -11,6 +11,7 @@ Patrick 的個人學習知識庫，目前包含九個主題：
 - 「Agentic AI 省 Token」：五階段、12 個完整大型章節；從成本量測、Context 與工具迴圈，到模型路由、多 Agent、快取與正式環境治理。
 - 「期貨交易入門」：五階段、12 個完整長篇章節；從契約、保證金與下單，到多空策略、部位風控、日誌與紙上交易。
 - 「火箭發動機原理」：一支 75 秒、6 段的 HTML Canvas 動畫影片，附中文 MP3 旁白與即時合成音效，搭配重點整理與推力計算器。
+- 「滴滴遊石門水庫」：給小一小朋友看的 90 秒、7 段 HTML Canvas 動畫影片，小水滴「滴滴」介紹水庫存水、防淹水、洩洪、供水、發電與灌溉，附中文 MP3 旁白與即時合成音效。
 
 ## 頁面
 
@@ -52,6 +53,7 @@ Patrick 的個人學習知識庫，目前包含九個主題：
 - `futures-trading/chapter-01-futures-foundations.html`～`chapter-12-trade-lifecycle.html`：契約、操作、策略、風控與完整紙上交易
 - `futures-trading/templates/`：契約規格卡、風險計算表、交易計畫與交易日誌
 - `rocket-engine/index.html`：火箭發動機原理動畫影片（播放器、章節、旁白、音效、重點與推力計算器）
+- `shimen-reservoir/index.html`：滴滴遊石門水庫兒童動畫影片（播放器、章節、旁白、音效與七個重點；網址加 `?t=秒數` 可直接跳到某個畫面）
 
 ## 內容維護
 
@@ -96,6 +98,7 @@ Patrick 的個人學習知識庫，目前包含九個主題：
 - `futures-trading/check_site.py`：檢查 13 個頁面的站內連結與圖片資產
 - `rocket-engine/data/narration.json`：火箭影片的場景長度、字幕與旁白文字
 - `rocket-engine/generate_audio.py`：產生 `rocket-engine/audio/` 旁白 MP3，並重建 `rocket-engine/narration.js`（旁白超過字幕時段會報錯）
+- `shimen-reservoir/data/narration.json`、`shimen-reservoir/generate_audio.py`：水庫影片的字幕與旁白，以及產生 `shimen-reservoir/audio/` 與 `shimen-reservoir/narration.js` 的腳本
 
 修改內容後執行：
 
@@ -132,6 +135,7 @@ python3 futures-trading/check_site.py
 python3 korean/generate_audio.py
 python3 japanese/generate_audio.py
 python3 rocket-engine/generate_audio.py
+python3 shimen-reservoir/generate_audio.py
 ```
 
 只修改火箭影片字幕、還沒產生音檔時，可執行 `python3 rocket-engine/generate_audio.py --manifest-only`；沒有 MP3 的句子只顯示字幕，音效照常播放。
