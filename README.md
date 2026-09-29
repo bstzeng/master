@@ -1,6 +1,6 @@
 # MASTER
 
-Patrick 的個人學習知識庫，目前包含十個主題：
+Patrick 的個人學習知識庫，目前包含十二個主題：
 
 - 「Python 資料結構與經典演算法」：兩階段、16 個單元與 131 堂獨立課程。
 - 「零基礎韓文」：五階段、26 個單元與 143 堂獨立課程，支援中文、RR 羅馬拼音與網站內建發音。
@@ -12,6 +12,8 @@ Patrick 的個人學習知識庫，目前包含十個主題：
 - 「期貨交易入門」：五階段、12 個完整長篇章節；從契約、保證金與下單，到多空策略、部位風控、日誌與紙上交易。
 - 「火箭發動機原理」：一支 75 秒、6 段的 HTML Canvas 動畫影片，附中文 MP3 旁白與即時合成音效，搭配重點整理與推力計算器。
 - 「滴滴遊石門水庫」：給小一小朋友看的 90 秒、7 段 HTML Canvas 動畫影片，小水滴「滴滴」介紹水庫存水、防淹水、洩洪、供水、發電與灌溉，附中文 MP3 旁白與即時合成音效。
+- 「飛機為什麼不能飛到太空」：給小一小朋友看的 84 秒、7 段動畫影片，小飛機「咻咻」說明翅膀與引擎都要靠空氣、越高空氣越少，以及火箭為什麼能飛上太空。
+- 「月亮為什麼會有圓缺」：給小一小朋友看的 76 秒、6 段 3D 線條動畫影片，小兔子「兔兔」說明太陽照亮月亮的一半、月亮繞地球轉，以及新月到滿月的變化。
 
 ## 頁面
 
@@ -54,6 +56,8 @@ Patrick 的個人學習知識庫，目前包含十個主題：
 - `futures-trading/templates/`：契約規格卡、風險計算表、交易計畫與交易日誌
 - `rocket-engine/index.html`：火箭發動機原理動畫影片（播放器、章節、旁白、音效、重點與推力計算器）
 - `shimen-reservoir/index.html`：滴滴遊石門水庫兒童動畫影片（播放器、章節、旁白、音效與七個重點；網址加 `?t=秒數` 可直接跳到某個畫面）
+- `airplane-space/index.html`：飛機為什麼不能飛到太空兒童動畫影片
+- `moon-phases/index.html`：月亮為什麼會有圓缺 3D 線條兒童動畫影片（Canvas 自製 3D 投影，不用外部套件）
 
 ## 內容維護
 
@@ -136,13 +140,15 @@ python3 korean/generate_audio.py
 python3 japanese/generate_audio.py
 python3 rocket-engine/generate_audio.py
 python3 shimen-reservoir/generate_audio.py
+python3 airplane-space/generate_audio.py
+python3 moon-phases/generate_audio.py
 ```
 
 只修改火箭影片字幕、還沒產生音檔時，可執行 `python3 rocket-engine/generate_audio.py --manifest-only`；沒有 MP3 的句子只顯示字幕，音效照常播放。
 
 ## 動畫影片的旁白播放方式
 
-`rocket-engine/` 與 `shimen-reservoir/` 的旁白是每句一個 MP3，音效則由 Web Audio 即時合成。新增有旁白的影片時請沿用同一套做法，不要每句各開一個 `new Audio()`：
+`rocket-engine/`、`shimen-reservoir/`、`airplane-space/` 與 `moon-phases/` 的旁白是每句一個 MP3，音效則由 Web Audio 即時合成。新增有旁白的影片時請沿用同一套做法，不要每句各開一個 `new Audio()`：
 
 - **問題**：用 `<audio>` 播旁白時，網路較慢會出現「第一次播放某幾句沒聲音、重播才有」的情況。原因是播放時間到了 MP3 還沒下載完；舊程式又在下載中每 0.5 秒重設播放位置，讓下載一直重來，整句就消失。手機 Safari 也會擋下不是在點擊當下才開始播放的 `<audio>`。
 - **兩條音軌**：頁面一載入就先 `fetch` 所有旁白 MP3，按下播放、`AudioContext` 解鎖後再用 `decodeAudioData` 解碼。旁白用 `AudioBufferSourceNode` 接到獨立的 `voice` 增益節點（人聲音軌），音效接到 `master`（音效音軌），兩條同時混音；旁白播放時音效自動降到 35%。

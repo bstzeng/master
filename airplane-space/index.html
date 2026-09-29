@@ -1,0 +1,1302 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="給小一小朋友看的 84 秒動畫影片：跟著小飛機咻咻了解飛機為什麼要靠空氣、為什麼飛不到太空，以及火箭為什麼可以，附中文旁白與音效。" />
+    <meta name="theme-color" content="#eaf6ff" />
+    <title>飛機為什麼不能飛到太空｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #eaf6ff;
+        --bg-2: #ffffff;
+        --ink: #12314a;
+        --muted: rgba(18, 49, 74, 0.68);
+        --line: rgba(18, 49, 74, 0.14);
+        --accent: #2f8fe0;
+        --accent-2: #ff7a59;
+        --accent-soft: rgba(47, 143, 224, .25);
+        --on-accent: #ffffff;
+        --active: #d6ecff;
+        --canvas: #bfe6ff;
+        --shadow: 0 18px 40px rgba(18, 49, 74, .12);
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body { margin: 0; overflow-x: hidden; color: var(--ink); background: var(--bg); font-family: "Noto Sans TC", sans-serif; -webkit-font-smoothing: antialiased; }
+      a { color: inherit; }
+      h1, h2, h3, p { margin-top: 0; }
+
+      .site-header { display: flex; justify-content: space-between; align-items: center; width: min(1240px, calc(100% - 32px)); min-height: 76px; margin: 0 auto; border-bottom: 1px solid var(--line); }
+      .brand { display: inline-flex; align-items: center; gap: 11px; font-family: "DM Mono", monospace; font-size: 16px; font-weight: 500; letter-spacing: .18em; text-decoration: none; }
+      .brand-dot { width: 11px; height: 11px; background: var(--accent); border-radius: 50%; box-shadow: 12px 0 0 var(--accent-2); }
+      .header-back { padding-bottom: 3px; border-bottom: 1px solid var(--ink); font-family: "DM Mono", monospace; font-size: 11px; letter-spacing: .12em; text-decoration: none; }
+
+      main { width: min(1240px, calc(100% - 32px)); margin: 0 auto; }
+      .intro { display: grid; grid-template-columns: 1fr .7fr; gap: 60px; align-items: end; padding: 70px 0 40px; }
+      .eyebrow { margin-bottom: 18px; color: var(--accent); font-family: "DM Mono", monospace; font-size: 12px; letter-spacing: .14em; }
+      h1 { margin-bottom: 0; font-size: clamp(40px, 6vw, 76px); font-weight: 900; line-height: 1.12; letter-spacing: -.02em; }
+      h1 em { color: var(--accent); font-style: normal; }
+      .intro > p { margin-bottom: 6px; color: var(--muted); font-size: 16px; line-height: 1.9; }
+
+      .player { position: relative; overflow: hidden; background: var(--bg-2); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
+      .player canvas { display: block; width: 100%; aspect-ratio: 16 / 9; cursor: pointer; background: var(--canvas); }
+      .big-play { position: absolute; inset: 0 0 58px; display: grid; place-items: center; border: 0; background: rgba(0, 0, 0, .18); cursor: pointer; transition: opacity 200ms ease; }
+      .big-play span { display: grid; width: 96px; height: 96px; place-items: center; padding-left: 8px; color: var(--on-accent); background: var(--accent); border-radius: 50%; font-size: 40px; box-shadow: 0 0 0 12px var(--accent-soft); }
+      .player.is-playing .big-play { opacity: 0; pointer-events: none; }
+      .controls { display: flex; align-items: center; gap: 12px; height: 58px; padding: 0 14px; background: var(--bg-2); border-top: 1px solid var(--line); }
+      .controls button, .controls select { height: 34px; padding: 0 12px; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 8px; font: 500 13px "DM Mono", monospace; cursor: pointer; }
+      .controls button:hover, .controls select:hover { border-color: var(--accent); }
+      .controls select option { color: #111; }
+      #play-btn, #mute-btn { width: 44px; padding: 0; font-size: 15px; }
+      .time { min-width: 96px; color: var(--muted); font: 12px "DM Mono", monospace; }
+      .seek { flex: 1; min-width: 60px; accent-color: var(--accent); cursor: pointer; }
+
+      .chapters { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin: 16px 0 0; padding: 0; list-style: none; }
+      .chapters button { width: 100%; height: 100%; padding: 14px; color: var(--ink); text-align: left; background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; font: inherit; cursor: pointer; transition: border-color 160ms ease, background 160ms ease; }
+      .chapters button:hover { border-color: var(--accent); }
+      .chapters button.is-active { background: var(--active); border-color: var(--accent); }
+      .chapters small { display: block; margin-bottom: 6px; color: var(--accent); font: 11px "DM Mono", monospace; letter-spacing: .08em; }
+      .chapters b { font-size: 14px; font-weight: 700; }
+      .next-link { margin: 18px 0 0; text-align: right; font-size: 16px; font-weight: 700; }
+      .next-link a { color: var(--accent); text-decoration: none; border-bottom: 2px solid var(--accent); }
+
+      section.block { padding: 90px 0 20px; }
+      .section-index { margin-bottom: 14px; color: var(--accent-2); font: 12px "DM Mono", monospace; letter-spacing: .14em; }
+      section.block h2 { margin-bottom: 36px; font-size: clamp(30px, 4vw, 48px); font-weight: 900; }
+      .points { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+      .points article { padding: 28px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 16px; }
+      .points span { color: var(--accent); font: 12px "DM Mono", monospace; }
+      .points h3 { margin: 18px 0 10px; font-size: 22px; }
+      .points p { margin: 0; font-size: 17px; line-height: 1.8; }
+      .points .parent { margin-top: 14px; padding-top: 14px; color: var(--muted); border-top: 1px dashed var(--line); font-size: 14px; line-height: 1.8; }
+      .points .parent b { color: var(--accent-2); font-weight: 700; }
+
+      footer { display: flex; justify-content: space-between; gap: 16px; width: min(1240px, calc(100% - 32px)); margin: 90px auto 0; padding: 36px 0; color: var(--muted); border-top: 1px solid var(--line); font: 10px "DM Mono", monospace; letter-spacing: .08em; }
+
+      @media (max-width: 880px) {
+        .intro { grid-template-columns: 1fr; gap: 24px; }
+        .chapters { grid-template-columns: repeat(4, 1fr); }
+        .points { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 560px) {
+        .intro { padding-top: 44px; }
+        .chapters { grid-template-columns: repeat(2, 1fr); }
+        .controls { gap: 8px; padding: 0 8px; }
+        .time { min-width: 0; font-size: 11px; }
+        #speed { display: none; }
+        .big-play span { width: 64px; height: 64px; font-size: 26px; }
+        footer { flex-direction: column; gap: 8px; }
+      }
+      @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot" aria-hidden="true"></span><span>MASTER</span></a>
+      <a class="header-back" href="../index.html#topics">← 所有主題</a>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">AIRPLANE VS SPACE / 84 SEC KIDS VIDEO</p>
+          <h1 id="page-title">飛機為什麼<br /><em>不能飛到太空？</em></h1>
+        </div>
+        <p>給小一小朋友看的動畫影片（記得開聲音）。小飛機「咻咻」帶大家看看：翅膀和引擎都要靠空氣，越往上空氣越少，太空幾乎沒有空氣，所以飛機飛不上去；火箭自己帶著燃料和氧氣，才能衝上太空。</p>
+      </section>
+
+      <div class="player" id="player">
+        <canvas id="stage" width="1280" height="720" aria-label="飛機為什麼不能飛到太空動畫影片"></canvas>
+        <button class="big-play" id="big-play" type="button" aria-label="播放影片"><span aria-hidden="true">▶</span></button>
+        <div class="controls">
+          <button id="play-btn" type="button" aria-label="播放">▶</button>
+          <span class="time" id="time">0:00 / 1:24</span>
+          <input class="seek" id="seek" type="range" min="0" max="84" step="0.01" value="0" aria-label="影片進度" />
+          <select id="speed" aria-label="播放速度">
+            <option value="0.5">0.5×</option>
+            <option value="1" selected>1×</option>
+            <option value="1.5">1.5×</option>
+            <option value="2">2×</option>
+          </select>
+          <button id="mute-btn" type="button" aria-label="靜音" aria-pressed="false">🔊</button>
+          <button id="fs-btn" type="button" aria-label="全螢幕">⛶</button>
+        </div>
+      </div>
+      <ol class="chapters" id="chapters"></ol>
+      <p class="next-link"><a href="../rocket-engine/index.html">下一支影片：火箭發動機原理 →</a></p>
+
+      <section class="block" aria-labelledby="points-title">
+        <p class="section-index">01 / KEY IDEAS</p>
+        <h2 id="points-title">影片裡的七個重點</h2>
+        <div class="points">
+          <article><span>01</span><h3>飛機飛好高</h3><p>飛機可以飛得比高山還要高。</p><p class="parent"><b>家長小知識：</b>民航客機通常在大約 10 到 12 公里高的地方飛行，比台灣最高的玉山（約 3.95 公里）高很多。</p></article>
+          <article><span>02</span><h3>翅膀要靠空氣</h3><p>飛機要一直往前衝，讓空氣流過翅膀，空氣就會把翅膀往上托。</p><p class="parent"><b>家長小知識：</b>這股往上托的力量叫做「升力」。飛機越快、空氣越多，升力就越大。</p></article>
+          <article><span>03</span><h3>引擎要吸空氣</h3><p>飛機的引擎要吸進空氣，燃料才燒得起來。</p><p class="parent"><b>家長小知識：</b>噴射引擎吸進空氣，用裡面的氧氣讓燃料燃燒，再把熱氣往後噴出去推動飛機。</p></article>
+          <article><span>04</span><h3>越高空氣越少</h3><p>越往上，空氣越稀薄。飛機飛在大約 10 公里高，太空在 100 公里以上。</p><p class="parent"><b>家長小知識：</b>大約 5.5 公里高的地方，空氣就只剩地面的一半左右；100 公里常被當成太空的起點。</p></article>
+          <article><span>05</span><h3>太空幾乎沒有空氣</h3><p>太空幾乎沒有空氣，翅膀托不住，引擎也吸不到空氣。</p><p class="parent"><b>家長小知識：</b>所以飛機只能在空氣比較多的地方飛，沒辦法一路飛到太空。</p></article>
+          <article><span>06</span><h3>火箭可以！</h3><p>火箭自己帶著燃料和氧氣，把熱氣往下噴，就能往上衝到太空。</p><p class="parent"><b>家長小知識：</b>火箭帶的是「氧化劑」（例如液態氧），不用靠外面的空氣，所以在太空也能推進。</p></article>
+          <article><span>07</span><h3>一起記住</h3><p>飛機靠空氣，火箭自己帶！</p><p class="parent"><b>家長小知識：</b>想知道火箭怎麼飛，可以接著看站上的<a href="../rocket-engine/index.html">火箭發動機原理</a>影片。</p></article>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>MASTER / AIRPLANE VS SPACE KIDS VIDEO</span>
+      <span>動畫為教學示意，高度與大小沒有照實際比例</span>
+    </footer>
+
+    <script src="narration.js"></script>
+    <script>
+      (() => {
+        // ---------- 基本設定 ----------
+        const W = 1280, H = 720;
+        const canvas = document.getElementById("stage");
+        const ctx = canvas.getContext("2d");
+        const DPR = Math.min(2, window.devicePixelRatio || 1);
+        canvas.width = W * DPR;
+        canvas.height = H * DPR;
+
+        const FONT = '"Noto Sans TC", sans-serif';
+        const MONO = '"DM Mono", monospace';
+        const C = {
+          ink: "#12314a", white: "#ffffff", water: "#2f8fe0", coral: "#ff7a59", sun: "#ffc83d", leaf: "#3fa65a",
+          grass: "#7ccf6b", steel: "#b8c2cc", night: "#18245a", gold: "#ffe27a", pillBg: "#ffffff", pillText: "#12314a",
+        };
+
+        // 字幕、旁白與場景長度來自 narration.js（由 data/narration.json 產生）
+        const NARRATION = (window.AIRPLANE_NARRATION || { scenes: [] }).scenes;
+        const SCENES = [sceneTakeoff, sceneWing, sceneEngine, sceneAltitude, sceneSpace, sceneRocket, sceneRecap].map((draw, i) => ({
+          draw,
+          title: NARRATION[i] ? NARRATION[i].title : "",
+          dur: NARRATION[i] ? NARRATION[i].dur : 12,
+          subs: NARRATION[i] ? NARRATION[i].subs : [],
+        }));
+        let acc = 0;
+        SCENES.forEach((s) => { s.start = acc; acc += s.dur; });
+        const TOTAL = acc;
+
+        // ---------- 工具函式 ----------
+        const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+        const lerp = (a, b, k) => a + (b - a) * k;
+        const ease = (k) => { k = clamp(k); return k * k * (3 - 2 * k); };
+        const fade = (t, start, dur = 0.6) => ease((t - start) / dur);
+        const fract = (v) => v - Math.floor(v);
+        const rnd = (i) => fract(Math.sin(i * 127.1 + 311.7) * 43758.5453);
+        // 彈出效果：0 → 稍微超過 1 → 1
+        const pop = (t, start, dur = 0.5) => { const k = clamp((t - start) / dur) - 1; return 1 + 2.70158 * k * k * k + 1.70158 * k * k; };
+
+        function text(str, x, y, { size = 24, color = C.ink, align = "left", weight = 700, font = FONT, alpha = 1, base = "alphabetic", stroke = null } = {}) {
+          if (alpha <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.font = `${weight} ${size}px ${font}`;
+          ctx.textAlign = align;
+          ctx.textBaseline = base;
+          if (stroke) { ctx.lineWidth = size * 0.18; ctx.lineJoin = "round"; ctx.strokeStyle = stroke; ctx.strokeText(str, x, y); }
+          ctx.fillStyle = color;
+          ctx.fillText(str, x, y);
+          ctx.restore();
+        }
+
+        function roundRect(x, y, w, h, r) {
+          ctx.beginPath();
+          ctx.moveTo(x + r, y);
+          ctx.arcTo(x + w, y, x + w, y + h, r);
+          ctx.arcTo(x + w, y + h, x, y + h, r);
+          ctx.arcTo(x, y + h, x, y, r);
+          ctx.arcTo(x, y, x + w, y, r);
+          ctx.closePath();
+        }
+
+        // 圓角標籤；scale 用來做彈出動畫
+        function pill(str, x, y, { bg = C.pillBg, color = C.pillText, size = 26, alpha = 1, scale = 1, border = null } = {}) {
+          if (alpha <= 0 || scale <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.translate(x, y);
+          ctx.scale(scale, scale);
+          ctx.font = `900 ${size}px ${FONT}`;
+          const w = ctx.measureText(str).width + size * 1.2, h = size * 1.7;
+          ctx.fillStyle = "rgba(0,0,0,.18)";
+          roundRect(-w / 2 + 3, -h / 2 + 5, w, h, h / 2);
+          ctx.fill();
+          ctx.fillStyle = bg;
+          roundRect(-w / 2, -h / 2, w, h, h / 2);
+          ctx.fill();
+          if (border) { ctx.lineWidth = 4; ctx.strokeStyle = border; ctx.stroke(); }
+          ctx.fillStyle = color;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(str, 0, 2);
+          ctx.restore();
+        }
+
+        function arrow(x1, y1, x2, y2, color, width = 8, alpha = 1) {
+          if (alpha <= 0) return;
+          const ang = Math.atan2(y2 - y1, x2 - x1), head = width * 3;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.strokeStyle = color;
+          ctx.fillStyle = color;
+          ctx.lineWidth = width;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2 - Math.cos(ang) * head * 0.8, y2 - Math.sin(ang) * head * 0.8);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(x2, y2);
+          ctx.lineTo(x2 - Math.cos(ang - 0.5) * head, y2 - Math.sin(ang - 0.5) * head);
+          ctx.lineTo(x2 - Math.cos(ang + 0.5) * head, y2 - Math.sin(ang + 0.5) * head);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+
+        function poly(points) {
+          ctx.beginPath();
+          points.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+          ctx.closePath();
+        }
+
+        function mixColor(a, b, k) {
+          const pa = a.match(/\w\w/g).map((h) => parseInt(h, 16)), pb = b.match(/\w\w/g).map((h) => parseInt(h, 16));
+          return `rgb(${pa.map((v, i) => Math.round(lerp(v, pb[i], clamp(k)))).join(",")})`;
+        }
+
+        function stars(alpha, t, y0 = 0, y1 = H) {
+          if (alpha <= 0) return;
+          for (let i = 0; i < 140; i++) {
+            const y = rnd(i + 1) * H;
+            if (y < y0 || y > y1) continue;
+            const tw = 0.4 + 0.6 * Math.abs(Math.sin(t * (0.6 + rnd(i + 4)) + i));
+            ctx.fillStyle = `rgba(230,240,255,${alpha * (0.25 + 0.65 * tw * rnd(i + 2))})`;
+            ctx.fillRect(rnd(i) * W, y, 2.2, 2.2);
+          }
+        }
+
+        // ---------- 背景元素 ----------
+        function sky(top, bottom) {
+          const g = ctx.createLinearGradient(0, 0, 0, H);
+          g.addColorStop(0, top);
+          g.addColorStop(1, bottom);
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, W, H);
+        }
+
+        function sunShape(x, y, r, t, alpha = 1) {
+          if (alpha <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.translate(x, y);
+          ctx.rotate(t * 0.4);
+          ctx.fillStyle = "rgba(255,200,61,.45)";
+          for (let i = 0; i < 12; i++) {
+            ctx.rotate(Math.PI / 6);
+            ctx.beginPath();
+            ctx.moveTo(-10, -r - 8);
+            ctx.lineTo(0, -r - 38 - 6 * Math.sin(t * 4 + i));
+            ctx.lineTo(10, -r - 8);
+            ctx.fill();
+          }
+          ctx.rotate(-t * 0.4);
+          ctx.fillStyle = C.sun;
+          ctx.beginPath();
+          ctx.arc(0, 0, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        function cloud(x, y, s = 1, alpha = 1) {
+          if (alpha <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.fillStyle = "#ffffff";
+          for (const [dx, dy, r] of [[-60, 10, 38], [-20, -14, 50], [30, -6, 44], [70, 12, 34], [0, 20, 40]]) {
+            ctx.beginPath();
+            ctx.arc(x + dx * s, y + dy * s, r * s, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+
+        // ---------- 主角：小飛機「咻咻」 ----------
+        function plane(x, y, s = 1, { t = 0, tilt = 0, mood = "happy", jet = 0, alpha = 1 } = {}) {
+          if (alpha <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.translate(x, y);
+          ctx.rotate(tilt);
+          ctx.scale(s, s);
+          ctx.lineJoin = "round";
+          ctx.lineWidth = 4;
+          ctx.strokeStyle = C.ink;
+          if (jet > 0) {
+            for (let i = 0; i < 4; i++) {
+              const k = fract(t * 3 + i / 4);
+              ctx.fillStyle = `rgba(255,255,255,${0.75 * (1 - k) * jet})`;
+              ctx.beginPath();
+              ctx.arc(-36 - k * 100, 33 + Math.sin(i + t * 9) * 3, 7 + k * 12, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+          // 尾翼
+          ctx.fillStyle = C.coral;
+          poly([[-72, -18], [-106, -72], [-80, -72], [-40, -18]]);
+          ctx.fill();
+          ctx.stroke();
+          // 機身
+          ctx.fillStyle = "#f7fbff";
+          ctx.beginPath();
+          ctx.moveTo(-98, -20);
+          ctx.lineTo(50, -24);
+          ctx.bezierCurveTo(92, -24, 110, -8, 110, 4);
+          ctx.bezierCurveTo(110, 18, 90, 24, 50, 24);
+          ctx.lineTo(-82, 22);
+          ctx.quadraticCurveTo(-102, 10, -98, -20);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = C.water;
+          ctx.fillRect(-82, 6, 150, 7);
+          ctx.fillStyle = "#9fd3ff";
+          for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.arc(-62 + i * 24, -6, 5, 0, Math.PI * 2); ctx.fill(); }
+          // 引擎
+          ctx.fillStyle = C.steel;
+          roundRect(-32, 22, 52, 20, 10);
+          ctx.fill();
+          ctx.stroke();
+          // 機翼
+          ctx.fillStyle = "#d9ecff";
+          poly([[-22, 8], [26, 8], [-6, 60], [-38, 60]]);
+          ctx.fill();
+          ctx.stroke();
+          // 臉
+          const blink = fract(t / 3.3 + 0.2) > 0.95 ? 0.15 : 1;
+          ctx.fillStyle = C.ink;
+          for (const ex of [72, 92]) { ctx.beginPath(); ctx.ellipse(ex, -6, 4.5, 6 * blink, 0, 0, Math.PI * 2); ctx.fill(); }
+          ctx.fillStyle = "rgba(255,155,179,.85)";
+          ctx.beginPath();
+          ctx.arc(64, 9, 5, 0, Math.PI * 2);
+          ctx.arc(101, 9, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.lineWidth = 3;
+          ctx.lineCap = "round";
+          ctx.fillStyle = C.ink;
+          ctx.beginPath();
+          if (mood === "wow") { ctx.ellipse(84, 12, 4, 5, 0, 0, Math.PI * 2); ctx.fill(); }
+          else if (mood === "sad") { ctx.arc(84, 20, 7, 1.2 * Math.PI, 1.8 * Math.PI); ctx.stroke(); }
+          else { ctx.arc(84, 6, 7, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke(); }
+          ctx.restore();
+        }
+
+        // ---------- 火箭（可以剖開看到氧氣和燃料） ----------
+        function rocket(x, y, s = 1, { flame = 0, t = 0, cut = 0 } = {}) {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.scale(s, s);
+          ctx.lineWidth = 4;
+          ctx.strokeStyle = C.ink;
+          ctx.lineJoin = "round";
+          if (flame > 0) {
+            ["#ff7a3d", "#ffb347", "#fff2b0"].forEach((col, i) => {
+              const h = (100 + 40 * Math.sin(t * 30 + i * 2)) * flame * (1 - i * 0.25);
+              ctx.fillStyle = col;
+              ctx.beginPath();
+              ctx.moveTo(-36 + i * 11, 168);
+              ctx.quadraticCurveTo(0, 168 + h * 1.7, 36 - i * 11, 168);
+              ctx.closePath();
+              ctx.fill();
+            });
+          }
+          ctx.fillStyle = C.coral;
+          poly([[-50, 96], [-92, 172], [-50, 160]]);
+          ctx.fill();
+          ctx.stroke();
+          poly([[50, 96], [92, 172], [50, 160]]);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#f7fbff";
+          roundRect(-50, -120, 100, 290, 18);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = C.coral;
+          ctx.beginPath();
+          ctx.moveTo(-50, -112);
+          ctx.quadraticCurveTo(0, -236, 50, -112);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          if (cut > 0) {
+            ctx.save();
+            ctx.globalAlpha *= cut;
+            ctx.fillStyle = "#6cc3ff";
+            roundRect(-36, -98, 72, 112, 14);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = "#ffb347";
+            roundRect(-36, 26, 72, 112, 14);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+          }
+          if (cut < 1) {
+            ctx.save();
+            ctx.globalAlpha *= 1 - cut;
+            ctx.fillStyle = "#9fd3ff";
+            ctx.beginPath();
+            ctx.arc(0, -40, 22, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+          }
+          ctx.restore();
+        }
+
+        function puff(x, y, r, alpha) {
+          if (alpha <= 0) return;
+          ctx.fillStyle = `rgba(150,160,175,${alpha})`;
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.arc(x + r * 0.8, y - r * 0.3, r * 0.7, 0, Math.PI * 2);
+          ctx.arc(x - r * 0.7, y - r * 0.2, r * 0.6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // ---------- 第 1 段：飛機飛好高 ----------
+        function sceneTakeoff(t) {
+          const space = fade(t, 4, 1) * (1 - fade(t, 8.4, 1));
+          sky(mixColor("#6fc3ff", "#18245a", space), "#e3f5ff");
+          stars(space, t, 0, 220);
+          sunShape(1120, 110, 44, t, 1 - space);
+          for (let i = 0; i < 5; i++) cloud(fract(rnd(i) - t * 0.015 * (1 + i * 0.3)) * 1600 - 160, 190 + rnd(i + 3) * 300, 0.55 + rnd(i + 6) * 0.6);
+          ctx.fillStyle = C.grass;
+          ctx.fillRect(0, 600, W, 120);
+          ctx.fillStyle = "#8d96a3";
+          ctx.fillRect(0, 612, W, 44);
+          ctx.fillStyle = "#ffffff";
+          for (let x = 20; x < W; x += 120) ctx.fillRect(x, 631, 60, 6);
+
+          const run = ease(t / 3.4);
+          const lift = clamp((t - 1.2) / 2.2);
+          let x = lerp(170, 640, run), y = lerp(585, 330, ease(lift));
+          let tilt = -0.28 * Math.sin(Math.PI * lift);
+          if (t > 3.4) y += Math.sin((t - 3.4) * 2) * 8;
+          if (t > 8.2) y -= 26 * Math.sin(clamp((t - 8.2) / 0.6) * Math.PI);
+          plane(x, y, 1, { t, tilt, jet: 1, mood: t > 4.3 && t < 8 ? "wow" : "happy" });
+          pill("我是咻咻！", x, y - 100, { color: C.water, scale: pop(t, 1.8) * (1 - fade(t, 3.9, 0.3)) });
+
+          const q = fade(t, 4.3, 0.5) * (1 - fade(t, 8.2, 0.5));
+          if (q > 0) {
+            ctx.save();
+            ctx.globalAlpha *= q;
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 5;
+            ctx.setLineDash([14, 14]);
+            ctx.lineDashOffset = -t * 40;
+            ctx.beginPath();
+            ctx.moveTo(640, 250);
+            ctx.lineTo(640, 140);
+            ctx.stroke();
+            ctx.restore();
+            pill("太空", 640, 104, { bg: C.night, color: C.gold, size: 30, scale: pop(t, 4.4), alpha: q });
+            text("？", 790, 300, { size: 90 * pop(t, 5), weight: 900, color: C.coral, stroke: C.white, align: "center", alpha: q });
+          }
+          pill("出發！", 640, 470, { bg: C.coral, color: C.white, size: 32, scale: pop(t, 8.4) });
+        }
+
+        // ---------- 第 2 段：翅膀要靠空氣 ----------
+        function sceneWing(t) {
+          sky("#8fd3ff", "#e8f7ff");
+          const air = 1 - fade(t, 8.2, 1);
+          const drop = t > 8.8 ? Math.pow(clamp((t - 8.8) / 1.8), 2) : 0;
+          // 氣流線
+          ctx.save();
+          ctx.globalAlpha = air;
+          ctx.lineWidth = 4;
+          ctx.lineCap = "round";
+          ctx.setLineDash([26, 22]);
+          ctx.lineDashOffset = -t * 160;
+          ctx.strokeStyle = "rgba(255,255,255,.95)";
+          for (let j = -4; j <= 4; j++) {
+            if (j === 0) continue;
+            const y0 = 340 + j * 44;
+            const bend = j < 0 ? -70 * Math.exp((j + 1) * 0.45) : 26 * Math.exp(-(j - 1) * 0.45);
+            ctx.beginPath();
+            for (let x = 40; x <= 1240; x += 20) {
+              const g = Math.exp(-(((x - 640) / 190) ** 2));
+              const y = y0 + bend * g + (x > 640 ? 18 * (1 - g) * clamp((x - 640) / 300) : 0);
+              if (x === 40) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+          }
+          ctx.restore();
+          pill("空氣", 150, 200, { bg: C.water, color: C.white, scale: pop(t, 0.8), alpha: air });
+          arrow(210, 250, 330, 250, C.water, 7, fade(t, 0.8) * air);
+
+          // 機翼切面
+          ctx.save();
+          ctx.translate(640, 340 + drop * 300);
+          ctx.rotate(drop * 0.35);
+          ctx.translate(-640, -340);
+          ctx.fillStyle = "#f7fbff";
+          ctx.strokeStyle = C.ink;
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.moveTo(440, 348);
+          ctx.bezierCurveTo(470, 262, 650, 262, 860, 352);
+          ctx.bezierCurveTo(690, 372, 500, 382, 440, 348);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          text("機翼", 600, 338, { size: 30, weight: 900, color: C.water, align: "center" });
+          ctx.restore();
+
+          const up = fade(t, 4.2, 0.5) * air;
+          for (const ax of [560, 650, 740]) arrow(ax, 500, ax, 405 - 10 * Math.sin(t * 5 + ax), C.coral, 10, up);
+          pill("往上托！", 650, 560, { bg: C.coral, color: C.white, size: 28, scale: pop(t, 4.6), alpha: air });
+          pill("沒有空氣…", 640, 150, { bg: C.ink, color: C.white, size: 30, scale: pop(t, 8.6) });
+          text("掉下來了！", 640, 250, { size: 44 * pop(t, 9.6), weight: 900, color: C.coral, stroke: C.white, align: "center" });
+          plane(1130, 150, 0.5, { t, mood: t > 8.8 ? "wow" : "happy" });
+        }
+
+        // ---------- 第 3 段：引擎要吸空氣 ----------
+        function sceneEngine(t) {
+          sky("#8fd3ff", "#e8f7ff");
+          const air = 1 - fade(t, 8.2, 1.2);
+          const fire = fade(t, 4.3, 0.6) * (1 - fade(t, 8.6, 1.2));
+          // 外殼
+          ctx.save();
+          ctx.lineWidth = 6;
+          ctx.strokeStyle = C.ink;
+          ctx.fillStyle = "#dfe6ee";
+          poly([[400, 228], [880, 270], [880, 410], [400, 452]]);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#ffffff";
+          poly([[420, 256], [868, 290], [868, 390], [420, 424]]);
+          ctx.fill();
+          ctx.restore();
+          // 燃料管
+          ctx.fillStyle = C.steel;
+          ctx.fillRect(686, 150, 16, 150);
+          ctx.fillStyle = "#ffb347";
+          ctx.strokeStyle = C.ink;
+          ctx.lineWidth = 4;
+          roundRect(640, 96, 110, 64, 16);
+          ctx.fill();
+          ctx.stroke();
+          text("燃料", 695, 138, { size: 26, weight: 900, align: "center" });
+          if (t > 4) {
+            for (let i = 0; i < 4; i++) {
+              const k = fract(i / 4 + t * 1.2);
+              ctx.fillStyle = "#ff9a2e";
+              ctx.beginPath();
+              ctx.arc(694, lerp(170, 320, k), 7, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+          // 火焰與排氣
+          if (fire > 0) {
+            for (let i = 0; i < 14; i++) {
+              const fx = 700 + rnd(i) * 150, fy = 340 + (rnd(i + 3) - 0.5) * 70;
+              const r = (16 + 14 * Math.sin(t * 20 + i)) * fire;
+              ctx.fillStyle = ["rgba(255,122,61,.8)", "rgba(255,179,71,.85)", "rgba(255,242,176,.9)"][i % 3];
+              ctx.beginPath();
+              ctx.arc(fx, fy, Math.max(2, r), 0, Math.PI * 2);
+              ctx.fill();
+            }
+            ctx.strokeStyle = `rgba(255,150,70,${fire})`;
+            ctx.lineWidth = 6;
+            ctx.lineCap = "round";
+            for (let i = 0; i < 5; i++) {
+              const k = fract(t * 2 + i / 5);
+              const y = 310 + i * 15;
+              ctx.beginPath();
+              ctx.moveTo(890 + k * 200, y);
+              ctx.lineTo(930 + k * 200, y);
+              ctx.stroke();
+            }
+          }
+          // 空氣點點被吸進去
+          for (let i = 0; i < 46; i++) {
+            if (rnd(i + 20) > air) continue;
+            const k = fract(rnd(i) + t * 0.45);
+            const x = lerp(120, 860, k);
+            const spread = x < 410 ? lerp(160, 90, (x - 120) / 290) : lerp(90, 45, (x - 410) / 450);
+            const y = 340 + (rnd(i + 9) - 0.5) * 2 * spread;
+            ctx.fillStyle = "#4aa7ee";
+            ctx.beginPath();
+            ctx.arc(x, y, 7, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          // 前面的風扇
+          const spin = t < 8.2 ? t : 8.2 + 0.6 * (1 - (1 - clamp((t - 8.2) / 1.2)) ** 2);
+          ctx.save();
+          ctx.translate(412, 340);
+          ctx.scale(0.3, 1);
+          ctx.strokeStyle = C.ink;
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.arc(0, 0, 100, 0, Math.PI * 2);
+          ctx.stroke();
+          for (let i = 0; i < 8; i++) {
+            const a = spin * 12 + (i * Math.PI) / 4;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(Math.cos(a) * 95, Math.sin(a) * 95);
+            ctx.stroke();
+          }
+          ctx.restore();
+          pill("吸進空氣", 240, 180, { bg: C.water, color: C.white, scale: pop(t, 0.8), alpha: air });
+          pill("燒起來了！", 780, 500, { bg: C.coral, color: C.white, scale: pop(t, 4.8) * (1 - fade(t, 8.4, 0.4)) });
+          if (t > 8.8) {
+            for (let i = 0; i < 3; i++) {
+              const k = fract((t - 8.8) * 0.5 + i / 3);
+              puff(900 + k * 160, 330 - k * 60, 20 + k * 20, 0.6 * (1 - k));
+            }
+          }
+          pill("熄火了…", 780, 500, { bg: C.ink, color: C.white, scale: pop(t, 9.4) });
+          plane(1130, 150, 0.5, { t, mood: t > 9 ? "sad" : "happy" });
+        }
+
+        // ---------- 第 4 段：越高空氣越少 ----------
+        const altY = (km) => (km <= 10 ? 640 - km * 14 : 500 - ((km - 10) / 90) * 350); // 示意用，非實際比例
+        function sceneAltitude(t) {
+          const g = ctx.createLinearGradient(0, 110, 0, 660);
+          g.addColorStop(0, "#050b1f");
+          g.addColorStop(0.35, "#1c2f6b");
+          g.addColorStop(1, "#9ed8ff");
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, W, H);
+          stars(1, t, 0, 160);
+          ctx.fillStyle = "#6d8fb0";
+          poly([[0, 660], [110, 560], [190, 610], [300, 522], [430, 660]]);
+          ctx.fill();
+          ctx.fillStyle = C.grass;
+          ctx.fillRect(0, 640, W, 80);
+          // 空氣點點：越高越少
+          for (let i = 0; i < 900; i++) {
+            const y = 150 + rnd(i) * 490;
+            const km = y >= 500 ? (640 - y) / 14 : 10 + ((500 - y) / 350) * 90;
+            if (rnd(i + 3) > Math.exp(-km / 8)) continue;
+            const x = 250 + fract(rnd(i + 5) + t * 0.01 * (rnd(i + 7) - 0.5)) * 960;
+            ctx.fillStyle = "rgba(255,255,255,.85)";
+            ctx.beginPath();
+            ctx.arc(x, y + Math.sin(t * 2 + i) * 2, 4, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          // 高度尺
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(170, 640);
+          ctx.lineTo(170, 140);
+          ctx.stroke();
+          for (const [km, label] of [[0, "地面"], [10, "10 公里"], [100, "100 公里"]]) {
+            const y = altY(km);
+            ctx.beginPath();
+            ctx.moveTo(158, y);
+            ctx.lineTo(182, y);
+            ctx.stroke();
+            text(label, 150, y + 9, { size: 24, weight: 900, color: C.white, align: "right" });
+          }
+          text("（示意圖，高度沒有照比例）", 1240, 700, { size: 16, weight: 500, color: "rgba(255,255,255,.8)", align: "right" });
+          pill("越高，空氣越少", 900, 250, { bg: C.white, color: C.water, size: 28, scale: pop(t, 0.8) * (1 - fade(t, 7.8, 0.4)) });
+          arrow(1220, 600, 1220, 210, "rgba(255,255,255,.9)", 8, fade(t, 0.8) * (1 - fade(t, 7.8)));
+          // 飛機在 10 公里
+          const fly = ease((t - 4) / 2);
+          if (t > 4) {
+            ctx.save();
+            ctx.strokeStyle = "rgba(255,255,255,.8)";
+            ctx.lineWidth = 3;
+            ctx.setLineDash([10, 10]);
+            ctx.beginPath();
+            ctx.moveTo(182, altY(10));
+            ctx.lineTo(lerp(-100, 640, fly) - 110, altY(10));
+            ctx.stroke();
+            ctx.restore();
+            plane(lerp(-100, 640, fly), altY(10) - 10 + Math.sin(t * 2) * 5, 0.7, { t, jet: 1 });
+            pill("飛機在這裡", 640, 420, { bg: C.coral, color: C.white, scale: pop(t, 5.8) });
+          }
+          // 太空從 100 公里開始
+          const sp = fade(t, 8.2, 0.6);
+          if (sp > 0) {
+            ctx.save();
+            ctx.globalAlpha = sp;
+            ctx.strokeStyle = C.gold;
+            ctx.lineWidth = 4;
+            ctx.setLineDash([16, 12]);
+            ctx.beginPath();
+            ctx.moveTo(182, altY(100));
+            ctx.lineTo(1240, altY(100));
+            ctx.stroke();
+            ctx.restore();
+            pill("太空從這裡開始", 760, 110, { bg: C.night, color: C.gold, size: 28, scale: pop(t, 8.4) });
+          }
+        }
+
+        // ---------- 第 5 段：太空幾乎沒有空氣 ----------
+        function sceneSpace(t) {
+          ctx.fillStyle = "#050b1f";
+          ctx.fillRect(0, 0, W, H);
+          stars(1, t);
+          const ex = 640, ey = 1650, er = 1150;
+          const g = ctx.createRadialGradient(ex, ey, er - 10, ex, ey, er + 80);
+          g.addColorStop(0, "rgba(120,200,255,.7)");
+          g.addColorStop(1, "rgba(120,200,255,0)");
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(ex, ey, er + 80, 0, Math.PI * 2);
+          ctx.fill();
+          const eg = ctx.createLinearGradient(0, 500, 0, 720);
+          eg.addColorStop(0, "#3d9ae8");
+          eg.addColorStop(1, "#1b5fa8");
+          ctx.fillStyle = eg;
+          ctx.beginPath();
+          ctx.arc(ex, ey, er, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#58b35a";
+          for (const [lx, ly, r] of [[380, 600, 70], [470, 580, 50], [860, 590, 80], [960, 620, 60]]) {
+            ctx.beginPath();
+            ctx.ellipse(lx, ly, r, r * 0.35, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          pill("空氣只有薄薄一層", 1010, 420, { bg: C.white, color: C.water, scale: pop(t, 0.8) * (1 - fade(t, 4, 0.4)) });
+          arrow(1010, 445, 1010, 480, C.white, 5, fade(t, 0.8) * (1 - fade(t, 4)));
+
+          const rise = ease(t / 3.6);
+          let py = lerp(620, 420, rise), tilt = -0.2 * (1 - rise);
+          if (t > 4) { tilt = 0.22 * Math.sin(t * 7) * fade(t, 4, 0.4); py = 420 + 6 * Math.sin(t * 9); }
+          if (t > 8.2) { const f = clamp((t - 8.2) / 2); py = 420 + 250 * f * f; tilt = 0.6 * f + 0.15 * Math.sin(t * 6); }
+          const jet = t < 4 ? 1 : Math.max(0, Math.sin(t * 12)) * (1 - fade(t, 7, 1));
+          if (t > 4 && t < 8.5) {
+            for (let i = 0; i < 3; i++) {
+              const k = fract(t * 0.8 + i / 3);
+              puff(560 - k * 120, py + 30, 14 + k * 14, 0.5 * (1 - k));
+            }
+          }
+          plane(640, py, 0.8, { t, tilt, mood: t > 8.2 ? "sad" : t > 4 ? "wow" : "happy", jet });
+          pill("翅膀托不住", 330, 300, { bg: C.coral, color: C.white, scale: pop(t, 4.5) * (1 - fade(t, 8, 0.4)) });
+          pill("引擎吸不到", 950, 300, { bg: C.coral, color: C.white, scale: pop(t, 5.6) * (1 - fade(t, 8, 0.4)) });
+          pill("飛不到太空…", 640, 200, { size: 32, scale: pop(t, 8.8) });
+        }
+
+        // ---------- 第 6 段：火箭可以！ ----------
+        function sceneRocket(t) {
+          const h = t > 4.4 ? 70 * (t - 4.4) ** 2 : 0;
+          const camY = Math.max(0, h - 280);
+          const k = clamp(camY / 1800);
+          const g = ctx.createLinearGradient(0, 0, 0, H);
+          g.addColorStop(0, mixColor("ff9f6b", "050b1f", k));
+          g.addColorStop(1, mixColor("ffe0b8", "12204a", k));
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, W, H);
+          stars(k, t);
+          const edgeY = 640 - 1500 + camY;
+          if (edgeY > -20 && edgeY < H + 20) {
+            ctx.save();
+            ctx.strokeStyle = "rgba(160,215,255,.9)";
+            ctx.lineWidth = 4;
+            ctx.setLineDash([16, 12]);
+            ctx.beginPath();
+            ctx.moveTo(0, edgeY);
+            ctx.lineTo(W, edgeY);
+            ctx.stroke();
+            ctx.restore();
+            text("空氣的邊邊", 150, edgeY - 14, { size: 24, weight: 900, color: "#bfe3ff", align: "center" });
+          }
+          const gy = 640 + camY;
+          if (gy < H + 60) {
+            ctx.fillStyle = "#6b7a5a";
+            ctx.fillRect(0, gy, W, H);
+            ctx.fillStyle = "#7c8591";
+            ctx.fillRect(440, gy - 430, 26, 430);
+            for (let y = gy - 400; y < gy; y += 44) ctx.fillRect(440, y, 90, 6);
+          }
+          const ign = fade(t, 4.2, 0.3);
+          if (ign > 0 && gy < H + 120) {
+            for (let i = 0; i < 40; i++) {
+              const p = fract(rnd(i) + (t - 4.2) * 0.4);
+              const side = rnd(i + 7) < 0.5 ? -1 : 1;
+              puff(640 + side * p * (120 + rnd(i + 3) * 360), gy - 10 - p * 60 * rnd(i + 11), 20 + p * 40, (1 - p) * 0.45 * ign);
+            }
+          }
+          const ry = 502 - Math.min(h, 280); // 火箭尾翼底部貼齊地面
+          rocket(640, ry, 0.8, { flame: ign, t, cut: 1 - fade(t, 6.5, 1) });
+          const tanks = 1 - fade(t, 6.5, 0.6);
+          pill("氧氣", 780, ry - 34, { bg: "#6cc3ff", color: C.ink, scale: pop(t, 0.6), alpha: tanks });
+          pill("燃料", 780, ry + 66, { bg: "#ffb347", color: C.ink, scale: pop(t, 1.4), alpha: tanks });
+          if (t > 2.3 && t < 4.2) {
+            const n = 3 - Math.floor((t - 2.4) / 0.6);
+            if (n >= 1) text(String(n), 1110, 250, { size: 120, weight: 900, font: MONO, color: C.white, stroke: C.ink, align: "center", alpha: 1 - fract((t - 2.4) / 0.6) * 0.5 });
+          }
+          text("點火！", 1110, 250, { size: 80, weight: 900, color: C.coral, stroke: C.white, align: "center", alpha: fade(t, 4.2, 0.2) * (1 - fade(t, 5.2, 0.4)) });
+          const push = fade(t, 4.8, 0.4) * (1 - fade(t, 8, 0.4));
+          arrow(505, ry + 110, 505, ry + 210, C.coral, 10, push);
+          pill("往下噴熱氣", 330, ry + 160,{ bg: C.coral, color: C.white, scale: pop(t, 4.8), alpha: push });
+          arrow(800, ry + 120, 800, ry - 40, C.water, 10, push);
+          pill("往上衝！", 900, ry - 70, { bg: C.water, color: C.white, scale: pop(t, 5.3), alpha: push });
+          pill("太空！", 640, 600, { bg: C.night, color: C.gold, size: 36, scale: pop(t, 9) });
+        }
+
+        // ---------- 第 7 段：一起記住 ----------
+        function sceneRecap(t) {
+          sky("#8fd3ff", "#fff6dc");
+          for (let i = 0; i < 26; i++) {
+            const k = fract(rnd(i) + t * 0.15);
+            ctx.fillStyle = [C.sun, C.coral, C.water, C.leaf][i % 4];
+            ctx.globalAlpha = 0.6;
+            ctx.fillRect(rnd(i + 9) * W, k * 600, 10, 10);
+            ctx.globalAlpha = 1;
+          }
+          const a = 1 - fade(t, 3.8, 0.5);
+          if (a > 0) {
+            ctx.save();
+            ctx.globalAlpha = a;
+            plane(380, 320 + Math.sin(t * 2) * 6, 1.1, { t, jet: 1 });
+            rocket(900, 290, 0.55, { t, flame: 0.6 });
+            ctx.restore();
+            pill("靠空氣", 380, 500, { bg: C.water, color: C.white, size: 32, scale: pop(t, 0.5), alpha: a });
+            pill("自己帶", 900, 500, { bg: C.coral, color: C.white, size: 32, scale: pop(t, 1.6), alpha: a });
+          }
+          const q = fade(t, 4, 0.5) * (1 - fade(t, 7.8, 0.4));
+          if (q > 0) {
+            ctx.save();
+            ctx.globalAlpha = q;
+            ctx.fillStyle = C.white;
+            ctx.strokeStyle = C.water;
+            ctx.lineWidth = 6;
+            roundRect(380, 190, 520, 280, 30);
+            ctx.fill();
+            ctx.stroke();
+            rocket(500, 330, 0.4, { t });
+            ctx.restore();
+            text("火箭怎麼飛？", 720, 345, { size: 48, weight: 900, color: C.ink, align: "center", alpha: q });
+          }
+          const e = fade(t, 8, 0.6);
+          if (e > 0) {
+            ctx.save();
+            ctx.globalAlpha = e;
+            ctx.fillStyle = "#1c1410";
+            roundRect(430, 150, 420, 250, 22);
+            ctx.fill();
+            ctx.fillStyle = "#ff7043";
+            ctx.beginPath();
+            ctx.arc(640, 300, 40, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#1c1410";
+            poly([[626, 280], [626, 320], [660, 300]]);
+            ctx.fill();
+            ctx.restore();
+            text("火箭發動機原理", 640, 225, { size: 38, weight: 900, color: "#ff7043", align: "center", alpha: e });
+            text("影片就在網頁下方 ↓", 640, 380, { size: 20, weight: 500, color: "#f1efe7", align: "center", alpha: e });
+            plane(250, 520 + Math.sin(t * 3) * 8, 0.7, { t, tilt: 0.12 * Math.sin(t * 6), alpha: e });
+            text("下次見！", 1000, 540, { size: 60, weight: 900, color: C.coral, stroke: C.white, align: "center", alpha: e });
+          }
+        }
+        // ---------- 播放器 ----------
+        const player = document.getElementById("player");
+        const playBtn = document.getElementById("play-btn");
+        const bigPlay = document.getElementById("big-play");
+        const seek = document.getElementById("seek");
+        const timeEl = document.getElementById("time");
+        const speedSel = document.getElementById("speed");
+        const chaptersEl = document.getElementById("chapters");
+        seek.max = TOTAL;
+
+        let time = 0, playing = false, last = 0, dragging = false;
+        const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+
+        SCENES.forEach((s, i) => {
+          const li = document.createElement("li");
+          const b = document.createElement("button");
+          b.type = "button";
+          b.innerHTML = `<small>${String(i + 1).padStart(2, "0")} · ${fmt(s.start)}</small><b>${s.title}</b>`;
+          b.addEventListener("click", () => { poster = false; time = s.start + 0.001; setPlaying(true); });
+          li.appendChild(b);
+          chaptersEl.appendChild(li);
+        });
+        const chapterBtns = [...chaptersEl.querySelectorAll("button")];
+
+        let poster = true; // 封面停在有畫面的瞬間，第一次播放從頭開始
+        function setPlaying(v) {
+          if (v && (poster || time >= TOTAL - 0.01)) time = 0;
+          if (v) poster = false;
+          playing = v;
+          player.classList.toggle("is-playing", v);
+          playBtn.textContent = v ? "❚❚" : "▶";
+          playBtn.setAttribute("aria-label", v ? "暫停" : "播放");
+          last = performance.now();
+          if (v) sound.unlock(); // 瀏覽器要求聲音必須由使用者操作啟動
+        }
+        const toggle = () => setPlaying(!playing);
+        playBtn.addEventListener("click", toggle);
+        bigPlay.addEventListener("click", toggle);
+        canvas.addEventListener("click", toggle);
+        seek.addEventListener("input", () => { dragging = true; poster = false; time = +seek.value; });
+        seek.addEventListener("change", () => { dragging = false; });
+        document.getElementById("fs-btn").addEventListener("click", () => {
+          if (document.fullscreenElement) document.exitFullscreen();
+          else if (player.requestFullscreen) player.requestFullscreen();
+        });
+        document.addEventListener("keydown", (e) => {
+          if (e.target.closest("input, select")) return;
+          if (e.code === "Space" || e.key === "k") { e.preventDefault(); toggle(); }
+          if (e.key.startsWith("Arrow")) poster = false;
+          if (e.key === "ArrowRight") time = Math.min(TOTAL, time + 5);
+          if (e.key === "ArrowLeft") time = Math.max(0, time - 5);
+          if (e.key === "m") sound.toggleMute();
+        });
+
+        function currentScene() {
+          for (let i = SCENES.length - 1; i >= 0; i--) if (time >= SCENES[i].start) return i;
+          return 0;
+        }
+
+        // ---------- 聲音：MP3 旁白 + Web Audio 即時合成音效 ----------
+        const sound = (() => {
+          const muteBtn = document.getElementById("mute-btn");
+          let muted = false;
+          try { muted = localStorage.getItem("airplane-muted") === "1"; } catch (e) {}
+
+          // 旁白：每句一個 MP3。解碼後和音效在同一個 AudioContext 裡當成兩條音軌同時混音，
+          // 由播放按鈕解鎖一次就好，手機瀏覽器也不會把後面的旁白擋掉。
+          const clips = [];
+          SCENES.forEach((scene) => scene.subs.forEach((sub) => {
+            if (!sub.audio) return;
+            // 頁面一載入就先下載，按播放時只需要解碼，第一句才不會被切掉開頭
+            const data = fetch(sub.audio).then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); });
+            data.catch(() => {});
+            clips.push({ start: scene.start + sub.start, duration: sub.duration, url: sub.audio, data, buffer: null, node: null, rate: 1, t0: 0, el: null });
+          }));
+
+          function loadClips() {
+            for (const c of clips) {
+              c.data
+                .then((data) => new Promise((ok, fail) => actx.decodeAudioData(data, ok, fail)))
+                .then((buf) => { c.buffer = buf; })
+                .catch(() => { // 直接開本機檔案時無法解碼，改用 <audio> 播放
+                  c.el = new Audio(c.url);
+                  c.el.preload = "auto";
+                  c.el.addEventListener("error", () => { c.failed = true; });
+                  c.el.load();
+                });
+            }
+          }
+
+          // 這句旁白準備好了沒（已解碼、<audio> 已可播放，或確定載入失敗）
+          const clipReady = (c) => c.buffer || c.failed || (c.el && c.el.readyState >= 3);
+
+          // 像影片播放器的緩衝：目前時間要播的旁白還沒載入好，就先停住畫面等它
+          function ready(t) {
+            if (muted || !actx) return true;
+            for (const c of clips) {
+              if (t < c.start - 0.05 || t >= c.start + c.duration || clipReady(c)) continue;
+              if (!c.waitSince) c.waitSince = performance.now();
+              if (performance.now() - c.waitSince > 8000) { c.failed = true; continue; } // 網路太慢就跳過這句，不要整支卡住
+              return false;
+            }
+            return true;
+          }
+
+          function stopClip(c) {
+            if (c.node) { try { c.node.stop(); } catch (e) {} c.node = null; }
+            if (c.el && !c.el.paused) c.el.pause();
+          }
+
+          function syncNarration() {
+            let speaking = false;
+            const rate = +speedSel.value;
+            for (const c of clips) {
+              const local = time - c.start;
+              const active = playing && !muted && local >= 0 && local < c.duration;
+              if (active) speaking = true;
+              if (!active) { stopClip(c); continue; }
+              if (c.buffer) {
+                const heard = c.node ? (actx.currentTime - c.t0) * c.rate : 0;
+                if (!c.node || c.rate !== rate || Math.abs(heard - local) > 0.5) { // 拖曳進度或改速度後重新對齊
+                  stopClip(c);
+                  const node = actx.createBufferSource();
+                  node.buffer = c.buffer;
+                  node.playbackRate.value = rate;
+                  node.connect(voice);
+                  node.start(0, local);
+                  c.node = node;
+                  c.rate = rate;
+                  c.t0 = actx.currentTime - local / rate;
+                }
+              } else if (c.el) {
+                c.el.playbackRate = rate;
+                if (c.el.paused) {
+                  if (c.el.readyState >= 1) c.el.currentTime = local;
+                  c.el.play().catch(() => {});
+                } else if (c.el.readyState >= 3 && !c.el.seeking && Math.abs(c.el.currentTime - local) > 0.5) {
+                  c.el.currentTime = local;
+                }
+              }
+            }
+            return speaking;
+          }
+
+          // 音效：噪音與振盪器即時合成，不需要額外音檔
+          let actx = null, master = null, voice = null, brownBuf = null;
+          const layers = {};
+          function noiseBuffer(brown) {
+            const len = actx.sampleRate * 2, buf = actx.createBuffer(1, len, actx.sampleRate), d = buf.getChannelData(0);
+            let lastOut = 0;
+            for (let i = 0; i < len; i++) {
+              const white = Math.random() * 2 - 1;
+              if (brown) { lastOut = (lastOut + 0.02 * white) / 1.02; d[i] = lastOut * 3.5; } else d[i] = white;
+            }
+            return buf;
+          }
+          function noiseLayer(buf, type, freq, q) {
+            const src = actx.createBufferSource(), filter = actx.createBiquadFilter(), gain = actx.createGain();
+            src.buffer = buf;
+            src.loop = true;
+            filter.type = type;
+            filter.frequency.value = freq;
+            filter.Q.value = q;
+            gain.gain.value = 0;
+            src.connect(filter).connect(gain).connect(master);
+            src.start();
+            return { gain, filter };
+          }
+          function init() {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return;
+            actx = new AC();
+            master = actx.createGain();
+            master.gain.value = 0.5;
+            master.connect(actx.destination);
+            voice = actx.createGain(); // 旁白音軌，和音效音軌分開
+            voice.gain.value = 1;
+            voice.connect(actx.destination);
+            loadClips();
+            const white = noiseBuffer(false);
+            brownBuf = noiseBuffer(true);
+            layers.rain = noiseLayer(white, "bandpass", 700, 0.4); // 風聲
+            layers.stream = noiseLayer(brownBuf, "bandpass", 520, 0.6); // 溪水、放水聲
+            layers.roar = noiseLayer(brownBuf, "lowpass", 380, 0.7); // 洩洪的大水聲
+            // 蟬叫：高頻振盪器加上快速的音量起伏
+            const cic = actx.createOscillator(), am = actx.createGain(), lfo = actx.createOscillator(), lfoGain = actx.createGain(), cg = actx.createGain();
+            cic.frequency.value = 4300;
+            lfo.frequency.value = 26;
+            lfoGain.gain.value = 0.5;
+            am.gain.value = 0.5;
+            cg.gain.value = 0;
+            lfo.connect(lfoGain).connect(am.gain);
+            cic.connect(am).connect(cg).connect(master);
+            cic.start();
+            lfo.start();
+            layers.cicada = { gain: cg };
+            // 大輪子轉動的嗡嗡聲
+            const hum = actx.createOscillator(), lp = actx.createBiquadFilter(), hg = actx.createGain();
+            hum.type = "sawtooth";
+            hum.frequency.value = 70;
+            lp.type = "lowpass";
+            lp.frequency.value = 420;
+            hg.gain.value = 0;
+            hum.connect(lp).connect(hg).connect(master);
+            hum.start();
+            layers.hum = { gain: hg, osc: hum };
+          }
+          function unlock() {
+            if (!actx) init();
+            if (actx && actx.state === "suspended") actx.resume();
+          }
+
+          // 各場景的音效層音量（0..1）
+          function levels(idx, lt) {
+            const L = { rain: 0, stream: 0, roar: 0, cicada: 0, hum: 0 };
+            if (idx === 0) { L.hum = 0.14 * fade(lt, 0.2, 0.5); L.rain = 0.25 * fade(lt, 1, 1); }
+            else if (idx === 1) { L.rain = 0.4 * (1 - fade(lt, 8.2, 1)); }
+            else if (idx === 2) { L.stream = 0.35 * (1 - fade(lt, 8.2, 1.2)); L.hum = 0.16 * fade(lt, 4.3, 0.6) * (1 - fade(lt, 8.6, 1.2)); }
+            else if (idx === 3) { L.rain = 0.3 * (1 - 0.85 * fade(lt, 1, 10)); L.hum = 0.08 * fade(lt, 4, 1); }
+            else if (idx === 4) { L.hum = 0.1 * (1 - fade(lt, 4, 4)); }
+            else if (idx === 5) { L.roar = 0.85 * fade(lt, 4.2, 0.3) * (1 - 0.6 * fade(lt, 9, 2)); }
+            else if (idx === 6) { L.hum = 0.05; }
+            return L;
+          }
+
+          // 單音：可滑音，delay 秒後播放
+          function tone(freq, dur, vol = 0.25, type = "sine", freqEnd = freq, delay = 0) {
+            const o = actx.createOscillator(), g = actx.createGain(), t0 = actx.currentTime + delay;
+            o.type = type;
+            o.frequency.setValueAtTime(freq, t0);
+            if (freqEnd !== freq) o.frequency.exponentialRampToValueAtTime(freqEnd, t0 + dur);
+            g.gain.setValueAtTime(0.0001, t0);
+            g.gain.exponentialRampToValueAtTime(vol, t0 + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+            o.connect(g).connect(master);
+            o.start(t0);
+            o.stop(t0 + dur + 0.05);
+          }
+          function noiseBurst(dur, vol, type, f0, f1 = f0) {
+            const src = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain(), t0 = actx.currentTime;
+            src.buffer = brownBuf;
+            f.type = type;
+            f.frequency.setValueAtTime(f0, t0);
+            f.frequency.exponentialRampToValueAtTime(f1, t0 + dur);
+            g.gain.setValueAtTime(vol, t0);
+            g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+            src.connect(f).connect(g).connect(master);
+            src.start(t0);
+            src.stop(t0 + dur + 0.05);
+          }
+          const sfx = {
+            drip: () => tone(1400, 0.18, 0.35, "sine", 480),
+            pop: () => tone(520, 0.12, 0.25, "sine", 980),
+            dengdeng: () => { tone(660, 0.2, 0.25, "triangle"); tone(990, 0.45, 0.25, "triangle", 990, 0.22); },
+            thunder: () => noiseBurst(1.8, 0.7, "lowpass", 500, 70), // 小聲、不嚇人的雷
+            birds: () => { for (let i = 0; i < 3; i++) tone(2600, 0.08, 0.1, "sine", 3600, i * 0.12); },
+            clank: () => { noiseBurst(0.15, 0.6, "bandpass", 1800); tone(140, 0.3, 0.3, "square", 90); },
+            siren: () => { tone(620, 0.5, 0.1, "triangle", 880); tone(880, 0.5, 0.1, "triangle", 620, 0.5); },
+            whoosh: () => noiseBurst(1, 0.5, "bandpass", 300, 2400),
+            ding: () => { tone(1320, 0.9, 0.22); tone(1980, 0.6, 0.08); },
+            jingle: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.35, 0.2, "triangle", f, i * 0.14)),
+            fall: () => tone(900, 1, 0.14, "triangle", 180),
+            sputter: () => noiseBurst(0.3, 0.7, "lowpass", 700, 90),
+            ignite: () => noiseBurst(0.7, 0.5, "bandpass", 300, 1600),
+            beep: () => tone(880, 0.18, 0.25),
+            boom: () => { tone(1320, 0.35, 0.18); noiseBurst(1.8, 1.1, "lowpass", 900, 90); },
+            c523: () => { tone(523, 1.4, 0.2); tone(1046, 0.9, 0.05); },
+            c659: () => { tone(659, 1.4, 0.2); tone(1318, 0.9, 0.05); },
+            c784: () => { tone(784, 1.4, 0.2); tone(1568, 0.9, 0.05); },
+            c1047: () => { tone(1047, 1.6, 0.2); tone(2093, 1, 0.05); },
+          };
+          // 單發音效：播放中時間正向跨過某個時間點才觸發（拖曳時不觸發）
+          const CUES = [
+            [0, 0.3, "whoosh"], [0, 1.8, "pop"], [0, 4.4, "pop"], [0, 5, "pop"], [0, 8.4, "dengdeng"],
+            [1, 0.8, "pop"], [1, 4.6, "pop"], [1, 8.6, "pop"], [1, 9, "fall"],
+            [2, 0.8, "pop"], [2, 4.4, "ignite"], [2, 9.2, "sputter"], [2, 9.7, "sputter"],
+            [3, 0.8, "pop"], [3, 5.8, "ding"], [3, 8.4, "ding"],
+            [4, 0.8, "pop"], [4, 4.5, "sputter"], [4, 5.6, "sputter"], [4, 6.8, "sputter"], [4, 8.3, "fall"],
+            [5, 0.6, "pop"], [5, 1.4, "pop"], [5, 2.4, "beep"], [5, 3.0, "beep"], [5, 3.6, "beep"], [5, 4.2, "boom"], [5, 9, "ding"],
+            [6, 0.5, "pop"], [6, 1.6, "pop"], [6, 4.2, "pop"], [6, 8.2, "jingle"],
+          ];
+          const cues = CUES.filter(([i]) => SCENES[i]).map(([i, at, name]) => ({ at: SCENES[i].start + at, fire: sfx[name] }));
+
+          function update(prev) {
+            const speaking = syncNarration();
+            if (!actx) return;
+            const idx = currentScene();
+            const lt = Math.min(SCENES[idx].dur, time - SCENES[idx].start);
+            const on = playing && !muted ? 1 : 0;
+            const duck = speaking ? 0.35 : 1; // 旁白時音效自動降低，讓人聲更清楚
+            const L = levels(idx, lt);
+            const now = actx.currentTime;
+            for (const key of Object.keys(layers)) layers[key].gain.gain.setTargetAtTime(L[key] * on * duck, now, 0.08);
+            if (on && time > prev && time - prev < 0.5) {
+              for (const c of cues) if (prev < c.at && time >= c.at) c.fire();
+            }
+          }
+
+          function setMuted(v) {
+            muted = v;
+            muteBtn.textContent = v ? "🔇" : "🔊";
+            muteBtn.setAttribute("aria-label", v ? "取消靜音" : "靜音");
+            muteBtn.setAttribute("aria-pressed", String(v));
+            try { localStorage.setItem("airplane-muted", v ? "1" : "0"); } catch (e) {}
+          }
+          muteBtn.addEventListener("click", () => { setMuted(!muted); unlock(); });
+          setMuted(muted);
+          return { unlock, update, ready, toggleMute: () => setMuted(!muted) };
+        })();
+
+        function render() {
+          const idx = currentScene();
+          const scene = SCENES[idx];
+          const lt = Math.min(scene.dur, time - scene.start);
+          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+          ctx.globalAlpha = 1;
+          ctx.globalCompositeOperation = "source-over";
+          scene.draw(lt);
+
+          // 轉場：每段開頭淡入
+          const inA = 1 - clamp(lt / 0.45);
+          if (inA > 0 && idx > 0) { ctx.fillStyle = `rgba(255,255,255,${inA})`; ctx.fillRect(0, 0, W, H); }
+
+          // 段落標題
+          ctx.save();
+          ctx.font = `900 28px ${FONT}`;
+          const tw = ctx.measureText(scene.title).width;
+          ctx.fillStyle = "rgba(255,255,255,.85)";
+          roundRect(24, 22, tw + 112, 50, 25);
+          ctx.fill();
+          ctx.restore();
+          text(`${String(idx + 1).padStart(2, "0")}`, 44, 57, { size: 22, font: MONO, weight: 500, color: C.water });
+          text(scene.title, 84, 58, { size: 28, weight: 900 });
+
+          // 字幕（小朋友看的大字幕）
+          const sub = scene.subs.find((x) => lt >= x.start && lt < x.end) || (lt >= scene.dur ? scene.subs[scene.subs.length - 1] : null);
+          if (sub) {
+            const sa = clamp((lt - sub.start) / 0.3);
+            ctx.save();
+            ctx.font = `700 34px ${FONT}`;
+            const w = ctx.measureText(sub.text).width + 56;
+            ctx.globalAlpha = sa;
+            ctx.fillStyle = "rgba(18,49,74,.78)";
+            roundRect(640 - w / 2, 648, w, 56, 28);
+            ctx.fill();
+            ctx.restore();
+            text(sub.text, 640, 688, { size: 34, align: "center", color: C.white, alpha: sa });
+          }
+
+          // 進度條
+          ctx.fillStyle = "rgba(18,49,74,.12)";
+          ctx.fillRect(0, H - 5, W, 5);
+          ctx.fillStyle = C.water;
+          ctx.fillRect(0, H - 5, (W * time) / TOTAL, 5);
+
+          if (!dragging) seek.value = time;
+          timeEl.textContent = `${fmt(time)} / ${fmt(TOTAL)}`;
+          chapterBtns.forEach((b, i) => b.classList.toggle("is-active", i === idx));
+        }
+
+        // 旁白還在載入時，右上角顯示提示
+        function loadingBadge() {
+          ctx.save();
+          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = "rgba(0,0,0,.65)";
+          roundRect(W - 200, 24, 170, 44, 22);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.font = `700 20px ${FONT}`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("旁白載入中…", W - 115, 47);
+          ctx.restore();
+        }
+
+        function loop(now) {
+          const prev = time;
+          const waiting = playing && !sound.ready(time);
+          if (playing && !waiting) {
+            const dt = Math.min(0.1, (now - last) / 1000);
+            time += dt * +speedSel.value;
+            if (time >= TOTAL) { time = TOTAL; setPlaying(false); }
+          }
+          last = now;
+          render();
+          if (waiting) loadingBadge();
+          sound.update(prev);
+          requestAnimationFrame(loop);
+        }
+        // 封面畫面；網址加 ?t=秒數 可以直接看某個畫面
+        const startAt = parseFloat(new URLSearchParams(location.search).get("t"));
+        time = Number.isFinite(startAt) ? clamp(startAt, 0, TOTAL) : 6;
+        if (Number.isFinite(startAt)) poster = false;
+        render();
+        if (document.fonts) document.fonts.ready.then(render);
+        requestAnimationFrame((n) => { last = n; loop(n); });
+      })();
+    </script>
+  </body>
+</html>

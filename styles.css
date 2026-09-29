@@ -75,6 +75,12 @@ h1 em { color: var(--orange); font-style: italic; }
 .topic-card.reservoir-featured { background: #0f2f4a; border-color: #0f2f4a; }
 .topic-card.reservoir-featured .topic-label { color: #6cc3ff; }
 .topic-card.reservoir-featured:hover .topic-arrow { color: #0f2f4a; background: #ffc83d; }
+.topic-card.airplane-featured { background: #16305c; border-color: #16305c; }
+.topic-card.airplane-featured .topic-label { color: #ffb39c; }
+.topic-card.airplane-featured:hover .topic-arrow { color: #16305c; background: #ff7a59; }
+.topic-card.moon-featured { background: #070d1c; border-color: #070d1c; }
+.topic-card.moon-featured .topic-label { color: #ffe27a; }
+.topic-card.moon-featured:hover .topic-arrow { color: #070d1c; background: #8fd3ff; }
 .topic-number { font-family: "Playfair Display", serif; font-size: 42px; }
 .topic-content { align-self: end; }
 .topic-label { margin-bottom: 12px; color: var(--orange); }

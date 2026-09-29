@@ -1,0 +1,1195 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="給小一小朋友看的 76 秒 3D 線條動畫影片：跟著小兔子兔兔了解月亮為什麼會有圓缺，從新月、眉月、上弦月到滿月、下弦月，附中文旁白與音效。" />
+    <meta name="theme-color" content="#070d1c" />
+    <title>月亮為什麼會有圓缺｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #070d1c;
+        --bg-2: #0f1830;
+        --ink: #e8f1ff;
+        --muted: rgba(232, 241, 255, 0.68);
+        --line: rgba(232, 241, 255, 0.16);
+        --accent: #8fd3ff;
+        --accent-2: #ffe27a;
+        --accent-soft: rgba(143, 211, 255, .22);
+        --on-accent: #0b1530;
+        --active: rgba(143, 211, 255, .16);
+        --canvas: #050b1a;
+        --shadow: 0 18px 50px rgba(0, 0, 0, .5);
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body { margin: 0; overflow-x: hidden; color: var(--ink); background: var(--bg); font-family: "Noto Sans TC", sans-serif; -webkit-font-smoothing: antialiased; }
+      a { color: inherit; }
+      h1, h2, h3, p { margin-top: 0; }
+
+      .site-header { display: flex; justify-content: space-between; align-items: center; width: min(1240px, calc(100% - 32px)); min-height: 76px; margin: 0 auto; border-bottom: 1px solid var(--line); }
+      .brand { display: inline-flex; align-items: center; gap: 11px; font-family: "DM Mono", monospace; font-size: 16px; font-weight: 500; letter-spacing: .18em; text-decoration: none; }
+      .brand-dot { width: 11px; height: 11px; background: var(--accent); border-radius: 50%; box-shadow: 12px 0 0 var(--accent-2); }
+      .header-back { padding-bottom: 3px; border-bottom: 1px solid var(--ink); font-family: "DM Mono", monospace; font-size: 11px; letter-spacing: .12em; text-decoration: none; }
+
+      main { width: min(1240px, calc(100% - 32px)); margin: 0 auto; }
+      .intro { display: grid; grid-template-columns: 1fr .7fr; gap: 60px; align-items: end; padding: 70px 0 40px; }
+      .eyebrow { margin-bottom: 18px; color: var(--accent); font-family: "DM Mono", monospace; font-size: 12px; letter-spacing: .14em; }
+      h1 { margin-bottom: 0; font-size: clamp(40px, 6vw, 76px); font-weight: 900; line-height: 1.12; letter-spacing: -.02em; }
+      h1 em { color: var(--accent); font-style: normal; }
+      .intro > p { margin-bottom: 6px; color: var(--muted); font-size: 16px; line-height: 1.9; }
+
+      .player { position: relative; overflow: hidden; background: var(--bg-2); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
+      .player canvas { display: block; width: 100%; aspect-ratio: 16 / 9; cursor: pointer; background: var(--canvas); }
+      .big-play { position: absolute; inset: 0 0 58px; display: grid; place-items: center; border: 0; background: rgba(0, 0, 0, .18); cursor: pointer; transition: opacity 200ms ease; }
+      .big-play span { display: grid; width: 96px; height: 96px; place-items: center; padding-left: 8px; color: var(--on-accent); background: var(--accent); border-radius: 50%; font-size: 40px; box-shadow: 0 0 0 12px var(--accent-soft); }
+      .player.is-playing .big-play { opacity: 0; pointer-events: none; }
+      .controls { display: flex; align-items: center; gap: 12px; height: 58px; padding: 0 14px; background: var(--bg-2); border-top: 1px solid var(--line); }
+      .controls button, .controls select { height: 34px; padding: 0 12px; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 8px; font: 500 13px "DM Mono", monospace; cursor: pointer; }
+      .controls button:hover, .controls select:hover { border-color: var(--accent); }
+      .controls select option { color: #111; }
+      #play-btn, #mute-btn { width: 44px; padding: 0; font-size: 15px; }
+      .time { min-width: 96px; color: var(--muted); font: 12px "DM Mono", monospace; }
+      .seek { flex: 1; min-width: 60px; accent-color: var(--accent); cursor: pointer; }
+
+      .chapters { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin: 16px 0 0; padding: 0; list-style: none; }
+      .chapters button { width: 100%; height: 100%; padding: 14px; color: var(--ink); text-align: left; background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; font: inherit; cursor: pointer; transition: border-color 160ms ease, background 160ms ease; }
+      .chapters button:hover { border-color: var(--accent); }
+      .chapters button.is-active { background: var(--active); border-color: var(--accent); }
+      .chapters small { display: block; margin-bottom: 6px; color: var(--accent); font: 11px "DM Mono", monospace; letter-spacing: .08em; }
+      .chapters b { font-size: 14px; font-weight: 700; }
+      .next-link { margin: 18px 0 0; text-align: right; font-size: 16px; font-weight: 700; }
+      .next-link a { color: var(--accent); text-decoration: none; border-bottom: 2px solid var(--accent); }
+
+      section.block { padding: 90px 0 20px; }
+      .section-index { margin-bottom: 14px; color: var(--accent-2); font: 12px "DM Mono", monospace; letter-spacing: .14em; }
+      section.block h2 { margin-bottom: 36px; font-size: clamp(30px, 4vw, 48px); font-weight: 900; }
+      .points { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+      .points article { padding: 28px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 16px; }
+      .points span { color: var(--accent); font: 12px "DM Mono", monospace; }
+      .points h3 { margin: 18px 0 10px; font-size: 22px; }
+      .points p { margin: 0; font-size: 17px; line-height: 1.8; }
+      .points .parent { margin-top: 14px; padding-top: 14px; color: var(--muted); border-top: 1px dashed var(--line); font-size: 14px; line-height: 1.8; }
+      .points .parent b { color: var(--accent-2); font-weight: 700; }
+
+      footer { display: flex; justify-content: space-between; gap: 16px; width: min(1240px, calc(100% - 32px)); margin: 90px auto 0; padding: 36px 0; color: var(--muted); border-top: 1px solid var(--line); font: 10px "DM Mono", monospace; letter-spacing: .08em; }
+
+      @media (max-width: 880px) {
+        .intro { grid-template-columns: 1fr; gap: 24px; }
+        .chapters { grid-template-columns: repeat(4, 1fr); }
+        .points { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 560px) {
+        .intro { padding-top: 44px; }
+        .chapters { grid-template-columns: repeat(2, 1fr); }
+        .controls { gap: 8px; padding: 0 8px; }
+        .time { min-width: 0; font-size: 11px; }
+        #speed { display: none; }
+        .big-play span { width: 64px; height: 64px; font-size: 26px; }
+        footer { flex-direction: column; gap: 8px; }
+      }
+      @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot" aria-hidden="true"></span><span>MASTER</span></a>
+      <a class="header-back" href="../index.html#topics">← 所有主題</a>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">MOON PHASES / 76 SEC KIDS VIDEO</p>
+          <h1 id="page-title">月亮為什麼<br /><em>會有圓缺？</em></h1>
+        </div>
+        <p>給小一小朋友看的 3D 線條動畫影片（記得開聲音）。月亮上的小兔子「兔兔」帶大家看：月亮自己不會發光，太陽照亮它的一半；月亮繞著地球轉，我們看到亮面的多少一直在變，就變成新月、眉月、上弦月、滿月和下弦月。</p>
+      </section>
+
+      <div class="player" id="player">
+        <canvas id="stage" width="1280" height="720" aria-label="月亮為什麼會有圓缺動畫影片"></canvas>
+        <button class="big-play" id="big-play" type="button" aria-label="播放影片"><span aria-hidden="true">▶</span></button>
+        <div class="controls">
+          <button id="play-btn" type="button" aria-label="播放">▶</button>
+          <span class="time" id="time">0:00 / 1:16</span>
+          <input class="seek" id="seek" type="range" min="0" max="76" step="0.01" value="0" aria-label="影片進度" />
+          <select id="speed" aria-label="播放速度">
+            <option value="0.5">0.5×</option>
+            <option value="1" selected>1×</option>
+            <option value="1.5">1.5×</option>
+            <option value="2">2×</option>
+          </select>
+          <button id="mute-btn" type="button" aria-label="靜音" aria-pressed="false">🔊</button>
+          <button id="fs-btn" type="button" aria-label="全螢幕">⛶</button>
+        </div>
+      </div>
+      <ol class="chapters" id="chapters"></ol>
+
+      <section class="block" aria-labelledby="points-title">
+        <p class="section-index">01 / KEY IDEAS</p>
+        <h2 id="points-title">影片裡的六個重點</h2>
+        <div class="points">
+          <article><span>01</span><h3>月亮一直是圓的</h3><p>月亮是一顆圓圓的球，形狀從來沒有變過。</p><p class="parent"><b>家長小知識：</b>我們看到月亮「變形」，只是看到它被照亮的部分不一樣多。</p></article>
+          <article><span>02</span><h3>月亮不會發光</h3><p>月亮自己不會發光，是太陽把它照亮的。</p><p class="parent"><b>家長小知識：</b>月光其實是月亮反射的太陽光。太陽永遠照亮月亮朝向它的那一半。</p></article>
+          <article><span>03</span><h3>月亮繞著地球轉</h3><p>月亮繞著地球轉一圈，大約要一個月。</p><p class="parent"><b>家長小知識：</b>月相從新月、滿月再回到新月，一輪大約 29.5 天。</p></article>
+          <article><span>04</span><h3>從新月到滿月</h3><p>新月 → 眉月 → 上弦月 → 滿月，亮的地方越來越多。</p><p class="parent"><b>家長小知識：</b>新月時月亮和太陽在同一邊，幾乎看不到；上弦月常在下午到傍晚出現，滿月整晚都看得到。</p></article>
+          <article><span>05</span><h3>從滿月回到新月</h3><p>滿月 → 下弦月 → 新月，亮的地方越來越少。</p><p class="parent"><b>家長小知識：</b>下弦月大多在半夜後升起，清晨還掛在天上。</p></article>
+          <article><span>06</span><h3>在家試試看</h3><p>拿一顆球和一盞燈，拿著球自己轉圈圈，看球亮的地方怎麼變。</p><p class="parent"><b>家長小知識：</b>把燈放在房間一邊、關掉其他燈，手伸直拿球，自己原地慢慢轉一圈，就能看到球從「新月」變成「滿月」再變回來。</p></article>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>MASTER / MOON PHASES KIDS VIDEO</span>
+      <span>3D 線條動畫為教學示意，大小與距離沒有照實際比例</span>
+    </footer>
+
+    <script src="narration.js"></script>
+    <script>
+      (() => {
+        // ---------- 基本設定 ----------
+        const W = 1280, H = 720;
+        const canvas = document.getElementById("stage");
+        const ctx = canvas.getContext("2d");
+        const DPR = Math.min(2, window.devicePixelRatio || 1);
+        canvas.width = W * DPR;
+        canvas.height = H * DPR;
+
+        const FONT = '"Noto Sans TC", sans-serif';
+        const MONO = '"DM Mono", monospace';
+        const C = {
+          ink: "#eaf2ff", white: "#ffffff", water: "#8fd3ff", cyan: "#8fd3ff", gold: "#ffe27a", sun: "#ffc24d",
+          coral: "#ff9f7a", pink: "#ff9bb3", navy: "#0b1530", pillBg: "#dff0ff", pillText: "#0b1530",
+        };
+        const CYAN = [143, 211, 255], GOLD = [255, 226, 122];
+
+        // 字幕、旁白與場景長度來自 narration.js（由 data/narration.json 產生）
+        const NARRATION = (window.MOON_NARRATION || { scenes: [] }).scenes;
+        const SCENES = [sceneShapes, sceneLight, sceneOrbit, sceneWax, sceneWane, sceneTry].map((draw, i) => ({
+          draw,
+          title: NARRATION[i] ? NARRATION[i].title : "",
+          dur: NARRATION[i] ? NARRATION[i].dur : 12,
+          subs: NARRATION[i] ? NARRATION[i].subs : [],
+        }));
+        let acc = 0;
+        SCENES.forEach((s) => { s.start = acc; acc += s.dur; });
+        const TOTAL = acc;
+
+        // ---------- 工具函式 ----------
+        const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+        const lerp = (a, b, k) => a + (b - a) * k;
+        const ease = (k) => { k = clamp(k); return k * k * (3 - 2 * k); };
+        const fade = (t, start, dur = 0.6) => ease((t - start) / dur);
+        const fract = (v) => v - Math.floor(v);
+        const rnd = (i) => fract(Math.sin(i * 127.1 + 311.7) * 43758.5453);
+        // 彈出效果：0 → 稍微超過 1 → 1
+        const pop = (t, start, dur = 0.5) => { const k = clamp((t - start) / dur) - 1; return 1 + 2.70158 * k * k * k + 1.70158 * k * k; };
+
+        function text(str, x, y, { size = 24, color = C.ink, align = "left", weight = 700, font = FONT, alpha = 1, base = "alphabetic", stroke = null } = {}) {
+          if (alpha <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.font = `${weight} ${size}px ${font}`;
+          ctx.textAlign = align;
+          ctx.textBaseline = base;
+          if (stroke) { ctx.lineWidth = size * 0.18; ctx.lineJoin = "round"; ctx.strokeStyle = stroke; ctx.strokeText(str, x, y); }
+          ctx.fillStyle = color;
+          ctx.fillText(str, x, y);
+          ctx.restore();
+        }
+
+        function roundRect(x, y, w, h, r) {
+          ctx.beginPath();
+          ctx.moveTo(x + r, y);
+          ctx.arcTo(x + w, y, x + w, y + h, r);
+          ctx.arcTo(x + w, y + h, x, y + h, r);
+          ctx.arcTo(x, y + h, x, y, r);
+          ctx.arcTo(x, y, x + w, y, r);
+          ctx.closePath();
+        }
+
+        // 圓角標籤；scale 用來做彈出動畫
+        function pill(str, x, y, { bg = C.pillBg, color = C.pillText, size = 26, alpha = 1, scale = 1, border = null } = {}) {
+          if (alpha <= 0 || scale <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.translate(x, y);
+          ctx.scale(scale, scale);
+          ctx.font = `900 ${size}px ${FONT}`;
+          const w = ctx.measureText(str).width + size * 1.2, h = size * 1.7;
+          ctx.fillStyle = "rgba(0,0,0,.18)";
+          roundRect(-w / 2 + 3, -h / 2 + 5, w, h, h / 2);
+          ctx.fill();
+          ctx.fillStyle = bg;
+          roundRect(-w / 2, -h / 2, w, h, h / 2);
+          ctx.fill();
+          if (border) { ctx.lineWidth = 4; ctx.strokeStyle = border; ctx.stroke(); }
+          ctx.fillStyle = color;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(str, 0, 2);
+          ctx.restore();
+        }
+
+        function arrow(x1, y1, x2, y2, color, width = 8, alpha = 1) {
+          if (alpha <= 0) return;
+          const ang = Math.atan2(y2 - y1, x2 - x1), head = width * 3;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.strokeStyle = color;
+          ctx.fillStyle = color;
+          ctx.lineWidth = width;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2 - Math.cos(ang) * head * 0.8, y2 - Math.sin(ang) * head * 0.8);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(x2, y2);
+          ctx.lineTo(x2 - Math.cos(ang - 0.5) * head, y2 - Math.sin(ang - 0.5) * head);
+          ctx.lineTo(x2 - Math.cos(ang + 0.5) * head, y2 - Math.sin(ang + 0.5) * head);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+
+        function poly(points) {
+          ctx.beginPath();
+          points.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+          ctx.closePath();
+        }
+
+        function mixColor(a, b, k) {
+          const pa = a.match(/\w\w/g).map((h) => parseInt(h, 16)), pb = b.match(/\w\w/g).map((h) => parseInt(h, 16));
+          return `rgb(${pa.map((v, i) => Math.round(lerp(v, pb[i], clamp(k)))).join(",")})`;
+        }
+
+        function stars(alpha, t, y0 = 0, y1 = H) {
+          if (alpha <= 0) return;
+          for (let i = 0; i < 140; i++) {
+            const y = rnd(i + 1) * H;
+            if (y < y0 || y > y1) continue;
+            const tw = 0.4 + 0.6 * Math.abs(Math.sin(t * (0.6 + rnd(i + 4)) + i));
+            ctx.fillStyle = `rgba(230,240,255,${alpha * (0.25 + 0.65 * tw * rnd(i + 2))})`;
+            ctx.fillRect(rnd(i) * W, y, 2.2, 2.2);
+          }
+        }
+
+        // ---------- 3D 線條：相機與投影 ----------
+        // 世界座標：y 朝上，軌道在 xz 平面；太陽在很遠的 -x 方向
+        const cam = { yaw: 0, pitch: 0, dist: 1400, f: 1400, cx: 640, cy: 340 };
+        const setCam = (o) => Object.assign(cam, o);
+        function rot([x, y, z]) {
+          const cy = Math.cos(cam.yaw), sy = Math.sin(cam.yaw);
+          const X = x * cy + z * sy, Z1 = -x * sy + z * cy;
+          const cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
+          return [X, y * cp - Z1 * sp, y * sp + Z1 * cp];
+        }
+        function proj(p) {
+          const [X, Y, Z] = rot(p);
+          const k = cam.f / (cam.dist - Z);
+          return [cam.cx + X * k, cam.cy - Y * k, k, Z];
+        }
+        const SUN_DIR = [-1, 0, 0];
+        const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+        const mixRGB = (a, b, k) => a.map((v, i) => Math.round(lerp(v, b[i], k)));
+
+        function spaceBg(t) {
+          const g = ctx.createRadialGradient(640, 300, 60, 640, 360, 900);
+          g.addColorStop(0, "#0d1a3a");
+          g.addColorStop(1, "#03060f");
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, W, H);
+          stars(1, t);
+        }
+
+        // 線框球：經緯線；lit 0..1 表示朝太陽那一半有多亮
+        function wireSphere(c, r, { sun = null, lit = 1, spin = 0, lat = 8, lon = 12, base = CYAN, alpha = 1, width = 2 } = {}) {
+          if (alpha <= 0) return;
+          const N = 36;
+          const segs = [];
+          const P = (phi, th) => [Math.cos(phi) * Math.cos(th + spin), Math.sin(phi), Math.cos(phi) * Math.sin(th + spin)];
+          const add = (a, b) => segs.push([a, b]);
+          for (let i = 1; i < lat; i++) {
+            const phi = -Math.PI / 2 + (i * Math.PI) / lat;
+            for (let j = 0; j < N; j++) add(P(phi, (j / N) * Math.PI * 2), P(phi, ((j + 1) / N) * Math.PI * 2));
+          }
+          for (let j = 0; j < lon; j++) {
+            const th = (j / lon) * Math.PI * 2;
+            for (let i = 0; i < N / 2; i++) add(P(-Math.PI / 2 + (i / (N / 2)) * Math.PI, th), P(-Math.PI / 2 + ((i + 1) / (N / 2)) * Math.PI, th));
+          }
+          const back = [], front = [];
+          for (const [a, b] of segs) {
+            const m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
+            let col = base, al = 0.8;
+            if (sun) {
+              const d = m[0] * sun[0] + m[1] * sun[1] + m[2] * sun[2];
+              const lk = lit * clamp(d / 0.18);
+              col = mixRGB(base, GOLD, lk);
+              al = 0.2 + 0.8 * lk;
+            }
+            const pa = proj([c[0] + a[0] * r, c[1] + a[1] * r, c[2] + a[2] * r]);
+            const pb = proj([c[0] + b[0] * r, c[1] + b[1] * r, c[2] + b[2] * r]);
+            (rot(m)[2] > 0 ? front : back).push([pa, pb, col, al]);
+          }
+          const [sx, sy, k] = proj(c);
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.lineWidth = width;
+          ctx.lineCap = "round";
+          for (const [pa, pb, col, al] of back) {
+            ctx.strokeStyle = rgba(col, al * 0.18);
+            ctx.beginPath();
+            ctx.moveTo(pa[0], pa[1]);
+            ctx.lineTo(pb[0], pb[1]);
+            ctx.stroke();
+          }
+          // 擋住背面的線，看起來才像實心的球
+          ctx.fillStyle = "rgba(5,11,26,.72)";
+          ctx.beginPath();
+          ctx.arc(sx, sy, r * k, 0, Math.PI * 2);
+          ctx.fill();
+          if (sun && lit > 0) {
+            const sp = rot(sun);
+            const gx = sx + sp[0] * r * k * 0.5, gy = sy - sp[1] * r * k * 0.5;
+            const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, r * k * 1.3);
+            g.addColorStop(0, `rgba(255,226,122,${0.22 * lit})`);
+            g.addColorStop(1, "rgba(255,226,122,0)");
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.arc(sx, sy, r * k, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          for (const [pa, pb, col, al] of front) {
+            ctx.strokeStyle = rgba(col, al);
+            ctx.beginPath();
+            ctx.moveTo(pa[0], pa[1]);
+            ctx.lineTo(pb[0], pb[1]);
+            ctx.stroke();
+          }
+          ctx.strokeStyle = rgba(base, 0.55);
+          ctx.beginPath();
+          ctx.arc(sx, sy, r * k, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        function sunGlyph(x, y, r, t, alpha = 1) {
+          if (alpha <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          const g = ctx.createRadialGradient(x, y, r * 0.2, x, y, r * 2.4);
+          g.addColorStop(0, "rgba(255,200,90,.55)");
+          g.addColorStop(1, "rgba(255,200,90,0)");
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(x, y, r * 2.4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = C.sun;
+          ctx.lineWidth = 2.5;
+          for (let i = 0; i < 4; i++) {
+            ctx.beginPath();
+            ctx.arc(x, y, r * (0.35 + i * 0.22), 0, Math.PI * 2);
+            ctx.stroke();
+          }
+          for (let i = 0; i < 16; i++) {
+            const a = (i / 16) * Math.PI * 2 + t * 0.3;
+            const r2 = r * (1.45 + 0.15 * Math.sin(t * 3 + i));
+            ctx.beginPath();
+            ctx.moveTo(x + Math.cos(a) * r * 1.1, y + Math.sin(a) * r * 1.1);
+            ctx.lineTo(x + Math.cos(a) * r2, y + Math.sin(a) * r2);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        function lightRays(x0, x1, yc, spread, t, alpha = 1) {
+          if (alpha <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.strokeStyle = "rgba(255,226,122,.6)";
+          ctx.lineWidth = 2;
+          ctx.setLineDash([30, 22]);
+          ctx.lineDashOffset = -t * 200;
+          for (let i = -3; i <= 3; i++) {
+            const y = yc + (i * spread) / 3;
+            ctx.beginPath();
+            ctx.moveTo(x0, y);
+            ctx.lineTo(x1, y);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        function orbitRing(R, alpha = 1) {
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.strokeStyle = "rgba(143,211,255,.45)";
+          ctx.lineWidth = 2;
+          ctx.setLineDash([8, 10]);
+          ctx.beginPath();
+          for (let i = 0; i <= 96; i++) {
+            const a = (i / 96) * Math.PI * 2;
+            const [x, y] = proj([R * Math.cos(a), 0, R * Math.sin(a)]);
+            if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+          }
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // 從地球看到的月亮：a 是月亮離開太陽方向的角度（0 = 新月，π = 滿月）
+        function phaseDisc(x, y, r, a, alpha = 1) {
+          if (alpha <= 0) return;
+          a = ((a % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.translate(x, y);
+          // 暗面：淡淡的線框
+          ctx.strokeStyle = "rgba(143,211,255,.3)";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(0, 0, r, 0, Math.PI * 2);
+          ctx.stroke();
+          for (let i = 1; i < 5; i++) {
+            ctx.beginPath();
+            ctx.ellipse(0, 0, (r * i) / 5, r, 0, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+          // 亮面（上半月亮右邊亮，下半月亮左邊亮）
+          if (a > Math.PI) ctx.scale(-1, 1);
+          const k = Math.cos(a <= Math.PI ? a : Math.PI * 2 - a);
+          ctx.beginPath();
+          ctx.arc(0, 0, r, -Math.PI / 2, Math.PI / 2, false);
+          if (k >= 0) ctx.ellipse(0, 0, Math.max(0.01, r * k), r, 0, Math.PI / 2, -Math.PI / 2, true);
+          else ctx.ellipse(0, 0, Math.max(0.01, -r * k), r, 0, Math.PI / 2, (Math.PI * 3) / 2, false);
+          ctx.closePath();
+          ctx.save();
+          ctx.clip();
+          ctx.fillStyle = "rgba(255,226,122,.18)";
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          ctx.strokeStyle = C.gold;
+          ctx.lineWidth = 2.2;
+          for (let yy = -r + 5; yy < r; yy += 10) {
+            ctx.beginPath();
+            ctx.moveTo(-r, yy);
+            ctx.lineTo(r, yy);
+            ctx.stroke();
+          }
+          for (let i = 1; i < 5; i++) {
+            ctx.beginPath();
+            ctx.ellipse(0, 0, (r * i) / 5, r, 0, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+          ctx.restore();
+          ctx.restore();
+        }
+
+        // ---------- 主角：月亮上的小兔子「兔兔」 ----------
+        function bunny(x, y, s = 1, { t = 0, wave = 0, alpha = 1 } = {}) {
+          if (alpha <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.translate(x, y);
+          ctx.scale(s, s);
+          ctx.lineWidth = 3;
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
+          ctx.shadowColor = "rgba(143,211,255,.9)";
+          ctx.shadowBlur = 10;
+          ctx.fillStyle = "rgba(10,20,45,.9)";
+          const wig = Math.sin(t * 3) * 0.08;
+          for (const [ex, base] of [[-14, -0.2], [14, 0.2]]) {
+            ctx.save();
+            ctx.translate(ex, -44);
+            ctx.rotate(base + wig);
+            ctx.strokeStyle = "#f4f8ff";
+            ctx.beginPath();
+            ctx.ellipse(0, -30, 10, 32, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.strokeStyle = C.pink;
+            ctx.beginPath();
+            ctx.ellipse(0, -28, 4, 21, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+          }
+          ctx.strokeStyle = "#f4f8ff";
+          ctx.beginPath();
+          ctx.ellipse(0, 40, 34, 36, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(0, -18, 32, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          const blink = fract(t / 3.4 + 0.1) > 0.95 ? 0.2 : 1;
+          ctx.fillStyle = "#f4f8ff";
+          for (const ex of [-11, 11]) {
+            ctx.beginPath();
+            ctx.ellipse(ex, -22, 3.5, 4.5 * blink, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.fillStyle = C.pink;
+          ctx.beginPath();
+          ctx.arc(0, -11, 3.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha *= 0.6;
+          ctx.beginPath();
+          ctx.arc(-20, -8, 5, 0, Math.PI * 2);
+          ctx.arc(20, -8, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha /= 0.6;
+          ctx.strokeStyle = "#f4f8ff";
+          ctx.beginPath();
+          ctx.moveTo(0, -8);
+          ctx.quadraticCurveTo(-5, -2, -9, -5);
+          ctx.moveTo(0, -8);
+          ctx.quadraticCurveTo(5, -2, 9, -5);
+          ctx.stroke();
+          if (wave > 0) {
+            const an = -1 - 0.5 * Math.sin(t * 9) * wave;
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.moveTo(26, 22);
+            ctx.lineTo(26 + Math.cos(an) * 34, 22 + Math.sin(an) * 34);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        function gridFloor(t, alpha = 1) {
+          if (alpha <= 0) return;
+          const hz = 540;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.fillStyle = "rgba(3,6,15,.85)";
+          ctx.fillRect(0, hz, W, H - hz);
+          ctx.strokeStyle = "rgba(143,211,255,.35)";
+          ctx.lineWidth = 1.5;
+          for (let i = -14; i <= 14; i++) {
+            ctx.beginPath();
+            ctx.moveTo(640 + i * 22, hz);
+            ctx.lineTo(640 + i * 170, H);
+            ctx.stroke();
+          }
+          for (let j = 0; j < 8; j++) {
+            const k = fract(j / 8 + t * 0.06);
+            const y = hz + (H - hz) * k * k;
+            ctx.globalAlpha = alpha * k;
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(W, y);
+            ctx.stroke();
+          }
+          ctx.globalAlpha = alpha;
+          ctx.strokeStyle = "rgba(143,211,255,.7)";
+          ctx.beginPath();
+          ctx.moveTo(0, hz);
+          ctx.lineTo(W, hz);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        const GOLD_PILL = { bg: C.gold, color: C.navy };
+
+        // ---------- 第 1 段：月亮變變變 ----------
+        function sceneShapes(t) {
+          spaceBg(t);
+          gridFloor(t);
+          bunny(1090, 560, 0.9, { t, wave: t < 3.4 ? 1 : 0 });
+          const morph = fade(t, 8.2, 1);
+          const a = 0.7 + (t / 8) * (Math.PI * 2 - 1.4);
+          phaseDisc(640, 280, 130, a, 1 - morph);
+          pill("彎彎的", 640, 470, { scale: pop(t, 0.6) * (1 - fade(t, 2.4, 0.3)) });
+          pill("圓圓的", 640, 470, { ...GOLD_PILL, scale: pop(t, 3.4) * (1 - fade(t, 5.4, 0.3)) });
+          text("？", 830, 200, { size: 110 * pop(t, 5.4), weight: 900, color: C.coral, align: "center", alpha: 1 - fade(t, 8, 0.4) });
+          if (morph > 0) {
+            setCam({ yaw: t * 0.5, pitch: 0.35, dist: 1400, f: 1400, cx: 640, cy: 280 });
+            wireSphere([0, 0, 0], 130, { alpha: morph, lat: 9, lon: 12 });
+            const p = fract((t - 8.4) / 1.2);
+            ctx.save();
+            ctx.globalAlpha = (1 - p) * morph;
+            ctx.strokeStyle = C.gold;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(640, 280, 130 * (1 + 0.25 * p), 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+            pill("一直都是圓的！", 640, 470, { ...GOLD_PILL, size: 30, scale: pop(t, 8.8) });
+          }
+        }
+
+        // ---------- 第 2 段：月亮不會發光 ----------
+        function sceneLight(t) {
+          spaceBg(t);
+          const sunA = fade(t, 4, 0.8);
+          const lit = fade(t, 7.8, 1.2);
+          lightRays(230, 600, 330, 220, t, sunA);
+          sunGlyph(150, 330, 60, t, sunA);
+          setCam({ yaw: 0, pitch: 0.25, dist: 1400, f: 1400, cx: 780, cy: 330 });
+          wireSphere([0, 0, 0], 160, { sun: SUN_DIR, lit, spin: t * 0.25, lat: 9, lon: 14 });
+          text("月亮", 780, 130, { size: 30, weight: 900, color: C.cyan, align: "center" });
+          pill("不會自己發光", 780, 560, { scale: pop(t, 0.8) * (1 - fade(t, 4, 0.4)) });
+          pill("太陽", 150, 450, { ...GOLD_PILL, scale: pop(t, 4.4) });
+          pill("亮的一半", 560, 190, { ...GOLD_PILL, scale: pop(t, 8.6) });
+          pill("暗的一半", 1010, 190, { scale: pop(t, 9.4) });
+          bunny(1170, 590, 0.6, { t, wave: t > 9 ? 1 : 0 });
+        }
+
+        // ---------- 第 3 段：月亮繞著地球轉 ----------
+        function drawSystem(t, a, R, er, mr) {
+          const moonPos = [-R * Math.cos(a), 0, R * Math.sin(a)];
+          const moonBehind = rot(moonPos)[2] < 0;
+          if (moonBehind) wireSphere(moonPos, mr, { sun: SUN_DIR, spin: 0, lat: 6, lon: 10 });
+          wireSphere([0, 0, 0], er, { sun: SUN_DIR, spin: t * 0.6, lat: 7, lon: 12, base: [120, 190, 255] });
+          if (!moonBehind) wireSphere(moonPos, mr, { sun: SUN_DIR, spin: 0, lat: 6, lon: 10 });
+          return moonPos;
+        }
+
+        function sceneOrbit(t) {
+          spaceBg(t);
+          setCam({ yaw: -0.25, pitch: lerp(0.25, 1.05, ease(t / 2.5)), dist: 1600, f: 1300, cx: 700, cy: 360 });
+          lightRays(140, 380, 340, 300, t, 0.7);
+          sunGlyph(80, 340, 50, t);
+          orbitRing(330);
+          const a = 0.3 + t * ((Math.PI * 2) / 10);
+          const moonPos = drawSystem(t, a, 330, 75, 32);
+          const [ex, ey] = proj([0, 0, 0]);
+          const [mx, my] = proj(moonPos);
+          text("地球", ex, ey + 110, { size: 26, weight: 900, color: C.cyan, align: "center" });
+          text("月亮", mx, my - 44, { size: 22, weight: 900, color: C.gold, align: "center" });
+          if (t > 4) {
+            for (let i = 0; i < 30; i++) {
+              if (i / 30 > fade(t, 4, 2.5)) break;
+              const b = (i / 30) * Math.PI * 2;
+              const [x, y] = proj([368 * Math.cos(b), 0, 368 * Math.sin(b)]);
+              ctx.fillStyle = "rgba(143,211,255,.8)";
+              ctx.fillRect(x - 2, y - 2, 4, 4);
+            }
+            pill("一圈 ≈ 一個月", 700, 110, { ...GOLD_PILL, size: 28, scale: pop(t, 4.4) });
+          }
+          const s = fade(t, 8.2, 0.5);
+          if (s > 0) {
+            ctx.save();
+            ctx.globalAlpha = s;
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 3;
+            ctx.setLineDash([10, 10]);
+            ctx.beginPath();
+            ctx.moveTo(ex, ey);
+            ctx.lineTo(mx, my);
+            ctx.stroke();
+            ctx.restore();
+            pill("看的角度一直變", 700, 590, { scale: pop(t, 8.6) });
+          }
+        }
+
+        // ---------- 第 4、5 段：月相對照 ----------
+        function phaseScene(t, keys, names) {
+          let a = keys[0][1];
+          for (let i = 1; i < keys.length; i++) a = lerp(a, keys[i][1], ease((t - keys[i][0]) / 1.2));
+          let idx = 0;
+          keys.forEach(([s], i) => { if (t >= s) idx = i; });
+          spaceBg(t);
+          setCam({ yaw: -0.2, pitch: 1.0, dist: 1600, f: 1300, cx: 440, cy: 360 });
+          lightRays(110, 200, 360, 260, t, 0.5);
+          sunGlyph(60, 360, 40, t, 0.9);
+          orbitRing(250);
+          const moonPos = drawSystem(t, a, 250, 58, 27);
+          const [ex, ey] = proj([0, 0, 0]);
+          const [mx, my] = proj(moonPos);
+          ctx.save();
+          ctx.strokeStyle = "rgba(255,255,255,.7)";
+          ctx.lineWidth = 2;
+          ctx.setLineDash([8, 8]);
+          ctx.beginPath();
+          ctx.moveTo(ex, ey);
+          ctx.lineTo(mx, my);
+          ctx.stroke();
+          ctx.restore();
+          text("地球", ex, ey + 90, { size: 22, weight: 900, color: C.cyan, align: "center" });
+          // 右邊：從地球看到的樣子
+          ctx.save();
+          ctx.fillStyle = "rgba(10,20,45,.72)";
+          ctx.strokeStyle = "rgba(143,211,255,.45)";
+          ctx.lineWidth = 2;
+          roundRect(840, 110, 380, 440, 26);
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+          text("從地球看到的月亮", 1030, 160, { size: 24, weight: 900, color: C.cyan, align: "center" });
+          phaseDisc(1030, 320, 110, a);
+          pill(names[idx], 1030, 500, { ...GOLD_PILL, size: 30, scale: pop(t, Math.max(0, keys[idx][0]) + 0.3) });
+          bunny(1175, 610, 0.5, { t, wave: t > keys[keys.length - 1][0] + 0.5 ? 1 : 0 });
+        }
+        function sceneWax(t) { phaseScene(t, [[-1, 0.001], [4, Math.PI / 4], [8, Math.PI / 2], [12, Math.PI]], ["新月", "眉月", "上弦月", "滿月"]); }
+        function sceneWane(t) { phaseScene(t, [[-1, Math.PI], [0, Math.PI * 1.25], [4, Math.PI * 1.5], [8, Math.PI * 2 - 0.001]], ["滿月", "亮的地方變少", "下弦月", "新月"]); }
+
+        // ---------- 第 6 段：在家試試看 ----------
+        function sceneTry(t) {
+          spaceBg(t);
+          const pa = 1 - fade(t, 3.8, 0.5);
+          if (pa > 0) {
+            ctx.save();
+            ctx.globalAlpha = pa;
+            sunGlyph(380, 300, 55, t);
+            ctx.strokeStyle = C.sun;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(380, 360);
+            ctx.lineTo(380, 470);
+            ctx.moveTo(330, 470);
+            ctx.lineTo(430, 470);
+            ctx.stroke();
+            ctx.restore();
+            setCam({ yaw: 0, pitch: 0.3, dist: 1400, f: 1400, cx: 840, cy: 330 });
+            wireSphere([0, 0, 0], 110, { sun: SUN_DIR, lit: 1, spin: t * 0.3, alpha: pa });
+            pill("燈", 380, 540, { ...GOLD_PILL, scale: pop(t, 0.6), alpha: pa });
+            pill("球", 840, 540, { scale: pop(t, 1.4), alpha: pa });
+          }
+          const pb = fade(t, 4, 0.5) * (1 - fade(t, 8, 0.5));
+          if (pb > 0) {
+            setCam({ yaw: 0, pitch: 0.95, dist: 1600, f: 1300, cx: 600, cy: 380 });
+            const a = ((t - 4) / 4) * Math.PI * 2;
+            const ball = [-190 * Math.cos(a), 0, 190 * Math.sin(a)];
+            ctx.save();
+            ctx.globalAlpha = pb;
+            const [lx, ly] = proj([-520, 0, 0]);
+            sunGlyph(lx, ly, 40, t);
+            orbitRing(190);
+            const [kx, ky] = proj([0, 0, 0]);
+            const [bx, by] = proj(ball);
+            ctx.strokeStyle = C.cyan;
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(kx, ky);
+            ctx.lineTo(bx, by);
+            ctx.stroke();
+            ctx.restore();
+            wireSphere([0, 0, 0], 45, { alpha: pb, lat: 5, lon: 8 });
+            wireSphere(ball, 34, { sun: SUN_DIR, alpha: pb, lat: 5, lon: 8 });
+            text("你", kx, ky + 80, { size: 24, weight: 900, color: C.cyan, align: "center", alpha: pb });
+            ctx.save();
+            ctx.globalAlpha = pb;
+            ctx.fillStyle = "rgba(10,20,45,.75)";
+            ctx.strokeStyle = "rgba(143,211,255,.45)";
+            ctx.lineWidth = 2;
+            roundRect(960, 120, 280, 330, 24);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+            text("你看到的球", 1100, 165, { size: 22, weight: 900, color: C.cyan, align: "center", alpha: pb });
+            phaseDisc(1100, 300, 95, a, pb);
+            pill("拿著球轉圈圈", 600, 110, { ...GOLD_PILL, scale: pop(t, 4.4), alpha: pb });
+          }
+          const pc = fade(t, 8, 0.6);
+          if (pc > 0) {
+            ctx.save();
+            ctx.globalAlpha = pc;
+            gridFloor(t);
+            ctx.restore();
+            phaseDisc(640, 250, 120, 2.2, pc);
+            bunny(900, 540, 1, { t, wave: 1, alpha: pc });
+            text("晚安！", 400, 470, { size: 64, weight: 900, color: C.gold, align: "center", alpha: pc });
+            text("MOON PHASES · MASTER", 640, 620, { size: 18, weight: 500, font: MONO, color: C.cyan, align: "center", alpha: pc * 0.9 });
+          }
+        }
+        // ---------- 播放器 ----------
+        const player = document.getElementById("player");
+        const playBtn = document.getElementById("play-btn");
+        const bigPlay = document.getElementById("big-play");
+        const seek = document.getElementById("seek");
+        const timeEl = document.getElementById("time");
+        const speedSel = document.getElementById("speed");
+        const chaptersEl = document.getElementById("chapters");
+        seek.max = TOTAL;
+
+        let time = 0, playing = false, last = 0, dragging = false;
+        const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+
+        SCENES.forEach((s, i) => {
+          const li = document.createElement("li");
+          const b = document.createElement("button");
+          b.type = "button";
+          b.innerHTML = `<small>${String(i + 1).padStart(2, "0")} · ${fmt(s.start)}</small><b>${s.title}</b>`;
+          b.addEventListener("click", () => { poster = false; time = s.start + 0.001; setPlaying(true); });
+          li.appendChild(b);
+          chaptersEl.appendChild(li);
+        });
+        const chapterBtns = [...chaptersEl.querySelectorAll("button")];
+
+        let poster = true; // 封面停在有畫面的瞬間，第一次播放從頭開始
+        function setPlaying(v) {
+          if (v && (poster || time >= TOTAL - 0.01)) time = 0;
+          if (v) poster = false;
+          playing = v;
+          player.classList.toggle("is-playing", v);
+          playBtn.textContent = v ? "❚❚" : "▶";
+          playBtn.setAttribute("aria-label", v ? "暫停" : "播放");
+          last = performance.now();
+          if (v) sound.unlock(); // 瀏覽器要求聲音必須由使用者操作啟動
+        }
+        const toggle = () => setPlaying(!playing);
+        playBtn.addEventListener("click", toggle);
+        bigPlay.addEventListener("click", toggle);
+        canvas.addEventListener("click", toggle);
+        seek.addEventListener("input", () => { dragging = true; poster = false; time = +seek.value; });
+        seek.addEventListener("change", () => { dragging = false; });
+        document.getElementById("fs-btn").addEventListener("click", () => {
+          if (document.fullscreenElement) document.exitFullscreen();
+          else if (player.requestFullscreen) player.requestFullscreen();
+        });
+        document.addEventListener("keydown", (e) => {
+          if (e.target.closest("input, select")) return;
+          if (e.code === "Space" || e.key === "k") { e.preventDefault(); toggle(); }
+          if (e.key.startsWith("Arrow")) poster = false;
+          if (e.key === "ArrowRight") time = Math.min(TOTAL, time + 5);
+          if (e.key === "ArrowLeft") time = Math.max(0, time - 5);
+          if (e.key === "m") sound.toggleMute();
+        });
+
+        function currentScene() {
+          for (let i = SCENES.length - 1; i >= 0; i--) if (time >= SCENES[i].start) return i;
+          return 0;
+        }
+
+        // ---------- 聲音：MP3 旁白 + Web Audio 即時合成音效 ----------
+        const sound = (() => {
+          const muteBtn = document.getElementById("mute-btn");
+          let muted = false;
+          try { muted = localStorage.getItem("moon-muted") === "1"; } catch (e) {}
+
+          // 旁白：每句一個 MP3。解碼後和音效在同一個 AudioContext 裡當成兩條音軌同時混音，
+          // 由播放按鈕解鎖一次就好，手機瀏覽器也不會把後面的旁白擋掉。
+          const clips = [];
+          SCENES.forEach((scene) => scene.subs.forEach((sub) => {
+            if (!sub.audio) return;
+            // 頁面一載入就先下載，按播放時只需要解碼，第一句才不會被切掉開頭
+            const data = fetch(sub.audio).then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); });
+            data.catch(() => {});
+            clips.push({ start: scene.start + sub.start, duration: sub.duration, url: sub.audio, data, buffer: null, node: null, rate: 1, t0: 0, el: null });
+          }));
+
+          function loadClips() {
+            for (const c of clips) {
+              c.data
+                .then((data) => new Promise((ok, fail) => actx.decodeAudioData(data, ok, fail)))
+                .then((buf) => { c.buffer = buf; })
+                .catch(() => { // 直接開本機檔案時無法解碼，改用 <audio> 播放
+                  c.el = new Audio(c.url);
+                  c.el.preload = "auto";
+                  c.el.addEventListener("error", () => { c.failed = true; });
+                  c.el.load();
+                });
+            }
+          }
+
+          // 這句旁白準備好了沒（已解碼、<audio> 已可播放，或確定載入失敗）
+          const clipReady = (c) => c.buffer || c.failed || (c.el && c.el.readyState >= 3);
+
+          // 像影片播放器的緩衝：目前時間要播的旁白還沒載入好，就先停住畫面等它
+          function ready(t) {
+            if (muted || !actx) return true;
+            for (const c of clips) {
+              if (t < c.start - 0.05 || t >= c.start + c.duration || clipReady(c)) continue;
+              if (!c.waitSince) c.waitSince = performance.now();
+              if (performance.now() - c.waitSince > 8000) { c.failed = true; continue; } // 網路太慢就跳過這句，不要整支卡住
+              return false;
+            }
+            return true;
+          }
+
+          function stopClip(c) {
+            if (c.node) { try { c.node.stop(); } catch (e) {} c.node = null; }
+            if (c.el && !c.el.paused) c.el.pause();
+          }
+
+          function syncNarration() {
+            let speaking = false;
+            const rate = +speedSel.value;
+            for (const c of clips) {
+              const local = time - c.start;
+              const active = playing && !muted && local >= 0 && local < c.duration;
+              if (active) speaking = true;
+              if (!active) { stopClip(c); continue; }
+              if (c.buffer) {
+                const heard = c.node ? (actx.currentTime - c.t0) * c.rate : 0;
+                if (!c.node || c.rate !== rate || Math.abs(heard - local) > 0.5) { // 拖曳進度或改速度後重新對齊
+                  stopClip(c);
+                  const node = actx.createBufferSource();
+                  node.buffer = c.buffer;
+                  node.playbackRate.value = rate;
+                  node.connect(voice);
+                  node.start(0, local);
+                  c.node = node;
+                  c.rate = rate;
+                  c.t0 = actx.currentTime - local / rate;
+                }
+              } else if (c.el) {
+                c.el.playbackRate = rate;
+                if (c.el.paused) {
+                  if (c.el.readyState >= 1) c.el.currentTime = local;
+                  c.el.play().catch(() => {});
+                } else if (c.el.readyState >= 3 && !c.el.seeking && Math.abs(c.el.currentTime - local) > 0.5) {
+                  c.el.currentTime = local;
+                }
+              }
+            }
+            return speaking;
+          }
+
+          // 音效：噪音與振盪器即時合成，不需要額外音檔
+          let actx = null, master = null, voice = null, brownBuf = null;
+          const layers = {};
+          function noiseBuffer(brown) {
+            const len = actx.sampleRate * 2, buf = actx.createBuffer(1, len, actx.sampleRate), d = buf.getChannelData(0);
+            let lastOut = 0;
+            for (let i = 0; i < len; i++) {
+              const white = Math.random() * 2 - 1;
+              if (brown) { lastOut = (lastOut + 0.02 * white) / 1.02; d[i] = lastOut * 3.5; } else d[i] = white;
+            }
+            return buf;
+          }
+          function noiseLayer(buf, type, freq, q) {
+            const src = actx.createBufferSource(), filter = actx.createBiquadFilter(), gain = actx.createGain();
+            src.buffer = buf;
+            src.loop = true;
+            filter.type = type;
+            filter.frequency.value = freq;
+            filter.Q.value = q;
+            gain.gain.value = 0;
+            src.connect(filter).connect(gain).connect(master);
+            src.start();
+            return { gain, filter };
+          }
+          function init() {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return;
+            actx = new AC();
+            master = actx.createGain();
+            master.gain.value = 0.5;
+            master.connect(actx.destination);
+            voice = actx.createGain(); // 旁白音軌，和音效音軌分開
+            voice.gain.value = 1;
+            voice.connect(actx.destination);
+            loadClips();
+            const white = noiseBuffer(false);
+            brownBuf = noiseBuffer(true);
+            layers.rain = noiseLayer(white, "bandpass", 3200, 0.5); // 雨聲
+            layers.stream = noiseLayer(brownBuf, "bandpass", 520, 0.6); // 溪水、放水聲
+            layers.roar = noiseLayer(brownBuf, "lowpass", 380, 0.7); // 洩洪的大水聲
+            // 蟬叫：高頻振盪器加上快速的音量起伏
+            const cic = actx.createOscillator(), am = actx.createGain(), lfo = actx.createOscillator(), lfoGain = actx.createGain(), cg = actx.createGain();
+            cic.frequency.value = 4300;
+            lfo.frequency.value = 26;
+            lfoGain.gain.value = 0.5;
+            am.gain.value = 0.5;
+            cg.gain.value = 0;
+            lfo.connect(lfoGain).connect(am.gain);
+            cic.connect(am).connect(cg).connect(master);
+            cic.start();
+            lfo.start();
+            layers.cicada = { gain: cg };
+            // 大輪子轉動的嗡嗡聲
+            const hum = actx.createOscillator(), lp = actx.createBiquadFilter(), hg = actx.createGain();
+            hum.type = "sawtooth";
+            hum.frequency.value = 55;
+            lp.type = "lowpass";
+            lp.frequency.value = 260;
+            hg.gain.value = 0;
+            hum.connect(lp).connect(hg).connect(master);
+            hum.start();
+            layers.hum = { gain: hg, osc: hum };
+          }
+          function unlock() {
+            if (!actx) init();
+            if (actx && actx.state === "suspended") actx.resume();
+          }
+
+          // 各場景的音效層音量（0..1）
+          function levels(idx, lt) {
+            const L = { rain: 0, stream: 0, roar: 0, cicada: 0, hum: 0.05 };
+            if (idx === 0) L.cicada = 0.05 * (1 - fade(lt, 8, 1));
+            if (idx === 5) L.cicada = 0.05 * fade(lt, 8, 1);
+            return L;
+          }
+
+          // 單音：可滑音，delay 秒後播放
+          function tone(freq, dur, vol = 0.25, type = "sine", freqEnd = freq, delay = 0) {
+            const o = actx.createOscillator(), g = actx.createGain(), t0 = actx.currentTime + delay;
+            o.type = type;
+            o.frequency.setValueAtTime(freq, t0);
+            if (freqEnd !== freq) o.frequency.exponentialRampToValueAtTime(freqEnd, t0 + dur);
+            g.gain.setValueAtTime(0.0001, t0);
+            g.gain.exponentialRampToValueAtTime(vol, t0 + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+            o.connect(g).connect(master);
+            o.start(t0);
+            o.stop(t0 + dur + 0.05);
+          }
+          function noiseBurst(dur, vol, type, f0, f1 = f0) {
+            const src = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain(), t0 = actx.currentTime;
+            src.buffer = brownBuf;
+            f.type = type;
+            f.frequency.setValueAtTime(f0, t0);
+            f.frequency.exponentialRampToValueAtTime(f1, t0 + dur);
+            g.gain.setValueAtTime(vol, t0);
+            g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+            src.connect(f).connect(g).connect(master);
+            src.start(t0);
+            src.stop(t0 + dur + 0.05);
+          }
+          const sfx = {
+            drip: () => tone(1400, 0.18, 0.35, "sine", 480),
+            pop: () => tone(520, 0.12, 0.25, "sine", 980),
+            dengdeng: () => { tone(660, 0.2, 0.25, "triangle"); tone(990, 0.45, 0.25, "triangle", 990, 0.22); },
+            thunder: () => noiseBurst(1.8, 0.7, "lowpass", 500, 70), // 小聲、不嚇人的雷
+            birds: () => { for (let i = 0; i < 3; i++) tone(2600, 0.08, 0.1, "sine", 3600, i * 0.12); },
+            clank: () => { noiseBurst(0.15, 0.6, "bandpass", 1800); tone(140, 0.3, 0.3, "square", 90); },
+            siren: () => { tone(620, 0.5, 0.1, "triangle", 880); tone(880, 0.5, 0.1, "triangle", 620, 0.5); },
+            whoosh: () => noiseBurst(1, 0.5, "bandpass", 300, 2400),
+            ding: () => { tone(1320, 0.9, 0.22); tone(1980, 0.6, 0.08); },
+            jingle: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.35, 0.2, "triangle", f, i * 0.14)),
+            fall: () => tone(900, 1, 0.14, "triangle", 180),
+            sputter: () => noiseBurst(0.3, 0.7, "lowpass", 700, 90),
+            ignite: () => noiseBurst(0.7, 0.5, "bandpass", 300, 1600),
+            beep: () => tone(880, 0.18, 0.25),
+            boom: () => { tone(1320, 0.35, 0.18); noiseBurst(1.8, 1.1, "lowpass", 900, 90); },
+            c523: () => { tone(523, 1.4, 0.2); tone(1046, 0.9, 0.05); },
+            c659: () => { tone(659, 1.4, 0.2); tone(1318, 0.9, 0.05); },
+            c784: () => { tone(784, 1.4, 0.2); tone(1568, 0.9, 0.05); },
+            c1047: () => { tone(1047, 1.6, 0.2); tone(2093, 1, 0.05); },
+          };
+          // 單發音效：播放中時間正向跨過某個時間點才觸發（拖曳時不觸發）
+          const CUES = [
+            [0, 0.6, "pop"], [0, 3.4, "pop"], [0, 5.4, "pop"], [0, 8.6, "ding"],
+            [1, 0.8, "pop"], [1, 4.2, "whoosh"], [1, 8.0, "ding"], [1, 9.4, "pop"],
+            [2, 0.3, "whoosh"], [2, 4.4, "pop"], [2, 8.6, "pop"],
+            [3, 0.3, "c523"], [3, 4.3, "c659"], [3, 8.3, "c784"], [3, 12.3, "c1047"],
+            [4, 0.3, "c784"], [4, 4.3, "c659"], [4, 8.3, "c523"],
+            [5, 0.6, "pop"], [5, 1.4, "pop"], [5, 4.4, "whoosh"], [5, 8.2, "jingle"],
+          ];
+          const cues = CUES.filter(([i]) => SCENES[i]).map(([i, at, name]) => ({ at: SCENES[i].start + at, fire: sfx[name] }));
+
+          function update(prev) {
+            const speaking = syncNarration();
+            if (!actx) return;
+            const idx = currentScene();
+            const lt = Math.min(SCENES[idx].dur, time - SCENES[idx].start);
+            const on = playing && !muted ? 1 : 0;
+            const duck = speaking ? 0.35 : 1; // 旁白時音效自動降低，讓人聲更清楚
+            const L = levels(idx, lt);
+            const now = actx.currentTime;
+            for (const key of Object.keys(layers)) layers[key].gain.gain.setTargetAtTime(L[key] * on * duck, now, 0.08);
+            if (on && time > prev && time - prev < 0.5) {
+              for (const c of cues) if (prev < c.at && time >= c.at) c.fire();
+            }
+          }
+
+          function setMuted(v) {
+            muted = v;
+            muteBtn.textContent = v ? "🔇" : "🔊";
+            muteBtn.setAttribute("aria-label", v ? "取消靜音" : "靜音");
+            muteBtn.setAttribute("aria-pressed", String(v));
+            try { localStorage.setItem("moon-muted", v ? "1" : "0"); } catch (e) {}
+          }
+          muteBtn.addEventListener("click", () => { setMuted(!muted); unlock(); });
+          setMuted(muted);
+          return { unlock, update, ready, toggleMute: () => setMuted(!muted) };
+        })();
+
+        function render() {
+          const idx = currentScene();
+          const scene = SCENES[idx];
+          const lt = Math.min(scene.dur, time - scene.start);
+          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+          ctx.globalAlpha = 1;
+          ctx.globalCompositeOperation = "source-over";
+          scene.draw(lt);
+
+          // 轉場：每段開頭淡入
+          const inA = 1 - clamp(lt / 0.45);
+          if (inA > 0 && idx > 0) { ctx.fillStyle = `rgba(3,6,15,${inA})`; ctx.fillRect(0, 0, W, H); }
+
+          // 段落標題
+          ctx.save();
+          ctx.font = `900 28px ${FONT}`;
+          const tw = ctx.measureText(scene.title).width;
+          ctx.fillStyle = "rgba(10,20,45,.75)";
+          roundRect(24, 22, tw + 112, 50, 25);
+          ctx.fill();
+          ctx.restore();
+          text(`${String(idx + 1).padStart(2, "0")}`, 44, 57, { size: 22, font: MONO, weight: 500, color: C.water });
+          text(scene.title, 84, 58, { size: 28, weight: 900 });
+
+          // 字幕（小朋友看的大字幕）
+          const sub = scene.subs.find((x) => lt >= x.start && lt < x.end) || (lt >= scene.dur ? scene.subs[scene.subs.length - 1] : null);
+          if (sub) {
+            const sa = clamp((lt - sub.start) / 0.3);
+            ctx.save();
+            ctx.font = `700 34px ${FONT}`;
+            const w = ctx.measureText(sub.text).width + 56;
+            ctx.globalAlpha = sa;
+            ctx.fillStyle = "rgba(18,49,74,.78)";
+            roundRect(640 - w / 2, 648, w, 56, 28);
+            ctx.fill();
+            ctx.restore();
+            text(sub.text, 640, 688, { size: 34, align: "center", color: C.white, alpha: sa });
+          }
+
+          // 進度條
+          ctx.fillStyle = "rgba(18,49,74,.12)";
+          ctx.fillRect(0, H - 5, W, 5);
+          ctx.fillStyle = C.water;
+          ctx.fillRect(0, H - 5, (W * time) / TOTAL, 5);
+
+          if (!dragging) seek.value = time;
+          timeEl.textContent = `${fmt(time)} / ${fmt(TOTAL)}`;
+          chapterBtns.forEach((b, i) => b.classList.toggle("is-active", i === idx));
+        }
+
+        // 旁白還在載入時，右上角顯示提示
+        function loadingBadge() {
+          ctx.save();
+          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = "rgba(0,0,0,.65)";
+          roundRect(W - 200, 24, 170, 44, 22);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.font = `700 20px ${FONT}`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("旁白載入中…", W - 115, 47);
+          ctx.restore();
+        }
+
+        function loop(now) {
+          const prev = time;
+          const waiting = playing && !sound.ready(time);
+          if (playing && !waiting) {
+            const dt = Math.min(0.1, (now - last) / 1000);
+            time += dt * +speedSel.value;
+            if (time >= TOTAL) { time = TOTAL; setPlaying(false); }
+          }
+          last = now;
+          render();
+          if (waiting) loadingBadge();
+          sound.update(prev);
+          requestAnimationFrame(loop);
+        }
+        // 封面畫面；網址加 ?t=秒數 可以直接看某個畫面
+        const startAt = parseFloat(new URLSearchParams(location.search).get("t"));
+        time = Number.isFinite(startAt) ? clamp(startAt, 0, TOTAL) : 10;
+        if (Number.isFinite(startAt)) poster = false;
+        render();
+        if (document.fonts) document.fonts.ready.then(render);
+        requestAnimationFrame((n) => { last = n; loop(n); });
+      })();
+    </script>
+  </body>
+</html>
