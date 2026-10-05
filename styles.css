@@ -81,6 +81,9 @@ h1 em { color: var(--orange); font-style: italic; }
 .topic-card.moon-featured { background: #070d1c; border-color: #070d1c; }
 .topic-card.moon-featured .topic-label { color: #ffe27a; }
 .topic-card.moon-featured:hover .topic-arrow { color: #070d1c; background: #8fd3ff; }
+.topic-card.etch-featured { grid-column: 1 / -1; background: #1a1230; border-color: #1a1230; }
+.topic-card.etch-featured .topic-label { color: #b98cff; }
+.topic-card.etch-featured:hover .topic-arrow { color: #1a1230; background: #b98cff; }
 .topic-number { font-family: "Playfair Display", serif; font-size: 42px; }
 .topic-content { align-self: end; }
 .topic-label { margin-bottom: 12px; color: var(--orange); }

@@ -1,0 +1,1612 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="用一支約兩分鐘、有旁白與音效的 HTML 動畫影片看懂矽的電漿蝕刻：SF₆ 電漿怎麼點燃、偏壓與鞘層怎麼讓離子垂直轟擊，以及遠端電漿的化學蝕刻為什麼會底切。" />
+    <meta name="theme-color" content="#120f1c" />
+    <title>半導體蝕刻原理｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #120f1c;
+        --bg-2: #1b1728;
+        --paper: #f1efe7;
+        --muted: rgba(241, 239, 231, 0.62);
+        --line: rgba(241, 239, 231, 0.16);
+        --fire: #b98cff;
+        --acid: #d9ff43;
+        --ice: #7cc7ff;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body { margin: 0; overflow-x: hidden; color: var(--paper); background: var(--bg); font-family: "Noto Sans TC", sans-serif; -webkit-font-smoothing: antialiased; }
+      a { color: inherit; text-decoration: none; }
+      h1, h2, h3, p { margin-top: 0; }
+
+      .site-header { display: flex; justify-content: space-between; align-items: center; width: min(1240px, calc(100% - 32px)); min-height: 76px; margin: 0 auto; border-bottom: 1px solid var(--line); }
+      .brand { display: inline-flex; align-items: center; gap: 11px; font-family: "DM Mono", monospace; font-size: 16px; font-weight: 500; letter-spacing: .18em; }
+      .brand-dot { width: 11px; height: 11px; background: var(--fire); border-radius: 50%; box-shadow: 12px 0 0 var(--acid); }
+      .header-back { padding-bottom: 3px; border-bottom: 1px solid var(--paper); font-family: "DM Mono", monospace; font-size: 11px; letter-spacing: .12em; }
+
+      main { width: min(1240px, calc(100% - 32px)); margin: 0 auto; }
+      .intro { display: grid; grid-template-columns: 1fr .7fr; gap: 60px; align-items: end; padding: 70px 0 40px; }
+      .eyebrow { margin-bottom: 18px; color: var(--fire); font-family: "DM Mono", monospace; font-size: 12px; letter-spacing: .14em; }
+      h1 { margin-bottom: 0; font-family: "Playfair Display", "Noto Sans TC", serif; font-size: clamp(40px, 6vw, 80px); line-height: 1.05; letter-spacing: -.03em; }
+      h1 em { color: var(--fire); }
+      .intro > p { margin-bottom: 6px; color: var(--muted); font-size: 16px; line-height: 1.9; }
+
+      .player { position: relative; overflow: hidden; background: #07090c; border: 1px solid var(--line); border-radius: 14px; }
+      .player canvas { display: block; width: 100%; aspect-ratio: 16 / 9; cursor: pointer; }
+      .big-play { position: absolute; inset: 0 0 58px; display: grid; place-items: center; border: 0; background: rgba(7, 9, 12, .35); cursor: pointer; transition: opacity 200ms ease; }
+      .big-play span { display: grid; width: 92px; height: 92px; place-items: center; padding-left: 8px; color: #120f1c; background: var(--fire); border-radius: 50%; font-size: 38px; box-shadow: 0 0 0 10px rgba(185, 140, 255, .2); }
+      .player.is-playing .big-play { opacity: 0; pointer-events: none; }
+      .controls { display: flex; align-items: center; gap: 12px; height: 58px; padding: 0 14px; background: #0f1216; border-top: 1px solid var(--line); }
+      .controls button, .controls select { height: 34px; padding: 0 12px; color: var(--paper); background: transparent; border: 1px solid var(--line); border-radius: 8px; font: 500 13px "DM Mono", monospace; cursor: pointer; }
+      .controls button:hover, .controls select:hover { border-color: var(--fire); }
+      .controls select option { color: #111; }
+      #play-btn, #mute-btn { width: 44px; padding: 0; font-size: 15px; }
+      .time { min-width: 96px; color: var(--muted); font: 12px "DM Mono", monospace; }
+      .seek { flex: 1; min-width: 60px; accent-color: var(--fire); cursor: pointer; }
+
+      .chapters { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin: 16px 0 0; padding: 0; list-style: none; }
+      .chapters button { width: 100%; height: 100%; padding: 14px; color: var(--paper); text-align: left; background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px; font: inherit; cursor: pointer; transition: border-color 160ms ease, background 160ms ease; }
+      .chapters button:hover { border-color: rgba(185, 140, 255, .6); }
+      .chapters button.is-active { background: #2c2245; border-color: var(--fire); }
+      .chapters small { display: block; margin-bottom: 6px; color: var(--fire); font: 11px "DM Mono", monospace; letter-spacing: .08em; }
+      .chapters b { font-size: 14px; font-weight: 700; }
+
+      section.block { padding: 90px 0 20px; }
+      .section-index { margin-bottom: 14px; color: var(--acid); font: 12px "DM Mono", monospace; letter-spacing: .14em; }
+      section.block h2 { margin-bottom: 36px; font-family: "Playfair Display", "Noto Sans TC", serif; font-size: clamp(32px, 4vw, 52px); letter-spacing: -.02em; }
+      .points { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+      .points article { padding: 30px; background: var(--bg); }
+      .points span { color: var(--fire); font: 12px "DM Mono", monospace; }
+      .points h3 { margin: 26px 0 10px; font-size: 21px; }
+      .points p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.85; }
+
+
+      .rx { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+      .rx article { padding: 26px; background: var(--bg-2); }
+      .rx span { color: var(--fire); font: 12px "DM Mono", monospace; letter-spacing: .06em; }
+      .rx .eq { margin: 16px 0 12px; font: 500 17px "DM Mono", monospace; line-height: 1.5; }
+      .rx p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.8; }
+      .notes { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; padding: 34px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px; }
+      .notes h3 { margin-bottom: 12px; font-size: 19px; }
+      .notes p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.85; }
+      footer { display: flex; justify-content: space-between; width: min(1240px, calc(100% - 32px)); margin: 90px auto 0; padding: 36px 0; color: var(--muted); border-top: 1px solid var(--line); font: 10px "DM Mono", monospace; letter-spacing: .08em; }
+
+      @media (max-width: 880px) {
+        .intro { grid-template-columns: 1fr; gap: 24px; }
+        .chapters { grid-template-columns: repeat(3, 1fr); }
+        .points, .notes { grid-template-columns: 1fr; }
+        .rx { grid-template-columns: 1fr 1fr; }
+      }
+      @media (max-width: 560px) {
+        .intro { padding-top: 44px; }
+        .chapters { grid-template-columns: repeat(2, 1fr); }
+        .controls { gap: 8px; padding: 0 8px; }
+        .time { min-width: 0; font-size: 11px; }
+        #speed { display: none; }
+        .big-play span { width: 64px; height: 64px; font-size: 26px; }
+        .rx { grid-template-columns: 1fr; }
+        .notes { padding: 22px; }
+        footer { flex-direction: column; gap: 8px; }
+      }
+      @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot" aria-hidden="true"></span><span>MASTER</span></a>
+      <a class="header-back" href="../index.html#topics">← 所有主題</a>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">SEMICONDUCTOR ETCH / BIAS VS CHEMICAL</p>
+          <h1 id="page-title">矽是怎麼<br /><em>被蝕刻掉的？</em></h1>
+        </div>
+        <p>這是一支用 HTML Canvas 即時繪製、附中文旁白與音效的動畫影片（記得開聲音）。同樣用 SF₆ 蝕刻矽 Si，對照兩種做法：偏壓蝕刻 bias etch 靠鞘層 sheath 讓離子垂直轟擊，挖出又深又直的溝槽；化學蝕刻 chemical etch 只靠氟自由基 radical，往各方向吃，形成底切 undercut。右上角的圖例全片通用。</p>
+      </section>
+
+      <div class="player" id="player">
+        <canvas id="stage" width="1280" height="720" aria-label="半導體蝕刻原理動畫影片"></canvas>
+        <button class="big-play" id="big-play" type="button" aria-label="播放影片"><span aria-hidden="true">▶</span></button>
+        <div class="controls">
+          <button id="play-btn" type="button" aria-label="播放">▶</button>
+          <span class="time" id="time">0:00 / 1:56</span>
+          <input class="seek" id="seek" type="range" min="0" max="116" step="0.01" value="0" aria-label="影片進度" />
+          <select id="speed" aria-label="播放速度">
+            <option value="0.5">0.5×</option>
+            <option value="1" selected>1×</option>
+            <option value="1.5">1.5×</option>
+            <option value="2">2×</option>
+          </select>
+          <button id="mute-btn" type="button" aria-label="靜音" aria-pressed="false">🔊</button>
+          <button id="fs-btn" type="button" aria-label="全螢幕">⛶</button>
+        </div>
+      </div>
+      <ol class="chapters" id="chapters"></ol>
+
+      <section class="block" aria-labelledby="points-title">
+        <p class="section-index">01 / KEY IDEAS</p>
+        <h2 id="points-title">影片裡的六個重點</h2>
+        <div class="points">
+          <article><span>01</span><h3>點燃電漿 Plasma Ignition</h3><p>射頻 RF 13.56 MHz 電場加速電子，電子撞上 SF₆：解離 dissociation 產生氟自由基 F*，游離 ionization 產生離子 SF₅⁺ 和更多電子。自由基的數量通常遠多於離子。</p></article>
+          <article><span>02</span><h3>偏壓與鞘層 Bias & Sheath</h3><p>晶圓底座 chuck 加上射頻偏壓 RF bias 後，跑得快的電子先打到晶圓，表面累積負電（自偏壓 self-bias）。晶圓上方形成鞘層 sheath，裡面的電場垂直向下，只對帶電的離子有作用。</p></article>
+          <article><span>03</span><h3>表面反應 Surface Reaction</h3><p>離子轟擊 ion bombardment 把溝槽底部的 Si–Si 鍵結打鬆，氟自由基再抓住矽，生成揮發性的 SiF₄ 被抽氣泵 pump 抽走。底部被打、側壁沒被打，所以是非等向性 anisotropic。</p></article>
+          <article><span>04</span><h3>遠端電漿 Remote Plasma</h3><p>電漿在晶圓上游的獨立腔體產生。往下流的途中，離子和電子重新結合 recombination（也會撞牆中和），抵達晶圓的幾乎只剩中性的氟自由基；晶圓也不加偏壓，沒有鞘層。</p></article>
+          <article><span>05</span><h3>等向性反應 Isotropic Reaction</h3><p>自由基沒有方向，從各個方向碰撞矽表面，各方向的蝕刻速率差不多：往下吃多深，往旁邊就吃多寬，鑽到光阻下方形成底切 undercut。</p></article>
+          <article><span>06</span><h3>對照與總結 Summary</h3><p>偏壓蝕刻 bias etch 由離子決定方向，適合細線寬和深溝槽；化學蝕刻 chemical etch 溫和、離子損傷低，適合整片移除或掏空結構（例如移除犧牲層 sacrificial layer）。</p></article>
+        </div>
+      </section>
+
+      <section class="block" aria-labelledby="rx-title">
+        <p class="section-index">02 / REACTIONS</p>
+        <h2 id="rx-title">反應式小卡</h2>
+        <div class="rx">
+          <article><span>解離 DISSOCIATION</span><p class="eq">SF₆ + e⁻ → SF₅ + F* + e⁻</p><p>電子把 SF₆ 拆開，放出不帶電的氟自由基 F*；撞擊的電子本身還在。</p></article>
+          <article><span>游離 IONIZATION</span><p class="eq">SF₆ + e⁻ → SF₅⁺ + F + 2e⁻</p><p>電子把分子打成正離子 SF₅⁺，同時多放出一個電子，讓電漿維持下去。</p></article>
+          <article><span>表面反應 SURFACE REACTION</span><p class="eq">Si + 4F → SiF₄↑</p><p>矽和四個氟結合成四氟化矽 SiF₄，是氣體，會離開表面被抽走。</p></article>
+          <article><span>重新結合 RECOMBINATION</span><p class="eq">SF₅⁺ + e⁻ → SF₅</p><p>離子和電子相遇後中和，變回不帶電的分子；遠端電漿就是靠這樣把離子濾掉。</p></article>
+        </div>
+      </section>
+
+      <section class="block" aria-labelledby="notes-title">
+        <p class="section-index">03 / NOTES</p>
+        <h2 id="notes-title">補充</h2>
+        <div class="notes">
+          <div>
+            <h3>側壁保護層 Sidewall Passivation</h3>
+            <p>實際的偏壓蝕刻還會在側壁沉積一層聚合物保護層 polymer（例如加入 C₄F₈ 之類的氣體，或像 Bosch 製程那樣「蝕刻、沉積」交替進行）。底部的保護層會被離子打掉、側壁的留下來，所以側壁可以更直、溝槽可以更深。</p>
+          </div>
+          <div>
+            <h3>濕蝕刻 Wet Etch</h3>
+            <p>把晶圓泡在藥水裡的濕蝕刻，也是一種化學蝕刻：藥液和矽反應，生成能溶解或離開表面的產物，原理和影片裡的自由基蝕刻類似。像氫氟酸加硝酸的混酸（HNA）蝕刻矽，就是等向性的，一樣會底切。</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>MASTER / SEMICONDUCTOR ETCH DEMO</span>
+      <span>數值與畫面為教學簡化，非特定機台或製程條件</span>
+    </footer>
+
+    <script src="narration.js"></script>
+    <script>
+      (() => {
+        // ---------- 基本設定 ----------
+        const W = 1280, H = 720;
+        const canvas = document.getElementById("stage");
+        const ctx = canvas.getContext("2d");
+        const DPR = Math.min(2, window.devicePixelRatio || 1);
+        canvas.width = W * DPR;
+        canvas.height = H * DPR;
+
+        const FONT = '"Noto Sans TC", sans-serif';
+        const MONO = '"DM Mono", monospace';
+        const C = { fire: "#b98cff", acid: "#d9ff43", ice: "#7cc7ff", paper: "#f1efe7", muted: "rgba(241,239,231,.6)", steel: "#9aa3ad", dark: "#07090c" };
+        // 圖例顏色（全片一致）
+        const P = { gas: "#9aa3ad", gas2: "#c7ccd3", e: "#ffd84a", ion: "#ff5a5a", rad: "#4ade80", prod: "#5aa9ff", prod2: "#a9d3ff", si: "#7d8aa0", pr: "#c9803f" };
+
+        // 字幕、旁白與場景長度來自 narration.js（由 data/narration.json 產生）
+        const NARRATION = (window.ETCH_NARRATION || { scenes: [] }).scenes;
+        const SCENES = [sceneIntro, sceneIgnite, sceneSheath, sceneSurface, sceneRemote, sceneIsotropic, sceneSummary].map((draw, i) => ({
+          draw,
+          title: NARRATION[i] ? NARRATION[i].title : "",
+          dur: NARRATION[i] ? NARRATION[i].dur : 12,
+          subs: NARRATION[i] ? NARRATION[i].subs : [],
+        }));
+        let acc = 0;
+        SCENES.forEach((s) => { s.start = acc; acc += s.dur; });
+        const TOTAL = acc;
+        const PART = ["", "PART 1 · 偏壓蝕刻 BIAS ETCH", "PART 1 · 偏壓蝕刻 BIAS ETCH", "PART 1 · 偏壓蝕刻 BIAS ETCH", "PART 2 · 化學蝕刻 CHEMICAL ETCH", "PART 2 · 化學蝕刻 CHEMICAL ETCH", ""];
+        // 每段每句旁白的開始時間：畫面跟著旁白走
+        const subStarts = (i) => SCENES[i].subs.map((x) => x.start);
+
+        // ---------- 工具函式 ----------
+        const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+        const lerp = (a, b, k) => a + (b - a) * k;
+        const ease = (k) => { k = clamp(k); return k * k * (3 - 2 * k); };
+        const fade = (t, start, dur = 0.6) => ease((t - start) / dur);
+        const fract = (v) => v - Math.floor(v);
+        const rnd = (i) => fract(Math.sin(i * 127.1 + 311.7) * 43758.5453);
+        const tri = (v) => 1 - 4 * Math.abs(fract(v) - 0.5); // -1..1 三角波（彈跳用）
+
+        function text(str, x, y, { size = 24, color = C.paper, align = "left", weight = 500, font = FONT, alpha = 1, base = "alphabetic" } = {}) {
+          if (alpha <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.fillStyle = color;
+          ctx.font = `${weight} ${size}px ${font}`;
+          ctx.textAlign = align;
+          ctx.textBaseline = base;
+          ctx.fillText(str, x, y);
+          ctx.restore();
+        }
+
+        function arrow(x1, y1, x2, y2, color, width = 6, alpha = 1) {
+          if (alpha <= 0) return;
+          const ang = Math.atan2(y2 - y1, x2 - x1);
+          const head = width * 3.2;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.strokeStyle = color;
+          ctx.fillStyle = color;
+          ctx.lineWidth = width;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2 - Math.cos(ang) * head * 0.8, y2 - Math.sin(ang) * head * 0.8);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(x2, y2);
+          ctx.lineTo(x2 - Math.cos(ang - 0.45) * head, y2 - Math.sin(ang - 0.45) * head);
+          ctx.lineTo(x2 - Math.cos(ang + 0.45) * head, y2 - Math.sin(ang + 0.45) * head);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+
+        function label(str, x, y, color, alpha) {
+          if (alpha <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= alpha;
+          ctx.font = `700 20px ${FONT}`;
+          const w = ctx.measureText(str).width + 26;
+          ctx.fillStyle = "rgba(7,9,12,.78)";
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1.5;
+          roundRect(x - w / 2, y - 20, w, 36, 18);
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+          text(str, x, y + 5, { size: 20, weight: 700, align: "center", color, alpha });
+        }
+
+        function roundRect(x, y, w, h, r) {
+          ctx.beginPath();
+          ctx.moveTo(x + r, y);
+          ctx.arcTo(x + w, y, x + w, y + h, r);
+          ctx.arcTo(x + w, y + h, x, y + h, r);
+          ctx.arcTo(x, y + h, x, y, r);
+          ctx.arcTo(x, y, x + w, y, r);
+          ctx.closePath();
+        }
+
+        // 熱度 0..1 → 顏色（白黃 → 橘 → 暗紅）
+        function heatColor(h, a = 1) {
+          const stops = [[0, [150, 40, 30]], [0.45, [255, 112, 50]], [0.75, [255, 190, 80]], [1, [255, 248, 210]]];
+          h = clamp(h);
+          for (let i = 1; i < stops.length; i++) {
+            if (h <= stops[i][0]) {
+              const [p0, c0] = stops[i - 1], [p1, c1] = stops[i];
+              const k = (h - p0) / (p1 - p0);
+              return `rgba(${Math.round(lerp(c0[0], c1[0], k))},${Math.round(lerp(c0[1], c1[1], k))},${Math.round(lerp(c0[2], c1[2], k))},${a})`;
+            }
+          }
+          return `rgba(255,248,210,${a})`;
+        }
+
+        function background(top = "#0b0f15", bottom = "#141019") {
+          const g = ctx.createLinearGradient(0, 0, 0, H);
+          g.addColorStop(0, top);
+          g.addColorStop(1, bottom);
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, W, H);
+          ctx.save();
+          ctx.strokeStyle = "rgba(255,255,255,.035)";
+          ctx.lineWidth = 1;
+          for (let x = 0; x <= W; x += 64) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+          for (let y = 0; y <= H; y += 64) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+          ctx.restore();
+        }
+
+
+        // ---------- 粒子（顏色和右上角圖例一致） ----------
+        function drawGas(x, y, a = 1, s = 1, n = 6) {
+          if (a <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= a;
+          ctx.fillStyle = P.gas2;
+          for (let k = 0; k < n; k++) {
+            const ang = (k / 6) * Math.PI * 2 + 0.5;
+            ctx.beginPath();
+            ctx.arc(x + Math.cos(ang) * 11 * s, y + Math.sin(ang) * 11 * s, 3.6 * s, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.fillStyle = P.gas;
+          ctx.beginPath();
+          ctx.arc(x, y, 7.5 * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+        function drawE(x, y, a = 1, s = 1) {
+          if (a <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= a;
+          ctx.fillStyle = "rgba(255,216,74,.28)";
+          ctx.beginPath();
+          ctx.arc(x, y, 6.5 * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = P.e;
+          ctx.beginPath();
+          ctx.arc(x, y, 3 * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+        function drawIon(x, y, a = 1, s = 1) {
+          if (a <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= a;
+          ctx.fillStyle = P.ion;
+          ctx.beginPath();
+          ctx.arc(x, y, 8 * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 2 * s;
+          ctx.beginPath();
+          ctx.moveTo(x - 4.5 * s, y);
+          ctx.lineTo(x + 4.5 * s, y);
+          ctx.moveTo(x, y - 4.5 * s);
+          ctx.lineTo(x, y + 4.5 * s);
+          ctx.stroke();
+          ctx.restore();
+        }
+        function drawRad(x, y, a = 1, s = 1) {
+          if (a <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= a;
+          ctx.fillStyle = P.rad;
+          ctx.beginPath();
+          ctx.arc(x, y, 5 * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+        function drawProd(x, y, a = 1, s = 1) {
+          if (a <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= a;
+          ctx.fillStyle = P.prod2;
+          for (const [dx, dy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+            ctx.beginPath();
+            ctx.arc(x + dx * 6.5 * s, y + dy * 6.5 * s, 3.6 * s, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.fillStyle = P.prod;
+          ctx.beginPath();
+          ctx.arc(x, y, 6.5 * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+        function drawSi(x, y, a = 1, s = 1, color = P.si) {
+          if (a <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= a;
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(x, y, 8 * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+        function flash(x, y, k, color = "255,255,255") {
+          if (k <= 0 || k >= 1) return;
+          ctx.save();
+          ctx.strokeStyle = `rgba(${color},${1 - k})`;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(x, y, 6 + 20 * k, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
+        function panel(x, y, w, h, a = 1) {
+          if (a <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= a;
+          ctx.fillStyle = "rgba(7,9,12,.84)";
+          ctx.strokeStyle = "rgba(241,239,231,.18)";
+          ctx.lineWidth = 1;
+          roundRect(x, y, w, h, 12);
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+        }
+        const bounce = (u) => 1 - Math.abs(2 * fract(u) - 1);
+        // 在方框裡亂飄；只由時間決定位置，所以拖曳進度、倍速播放都會畫出同樣的畫面
+        function roam(i, t, x0, x1, y0, y1, sp = 1) {
+          return [
+            lerp(x0, x1, bounce(rnd(i) + t * sp * (0.03 + 0.05 * rnd(i + 3)))) + Math.sin(t * 5 * sp + i) * 3,
+            lerp(y0, y1, bounce(rnd(i + 7) + t * sp * (0.035 + 0.05 * rnd(i + 9)))) + Math.cos(t * 4.3 * sp + i * 2) * 3,
+          ];
+        }
+        // 自由基的鋸齒亂飄
+        function zig(i, t, x0, x1, y0, y1) {
+          const [x, y] = roam(i, t, x0, x1, y0, y1, 1.6);
+          return [x + 9 * Math.sin(t * 11 + i), y + 9 * Math.cos(t * 13 + i * 2)];
+        }
+
+        // ---------- 右上角圖例（全片固定） ----------
+        function legend() {
+          const x = 1012, y = 16;
+          panel(x, y, 252, 172);
+          text("圖例 LEGEND", x + 14, y + 25, { size: 12, font: MONO, color: C.muted });
+          const rows = [
+            [(a, b) => drawGas(a, b, 1, 0.8), "SF₆ 原料氣體 feed gas"],
+            [(a, b) => drawE(a, b, 1, 1.2), "電子 electron e⁻"],
+            [(a, b) => drawIon(a, b), "離子 ion（SF₅⁺）"],
+            [(a, b) => drawRad(a, b), "氟自由基 radical F*"],
+            [(a, b) => drawProd(a, b, 1, 0.9), "四氟化矽 SiF₄（產物）"],
+          ];
+          rows.forEach(([fn, str], i) => {
+            const yy = y + 50 + i * 26;
+            fn(x + 28, yy);
+            text(str, x + 50, yy + 5, { size: 15 });
+          });
+        }
+
+        // ---------- 腔體 ----------
+        const CH = { l: 140, r: 940, t: 130, b: 640 };
+        const WAFER = { l: 300, r: 780, y: 572 };
+        function rfSource(x, y, t, str, a = 1) {
+          if (a <= 0) return;
+          ctx.save();
+          ctx.globalAlpha *= a;
+          ctx.strokeStyle = C.fire;
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(x, y, 20, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.beginPath();
+          for (let i = 0; i <= 24; i++) {
+            const xx = x - 12 + i;
+            const yy = y + Math.sin((i / 24) * Math.PI * 4 + t * 8) * 7;
+            if (i) ctx.lineTo(xx, yy); else ctx.moveTo(xx, yy);
+          }
+          ctx.stroke();
+          ctx.restore();
+          str.split("\n").forEach((line, i) => text(line, x, y + 38 + i * 16, { size: 13, font: MONO, align: "center", color: C.fire, alpha: a }));
+        }
+        function pump(x, y, t, a = 1) {
+          ctx.save();
+          ctx.globalAlpha *= a;
+          ctx.strokeStyle = C.steel;
+          ctx.lineWidth = 3;
+          ctx.strokeRect(x - 28, y - 46, 56, 92);
+          ctx.translate(x, y);
+          ctx.rotate(t * 6);
+          for (let k = 0; k < 4; k++) {
+            ctx.rotate(Math.PI / 2);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, -20);
+            ctx.stroke();
+          }
+          ctx.restore();
+          text("抽氣泵", x, y + 68, { size: 14, align: "center", color: C.steel, alpha: a });
+          text("pump", x, y + 86, { size: 13, font: MONO, align: "center", color: C.steel, alpha: a });
+        }
+        function chamber(t, { glow = 0, rf = 0, bias = 0 } = {}) {
+          background("#0b0f15", "#120f1c");
+          if (glow > 0) {
+            const g = ctx.createRadialGradient(540, 360, 40, 540, 360, 430);
+            g.addColorStop(0, `rgba(185,120,255,${0.42 * glow})`);
+            g.addColorStop(1, "rgba(185,120,255,0)");
+            ctx.fillStyle = g;
+            ctx.fillRect(CH.l, 168, CH.r - CH.l, WAFER.y - 168);
+          }
+          ctx.strokeStyle = C.steel;
+          ctx.lineWidth = 6;
+          ctx.beginPath();
+          ctx.moveTo(CH.r, 512);
+          ctx.lineTo(CH.r, CH.t);
+          ctx.lineTo(CH.l, CH.t);
+          ctx.lineTo(CH.l, CH.b);
+          ctx.lineTo(CH.r, CH.b);
+          ctx.lineTo(CH.r, 608);
+          ctx.stroke();
+          pump(CH.r + 34, 560, t);
+          // 進氣管與噴氣頭（也是上電極）
+          ctx.fillStyle = C.steel;
+          ctx.fillRect(530, 98, 20, 36);
+          text("SF₆", 560, 120, { size: 15, font: MONO, color: C.steel });
+          ctx.fillStyle = "#4a5260";
+          ctx.fillRect(200, 148, 680, 16);
+          ctx.fillStyle = "#0b0f15";
+          for (let x = 217; x < 880; x += 34) ctx.fillRect(x - 3, 160, 6, 4);
+          if (rf > 0) {
+            ctx.save();
+            ctx.globalAlpha = rf * (0.6 + 0.4 * Math.sin(t * 20));
+            ctx.strokeStyle = C.fire;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(200, 148, 680, 16);
+            ctx.beginPath();
+            ctx.moveTo(100, 156);
+            ctx.lineTo(200, 156);
+            ctx.stroke();
+            ctx.restore();
+          }
+          rfSource(80, 156, t, "RF\n13.56 MHz", rf);
+          // 晶圓底座與晶圓
+          ctx.fillStyle = "#2a2f38";
+          ctx.fillRect(280, 584, 520, 38);
+          ctx.strokeStyle = C.steel;
+          ctx.lineWidth = 2;
+          ctx.strokeRect(280, 584, 520, 38);
+          ctx.fillStyle = "#8d99ab";
+          ctx.fillRect(WAFER.l, WAFER.y, WAFER.r - WAFER.l, 12);
+          text("晶圓底座 chuck", 540, 609, { size: 14, align: "center", color: C.steel });
+          if (bias > 0) {
+            ctx.save();
+            ctx.globalAlpha = bias;
+            ctx.strokeStyle = C.fire;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(100, 603);
+            ctx.lineTo(280, 603);
+            ctx.stroke();
+            ctx.restore();
+          }
+          rfSource(80, 603, t, "RF bias", bias);
+        }
+
+        // ---------- 開場 ----------
+        function card(x, y, a1, a2, color, a) {
+          if (a <= 0) return;
+          ctx.save();
+          ctx.globalAlpha = a;
+          ctx.fillStyle = "rgba(7,9,12,.85)";
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2;
+          roundRect(x - 150, y - 40, 300, 80, 14);
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+          text(a1, x, y - 6, { size: 22, weight: 700, align: "center", alpha: a });
+          text(a2, x, y + 24, { size: 16, align: "center", color, alpha: a });
+        }
+        function sceneIntro(t) {
+          const s = subStarts(0);
+          background("#0b0f15", "#120f1c");
+          text("蝕刻 Etching", 640, 172, { size: 56, weight: 700, align: "center", alpha: fade(t, 0.2, 0.8) });
+          text("把不要的矽 Si 吃掉，留下想要的圖形", 640, 212, { size: 20, align: "center", color: C.muted, alpha: fade(t, 0.6, 0.8) });
+          const ya = fade(t, 0.3, 0.8);
+          ctx.save();
+          ctx.globalAlpha = ya;
+          ctx.fillStyle = "#151b25";
+          ctx.fillRect(240, 420, 800, 190);
+          ctx.fillStyle = P.pr;
+          ctx.fillRect(240, 384, 360, 36);
+          ctx.fillRect(680, 384, 360, 36);
+          ctx.restore();
+          for (let x = 255; x < 1040; x += 30) for (let y = 438; y < 610; y += 30) drawSi(x, y, ya * 0.85, 0.8);
+          text("光阻 photoresist", 250, 374, { size: 16, color: P.pr, alpha: ya });
+          text("矽基板 Si substrate", 1036, 636, { size: 16, align: "right", color: C.steel, alpha: ya });
+          const ka = fade(t, (s[0] || 0) + 2.8, 0.5), kb = fade(t, (s[0] || 0) + 4.4, 0.5);
+          card(380, 292, "用電場推著吃", "偏壓蝕刻 Bias Etch", P.ion, ka);
+          card(900, 292, "純靠化學慢慢吃", "化學蝕刻 Chemical Etch", P.rad, kb);
+          // 開口上方：直直落下的離子、到處飄的自由基
+          for (let k = 0; k < 3; k++) {
+            const q = fract(t * 0.8 + k / 3);
+            drawIon(620 + k * 20, lerp(250, 412, q), ka * (1 - kb * 0.6), 0.8);
+          }
+          for (let k = 0; k < 6; k++) {
+            const [x, y] = zig(k + 40, t, 560, 720, 250, 412);
+            drawRad(x, y, kb);
+          }
+        }
+
+        // ---------- Part 1-1：進氣與點燃電漿 ----------
+        function sceneIgnite(t) {
+          const s = subStarts(1);
+          const rf = fade(t, s[1], 0.6);
+          const ign = fade(t, s[1] + 1.5, 1.2);
+          chamber(t, { glow: ign * (0.8 + 0.2 * Math.sin(t * 7)), rf });
+          // SF₆ 從噴氣頭的小孔飄進來，大部分之後被電子拆開
+          for (let i = 0; i < 40; i++) {
+            const ts = 0.3 + i * 0.1;
+            if (t < ts) continue;
+            const k = ease((t - ts) / 2.6);
+            const x = 217 + (i % 20) * 34 + Math.sin(t * 0.9 + i) * 16 * k;
+            const y = lerp(168, 200 + rnd(i + 2) * 330, k) + Math.cos(t * 1.1 + i) * 8 * k;
+            const split = i % 3 !== 0 ? fade(t, s[1] + 1.5 + rnd(i) * 3, 0.5) : 0;
+            drawGas(x, y, fade(t, ts, 0.3) * (1 - split));
+          }
+          // 電子被射頻電場上下來回加速
+          for (let i = 0; i < 26; i++) {
+            const x = 190 + rnd(i + 11) * 700;
+            const y = 365 + 165 * Math.sin(t * 5.5 + rnd(i + 12) * 6.28);
+            drawE(x, y, rf * fade(t, s[1] + rnd(i), 0.3));
+          }
+          // 拆出來的主角：自由基很多、離子很少
+          for (let i = 0; i < 70; i++) {
+            const a = fade(t, s[1] + 1.5 + i * 0.045, 0.4);
+            if (a <= 0) break;
+            const [x, y] = roam(i + 100, t, 170, 910, 185, 560);
+            drawRad(x, y, a);
+          }
+          for (let i = 0; i < 9; i++) {
+            const a = fade(t, s[1] + 1.8 + i * 0.35, 0.4);
+            if (a <= 0) break;
+            const [x, y] = roam(i + 300, t, 180, 900, 190, 550, 0.8);
+            drawIon(x, y, a);
+          }
+          label("噴氣頭 showerhead", 330, 200, C.steel, fade(t, 0.6) * (1 - fade(t, s[1], 0.4)));
+          label("低壓腔體 low-pressure chamber", 540, 470, C.steel, fade(t, 1.6) * (1 - fade(t, s[1], 0.4)));
+
+          // 右側：電子撞上 SF₆ 的放大圖與反應式
+          const pa = fade(t, s[1] + 0.3, 0.5);
+          if (pa > 0) {
+            panel(962, 204, 306, 330, pa);
+            const counts = fade(t, s[2] + 0.2, 0.5);
+            const ea = pa * (1 - counts);
+            if (ea > 0) {
+              const cyc = Math.max(0, t - s[1] - 0.3) / 3.2, mode = Math.floor(cyc) % 2, p = fract(cyc);
+              const cx = 1115, cy = 304;
+              text(mode === 0 ? "解離 dissociation" : "游離 ionization", cx, 242, { size: 18, weight: 700, align: "center", color: mode === 0 ? P.rad : P.ion, alpha: ea });
+              if (p < 0.35) {
+                drawE(lerp(985, cx - 20, p / 0.35), cy, ea, 1.4);
+                drawGas(cx, cy, ea, 1.5);
+              } else {
+                const k = ease((p - 0.35) / 0.4);
+                ctx.save();
+                ctx.globalAlpha = ea;
+                flash(cx, cy, (p - 0.35) / 0.15);
+                ctx.restore();
+                if (mode === 0) {
+                  drawGas(cx - 55 * k, cy - 25 * k, ea, 1.3, 5);
+                  drawRad(cx + 55 * k, cy + 30 * k, ea, 1.4);
+                  drawE(cx + 50 * k, cy - 40 * k, ea, 1.4);
+                } else {
+                  drawIon(cx - 55 * k, cy - 25 * k, ea, 1.3);
+                  drawRad(cx + 55 * k, cy + 30 * k, ea, 1.4);
+                  drawE(cx + 50 * k, cy - 45 * k, ea, 1.4);
+                  drawE(cx + 10 * k, cy + 50 * k, ea, 1.4);
+                }
+              }
+              text("SF₆ + e⁻ → SF₅ + F* + e⁻", 980, 410, { size: 15, font: MONO, color: mode === 0 ? C.paper : C.muted, alpha: ea });
+              text("解離 dissociation", 980, 433, { size: 14, color: mode === 0 ? P.rad : C.muted, alpha: ea });
+              text("SF₆ + e⁻ → SF₅⁺ + F + 2e⁻", 980, 478, { size: 15, font: MONO, color: mode === 1 ? C.paper : C.muted, alpha: ea });
+              text("游離 ionization", 980, 501, { size: 14, color: mode === 1 ? P.ion : C.muted, alpha: ea });
+            }
+            if (counts > 0) {
+              text("數量 density", 1115, 246, { size: 18, weight: 700, align: "center", alpha: counts });
+              text("自由基 radical F*", 990, 290, { size: 15, color: P.rad, alpha: counts });
+              ctx.save();
+              ctx.globalAlpha = counts;
+              ctx.fillStyle = P.rad;
+              ctx.fillRect(990, 300, 250 * ease((t - s[2] - 0.2) / 1.2), 22);
+              ctx.fillStyle = P.ion;
+              ctx.fillRect(990, 380, 24 * ease((t - s[2] - 0.2) / 1.2), 22);
+              ctx.restore();
+              text("離子 ion SF₅⁺", 990, 370, { size: 15, color: P.ion, alpha: counts });
+              text("自由基 ≫ 離子", 1115, 462, { size: 22, weight: 700, align: "center", alpha: counts });
+              text("radicals ≫ ions", 1115, 490, { size: 15, font: MONO, align: "center", color: C.muted, alpha: counts });
+            }
+          }
+          // 第三句：指出兩種主角
+          const la = fade(t, s[2] + 0.2, 0.4);
+          if (la > 0) {
+            const [ix, iy] = roam(300, t, 180, 900, 190, 550, 0.8);
+            const [rx, ry] = roam(104, t, 170, 910, 185, 560);
+            ctx.save();
+            ctx.globalAlpha = la;
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = P.ion;
+            ctx.beginPath();
+            ctx.moveTo(330, 240);
+            ctx.lineTo(ix, iy - 9);
+            ctx.stroke();
+            ctx.strokeStyle = P.rad;
+            ctx.beginPath();
+            ctx.moveTo(720, 240);
+            ctx.lineTo(rx, ry - 6);
+            ctx.stroke();
+            ctx.restore();
+            label("離子 ion SF₅⁺", 330, 222, P.ion, la);
+            label("自由基 radical F*", 720, 222, P.rad, la);
+          }
+        }
+
+        // ---------- Part 1-2：偏壓與鞘層 ----------
+        const SH_TOP = 500;
+        function sceneSheath(t) {
+          const s = subStarts(2);
+          const bias = fade(t, 0.3, 0.6);
+          const sh = fade(t, s[1] + 0.2, 0.8);
+          chamber(t, { glow: 0.8 + 0.2 * Math.sin(t * 7), rf: 1, bias });
+          if (sh > 0) {
+            ctx.save();
+            ctx.globalAlpha = sh;
+            ctx.fillStyle = "rgba(4,5,9,.8)";
+            ctx.fillRect(WAFER.l, SH_TOP, WAFER.r - WAFER.l, WAFER.y - SH_TOP);
+            ctx.strokeStyle = "rgba(185,140,255,.75)";
+            ctx.lineWidth = 2;
+            ctx.setLineDash([8, 8]);
+            ctx.beginPath();
+            ctx.moveTo(WAFER.l, SH_TOP);
+            ctx.lineTo(WAFER.r, SH_TOP);
+            ctx.stroke();
+            ctx.restore();
+            for (let x = 340; x <= 740; x += 100) arrow(x, SH_TOP + 10, x, WAFER.y - 8, C.ice, 3, sh * 0.85);
+            text("鞘層 sheath", 860, 528, { size: 18, weight: 700, align: "center", color: C.fire, alpha: sh });
+            text("電場 E ↓", 860, 553, { size: 15, align: "center", color: C.ice, alpha: sh });
+          }
+          // 自由基：在電漿裡到處亂飄（鋸齒軌跡）
+          const tr = fade(t, s[2], 0.4);
+          for (let i = 0; i < 50; i++) {
+            const [x, y] = zig(i + 100, t, 170, 910, 185, SH_TOP - 12);
+            if (i < 6 && tr > 0) {
+              ctx.save();
+              ctx.strokeStyle = `rgba(74,222,128,${0.5 * tr})`;
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              for (let j = 0; j <= 14; j++) {
+                const [px, py] = zig(i + 100, t - j * 0.07, 170, 910, 185, SH_TOP - 12);
+                if (j) ctx.lineTo(px, py); else ctx.moveTo(px, py);
+              }
+              ctx.stroke();
+              ctx.restore();
+            }
+            drawRad(x, y);
+          }
+          // 離子：先在電漿裡飄，第三句起一進鞘層就被拉直、垂直往下加速
+          for (let i = 0; i < 10; i++) {
+            const [x, y] = roam(i + 300, t, 180, 900, 190, SH_TOP - 14, 0.8);
+            drawIon(x, y, 1 - tr);
+          }
+          if (tr > 0) {
+            const T = 2.4;
+            for (let i = 0; i < 10; i++) {
+              const ph = (t - s[2]) / T + rnd(i + 40);
+              const q = fract(ph);
+              const xi = 330 + rnd(i + 41) * 420;
+              const xe = xi + 30 * Math.sin((Math.floor(ph) + 0.55) * 2.1 + i);
+              if (q < 0.55) {
+                drawIon(xi + 30 * Math.sin((Math.floor(ph) + q) * 2.1 + i), lerp(215, SH_TOP, q / 0.55), tr);
+              } else {
+                const k = (q - 0.55) / 0.12;
+                const y = lerp(SH_TOP, WAFER.y - 7, Math.min(1, k));
+                ctx.save();
+                ctx.strokeStyle = `rgba(255,90,90,${0.65 * tr})`;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(xe, SH_TOP);
+                ctx.lineTo(xe, y);
+                ctx.stroke();
+                ctx.restore();
+                if (k < 1) drawIon(xe, y, tr);
+                else flash(xe, WAFER.y - 4, (k - 1) / 0.6, "255,90,90");
+              }
+            }
+          }
+          // 第一句：電子衝向晶圓，表面累積負電
+          for (let i = 0; i < 16; i++) {
+            const d = 0.5 + i * 0.12;
+            const k = ease((t - d) / 0.8);
+            const tx = WAFER.l + 15 + i * 30;
+            if (t > d && k < 1) {
+              const [x0, y0] = roam(i + 500, d, 200, 880, 220, 460);
+              drawE(lerp(x0, tx, k), lerp(y0, WAFER.y - 2, k));
+            }
+            if (k >= 1) text("−", tx, WAFER.y + 11, { size: 18, weight: 700, align: "center", color: P.e });
+          }
+          text("表面負電 −", 860, 600, { size: 15, align: "center", color: P.e, alpha: fade(t, 2) });
+          // 右側：兩種軌跡
+          if (tr > 0) {
+            panel(962, 204, 306, 170, tr);
+            arrow(992, 228, 992, 282, P.ion, 3, tr);
+            text("離子：垂直加速", 1016, 252, { size: 16, weight: 700, alpha: tr });
+            text("ion: straight down", 1016, 274, { size: 13, font: MONO, color: C.muted, alpha: tr });
+            ctx.save();
+            ctx.globalAlpha = tr;
+            ctx.strokeStyle = P.rad;
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            [[982, 306], [998, 318], [984, 330], [1000, 342], [986, 354]].forEach(([x, y], j) => (j ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+            ctx.stroke();
+            ctx.restore();
+            text("自由基：到處亂飄", 1016, 328, { size: 16, weight: 700, alpha: tr });
+            text("radical: random walk", 1016, 350, { size: 13, font: MONO, color: C.muted, alpha: tr });
+          }
+        }
+
+        // ---------- 放大的溝槽：矽原子格子 ----------
+        const LAT = { x0: 160, y0: 345, d: 30, nx: 25, ny: 10 };
+        const OPEN = [450, 590], SURF = 330;
+        const latX = (i) => LAT.x0 + i * LAT.d, latY = (j) => LAT.y0 + j * LAT.d;
+        function siBlock(hidden, cavity) {
+          ctx.fillStyle = "#151b25";
+          ctx.fillRect(150, SURF, 740, 300);
+          ctx.fillStyle = "#0d1017";
+          cavity();
+          ctx.fill();
+          ctx.strokeStyle = "rgba(125,138,160,.35)";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          for (let i = 0; i < LAT.nx; i++) {
+            for (let j = 0; j < LAT.ny; j++) {
+              const x = latX(i), y = latY(j);
+              if (hidden(x, y)) continue;
+              if (i + 1 < LAT.nx && !hidden(latX(i + 1), y)) { ctx.moveTo(x, y); ctx.lineTo(latX(i + 1), y); }
+              if (j + 1 < LAT.ny && !hidden(x, latY(j + 1))) { ctx.moveTo(x, y); ctx.lineTo(x, latY(j + 1)); }
+            }
+          }
+          ctx.stroke();
+          for (let i = 0; i < LAT.nx; i++) for (let j = 0; j < LAT.ny; j++) if (!hidden(latX(i), latY(j))) drawSi(latX(i), latY(j), 0.95, 0.9);
+          // 光阻
+          ctx.fillStyle = P.pr;
+          ctx.fillRect(150, SURF - 40, OPEN[0] - 150, 40);
+          ctx.fillRect(OPEN[1], SURF - 40, 890 - OPEN[1], 40);
+          text("光阻 photoresist", 740, SURF - 14, { size: 15, weight: 700, align: "center", color: "#2a1606" });
+          text("矽 Si", 870, 622, { size: 15, align: "right", color: C.steel });
+        }
+
+        // SiF₄ 的路線：先往上離開溝槽，再往右，最後往下進抽氣泵
+        function toPump(x0, y0, p) {
+          if (p < 0.35) return [x0, lerp(y0, 232, ease(p / 0.35))];
+          if (p < 0.8) return [lerp(x0, 974, (p - 0.35) / 0.45), 232];
+          return [974, lerp(232, 352, (p - 0.8) / 0.2)];
+        }
+
+        // ---------- Part 1-3：表面反應（非等向性） ----------
+        function sceneSurface(t) {
+          const s = subStarts(3);
+          const dur = SCENES[3].dur;
+          background("#0b0f15", "#120f1c");
+          const depth = lerp(45, 255, ease(t / dur));
+          const bottom = SURF + depth;
+          const rowBelow = (yy) => latY(Math.max(0, Math.ceil((yy - LAT.y0) / LAT.d)));
+          const fx = 520, fy = rowBelow(SURF + lerp(45, 255, ease(s[1] / dur)));
+          const hidden = (x, y) => (x > OPEN[0] && x < OPEN[1] && y < bottom) || (x === fx && y === fy);
+          siBlock(hidden, () => { ctx.beginPath(); ctx.rect(OPEN[0], SURF, OPEN[1] - OPEN[0], depth); });
+          const by = rowBelow(bottom);
+          pump(974, 380, t);
+          // 上方到處飄的自由基
+          for (let i = 0; i < 16; i++) {
+            const [x, y] = zig(i + 700, t, 160, 900, 120, SURF - 52);
+            drawRad(x, y);
+          }
+          for (let i = 0; i < 3; i++) {
+            const [x, y] = zig(i + 760, t, OPEN[0] + 12, OPEN[1] - 12, SURF, bottom - 12);
+            drawRad(x, y);
+          }
+          // 離子垂直落下，撞擊溝槽底部，把鍵結打鬆
+          [472, 505, 535, 568].forEach((x, j) => {
+            const q = fract(t / 1.1 + j * 0.27 + 0.1);
+            if (q < 0.6) {
+              const y = lerp(110, bottom - 10, q / 0.6);
+              ctx.save();
+              ctx.strokeStyle = "rgba(255,90,90,.45)";
+              ctx.lineWidth = 3;
+              ctx.beginPath();
+              ctx.moveTo(x, Math.max(110, y - 70));
+              ctx.lineTo(x, y);
+              ctx.stroke();
+              ctx.restore();
+              drawIon(x, y);
+            } else if (q < 0.85) {
+              const k = (q - 0.6) / 0.25;
+              flash(x, bottom, k, "255,90,90");
+              ctx.save();
+              ctx.strokeStyle = `rgba(255,216,74,${1 - k})`;
+              ctx.lineWidth = 3;
+              ctx.setLineDash([4, 5]);
+              ctx.beginPath();
+              ctx.moveTo(x - 16, by);
+              ctx.lineTo(x + 16, by);
+              ctx.moveTo(x, by);
+              ctx.lineTo(x, by + 30);
+              ctx.stroke();
+              ctx.restore();
+            }
+          });
+          const bondA = fade(t, s[0] + 1) * (1 - fade(t, s[1], 0.4));
+          label("鍵結 bond", 720, 470, P.e, bondA);
+          arrow(662, 470, 590, by, P.e, 2.5, bondA);
+          label("溝槽 trench", 300, 254, C.paper, fade(t, 0.4) * (1 - fade(t, s[1], 0.4)));
+          // 第二句：四個氟自由基一個個接到同一顆矽上，接滿變成藍色 SiF₄
+          const offs = [[-19, -19], [19, -19], [-19, 19], [19, 19]];
+          const full = s[1] + 0.4 + 3 * 0.8;
+          if (t < s[2]) {
+            if (t < full) {
+              drawSi(fx, fy, 1, 1.35, "#aab6cc");
+              ctx.save();
+              ctx.strokeStyle = `rgba(241,239,231,${0.7 * fade(t, s[1], 0.4)})`;
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.arc(fx, fy, 32, 0, Math.PI * 2);
+              ctx.stroke();
+              ctx.restore();
+              offs.forEach(([dx, dy], k) => {
+                const arrive = s[1] + 0.4 + k * 0.8;
+                if (t < arrive - 0.7) return;
+                const m = ease((t - (arrive - 0.7)) / 0.7);
+                drawRad(lerp(fx + (k - 1.5) * 70, fx + dx, m), lerp(140, fy + dy, m), 1, 1.35);
+              });
+            } else {
+              flash(fx, fy, (t - full) / 0.5, "90,169,255");
+              drawProd(fx, fy, 1, 1.6);
+            }
+          } else {
+            const p = clamp((t - s[2]) / 3.6);
+            const [x, y] = toPump(fx, fy, p);
+            drawProd(x, y, 1 - fade(p, 0.92, 0.08), 1.6);
+          }
+          // 第三句起：持續生成的 SiF₄ 被抽走
+          if (t > s[2]) {
+            for (let i = 0; i < 5; i++) {
+              const ph = (t - s[2]) / 3.2 + i / 5 - 0.4;
+              if (ph < 0) continue;
+              const q = fract(ph), c = Math.floor(ph);
+              const sx = 470 + rnd(i * 17 + c * 3) * 100;
+              const [x, y] = toPump(sx, bottom - 8, q);
+              drawProd(x, y, fade(q, 0, 0.08) * (1 - fade(q, 0.92, 0.08)));
+            }
+          }
+          // 第四句：側壁只偶爾被自由基碰到，幾乎不動
+          const sw = fade(t, s[3], 0.4);
+          if (sw > 0) {
+            for (let j = 0; j < 2; j++) {
+              const ph = t / 1.6 + j * 0.5, q = fract(ph);
+              const wx = j ? OPEN[1] - 10 : OPEN[0] + 10;
+              const wy = SURF + 30 + rnd(j + Math.floor(ph) * 7) * Math.max(10, depth - 60);
+              const k = q < 0.5 ? q / 0.5 : 1 - (q - 0.5) / 0.5;
+              drawRad(lerp(520, wx, k), lerp(wy - 30, wy, k), sw, 1.1);
+              if (Math.abs(q - 0.5) < 0.12) flash(wx, wy, (q - 0.38) / 0.24, "74,222,128");
+            }
+            label("側壁 sidewall", 320, 480, C.paper, sw);
+            arrow(394, 480, 446, 480, C.paper, 2.5, sw);
+          }
+          label("Si + 4F → SiF₄↑", 760, 170, P.prod, fade(t, full + 0.2));
+          label("非等向性 Anisotropic", 760, 214, C.fire, fade(t, s[3] + 0.3));
+        }
+
+        // ---------- Part 2-1：遠端電漿 ----------
+        function sceneRemote(t) {
+          const s = subStarts(4);
+          background("#0b0f15", "#120f1c");
+          const SRC = { l: 380, r: 700, t: 120, b: 226 };
+          const g = ctx.createRadialGradient(540, 173, 10, 540, 173, 190);
+          g.addColorStop(0, `rgba(185,120,255,${0.55 * (0.85 + 0.15 * Math.sin(t * 7))})`);
+          g.addColorStop(1, "rgba(185,120,255,0)");
+          ctx.fillStyle = g;
+          ctx.fillRect(SRC.l, SRC.t, SRC.r - SRC.l, SRC.b - SRC.t);
+          ctx.strokeStyle = C.steel;
+          ctx.lineWidth = 5;
+          ctx.strokeRect(SRC.l, SRC.t, SRC.r - SRC.l, SRC.b - SRC.t);
+          ctx.strokeStyle = C.fire;
+          ctx.lineWidth = 2.5;
+          for (const x of [SRC.l - 14, SRC.r + 14]) {
+            ctx.beginPath();
+            for (let y = SRC.t + 6, i = 0; y <= SRC.b - 6; y += 10, i++) ctx.lineTo(x + (i % 2 ? 7 : -7), y);
+            ctx.stroke();
+          }
+          rfSource(300, 160, t, "RF", 1);
+          // 管道與製程腔體
+          ctx.strokeStyle = C.steel;
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.moveTo(505, SRC.b);
+          ctx.lineTo(505, 420);
+          ctx.lineTo(200, 420);
+          ctx.lineTo(200, 640);
+          ctx.lineTo(880, 640);
+          ctx.lineTo(880, 420);
+          ctx.lineTo(575, 420);
+          ctx.lineTo(575, SRC.b);
+          ctx.stroke();
+          pump(918, 560, t);
+          ctx.fillStyle = "#4a5260";
+          ctx.fillRect(220, 436, 640, 10);
+          ctx.fillStyle = "#0b0f15";
+          for (let x = 236; x < 860; x += 32) ctx.fillRect(x - 3, 436, 6, 10);
+          ctx.fillStyle = "#2a2f38";
+          ctx.fillRect(300, 600, 480, 32);
+          ctx.fillStyle = "#8d99ab";
+          ctx.fillRect(320, 588, 440, 12);
+          const nb = fade(t, s[2] + 0.4, 0.5);
+          text("晶圓底座 chuck", 540, 621, { size: 14, align: "center", color: C.steel, alpha: 1 - nb });
+          text("無偏壓 no bias ・ 無鞘層 no sheath", 540, 621, { size: 14, align: "center", color: C.acid, alpha: nb });
+          // 電漿源裡：三種粒子都有
+          for (let i = 0; i < 16; i++) { const [x, y] = roam(i + 800, t, SRC.l + 14, SRC.r - 14, SRC.t + 14, SRC.b - 14, 1.5); drawRad(x, y); }
+          for (let i = 0; i < 7; i++) { const [x, y] = roam(i + 830, t, SRC.l + 14, SRC.r - 14, SRC.t + 14, SRC.b - 14, 1.5); drawIon(x, y); }
+          for (let i = 0; i < 9; i++) { const [x, y] = roam(i + 850, t, SRC.l + 14, SRC.r - 14, SRC.t + 14, SRC.b - 14, 2.5); drawE(x, y); }
+          // 管道裡：自由基繼續往下；離子和電子相遇後一起消失（重新結合）
+          for (let i = 0; i < 10; i++) {
+            const k = fract(rnd(i + 900) + t * 0.2);
+            drawRad(515 + rnd(i + 901) * 50 + Math.sin(t * 3 + i) * 4, lerp(232, 445, k), fade(k, 0, 0.05) * (1 - fade(k, 0.93, 0.07)));
+          }
+          for (let i = 0; i < 6; i++) {
+            const k = fract(rnd(i + 950) + t * 0.2);
+            const yMeet = 300 + rnd(i + 951) * 50;
+            if (k < 0.5) {
+              const kk = k / 0.5;
+              const dx = lerp(22, 0, kk), y = lerp(232, yMeet, kk);
+              drawIon(540 - dx, y, fade(k, 0, 0.05));
+              drawE(540 + dx, y, fade(k, 0, 0.05));
+            } else {
+              flash(540, yMeet, (k - 0.5) / 0.12, "255,216,74");
+            }
+          }
+          // 製程腔體裡：只剩自由基
+          for (let i = 0; i < 36; i++) {
+            const [x, y] = zig(i + 1000, t, 215, 865, 456, 578);
+            drawRad(x, y, fade(t, i * 0.25, 0.4));
+          }
+          label("遠端電漿 remote plasma", 860, 150, C.fire, fade(t, s[0] + 0.6));
+          text("晶圓上游 upstream", 860, 196, { size: 14, align: "center", color: C.muted, alpha: fade(t, s[0] + 1) });
+          const ra = fade(t, s[1] + 0.3);
+          label("重新結合 recombination", 760, 300, P.ion, ra);
+          text("SF₅⁺ + e⁻ → SF₅", 760, 342, { size: 16, font: MONO, align: "center", alpha: ra });
+          label("只剩自由基 F*", 740, 500, P.rad, fade(t, s[2] + 0.2));
+        }
+
+        // ---------- Part 2-2：等向性反應 ----------
+        function sceneIsotropic(t) {
+          const s = subStarts(5);
+          const dur = SCENES[5].dur;
+          background("#0b0f15", "#120f1c");
+          const r = lerp(25, 160, ease(t / dur));
+          const cavity = () => {
+            ctx.beginPath();
+            ctx.moveTo(OPEN[0] - r, SURF);
+            ctx.arc(OPEN[0], SURF, r, Math.PI, Math.PI / 2, true);
+            ctx.lineTo(OPEN[1], SURF + r);
+            ctx.arc(OPEN[1], SURF, r, Math.PI / 2, 0, true);
+            ctx.closePath();
+          };
+          const hidden = (x, y) => {
+            const dx = x < OPEN[0] ? OPEN[0] - x : x > OPEN[1] ? x - OPEN[1] : 0;
+            return y >= SURF && Math.hypot(dx, y - SURF) < r + 4;
+          };
+          siBlock(hidden, cavity);
+          for (let i = 0; i < 14; i++) {
+            const [x, y] = zig(i + 1100, t, 160, 900, 120, SURF - 52);
+            drawRad(x, y);
+          }
+          // 自由基從四面八方撞上表面，反應後的 SiF₄ 往外飄
+          const edge = (u) => {
+            if (u < 0.35) { const a = Math.PI - (u / 0.35) * (Math.PI / 2); return [OPEN[0] + r * Math.cos(a), SURF + r * Math.sin(a)]; }
+            if (u > 0.65) { const a = Math.PI / 2 - ((u - 0.65) / 0.35) * (Math.PI / 2); return [OPEN[1] + r * Math.cos(a), SURF + r * Math.sin(a)]; }
+            return [lerp(OPEN[0], OPEN[1], (u - 0.35) / 0.3), SURF + r];
+          };
+          for (let j = 0; j < 16; j++) {
+            const ph = t / 1.5 + rnd(j + 60), c = Math.floor(ph), q = fract(ph);
+            const [bx, by] = edge(rnd(j * 7 + c * 13));
+            const sx = 520 + (rnd(j * 5 + c * 11) - 0.5) * 100, sy = SURF - 30 + r * 0.45 + (rnd(j * 3 + c * 17) - 0.5) * 30;
+            if (q < 0.55) drawRad(lerp(sx, bx, ease(q / 0.55)), lerp(sy, by, ease(q / 0.55)));
+            else if (q < 0.72) flash(bx, by, (q - 0.55) / 0.17, "74,222,128");
+            if (q > 0.6) {
+              const p = (q - 0.6) / 0.4;
+              drawProd(lerp(bx, 520 + (rnd(j + c) - 0.5) * 40, p), lerp(by, 150, p), 1 - fade(p, 0.85, 0.15));
+            }
+          }
+          label("Si + 4F → SiF₄↑", 760, 170, P.prod, fade(t, s[1] + 0.4));
+          // 第三句：往下多深 = 往旁邊多寬（底切）
+          const ua = fade(t, s[2] + 0.2, 0.5);
+          if (ua > 0) {
+            arrow(OPEN[0] - 4, SURF + 14, OPEN[0] - r + 10, SURF + 14, P.e, 3, ua);
+            arrow(OPEN[0] - r + 10, SURF + 14, OPEN[0] - 4, SURF + 14, P.e, 3, ua);
+            label("底切 undercut", OPEN[0] - r / 2, SURF + 50, P.e, ua);
+            arrow(520, SURF + 6, 520, SURF + r - 6, C.ice, 3, ua);
+            arrow(520, SURF + r - 6, 520, SURF + 6, C.ice, 3, ua);
+            panel(500, 526, 400, 112, ua);
+            text("往下多深 = 往旁邊多寬", 700, 554, { size: 17, weight: 700, align: "center", alpha: ua });
+            ctx.save();
+            ctx.globalAlpha = ua;
+            ctx.fillStyle = C.ice;
+            ctx.fillRect(660, 572, r, 10);
+            ctx.fillStyle = P.e;
+            ctx.fillRect(660, 604, r, 10);
+            ctx.restore();
+            text("往下 depth", 648, 583, { size: 15, align: "right", color: C.ice, alpha: ua });
+            text("往旁邊 lateral", 648, 615, { size: 15, align: "right", color: P.e, alpha: ua });
+          }
+          label("等向性 Isotropic ／ 底切 Undercut", 760, 214, C.fire, fade(t, s[3] + 0.2));
+        }
+
+        // ---------- Part 2-3：對照與總結 ----------
+        function miniEtch(cx, top, kind, a) {
+          const o0 = cx - 20, o1 = cx + 20, surf = top + 22, depth = 100, r = 72;
+          ctx.save();
+          ctx.globalAlpha = a;
+          ctx.fillStyle = "#151b25";
+          ctx.fillRect(cx - 130, surf, 260, 140);
+          ctx.fillStyle = "#0d1017";
+          ctx.beginPath();
+          if (kind === "bias") ctx.rect(o0, surf, 40, depth);
+          else {
+            ctx.moveTo(o0 - r, surf);
+            ctx.arc(o0, surf, r, Math.PI, Math.PI / 2, true);
+            ctx.lineTo(o1, surf + r);
+            ctx.arc(o1, surf, r, Math.PI / 2, 0, true);
+            ctx.closePath();
+          }
+          ctx.fill();
+          ctx.restore();
+          for (let x = cx - 121; x < cx + 130; x += 18) {
+            for (let y = surf + 9; y < surf + 140; y += 18) {
+              const dx = x < o0 ? o0 - x : x > o1 ? x - o1 : 0;
+              const gone = kind === "bias" ? x > o0 && x < o1 && y < surf + depth : Math.hypot(dx, y - surf) < r + 3;
+              if (!gone) drawSi(x, y, a * 0.9, 0.55);
+            }
+          }
+          ctx.save();
+          ctx.globalAlpha = a;
+          ctx.fillStyle = P.pr;
+          ctx.fillRect(cx - 130, top, 110, 22);
+          ctx.fillRect(o1, top, 110, 22);
+          ctx.restore();
+        }
+        function sceneSummary(t) {
+          const s = subStarts(6);
+          background("#0b0f15", "#120f1c");
+          const da = fade(t, 0.2, 0.6);
+          text("偏壓蝕刻 Bias Etch", 380, 140, { size: 22, weight: 700, align: "center", color: P.ion, alpha: da });
+          text("化學蝕刻 Chemical Etch", 820, 140, { size: 22, weight: 700, align: "center", color: P.rad, alpha: da });
+          miniEtch(380, 160, "bias", da);
+          miniEtch(820, 160, "chem", da);
+          for (let k = 0; k < 3; k++) {
+            const q = fract(t * 0.9 + k / 3);
+            drawIon(366 + k * 14, lerp(80 + 70, 270, q), da * 0.9, 0.6);
+          }
+          for (let k = 0; k < 5; k++) {
+            const [x, y] = zig(k + 1200, t, 770, 870, 186, 240);
+            drawRad(x, y, da, 0.8);
+          }
+          // 比較表
+          const X = [140, 380, 780, 1180], Y0 = 350, RH = 50;
+          const rows = [
+            ["", "偏壓蝕刻 Bias Etch", "化學蝕刻 Chemical Etch"],
+            ["誰在吃矽 who etches", "離子 + 自由基 ions + radicals", "只有自由基 radicals only"],
+            ["方向 direction", "垂直 vertical", "全方向 all directions"],
+            ["損傷 damage", "有離子轟擊 ion bombardment", "低 low"],
+            ["用途 use", "細線寬、深溝槽 fine lines, deep trenches", "整片移除、掏空結構 bulk removal, release"],
+          ];
+          const hl0 = fade(t, s[0] + 0.2, 0.4) * (1 - fade(t, s[1], 0.4)), hl1 = fade(t, s[1] + 0.2, 0.4);
+          ctx.save();
+          ctx.fillStyle = `rgba(255,90,90,${0.14 * hl0})`;
+          ctx.fillRect(X[1], Y0, X[2] - X[1], RH * rows.length);
+          ctx.fillStyle = `rgba(74,222,128,${0.14 * hl1})`;
+          ctx.fillRect(X[2], Y0, X[3] - X[2], RH * rows.length);
+          ctx.restore();
+          rows.forEach((row, k) => {
+            const a = fade(t, 0.4 + k * 0.35, 0.4);
+            const y = Y0 + k * RH;
+            ctx.save();
+            ctx.globalAlpha = a;
+            ctx.strokeStyle = "rgba(241,239,231,.16)";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(X[0], y + RH);
+            ctx.lineTo(X[3], y + RH);
+            ctx.stroke();
+            ctx.restore();
+            row.forEach((cell, c) => {
+              const color = k === 0 ? (c === 1 ? P.ion : P.rad) : c === 0 ? C.muted : C.paper;
+              text(cell, X[c] + 16, y + 32, { size: k === 0 ? 18 : 16, weight: k === 0 || c === 0 ? 700 : 500, color, alpha: a });
+            });
+          });
+        }
+        // ---------- 播放器 ----------
+        const player = document.getElementById("player");
+        const playBtn = document.getElementById("play-btn");
+        const bigPlay = document.getElementById("big-play");
+        const seek = document.getElementById("seek");
+        const timeEl = document.getElementById("time");
+        const speedSel = document.getElementById("speed");
+        const chaptersEl = document.getElementById("chapters");
+        seek.max = TOTAL;
+
+        let time = 0, playing = false, last = 0, dragging = false;
+        const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+
+        SCENES.forEach((s, i) => {
+          const li = document.createElement("li");
+          const b = document.createElement("button");
+          b.type = "button";
+          b.innerHTML = `<small>${String(i + 1).padStart(2, "0")} · ${fmt(s.start)}</small><b>${s.title}</b>`;
+          b.addEventListener("click", () => { poster = false; time = s.start + 0.001; setPlaying(true); });
+          li.appendChild(b);
+          chaptersEl.appendChild(li);
+        });
+        const chapterBtns = [...chaptersEl.querySelectorAll("button")];
+
+        let poster = true; // 封面停在有畫面的瞬間，第一次播放從頭開始
+        function setPlaying(v) {
+          if (v && (poster || time >= TOTAL - 0.01)) time = 0;
+          if (v) poster = false;
+          playing = v;
+          player.classList.toggle("is-playing", v);
+          playBtn.textContent = v ? "❚❚" : "▶";
+          playBtn.setAttribute("aria-label", v ? "暫停" : "播放");
+          last = performance.now();
+          if (v) sound.unlock(); // 瀏覽器要求聲音必須由使用者操作啟動
+        }
+        const toggle = () => setPlaying(!playing);
+        playBtn.addEventListener("click", toggle);
+        bigPlay.addEventListener("click", toggle);
+        canvas.addEventListener("click", toggle);
+        seek.addEventListener("input", () => { dragging = true; poster = false; time = +seek.value; });
+        seek.addEventListener("change", () => { dragging = false; });
+        document.getElementById("fs-btn").addEventListener("click", () => {
+          if (document.fullscreenElement) document.exitFullscreen();
+          else if (player.requestFullscreen) player.requestFullscreen();
+        });
+        document.addEventListener("keydown", (e) => {
+          if (e.target.closest("input, select")) return;
+          if (e.code === "Space" || e.key === "k") { e.preventDefault(); toggle(); }
+          if (e.key.startsWith("Arrow")) poster = false;
+          if (e.key === "ArrowRight") time = Math.min(TOTAL, time + 5);
+          if (e.key === "ArrowLeft") time = Math.max(0, time - 5);
+          if (e.key === "m") sound.toggleMute();
+        });
+
+        function currentScene() {
+          for (let i = SCENES.length - 1; i >= 0; i--) if (time >= SCENES[i].start) return i;
+          return 0;
+        }
+
+        // ---------- 聲音：MP3 旁白 + Web Audio 即時合成音效 ----------
+        const sound = (() => {
+          const muteBtn = document.getElementById("mute-btn");
+          let muted = false;
+          try { muted = localStorage.getItem("etch-muted") === "1"; } catch (e) {}
+
+          // 旁白：每句一個 MP3。解碼後和音效在同一個 AudioContext 裡當成兩條音軌同時混音，
+          // 由播放按鈕解鎖一次就好，手機瀏覽器也不會把後面的旁白擋掉。
+          const clips = [];
+          SCENES.forEach((scene) => scene.subs.forEach((sub) => {
+            if (!sub.audio) return;
+            // 頁面一載入就先下載，按播放時只需要解碼，第一句才不會被切掉開頭
+            const data = fetch(sub.audio).then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); });
+            data.catch(() => {});
+            clips.push({ start: scene.start + sub.start, duration: sub.duration, url: sub.audio, data, buffer: null, node: null, rate: 1, t0: 0, el: null });
+          }));
+
+          function loadClips() {
+            for (const c of clips) {
+              c.data
+                .then((data) => new Promise((ok, fail) => actx.decodeAudioData(data, ok, fail)))
+                .then((buf) => { c.buffer = buf; })
+                .catch(() => { // 直接開本機檔案時無法解碼，改用 <audio> 播放
+                  c.el = new Audio(c.url);
+                  c.el.preload = "auto";
+                  c.el.addEventListener("error", () => { c.failed = true; });
+                  c.el.load();
+                });
+            }
+          }
+
+          // 這句旁白準備好了沒（已解碼、<audio> 已可播放，或確定載入失敗）
+          const clipReady = (c) => c.buffer || c.failed || (c.el && c.el.readyState >= 3);
+
+          // 像影片播放器的緩衝：目前時間要播的旁白還沒載入好，就先停住畫面等它
+          function ready(t) {
+            if (muted || !actx) return true;
+            for (const c of clips) {
+              if (t < c.start - 0.05 || t >= c.start + c.duration || clipReady(c)) continue;
+              if (!c.waitSince) c.waitSince = performance.now();
+              if (performance.now() - c.waitSince > 8000) { c.failed = true; continue; } // 網路太慢就跳過這句，不要整支卡住
+              return false;
+            }
+            return true;
+          }
+
+          function stopClip(c) {
+            if (c.node) { try { c.node.stop(); } catch (e) {} c.node = null; }
+            if (c.el && !c.el.paused) c.el.pause();
+          }
+
+          function syncNarration() {
+            let speaking = false;
+            const rate = +speedSel.value;
+            for (const c of clips) {
+              const local = time - c.start;
+              const active = playing && !muted && local >= 0 && local < c.duration;
+              if (active) speaking = true;
+              if (!active) { stopClip(c); continue; }
+              if (c.buffer) {
+                const heard = c.node ? (actx.currentTime - c.t0) * c.rate : 0;
+                if (!c.node || c.rate !== rate || Math.abs(heard - local) > 0.5) { // 拖曳進度或改速度後重新對齊
+                  stopClip(c);
+                  const node = actx.createBufferSource();
+                  node.buffer = c.buffer;
+                  node.playbackRate.value = rate;
+                  node.connect(voice);
+                  node.start(0, local);
+                  c.node = node;
+                  c.rate = rate;
+                  c.t0 = actx.currentTime - local / rate;
+                }
+              } else if (c.el) {
+                c.el.playbackRate = rate;
+                if (c.el.paused) {
+                  if (c.el.readyState >= 1) c.el.currentTime = local;
+                  c.el.play().catch(() => {});
+                } else if (c.el.readyState >= 3 && !c.el.seeking && Math.abs(c.el.currentTime - local) > 0.5) {
+                  c.el.currentTime = local;
+                }
+              }
+            }
+            return speaking;
+          }
+
+          // 音效：噪音與振盪器即時合成，不需要額外音檔
+          let actx = null, master = null, voice = null, white = null, brown = null;
+          const layers = {};
+          function noiseBuffer(brown) {
+            const len = actx.sampleRate * 2, buf = actx.createBuffer(1, len, actx.sampleRate), d = buf.getChannelData(0);
+            let lastOut = 0;
+            for (let i = 0; i < len; i++) {
+              const white = Math.random() * 2 - 1;
+              if (brown) { lastOut = (lastOut + 0.02 * white) / 1.02; d[i] = lastOut * 3.5; } else d[i] = white;
+            }
+            return buf;
+          }
+          function noiseLayer(buf, type, freq, q) {
+            const src = actx.createBufferSource(), filter = actx.createBiquadFilter(), gain = actx.createGain();
+            src.buffer = buf;
+            src.loop = true;
+            filter.type = type;
+            filter.frequency.value = freq;
+            filter.Q.value = q;
+            gain.gain.value = 0;
+            src.connect(filter).connect(gain).connect(master);
+            src.start();
+            return { gain, filter };
+          }
+          function init() {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return;
+            actx = new AC();
+            master = actx.createGain();
+            master.gain.value = 0.5;
+            master.connect(actx.destination);
+            voice = actx.createGain(); // 旁白音軌，和音效音軌分開
+            voice.gain.value = 1;
+            voice.connect(actx.destination);
+            loadClips();
+            white = noiseBuffer(false);
+            brown = noiseBuffer(true);
+            layers.rumble = noiseLayer(brown, "lowpass", 160, 0.7); // 電漿低鳴
+            layers.hiss = noiseLayer(white, "bandpass", 3200, 0.7); // 進氣嘶聲
+            layers.air = noiseLayer(white, "bandpass", 700, 0.9); // 抽氣氣流
+            const osc = actx.createOscillator(), osc2 = actx.createOscillator(), lp = actx.createBiquadFilter(), g = actx.createGain();
+            osc.type = "sawtooth";
+            osc2.type = "triangle";
+            lp.type = "lowpass";
+            lp.frequency.value = 1200;
+            g.gain.value = 0;
+            osc.connect(lp);
+            osc2.connect(lp);
+            lp.connect(g).connect(master);
+            osc.start();
+            osc2.start();
+            layers.pump = { gain: g, osc, osc2 }; // 射頻嗡鳴
+          }
+          function unlock() {
+            if (!actx) init();
+            if (actx && actx.state === "suspended") actx.resume();
+          }
+
+          // 各場景的音效層音量（0..1）
+          function levels(idx, lt) {
+            const L = { rumble: 0, hiss: 0, air: 0, pump: 0 };
+            const s = subStarts(idx);
+            if (idx === 1) {
+              const ign = fade(lt, s[1] + 1.5, 0.8);
+              L.hiss = 0.3 * fade(lt, 0.2, 0.6) * (1 - 0.75 * ign);
+              L.pump = 0.12 * fade(lt, s[1], 0.6);
+              L.rumble = 0.38 * ign;
+            } else if (idx === 2) {
+              L.rumble = 0.32;
+              L.pump = 0.12 - 0.06 * fade(lt, 0.3, 0.8); // 偏壓開啟時嗡鳴降低
+              L.hiss = 0.05;
+            } else if (idx === 3) {
+              L.rumble = 0.14;
+              L.pump = 0.04;
+              L.air = 0.32 * fade(lt, 0, 0.6);
+            } else if (idx === 4) {
+              L.rumble = 0.14; // 電漿在遠處，聲音變小
+              L.air = 0.22;
+            } else if (idx === 5) {
+              L.air = 0.16;
+              L.hiss = 0.04;
+            } else if (idx === 6) {
+              L.air = 0.05 * (1 - fade(lt, 6, 3));
+            }
+            return L;
+          }
+
+          function beep(freq, dur, vol = 0.25) {
+            const o = actx.createOscillator(), g = actx.createGain(), t0 = actx.currentTime;
+            o.frequency.value = freq;
+            g.gain.setValueAtTime(vol, t0);
+            g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+            o.connect(g).connect(master);
+            o.start(t0);
+            o.stop(t0 + dur);
+          }
+          function boom() {
+            const src = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain(), t0 = actx.currentTime;
+            src.buffer = noiseBuffer(true);
+            f.type = "lowpass";
+            f.frequency.setValueAtTime(900, t0);
+            f.frequency.exponentialRampToValueAtTime(90, t0 + 1.6);
+            g.gain.setValueAtTime(1.2, t0);
+            g.gain.exponentialRampToValueAtTime(0.001, t0 + 1.8);
+            src.connect(f).connect(g).connect(master);
+            src.start(t0);
+            src.stop(t0 + 1.9);
+          }
+          // 其他單發音效
+          function tone(freq, dur, vol = 0.2, type = "sine", freqEnd = freq) {
+            const o = actx.createOscillator(), g = actx.createGain(), t0 = actx.currentTime;
+            o.type = type;
+            o.frequency.setValueAtTime(freq, t0);
+            if (freqEnd !== freq) o.frequency.exponentialRampToValueAtTime(freqEnd, t0 + dur);
+            g.gain.setValueAtTime(0.0001, t0);
+            g.gain.exponentialRampToValueAtTime(vol, t0 + 0.01);
+            g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+            o.connect(g).connect(master);
+            o.start(t0);
+            o.stop(t0 + dur + 0.05);
+          }
+          function noiseBurst(dur, vol, type, f0, f1 = f0, buf = white) {
+            const src = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain(), t0 = actx.currentTime;
+            src.buffer = buf;
+            f.type = type;
+            f.frequency.setValueAtTime(f0, t0);
+            f.frequency.exponentialRampToValueAtTime(f1, t0 + dur);
+            g.gain.setValueAtTime(vol, t0);
+            g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+            src.connect(f).connect(g).connect(master);
+            src.start(t0);
+            src.stop(t0 + dur + 0.05);
+          }
+          const sfx = {
+            ignite: () => { noiseBurst(0.5, 0.9, "lowpass", 1800, 120, brown); tone(220, 0.4, 0.2, "sine", 90); }, // 電漿點燃的「啵」
+            tick: () => tone(2400 + Math.random() * 600, 0.04, 0.07, "square"), // 離子落下的「嗒」
+            pop: () => tone(700 + Math.random() * 300, 0.09, 0.12, "sine", 1300), // 表面反應的「啵」
+            fizz: () => noiseBurst(0.35, 0.25, "highpass", 4000, 6000), // 重新結合的「嘶」
+            bubble: () => tone(500 + Math.random() * 500, 0.12, 0.08, "sine", 900 + Math.random() * 600), // 化學蝕刻的氣泡聲
+            chord: () => [392, 494, 587, 784].forEach((f) => tone(f, 2.2, 0.08, "triangle")), // 結尾收束音
+          };
+          // 單發音效：[段落, 第幾句, 該句開始後幾秒, 音效]；播放中時間正向跨過才觸發（拖曳時不觸發）
+          const CUES = [[1, 1, 1.5, "ignite"], [6, 1, 3.2, "chord"]];
+          const span = (idx, from, to, step, name, jitter = 0) => { for (let x = from; x < to; x += step) CUES.push([idx, 0, x + jitter * rnd(x * 13.7), name]); };
+          if (SCENES[2]) span(2, subStarts(2)[2] + 0.3, SCENES[2].dur, 0.38, "tick", 0.15);
+          if (SCENES[3]) {
+            span(3, 0.3, SCENES[3].dur, 0.55, "tick", 0.2);
+            [0.4, 1.2, 2.0, 2.8].forEach((x) => CUES.push([3, 1, x, "pop"]));
+            CUES.push([3, 2, 0.1, "pop"]);
+          }
+          if (SCENES[4]) span(4, subStarts(4)[1] + 0.3, SCENES[4].dur, 1.3, "fizz", 0.3);
+          if (SCENES[5]) span(5, 0.4, SCENES[5].dur, 0.33, "bubble", 0.2);
+          const cues = CUES.filter(([i, j]) => SCENES[i] && SCENES[i].subs[j]).map(([i, j, at, name]) => ({ at: SCENES[i].start + SCENES[i].subs[j].start + at, fire: sfx[name] }));
+
+          function update(prev) {
+            const speaking = syncNarration();
+            if (!actx) return;
+            const idx = currentScene();
+            const lt = Math.min(SCENES[idx].dur, time - SCENES[idx].start);
+            const on = playing && !muted ? 1 : 0;
+            const duck = speaking ? 0.35 : 1; // 旁白時音效自動降低，讓人聲更清楚
+            const L = levels(idx, lt);
+            const now = actx.currentTime;
+            for (const key of Object.keys(layers)) layers[key].gain.gain.setTargetAtTime(L[key] * on * duck, now, 0.08);
+            layers.pump.osc.frequency.setTargetAtTime(60 + 110 * L.pump / 0.14, now, 0.3);
+            layers.pump.osc2.frequency.setTargetAtTime(120 + 220 * L.pump / 0.14, now, 0.3);
+            layers.rumble.filter.frequency.setTargetAtTime(120 + 180 * L.rumble, now, 0.2);
+            if (on && time > prev && time - prev < 0.5) {
+              for (const c of cues) if (prev < c.at && time >= c.at) c.fire();
+            }
+          }
+
+          function setMuted(v) {
+            muted = v;
+            muteBtn.textContent = v ? "🔇" : "🔊";
+            muteBtn.setAttribute("aria-label", v ? "取消靜音" : "靜音");
+            muteBtn.setAttribute("aria-pressed", String(v));
+            try { localStorage.setItem("etch-muted", v ? "1" : "0"); } catch (e) {}
+          }
+          muteBtn.addEventListener("click", () => { setMuted(!muted); unlock(); });
+          setMuted(muted);
+          return { unlock, update, ready, toggleMute: () => setMuted(!muted) };
+        })();
+
+        function render() {
+          const idx = currentScene();
+          const scene = SCENES[idx];
+          const lt = Math.min(scene.dur, time - scene.start);
+          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+          ctx.globalAlpha = 1;
+          ctx.globalCompositeOperation = "source-over";
+          scene.draw(lt);
+
+          // 轉場：每段開頭淡入
+          const inA = 1 - clamp(lt / 0.45);
+          if (inA > 0 && idx > 0) { ctx.fillStyle = `rgba(0,0,0,${inA})`; ctx.fillRect(0, 0, W, H); }
+
+          // 段落標題
+          text(`${String(idx + 1).padStart(2, "0")} / ${String(SCENES.length).padStart(2, "0")}   ${PART[idx] || ""}`, 40, 50, { size: 16, font: MONO, color: C.fire });
+          text(scene.title, 40, 84, { size: 28, weight: 700 });
+
+          legend();
+
+          // 字幕（太長時自動縮小字級，不會超出畫面）
+          const sub = scene.subs.find((x) => lt >= x.start && lt < x.end) || (lt >= scene.dur ? scene.subs[scene.subs.length - 1] : null);
+          if (sub) {
+            const sa = clamp((lt - sub.start) / 0.3);
+            ctx.save();
+            ctx.font = `500 26px ${FONT}`;
+            const fs = Math.max(18, Math.min(26, (26 * 1180) / ctx.measureText(sub.text).width));
+            ctx.font = `500 ${fs}px ${FONT}`;
+            const w = ctx.measureText(sub.text).width + 44;
+            ctx.globalAlpha = sa;
+            ctx.fillStyle = "rgba(0,0,0,.62)";
+            roundRect(640 - w / 2, 672, w, 44, 10);
+            ctx.fill();
+            ctx.restore();
+            text(sub.text, 640, 702, { size: fs, align: "center", alpha: sa });
+          }
+
+          // 進度條
+          ctx.fillStyle = "rgba(255,255,255,.12)";
+          ctx.fillRect(0, H - 4, W, 4);
+          ctx.fillStyle = C.fire;
+          ctx.fillRect(0, H - 4, (W * time) / TOTAL, 4);
+
+          if (!dragging) seek.value = time;
+          timeEl.textContent = `${fmt(time)} / ${fmt(TOTAL)}`;
+          chapterBtns.forEach((b, i) => b.classList.toggle("is-active", i === idx));
+        }
+
+        // 旁白還在載入時，右上角顯示提示
+        function loadingBadge() {
+          ctx.save();
+          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = "rgba(0,0,0,.65)";
+          roundRect(W - 200, 24, 170, 44, 22);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.font = `700 20px ${FONT}`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("旁白載入中…", W - 115, 47);
+          ctx.restore();
+        }
+
+        function loop(now) {
+          const prev = time;
+          const waiting = playing && !sound.ready(time);
+          if (playing && !waiting) {
+            const dt = Math.min(0.1, (now - last) / 1000);
+            time += dt * +speedSel.value;
+            if (time >= TOTAL) { time = TOTAL; setPlaying(false); }
+          }
+          last = now;
+          render();
+          if (waiting) loadingBadge();
+          sound.update(prev);
+          requestAnimationFrame(loop);
+        }
+        // 封面畫面；網址加 ?t=秒數 可以直接看某個畫面
+        const startAt = parseFloat(new URLSearchParams(location.search).get("t"));
+        time = Number.isFinite(startAt) ? clamp(startAt, 0, TOTAL) : 16;
+        if (Number.isFinite(startAt)) poster = false;
+        render();
+        if (document.fonts) document.fonts.ready.then(render);
+        requestAnimationFrame((n) => { last = n; loop(n); });
+
+      })();
+    </script>
+  </body>
+</html>
