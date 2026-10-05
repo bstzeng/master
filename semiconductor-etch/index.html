@@ -76,12 +76,20 @@
       .notes { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; padding: 34px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px; }
       .notes h3 { margin-bottom: 12px; font-size: 19px; }
       .notes p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.85; }
+      .gif-note { max-width: 760px; margin: -14px 0 28px; color: var(--muted); font-size: 15px; line-height: 1.85; }
+      .gifs { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+      .gifs figure { margin: 0; padding: 12px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px; }
+      .gifs img { display: block; width: 100%; height: auto; border-radius: 8px; background: #07090c; }
+      .gifs figcaption { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 4px 2px; font-size: 15px; }
+      .gifs figcaption span { min-width: 0; }
+      .gifs figcaption small { display: block; color: var(--fire); font: 11px "DM Mono", monospace; letter-spacing: .08em; }
+      .gifs a { flex: none; padding: 8px 14px; color: #120f1c; background: var(--fire); border-radius: 8px; font-size: 14px; font-weight: 700; text-decoration: none; }
       footer { display: flex; justify-content: space-between; width: min(1240px, calc(100% - 32px)); margin: 90px auto 0; padding: 36px 0; color: var(--muted); border-top: 1px solid var(--line); font: 10px "DM Mono", monospace; letter-spacing: .08em; }
 
       @media (max-width: 880px) {
         .intro { grid-template-columns: 1fr; gap: 24px; }
         .chapters { grid-template-columns: repeat(3, 1fr); }
-        .points, .notes { grid-template-columns: 1fr; }
+        .points, .notes, .gifs { grid-template-columns: 1fr; }
         .rx { grid-template-columns: 1fr 1fr; }
       }
       @media (max-width: 560px) {
@@ -168,6 +176,21 @@
             <h3>濕蝕刻 Wet Etch</h3>
             <p>把晶圓泡在藥水裡的濕蝕刻，也是一種化學蝕刻：藥液和矽反應，生成能溶解或離開表面的產物，原理和影片裡的自由基蝕刻類似。像氫氟酸加硝酸的混酸（HNA）蝕刻矽，就是等向性的，一樣會底切。</p>
           </div>
+        </div>
+      </section>
+
+      <section class="block" aria-labelledby="gif-title">
+        <p class="section-index">04 / GIF</p>
+        <h2 id="gif-title">每一段的 GIF 動畫</h2>
+        <p class="gif-note">方便放進簡報：每段一個 GIF，960×534、每秒 10 格、會一直循環播放。GIF 沒有聲音，字幕、標題和圖例都在畫面裡。按「下載 GIF」存檔後，直接拖進 PowerPoint 就能播放。</p>
+        <div class="gifs">
+          <figure><img src="gifs/01-intro-two-ways.gif" alt="開場 Two Ways to Etch 動畫" width="960" height="534" loading="lazy" decoding="async" /><figcaption><span><small>STEP 01 · 8 秒</small>開場 Two Ways to Etch</span><a href="gifs/01-intro-two-ways.gif" download="semiconductor-etch-01-intro-two-ways.gif">下載 GIF（0.3 MB）</a></figcaption></figure>
+          <figure><img src="gifs/02-plasma-ignition.gif" alt="進氣與點燃電漿 Plasma Ignition 動畫" width="960" height="534" loading="lazy" decoding="async" /><figcaption><span><small>STEP 02 · 17 秒</small>進氣與點燃電漿 Plasma Ignition</span><a href="gifs/02-plasma-ignition.gif" download="semiconductor-etch-02-plasma-ignition.gif">下載 GIF（3.8 MB）</a></figcaption></figure>
+          <figure><img src="gifs/03-bias-sheath.gif" alt="偏壓與鞘層 Bias & Sheath 動畫" width="960" height="534" loading="lazy" decoding="async" /><figcaption><span><small>STEP 03 · 18 秒</small>偏壓與鞘層 Bias & Sheath</span><a href="gifs/03-bias-sheath.gif" download="semiconductor-etch-03-bias-sheath.gif">下載 GIF（3.7 MB）</a></figcaption></figure>
+          <figure><img src="gifs/04-surface-reaction.gif" alt="表面反應 Surface Reaction 動畫" width="960" height="534" loading="lazy" decoding="async" /><figcaption><span><small>STEP 04 · 22 秒</small>表面反應 Surface Reaction</span><a href="gifs/04-surface-reaction.gif" download="semiconductor-etch-04-surface-reaction.gif">下載 GIF（1.6 MB）</a></figcaption></figure>
+          <figure><img src="gifs/05-remote-plasma.gif" alt="遠端電漿 Remote Plasma 動畫" width="960" height="534" loading="lazy" decoding="async" /><figcaption><span><small>STEP 05 · 16 秒</small>遠端電漿 Remote Plasma</span><a href="gifs/05-remote-plasma.gif" download="semiconductor-etch-05-remote-plasma.gif">下載 GIF（1.8 MB）</a></figcaption></figure>
+          <figure><img src="gifs/06-isotropic-reaction.gif" alt="等向性反應 Isotropic Reaction 動畫" width="960" height="534" loading="lazy" decoding="async" /><figcaption><span><small>STEP 06 · 22 秒</small>等向性反應 Isotropic Reaction</span><a href="gifs/06-isotropic-reaction.gif" download="semiconductor-etch-06-isotropic-reaction.gif">下載 GIF（1.7 MB）</a></figcaption></figure>
+          <figure><img src="gifs/07-summary.gif" alt="對照與總結 Summary 動畫" width="960" height="534" loading="lazy" decoding="async" /><figcaption><span><small>STEP 07 · 13 秒</small>對照與總結 Summary</span><a href="gifs/07-summary.gif" download="semiconductor-etch-07-summary.gif">下載 GIF（0.4 MB）</a></figcaption></figure>
         </div>
       </section>
     </main>

@@ -105,6 +105,7 @@ Patrick 的個人學習知識庫，目前包含十三個主題：
 - `rocket-engine/data/narration.json`：火箭影片的場景長度、字幕與旁白文字
 - `rocket-engine/generate_audio.py`：產生 `rocket-engine/audio/` 旁白 MP3，並重建 `rocket-engine/narration.js`（旁白超過字幕時段會報錯）
 - `semiconductor-etch/data/narration.json`：蝕刻影片的場景長度、字幕 `text`（中英並列）與給 TTS 念的 `speak` 文字
+- `semiconductor-etch/gifs/`：影片 7 段各自的 GIF（960×534、每秒 10 格、循環播放，給簡報使用），由影片畫面逐格匯出；改了動畫或字幕時段後要重新匯出
 - `semiconductor-etch/generate_audio.py`：產生 `semiconductor-etch/audio/` 旁白 MP3，並重建 `semiconductor-etch/narration.js`（旁白超過字幕時段會報錯）
 - `shimen-reservoir/data/narration.json`、`shimen-reservoir/generate_audio.py`：水庫影片的字幕與旁白，以及產生 `shimen-reservoir/audio/` 與 `shimen-reservoir/narration.js` 的腳本
 
