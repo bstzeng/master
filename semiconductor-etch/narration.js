@@ -166,7 +166,7 @@ window.ETCH_NARRATION = {
     },
     {
       "title": "對照與總結 Summary",
-      "dur": 12.0,
+      "dur": 13.0,
       "subs": [
         {
           "start": 0.0,
@@ -177,10 +177,10 @@ window.ETCH_NARRATION = {
         },
         {
           "start": 6.0,
-          "end": 12.0,
-          "text": "化學蝕刻 chemical etch 溫和、損傷小，適合整片移除或掏空結構。",
+          "end": 13.0,
+          "text": "化學蝕刻 chemical etch 溫和、損傷小、選擇比 selectivity 高，適合整片移除或掏空結構。",
           "audio": "audio/s7-2.mp3",
-          "duration": 5.184
+          "duration": 6.168
         }
       ]
     }

@@ -141,7 +141,7 @@
           <article><span>03</span><h3>表面反應 Surface Reaction</h3><p>離子轟擊 ion bombardment 把溝槽底部的 Si–Si 鍵結打鬆，氟自由基再抓住矽，生成揮發性的 SiF₄ 被抽氣泵 pump 抽走。底部被打、側壁沒被打，所以是非等向性 anisotropic。</p></article>
           <article><span>04</span><h3>遠端電漿 Remote Plasma</h3><p>電漿在晶圓上游的獨立腔體產生。往下流的途中，離子和電子重新結合 recombination（也會撞牆中和），抵達晶圓的幾乎只剩中性的氟自由基；晶圓也不加偏壓，沒有鞘層。</p></article>
           <article><span>05</span><h3>等向性反應 Isotropic Reaction</h3><p>自由基沒有方向，從各個方向碰撞矽表面，各方向的蝕刻速率差不多：往下吃多深，往旁邊就吃多寬，鑽到光阻下方形成底切 undercut。</p></article>
-          <article><span>06</span><h3>對照與總結 Summary</h3><p>偏壓蝕刻 bias etch 由離子決定方向，適合細線寬和深溝槽；化學蝕刻 chemical etch 溫和、離子損傷低，適合整片移除或掏空結構（例如移除犧牲層 sacrificial layer）。</p></article>
+          <article><span>06</span><h3>對照與總結 Summary</h3><p>偏壓蝕刻 bias etch 由離子決定方向，適合細線寬和深溝槽；化學蝕刻 chemical etch 溫和、離子損傷低，而且選擇比 selectivity 高：自由基只和容易反應的材料快速反應，對光阻或底下其他材料吃得很慢，適合整片移除或掏空結構（例如移除犧牲層 sacrificial layer）。</p></article>
         </div>
       </section>
 
@@ -1160,12 +1160,13 @@
             drawRad(x, y, da, 0.8);
           }
           // 比較表
-          const X = [140, 380, 780, 1180], Y0 = 350, RH = 50;
+          const X = [140, 380, 780, 1180], Y0 = 340, RH = 46;
           const rows = [
             ["", "偏壓蝕刻 Bias Etch", "化學蝕刻 Chemical Etch"],
             ["誰在吃矽 who etches", "離子 + 自由基 ions + radicals", "只有自由基 radicals only"],
             ["方向 direction", "垂直 vertical", "全方向 all directions"],
             ["損傷 damage", "有離子轟擊 ion bombardment", "低 low"],
+            ["選擇比 selectivity", "較低 lower（離子也會削掉光阻）", "高 high（只吃容易反應的材料）"],
             ["用途 use", "細線寬、深溝槽 fine lines, deep trenches", "整片移除、掏空結構 bulk removal, release"],
           ];
           const hl0 = fade(t, s[0] + 0.2, 0.4) * (1 - fade(t, s[1], 0.4)), hl1 = fade(t, s[1] + 0.2, 0.4);
@@ -1189,7 +1190,7 @@
             ctx.restore();
             row.forEach((cell, c) => {
               const color = k === 0 ? (c === 1 ? P.ion : P.rad) : c === 0 ? C.muted : C.paper;
-              text(cell, X[c] + 16, y + 32, { size: k === 0 ? 18 : 16, weight: k === 0 || c === 0 ? 700 : 500, color, alpha: a });
+              text(cell, X[c] + 16, y + 30, { size: k === 0 ? 18 : 16, weight: k === 0 || c === 0 ? 700 : 500, color, alpha: a });
             });
           });
         }
