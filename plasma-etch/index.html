@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="用 13 張 3D 動畫 GIF 講解電漿蝕刻：打 RF 之後電子怎麼撞分子、鞘層怎麼讓離子垂直加速、等向性與非等向性的差別、選擇比、在 Nanosheet 的應用，以及為什麼不用濕蝕刻。" />
+    <meta name="theme-color" content="#05070d" />
+    <title>電漿蝕刻 Plasma Etching｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #05070d;
+        --bg-2: #0b1220;
+        --paper: #e8f6ff;
+        --muted: rgba(232, 246, 255, 0.62);
+        --line: rgba(34, 229, 255, 0.18);
+        --cyan: #22e5ff;
+        --magenta: #ff3df2;
+        --lime: #b6ff3d;
+        --amber: #ffb340;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body { margin: 0; overflow-x: hidden; color: var(--paper); background: var(--bg); font-family: "Noto Sans TC", sans-serif; -webkit-font-smoothing: antialiased;
+        background-image: linear-gradient(rgba(34,229,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(34,229,255,.045) 1px, transparent 1px); background-size: 40px 40px; }
+      a { color: inherit; text-decoration: none; }
+      h1, h2, h3, p { margin-top: 0; }
+
+      .site-header { display: flex; justify-content: space-between; align-items: center; width: min(1240px, calc(100% - 32px)); min-height: 76px; margin: 0 auto; border-bottom: 1px solid var(--line); }
+      .brand { display: inline-flex; align-items: center; gap: 11px; font-family: "DM Mono", monospace; font-size: 16px; font-weight: 500; letter-spacing: .18em; }
+      .brand-dot { width: 11px; height: 11px; background: var(--cyan); border-radius: 50%; box-shadow: 12px 0 0 var(--magenta), 0 0 12px var(--cyan); }
+      .header-back { padding-bottom: 3px; border-bottom: 1px solid var(--paper); font-family: "DM Mono", monospace; font-size: 11px; letter-spacing: .12em; }
+
+      main { width: min(1240px, calc(100% - 32px)); margin: 0 auto; }
+      .intro { display: grid; grid-template-columns: 1fr .75fr; gap: 60px; align-items: end; padding: 70px 0 30px; }
+      .eyebrow { margin-bottom: 18px; color: var(--cyan); font-family: "DM Mono", monospace; font-size: 12px; letter-spacing: .14em; }
+      h1 { margin-bottom: 0; font-size: clamp(38px, 5.6vw, 74px); line-height: 1.1; letter-spacing: -.02em; }
+      h1 em { color: var(--cyan); font-style: normal; text-shadow: 0 0 24px rgba(34,229,255,.45); }
+      .intro > p { margin-bottom: 6px; color: var(--muted); font-size: 16px; line-height: 1.9; }
+      .hero-gif { margin: 20px 0 0; padding: 10px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 0 40px rgba(34,229,255,.08); }
+      .hero-gif img { display: block; width: 100%; height: auto; border-radius: 8px; }
+      .hero-gif figcaption { padding: 10px 4px 2px; color: var(--muted); font-size: 14px; }
+
+      section.block { padding: 80px 0 10px; }
+      .section-index { margin-bottom: 12px; color: var(--magenta); font: 12px "DM Mono", monospace; letter-spacing: .14em; }
+      section.block h2 { margin-bottom: 14px; font-size: clamp(28px, 3.6vw, 44px); letter-spacing: -.01em; }
+      .lead { max-width: 780px; margin-bottom: 30px; color: var(--muted); font-size: 16px; line-height: 1.85; }
+
+      .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+      .card, .step { background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+      .card figure, .step figure { margin: 0; background: #05070d; }
+      .card img, .step img { display: block; width: 100%; height: auto; }
+      .card-body { padding: 20px 22px 22px; }
+      .tag { margin-bottom: 8px; color: var(--cyan); font: 11px "DM Mono", monospace; letter-spacing: .1em; }
+      .card h3, .step h3 { margin-bottom: 10px; font-size: 21px; }
+      .card h3 span, .step h3 span { color: var(--muted); font-size: 15px; font-weight: 500; }
+      .card-body > p:not(.tag) { margin-bottom: 14px; color: var(--muted); font-size: 15px; line-height: 1.85; }
+      .link-note a { color: var(--lime); border-bottom: 1px solid var(--lime); }
+      .dl { display: inline-block; padding: 8px 14px; color: #05070d; background: var(--cyan); border-radius: 8px; font-size: 14px; font-weight: 700; box-shadow: 0 0 14px rgba(34,229,255,.35); }
+
+      .compare { width: 100%; margin-top: 26px; border-collapse: collapse; font-size: 15px; }
+      .compare th, .compare td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--line); }
+      .compare thead th { color: var(--cyan); font: 12px "DM Mono", monospace; letter-spacing: .1em; }
+      .compare td b { color: var(--cyan); }
+      .compare tbody th { color: var(--muted); font-weight: 500; }
+      .table-wrap { overflow-x: auto; }
+
+      .steps { display: grid; gap: 22px; }
+      .step { display: grid; grid-template-columns: 1.15fr 1fr; align-items: center; }
+      .step:nth-child(even) figure { order: 2; }
+      .overview { margin-top: 30px; }
+      .future { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+      .future article { padding: 26px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px; }
+      .future h3 { margin-bottom: 10px; font-size: 20px; }
+      .future p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.85; }
+      .note { margin-top: 26px; color: var(--muted); font-size: 14px; line-height: 1.8; }
+
+      footer { display: flex; justify-content: space-between; width: min(1240px, calc(100% - 32px)); margin: 90px auto 0; padding: 36px 0; color: var(--muted); border-top: 1px solid var(--line); font: 10px "DM Mono", monospace; letter-spacing: .08em; }
+
+      @media (max-width: 880px) {
+        .intro, .cards, .future { grid-template-columns: 1fr; gap: 22px; }
+        .step { grid-template-columns: 1fr; }
+        .step:nth-child(even) figure { order: 0; }
+      }
+      @media (max-width: 560px) {
+        .intro { padding-top: 44px; }
+        .card-body { padding: 16px; }
+        .compare th, .compare td { padding: 10px 8px; font-size: 14px; }
+        footer { flex-direction: column; gap: 8px; }
+      }
+      @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot" aria-hidden="true"></span><span>MASTER</span></a>
+      <a class="header-back" href="../index.html#topics">← 所有主題</a>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">PLASMA ETCHING / 3D GIF</p>
+          <h1 id="page-title">電漿蝕刻<br /><em>Plasma Etching</em></h1>
+        </div>
+        <p>從「打 RF 之後發生什麼」開始：電子怎麼撞出離子和自由基、鞘層怎麼讓離子垂直加速，接著比較等向性與非等向性、說明選擇比，最後看它們在 Nanosheet 怎麼用，以及為什麼奈米級圖案不用濕蝕刻。13 張 3D 動畫 GIF，每張都可以下載 1080P 放進簡報。</p>
+      </section>
+      <figure class="hero-gif">
+        <img src="gifs/preview/07-compare.gif" alt="等向性與非等向性蝕刻並排比較 3D 動畫" width="800" height="450" decoding="async" />
+        <figcaption>同一個開口：左邊等向性（只有自由基）越挖越寬，右邊非等向性（離子 + 自由基）只往下。圖例：黃 = 電子、紅 = 離子、綠 = 自由基、藍 = 反應產物 SiF₄。</figcaption>
+      </figure>
+
+      <section class="block" aria-labelledby="p0-title">
+        <p class="section-index">PART 0 / WHAT</p>
+        <h2 id="p0-title">蝕刻在做什麼？</h2>
+        <p class="lead">微影只把圖案畫在光阻上；蝕刻才真正把圖案刻進材料。整門課只回答兩個問題：往哪個方向吃？只吃誰？</p>
+        <div class="steps">
+          <article class="step">
+            <figure><img src="gifs/preview/00-what-is-etch.gif" alt="蝕刻在做什麼 Pattern Transfer 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+            <div class="card-body">
+              <p class="tag">GIF 00</p>
+              <h3>蝕刻在做什麼 <span>Pattern Transfer</span></h3>
+              <p>光阻（photoresist）上已經有微影畫好的開口。蝕刻把開口下方的目標膜吃掉，移除光阻後，圖案就留在材料上。</p>
+              <a class="dl" href="gifs/00-what-is-etch.gif" download="plasma-etch-00-what-is-etch.gif">下載 1080P GIF（4.2 MB）</a>
+            </div>
+          </article>
+        </div>
+
+      </section>
+      <section class="block" aria-labelledby="p1-title">
+        <p class="section-index">PART 1 / PLASMA</p>
+        <h2 id="p1-title">打 RF 之後發生什麼？</h2>
+        <p class="lead">電漿蝕刻的第一步是「點燃電漿」：用射頻（RF）電場把電子加速，讓電子去撞氣體分子。</p>
+        <div class="steps">
+          <article class="step">
+            <figure><img src="gifs/preview/01-rf-power.gif" alt="打 RF 之後 RF Power On 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+            <div class="card-body">
+              <p class="tag">GIF 01</p>
+              <h3>打 RF 之後 <span>RF Power On</span></h3>
+              <p>上下電極之間加 13.56 MHz 的射頻電壓，電場方向每秒翻轉 1356 萬次。電子很輕，被電場來回甩動、越跑越快；SF₆ 氣體則從上方的噴氣頭（showerhead）進來。</p>
+              <a class="dl" href="gifs/01-rf-power.gif" download="plasma-etch-01-rf-power.gif">下載 1080P GIF（13.1 MB）</a>
+            </div>
+          </article>
+          <article class="step">
+            <figure><img src="gifs/preview/02-electron-impact.gif" alt="電子撞分子 Electron Impact 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+            <div class="card-body">
+              <p class="tag">GIF 02</p>
+              <h3>電子撞分子 <span>Electron Impact</span></h3>
+              <p>高能電子撞上 SF₆ 有三種結果：① 激發（excitation）→ 放出光，就是電漿的輝光；② 解離（dissociation）→ 產生氟自由基 F*；③ 游離（ionization）→ 產生正離子 SF₅⁺ 和多一顆電子。</p>
+              <a class="dl" href="gifs/02-electron-impact.gif" download="plasma-etch-02-electron-impact.gif">下載 1080P GIF（9.6 MB）</a>
+            </div>
+          </article>
+          <article class="step">
+            <figure><img src="gifs/preview/03-avalanche.gif" alt="雪崩與穩態 Avalanche → Plasma 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+            <div class="card-body">
+              <p class="tag">GIF 03</p>
+              <h3>雪崩與穩態 <span>Avalanche → Plasma</span></h3>
+              <p>游離多出來的電子再去撞下一個分子，數量 1 → 2 → 4 → 8 倍增（雪崩），直到產生和損失（撞牆、復合）平衡。電漿裡的自由基遠多於離子：自由基負責「吃」，離子負責「定方向」。</p>
+              <a class="dl" href="gifs/03-avalanche.gif" download="plasma-etch-03-avalanche.gif">下載 1080P GIF（16.4 MB）</a>
+            </div>
+          </article>
+        </div>
+
+      </section>
+      <section class="block" aria-labelledby="p2-title">
+        <p class="section-index">PART 2 / DIRECTION</p>
+        <h2 id="p2-title">兩種吃法：等向性 vs 非等向性</h2>
+        <p class="lead">同樣是電漿，只靠自由基就是等向性；在晶圓加上偏壓、讓離子垂直打下來，才會變成非等向性。</p>
+        <div class="steps">
+          <article class="step">
+            <figure><img src="gifs/preview/04-isotropic.gif" alt="等向性蝕刻 Isotropic 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+            <div class="card-body">
+              <p class="tag">GIF 04</p>
+              <h3>等向性蝕刻 <span>Isotropic</span></h3>
+              <p>只有自由基時，粒子從四面八方抵達表面，Si + 4F* → SiF₄↑ 飄走。往下吃多深、往旁邊就吃多寬，鑽到光阻底下形成底切（undercut），線寬變大。</p>
+              <a class="dl" href="gifs/04-isotropic.gif" download="plasma-etch-04-isotropic.gif">下載 1080P GIF（17.9 MB）</a>
+            </div>
+          </article>
+          <article class="step">
+            <figure><img src="gifs/preview/05-bias-sheath.gif" alt="偏壓與鞘層 Bias & Sheath 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+            <div class="card-body">
+              <p class="tag">GIF 05</p>
+              <h3>偏壓與鞘層 <span>Bias & Sheath</span></h3>
+              <p>晶圓底座加 RF 偏壓，晶圓帶負的自偏壓，上方形成鞘層（sheath）。電子在電漿本體被加熱、碰到鞘層邊緣被彈回；離子在鞘層裡才被大幅加速、垂直撞向晶圓；自由基不帶電，完全不受影響。（畫面中的 RF 頻率已放慢）</p>
+              <a class="dl" href="gifs/05-bias-sheath.gif" download="plasma-etch-05-bias-sheath.gif">下載 1080P GIF（16.6 MB）</a>
+            </div>
+          </article>
+          <article class="step">
+            <figure><img src="gifs/preview/06-anisotropic.gif" alt="非等向性蝕刻 Anisotropic 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+            <div class="card-body">
+              <p class="tag">GIF 06</p>
+              <h3>非等向性蝕刻 <span>Anisotropic</span></h3>
+              <p>離子只打得到溝槽底部，打斷鍵結後自由基跟著反應，底部吃得快；側壁沒被離子打到，還長出一層保護膜（passivation），幾乎不動。結果是又深又直、線寬不變。</p>
+              <a class="dl" href="gifs/06-anisotropic.gif" download="plasma-etch-06-anisotropic.gif">下載 1080P GIF（15.2 MB）</a>
+            </div>
+          </article>
+          <article class="step">
+            <figure><img src="gifs/preview/07-compare.gif" alt="並排比較 Side by Side 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+            <div class="card-body">
+              <p class="tag">GIF 07</p>
+              <h3>並排比較 <span>Side by Side</span></h3>
+              <p>同一個開口同時開吃：等向性越挖越寬，開口最後變成好幾倍寬；非等向性只往下，開口寬度維持不變。</p>
+              <a class="dl" href="gifs/07-compare.gif" download="plasma-etch-07-compare.gif">下載 1080P GIF（14.0 MB）</a>
+            </div>
+          </article>
+        </div>
+        <div class="table-wrap">
+          <table class="compare">
+            <thead><tr><th>粒子</th><th>電漿本體 bulk</th><th>鞘層 sheath</th></tr></thead>
+            <tbody>
+              <tr><th>電子 e⁻</th><td>被 RF 來回甩動、獲得能量；鞘層邊緣伸縮時也會把電子「拍」回本體</td><td>被擋住、彈回（減速區）</td></tr>
+              <tr><th>離子 ⊕</th><td>太重，跟不上 RF，只被弱電場慢慢帶向鞘層</td><td><b>主要加速區</b>：被平均電壓垂直拉向晶圓</td></tr>
+              <tr><th>自由基 F*</th><td>不帶電，隨機亂飄</td><td>一樣不受影響，四面八方抵達表面</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="p3-title">
+        <p class="section-index">PART 3 / SELECTIVITY</p>
+        <h2 id="p3-title">選擇比：只吃誰？</h2>
+        <p class="lead">方向決定形狀，選擇比決定「會不會吃錯東西」。</p>
+        <div class="steps">
+          <article class="step">
+            <figure><img src="gifs/preview/08-selectivity.gif" alt="選擇比 Selectivity 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+            <div class="card-body">
+              <p class="tag">GIF 08</p>
+              <h3>選擇比 <span>Selectivity</span></h3>
+              <p>選擇比 = 目標膜蝕刻速率 ÷ 其他材料蝕刻速率。例如 Si 對硬遮罩 20 : 1，代表吃掉 60 nm 的 Si，硬遮罩只少 3 nm；Si 對底層 SiO₂ 100 : 1，代表碰到底層就幾乎停住（stop on layer）。</p>
+              <a class="dl" href="gifs/08-selectivity.gif" download="plasma-etch-08-selectivity.gif">下載 1080P GIF（6.2 MB）</a>
+            </div>
+          </article>
+        </div>
+
+      </section>
+      <section class="block" aria-labelledby="p4-title">
+        <p class="section-index">PART 4 / NANOSHEET</p>
+        <h2 id="p4-title">用在 Nanosheet</h2>
+        <p class="lead">Nanosheet 兩種蝕刻都要：刻鰭和源汲極凹槽靠非等向性，挖掉 SiGe 則是等向性、但選擇比要極高。</p>
+        <div class="steps">
+          <article class="step">
+            <figure><img src="gifs/preview/09-nanosheet-fin.gif" alt="非等向性刻 Nanosheet 鰭 Fin Etch 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+            <div class="card-body">
+              <p class="tag">GIF 09</p>
+              <h3>非等向性刻 Nanosheet 鰭 <span>Fin Etch</span></h3>
+              <p>Si / SiGe 千層疊層又高、層數又多，必須垂直刻穿：側壁垂直時三片一樣寬，電流一致；如果是等向性，越上面的層被側向吃越多，三片寬度不一。之後的源汲極凹槽（S/D recess）也一樣要直。</p>
+              <a class="dl" href="gifs/09-nanosheet-fin.gif" download="plasma-etch-09-nanosheet-fin.gif">下載 1080P GIF（13.4 MB）</a>
+            </div>
+          </article>
+          <article class="step">
+            <figure><img src="gifs/preview/10-sige-release.gif" alt="高選擇比的通道釋放 Channel Release 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+            <div class="card-body">
+              <p class="tag">GIF 10</p>
+              <h3>高選擇比的通道釋放 <span>Channel Release</span></h3>
+              <p>這一步不需要方向，需要的是「只吃 SiGe、不吃 Si」：SiGe 從兩側被挖空，Si 薄片幾乎沒被吃，靠源汲極和內間隔層固定兩端。選擇比 SiGe : Si 要大於 100 : 1。</p>
+              <a class="dl" href="gifs/10-sige-release.gif" download="plasma-etch-10-sige-release.gif">下載 1080P GIF（12.5 MB）</a>
+            </div>
+          </article>
+        </div>
+
+      </section>
+      <section class="block" aria-labelledby="p5-title">
+        <p class="section-index">PART 5 / WHY NOT WET</p>
+        <h2 id="p5-title">為什麼不用濕蝕刻？</h2>
+        <p class="lead">濕蝕刻（泡藥水）便宜、選擇比也可以很高，但到了奈米級的細高結構有兩個致命問題。</p>
+        <div class="steps">
+          <article class="step">
+            <figure><img src="gifs/preview/11-wet-isotropic.gif" alt="濕蝕刻是等向性的 Wet Etch 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+            <div class="card-body">
+              <p class="tag">GIF 11</p>
+              <h3>濕蝕刻是等向性的 <span>Wet Etch</span></h3>
+              <p>藥水是液體，沒有方向。每個開口都被吃成碗狀，線寬變大好幾倍；開口一密，相鄰的碗就被吃穿、連在一起。</p>
+              <a class="dl" href="gifs/11-wet-isotropic.gif" download="plasma-etch-11-wet-isotropic.gif">下載 1080P GIF（5.5 MB）</a>
+            </div>
+          </article>
+          <article class="step">
+            <figure><img src="gifs/preview/12-pattern-collapse.gif" alt="乾燥時被拉倒 Pattern Collapse 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+            <div class="card-body">
+              <p class="tag">GIF 12</p>
+              <h3>乾燥時被拉倒 <span>Pattern Collapse</span></h3>
+              <p>藥水乾燥時液面下降，相鄰細高結構之間的表面張力把它們往內拉，最後倒塌黏在一起（stiction）。乾式蝕刻沒有液體，沒有這個問題。</p>
+              <a class="dl" href="gifs/12-pattern-collapse.gif" download="plasma-etch-12-pattern-collapse.gif">下載 1080P GIF（3.2 MB）</a>
+            </div>
+          </article>
+        </div>
+        <div class="table-wrap">
+          <table class="compare">
+            <thead><tr><th>比較項目</th><th>濕蝕刻 Wet</th><th>等向性乾蝕刻</th><th>非等向性乾蝕刻</th></tr></thead>
+            <tbody>
+              <tr><th>方向</th><td>全方向</td><td>全方向</td><td>垂直</td></tr>
+              <tr><th>選擇比</th><td>可以很高</td><td>可以很高</td><td>中～高（看化學與條件）</td></tr>
+              <tr><th>細高結構</th><td>易底切、乾燥時會倒塌</td><td>沒有液體，不會倒塌</td><td>最適合</td></tr>
+              <tr><th>損傷</th><td>低</td><td>低</td><td>有離子轟擊</td></tr>
+              <tr><th>典型用途</th><td>清洗、去光阻、大面積移除</td><td>挖空犧牲層（如 SiGe 釋放）、灰化</td><td>定義線寬、刻鰭、溝槽、接觸窗</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">濕式製程並沒有被淘汰：晶圓清洗、去光阻和部分選擇性移除仍大量使用；只是「定義奈米級圖案」這件事交給了乾式電漿蝕刻。</p>
+      </section>
+
+      <section class="block" aria-labelledby="more-title">
+        <p class="section-index">RELATED</p>
+        <h2 id="more-title">延伸閱讀</h2>
+        <div class="future">
+          <article><h3><a href="../nanosheet/index.html">從 FinFET 到 Nanosheet →</a></h3><p>Nanosheet 為什麼取代 FinFET，以及 7 個製程步驟；GIF 09、10 就是其中的刻鰭與通道釋放。</p></article>
+          <article><h3><a href="../semiconductor-etch/index.html">半導體蝕刻原理（有聲影片）→</a></h3><p>同一套觀念的 2D 動畫影片版，附中文旁白與音效。</p></article>
+        </div>
+        <p class="note">動畫為教學用示意：粒子數量、速度、RF 頻率、尺寸與數值都經過簡化或放慢，不是特定機台或製程的規格。網頁上顯示的是 800×450 的預覽；按「下載 1080P GIF」可取得 1920×1080 的原檔，循環播放、第一格就是完整畫面，可直接放進簡報。</p>
+      </section>
+    </main>
+
+    <footer>
+      <span>MASTER / PLASMA ETCHING</span>
+      <span>3D 動畫為教學示意，非特定機台或製程規格</span>
+    </footer>
+  </body>
+</html>
