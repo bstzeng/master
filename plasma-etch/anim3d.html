@@ -952,6 +952,102 @@ addScene("12-pattern-collapse", {
   },
 });
 
+
+// =====================================================================
+// GIF 04B：Radical etch 怎麼濾掉離子（遠端電漿 + 接地過濾板 + 無偏壓）
+// =====================================================================
+addScene("04b-ion-filter", {
+  dur: 9, fps: 12,
+  setup(g) {
+    // 下方製程腔體 + 晶圓（沒有偏壓）
+    mbox(g, [0x0a1424, 0x22e5ff], { opacity: 0.05 }).set(-4.2, -0.6, -2.4, 4.2, 3.8, 2.4);
+    mbox(g, M.sub).set(-3.6, -0.6, -2, 3.6, 0, 2);
+    this.wafer = mbox(g, M.si, { emissive: 0x0a3a66, ei: 0.5 }).set(-3.2, 0, -1.8, 3.2, 0.18, 1.8);
+    // 上方遠端電漿源（管狀）+ RF 線圈
+    mbox(g, [0x0a1424, 0xc77dff], { opacity: 0.06 }).set(-2.4, 4.3, -1.8, 2.4, 8.2, 1.8);
+    this.src = mbox(g, [0x5a1a8a, 0xc77dff], { opacity: 0.14, emissive: 0x7a2cc0, ei: 0.9 }).set(-2.3, 5.6, -1.7, 2.3, 8.1, 1.7);
+    this.coils = [6.1, 6.8, 7.5].map((y) => {
+      const c = new THREE.Mesh(new THREE.TorusGeometry(3.1, 0.07, 8, 64), new THREE.MeshBasicMaterial({ color: 0xff3df2, transparent: true }));
+      c.rotation.x = Math.PI / 2; c.position.y = y; c.scale.set(1, 0.75, 1); g.add(c); return c;
+    });
+    // 接地的離子過濾板：金屬板上開一排細孔
+    this.holesX = [-1.8, -0.6, 0.6, 1.8]; this.holesZ = [-0.9, 0.9]; const hh = 0.25;
+    this.hh = hh; this.pY = [3.8, 4.3];
+    const zb = [-1.8, -0.9 - hh, -0.9 + hh, 0.9 - hh, 0.9 + hh, 1.8];
+    const xb = [-2.4, ...this.holesX.flatMap((x) => [x - hh, x + hh]), 2.4];
+    for (let i = 0; i < zb.length - 1; i++) {
+      const band = i === 1 || i === 3;
+      if (!band) mbox(g, M.mask, { emissive: 0x2a2f38, ei: 0.3 }).set(-2.4, 3.8, zb[i], 2.4, 4.3, zb[i + 1]);
+      else for (let j = 0; j < xb.length; j += 2) mbox(g, M.mask, { emissive: 0x2a2f38, ei: 0.3 }).set(xb[j], 3.8, zb[i], xb[j + 1], 4.3, zb[i + 1]);
+    }
+    this.e = particles(g, 60, COL.e, 0.08);
+    this.ions = particles(g, 70, COL.ion, 0.11);
+    this.rad = particles(g, 150, COL.rad, 0.09);
+    this.flash = particles(g, 40, 0xffffff, 0.15);
+    this.prod = particles(g, 20, 0x4fc3ff, 0.09);
+  },
+  render(t) {
+    camOrbit(t, this.dur, { r: 23, h: 6.5, a0: 0.32, amp: 0.05, look: [0, 3.4, 0] });
+    this.coils.forEach((c, i) => { c.material.opacity = 0.55 + 0.45 * Math.sin(t * 6 + i); });
+    const HX = this.holesX, HZ = this.holesZ, hh = this.hh, [pB, pT] = this.pY;
+    const hole = (i) => [HX[i % HX.length], HZ[Math.floor(i / HX.length) % HZ.length]];
+    const e = [], ions = [], rad = [], flash = [];
+    // 電漿源裡：電子、離子、自由基一起亂飄
+    drift(e, { t, n: 30, seed: 1, x0: -2.1, x1: 2.1, y0: 5.8, y1: 7.9, z0: -1.5, z1: 1.5, sp: 0.35 });
+    drift(ions, { t, n: 25, seed: 2, x0: -2.1, x1: 2.1, y0: 5.8, y1: 7.9, z0: -1.5, z1: 1.5, sp: 0.08 });
+    drift(rad, { t, n: 40, seed: 3, x0: -2.1, x1: 2.1, y0: 5.8, y1: 7.9, z0: -1.5, z1: 1.5, sp: 0.1 });
+    // 往下流的帶電粒子：撞到管壁或過濾板就被中和（閃光後消失）
+    for (let i = 0; i < 45; i++) {
+      const ph = fract(rnd(i + 40) + t * 0.32);
+      const x0 = -2 + rnd(i + 41) * 4, z0 = -1.5 + rnd(i + 42) * 3;
+      const toWall = rnd(i + 43) < 0.35; // 一部分先撞到管壁、和電子復合
+      const list = i % 3 === 0 ? e : ions;
+      if (toWall) {
+        const sx = x0 > 0 ? 1 : -1, x = lerp(x0, sx * 2.35, ph), y = lerp(5.6, 4.6, ph);
+        if (ph < 0.92) list.push([x, y, z0]); else flash.push([sx * 2.35, y, z0, 1.2]);
+      } else {
+        const y = lerp(5.6, pT, ph);
+        if (ph < 0.95) list.push([x0, y, z0]); else flash.push([x0, pT, z0, 1.3]);
+      }
+    }
+    // 少數剛好對準細孔的離子：在孔裡撞到孔壁也被中和
+    for (let i = 0; i < 8; i++) {
+      const ph = fract(rnd(i + 70) + t * 0.32), [hx, hz] = hole(i);
+      const y = lerp(5.6, (pT + pB) / 2, ph), x = hx + lerp(-0.1, hh * 0.98, ph * ph);
+      if (ph < 0.93) ions.push([x, y, hz]); else flash.push([hx + hh, y, hz, 1]);
+    }
+    // 自由基：穿過細孔，往下抵達晶圓
+    for (let i = 0; i < 70; i++) {
+      const ph = fract(rnd(i + 100) + t * 0.22), [hx, hz] = hole(i);
+      let x, y, z;
+      if (ph < 0.35) { const k = ph / 0.35; x = lerp(hx + (rnd(i + 101) - 0.5) * 1.6, hx, k); z = lerp(hz + (rnd(i + 102) - 0.5) * 1.2, hz, k); y = lerp(5.6, pT, k); }
+      else if (ph < 0.45) { const k = (ph - 0.35) / 0.1; x = hx + (rnd(i + 103) - 0.5) * hh; z = hz + (rnd(i + 104) - 0.5) * hh; y = lerp(pT, pB, k); }
+      else { const k = (ph - 0.45) / 0.55; x = hx + (rnd(i + 105) - 0.5) * 3 * k; z = hz + (rnd(i + 106) - 0.5) * 2.4 * k; y = lerp(pB, 0.25, k); }
+      rad.push([x, y, z]);
+    }
+    drift(rad, { t, n: 35, seed: 200, x0: -3, x1: 3, y0: 0.25, y1: 1.2, z0: -1.6, z1: 1.6, sp: 0.12 });
+    place(this.e, e); place(this.ions, ions); place(this.rad, rad); place(this.flash, flash);
+    const pr = [];
+    for (let i = 0; i < 20; i++) { const ph = fract(rnd(i + 300) + t * 0.3); pr.push([-2.8 + rnd(i + 301) * 5.6, 0.2 + ph * 2.6, -1.5 + rnd(i + 302) * 3, 1 - ph]); }
+    place(this.prod, pr);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("Radical etch：離子怎麼被濾掉 Ion Filtering", "PLASMA ETCH / 04B");
+    chip("只讓不帶電的自由基通過", 772, 40, C.lime, { a: "right", size: 13 });
+    callout([2.3, 7.4, 1.7], 772, 105, "① 遠端電漿源 Remote plasma（離晶圓很遠）", C.magenta, { a: "right" });
+    callout([2.35, 4.9, 0.5], 772, 160, "② 往下走時撞牆、和電子復合 → 中和", C.yellow, { a: "right" });
+    callout([2.0, 4.3, 1.4], 772, 215, "③ 接地的過濾板 Ion filter：帶電粒子撞上就中和", C.grey, { a: "right" });
+    callout([-1.8, 3.8, 0.9], 40, 285, "細孔又深又小：離子撞孔壁，自由基穿過", C.lime);
+    callout([2.6, 0.18, 1.8], 772, 330, "④ 晶圓沒有偏壓 → 沒有鞘層加速", C.cyan, { a: "right" });
+    meter(40, 352, "過濾板上方：離子 ⊕", 0.8, C.red);
+    meter(40, 384, "過濾板下方：離子 ⊕（幾乎為 0）", 0.02, C.red);
+    meter(240, 352, "上方：自由基 F*", 0.9, C.lime);
+    meter(240, 384, "下方：自由基 F*（大部分通過）", 0.75, C.lime);
+    chip("抵達晶圓的只剩自由基 → 純化學、等向性、低損傷", 560, 432, C.cyan, { a: "center", size: 13 });
+    legend([["電子 e⁻", C.yellow], ["離子 ⊕", C.red], ["自由基 F*", C.lime]], 32, 100);
+  },
+});
+
 // ---------- 匯出 ----------
 for (const k of Object.keys(SCENES)) SCENES[k].fps = SCENES[k].fps || 15;
 window.SCENES = SCENES;
