@@ -1,11 +1,10 @@
-// 用 Playwright 逐格繪製 anim.html（2D）與 anim3d.html（3D, three.js）的場景，存成 PNG，再交給 encode_gif.py 合成 GIF
+// 用 Playwright 逐格繪製 anim3d.html（three.js）的場景，存成 PNG，再交給 encode_gif.py 合成 GIF
 // 用法：node nanosheet/build_gifs.js [場景名稱...]
 const path = require("path"), fs = require("fs"), http = require("http"), os = require("os");
 const { execFileSync } = require("child_process");
 let chromium;
 try { ({ chromium } = require("playwright")); } catch { ({ chromium } = require(path.join(execFileSync("npm", ["root", "-g"]).toString().trim(), "playwright"))); }
-const FPS = 15;
-const PAGES = ["anim.html", "anim3d.html"];
+const PAGES = ["anim3d.html"];
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json" };
 
 (async () => {
@@ -28,15 +27,15 @@ const TYPES = { ".html": "text/html", ".js": "text/javascript", ".json": "applic
     await page.goto(base + p);
     await page.waitForFunction(() => window.SCENES && window.renderAt);
     await page.evaluate(() => document.fonts.ready);
-    const scenes = await page.evaluate(() => Object.keys(window.SCENES).map((k) => [k, window.SCENES[k].dur]));
-    for (const [name, dur] of scenes.filter(([n]) => !wanted.length || wanted.includes(n))) {
-      const frames = Math.round(dur * FPS), fdir = path.join(tmp, name);
+    const scenes = await page.evaluate(() => Object.keys(window.SCENES).map((k) => [k, window.SCENES[k].dur, window.SCENES[k].fps]));
+    for (const [name, dur, fps] of scenes.filter(([n]) => !wanted.length || wanted.includes(n))) {
+      const frames = Math.round(dur * fps), fdir = path.join(tmp, name);
       fs.mkdirSync(fdir);
       for (let i = 0; i < frames; i++) {
-        const url = await page.evaluate(([n, t]) => window.renderAt(n, t), [name, i / FPS]);
+        const url = await page.evaluate(([n, t]) => window.renderAt(n, t), [name, i / fps]);
         fs.writeFileSync(path.join(fdir, String(i).padStart(4, "0") + ".png"), Buffer.from(url.split(",")[1], "base64"));
       }
-      execFileSync("python3", [path.join(dir, "encode_gif.py"), fdir, path.join(out, name + ".gif"), String(FPS)], { stdio: "inherit" });
+      execFileSync("python3", [path.join(dir, "encode_gif.py"), fdir, path.join(out, name + ".gif"), String(fps)], { stdio: "inherit" });
     }
   }
   await browser.close();

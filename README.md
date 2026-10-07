@@ -1,6 +1,6 @@
 # MASTER
 
-Patrick 的個人學習知識庫，目前包含十三個主題：
+Patrick 的個人學習知識庫，目前包含十四個主題：
 
 - 「Python 資料結構與經典演算法」：兩階段、16 個單元與 131 堂獨立課程。
 - 「零基礎韓文」：五階段、26 個單元與 143 堂獨立課程，支援中文、RR 羅馬拼音與網站內建發音。
@@ -15,6 +15,7 @@ Patrick 的個人學習知識庫，目前包含十三個主題：
 - 「飛機為什麼不能飛到太空」：給小一小朋友看的 84 秒、7 段動畫影片，小飛機「咻咻」說明翅膀與引擎都要靠空氣、越高空氣越少，以及火箭為什麼能飛上太空。
 - 「月亮為什麼會有圓缺」：給小一小朋友看的 76 秒、6 段 3D 線條動畫影片，小兔子「兔兔」說明太陽照亮月亮的一半、月亮繞地球轉，以及新月到滿月的變化。
 - 「半導體蝕刻原理」：一支約 116 秒、7 段的 HTML Canvas 動畫影片，用 SF₆ 蝕刻矽 Si，對照偏壓蝕刻 bias etch（鞘層讓離子垂直轟擊、非等向性）和化學蝕刻 chemical etch（遠端電漿、只剩自由基、等向性底切），附中文 MP3 旁白、即時合成音效、反應式小卡與補充說明。
+- 「從 FinFET 到 Nanosheet」：給 IT 人的 GAA 電晶體入門，13 張 three.js 3D 動畫 GIF：為什麼從 FinFET 換成 Nanosheet（漏電、4 面閘極控制、疊片、寬度可調），以及 Nanosheet 的 7 個主要製程步驟與總覽。
 
 ## 頁面
 
@@ -59,6 +60,7 @@ Patrick 的個人學習知識庫，目前包含十三個主題：
 - `shimen-reservoir/index.html`：滴滴遊石門水庫兒童動畫影片（播放器、章節、旁白、音效與七個重點；網址加 `?t=秒數` 可直接跳到某個畫面）
 - `airplane-space/index.html`：飛機為什麼不能飛到太空兒童動畫影片
 - `semiconductor-etch/index.html`：半導體蝕刻原理動畫影片（播放器、章節、旁白、音效、全片圖例、重點、反應式小卡與補充；網址加 `?t=秒數` 可直接跳到某個畫面）
+- `nanosheet/index.html`：從 FinFET 到 Nanosheet 主題頁（Part 1 原因、Part 2 製程 7 步驟，每張 GIF 可下載）
 - `moon-phases/index.html`：月亮為什麼會有圓缺 3D 線條兒童動畫影片（Canvas 自製 3D 投影，不用外部套件）
 
 ## 內容維護
@@ -107,6 +109,9 @@ Patrick 的個人學習知識庫，目前包含十三個主題：
 - `semiconductor-etch/data/narration.json`：蝕刻影片的場景長度、字幕 `text`（中英並列）與給 TTS 念的 `speak` 文字
 - `semiconductor-etch/gifs/`：影片 7 段各自的 GIF（960×534、每秒 10 格、循環播放，給簡報使用），由影片畫面逐格匯出；改了動畫或字幕時段後要重新匯出
 - `semiconductor-etch/generate_audio.py`：產生 `semiconductor-etch/audio/` 旁白 MP3，並重建 `semiconductor-etch/narration.js`（旁白超過字幕時段會報錯）
+- `nanosheet/anim3d.html`：所有 GIF 的 three.js 3D 場景（2D HUD 疊圖；用本機 http 伺服器開 `anim3d.html#場景名` 可即時預覽）
+- `nanosheet/build_gifs.js`：用 Playwright 逐格錄製場景，交給 `nanosheet/encode_gif.py`（Pillow）合成共用調色盤的循環 GIF，輸出到 `nanosheet/gifs/`
+- `nanosheet/vendor/three/`：three.js r169 與用到的後製模組（MIT），錄製時不需要連網
 - `shimen-reservoir/data/narration.json`、`shimen-reservoir/generate_audio.py`：水庫影片的字幕與旁白，以及產生 `shimen-reservoir/audio/` 與 `shimen-reservoir/narration.js` 的腳本
 
 修改內容後執行：
@@ -151,6 +156,13 @@ python3 semiconductor-etch/generate_audio.py
 ```
 
 只修改火箭影片字幕、還沒產生音檔時，可執行 `python3 rocket-engine/generate_audio.py --manifest-only`；沒有 MP3 的句子只顯示字幕，音效照常播放。
+
+修改 `nanosheet/anim3d.html` 後重新產生 GIF（需要 Node.js、Playwright 與 Pillow；可只指定場景名稱）：
+
+```bash
+node nanosheet/build_gifs.js
+node nanosheet/build_gifs.js 10-step6-channel-release
+```
 
 ## 動畫影片的旁白播放方式
 

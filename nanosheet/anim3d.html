@@ -6,7 +6,6 @@
 <style>
   body { margin: 0; background: #05070d; }
   canvas { display: block; }
-  #gl, #hud { position: absolute; left: 0; top: 0; }
 </style>
 <script type="importmap">
   { "imports": { "three": "./vendor/three/three.module.min.js", "three/addons/": "./vendor/three/addons/" } }
@@ -15,8 +14,8 @@
 <body>
 <canvas id="out" width="800" height="450"></canvas>
 <script type="module">
-// 3D 場景：用 three.js 繪製，2D HUD 疊在上面，再合成到 #out 讓錄製程式擷取
-// 需要用 http 伺服器開啟（ES module 不能用 file://），預覽：anim3d.html#02-gate-control-3d
+// 所有 GIF 的 3D 場景：three.js 繪製 + 發光後製，2D HUD 疊在上面，合成到 #out 讓 build_gifs.js 擷取。
+// 需要用 http 伺服器開啟（ES module 不能用 file://）。預覽：anim3d.html#02-gate-control
 import * as THREE from "three";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
@@ -26,14 +25,15 @@ import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 const W = 800, H = 450;
 const FONT = '"Noto Sans TC", "Noto Sans CJK TC", sans-serif';
 const MONO = '"DejaVu Sans Mono", "DM Mono", monospace';
-const C = { cyan: "#22e5ff", magenta: "#ff3df2", lime: "#b6ff3d", red: "#ff4d5e", amber: "#ffb340", text: "#e8f6ff", dim: "rgba(232,246,255,.6)" };
+const C = { cyan: "#22e5ff", magenta: "#ff3df2", lime: "#b6ff3d", red: "#ff4d5e", amber: "#ffb340", orange: "#ffa04d", green: "#5dffb0", blue: "#5aa0ff", yellow: "#ffd23d", grey: "#c8ced8", text: "#e8f6ff", dim: "rgba(232,246,255,.62)" };
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const ease = (k) => { k = clamp(k); return k * k * (3 - 2 * k); };
+const seg = (v, a, b) => ease((v - a) / (b - a)); // v 在 a..b 之間的平滑進度
 const fract = (v) => v - Math.floor(v);
 const rnd = (i) => fract(Math.sin(i * 127.1 + 311.7) * 43758.5453);
 const lerp = (a, b, k) => a + (b - a) * k;
 
-// ---------- three.js 基本設定 ----------
+// ---------- three.js ----------
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(1);
 renderer.setSize(W, H);
@@ -46,7 +46,7 @@ const out = document.getElementById("out");
 const octx = out.getContext("2d");
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x05070d, 22, 40);
+scene.fog = new THREE.Fog(0x05070d, 24, 44);
 const camera = new THREE.PerspectiveCamera(36, W / H, 0.1, 100);
 scene.add(new THREE.AmbientLight(0x8fb4ff, 0.9));
 const key = new THREE.DirectionalLight(0xffffff, 1.6);
@@ -55,48 +55,85 @@ scene.add(key);
 const rim = new THREE.DirectionalLight(0xff3df2, 0.6);
 rim.position.set(-8, 4, -6);
 scene.add(rim);
-
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(W, H), 0.9, 0.45, 0.55);
-composer.addPass(bloom);
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.9, 0.45, 0.55));
 composer.addPass(new OutputPass());
-
-// 地板網格
 const grid = new THREE.GridHelper(60, 60, 0x0e3a4a, 0x0a2230);
 grid.position.y = -2.01;
 scene.add(grid);
 
-// 方塊 + 發光邊線
-function box(parent, [x0, y0, z0], [x1, y1, z1], color, { opacity = 1, edge = null, emissive = 0x000000, ei = 0 } = {}) {
-  const g = new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0);
-  const m = new THREE.MeshStandardMaterial({ color, transparent: opacity < 1, opacity, roughness: 0.45, metalness: 0.1, emissive, emissiveIntensity: ei, depthWrite: opacity >= 1 });
-  const mesh = new THREE.Mesh(g, m);
-  mesh.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+// 材料顏色（面, 邊）
+const M = {
+  sub: [0x0f1a2c, 0x2c4a6e], sti: [0x2a3a55, 0x4a6a95], si: [0x1d78c0, 0x4fc3ff], sige: [0xd9822b, 0xffa04d],
+  poly: [0x7c828c, 0xc8ced8], spacer: [0x1f9e6a, 0x5dffb0], inner: [0x14c88a, 0x8dffd0], sd: [0x2a5fd0, 0x5aa0ff],
+  hik: [0xffd23d, 0xffe680], gate: [0xb02cc0, 0xff3df2],
+};
+
+// 單位方塊：用 set(x0,y0,z0,x1,y1,z1) 改尺寸位置，任何一邊為 0 就隱藏
+function mbox(parent, [face, edge], { opacity = 1, emissive = 0x000000, ei = 0, edges = true } = {}) {
+  const g = new THREE.BoxGeometry(1, 1, 1);
+  const mat = new THREE.MeshStandardMaterial({ color: face, transparent: opacity < 1, opacity, roughness: 0.45, metalness: 0.1, emissive, emissiveIntensity: ei, depthWrite: opacity >= 1 });
+  const mesh = new THREE.Mesh(g, mat);
   parent.add(mesh);
-  if (edge !== null) {
-    const lines = new THREE.LineSegments(new THREE.EdgesGeometry(g), new THREE.LineBasicMaterial({ color: edge, transparent: true, opacity: 0.95 }));
-    mesh.add(lines);
-    mesh.userData.lines = lines;
-  }
-  return mesh;
+  let lines = null;
+  if (edges) { lines = new THREE.LineSegments(new THREE.EdgesGeometry(g), new THREE.LineBasicMaterial({ color: edge, transparent: true, opacity: 0.95 })); mesh.add(lines); }
+  const base = { opacity, line: 0.95 };
+  const api = {
+    mesh, mat, lines,
+    set(x0, y0, z0, x1, y1, z1) {
+      const sx = x1 - x0, sy = y1 - y0, sz = z1 - z0;
+      if (sx < 1e-3 || sy < 1e-3 || sz < 1e-3) { mesh.visible = false; return api; }
+      mesh.visible = true;
+      mesh.scale.set(sx, sy, sz);
+      mesh.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+      return api;
+    },
+    alpha(a) { // 0..1 淡入淡出
+      mat.transparent = true; mat.opacity = base.opacity * a; mat.depthWrite = a >= 1 && base.opacity >= 1;
+      if (lines) lines.material.opacity = base.line * a;
+      if (a <= 0.001) mesh.visible = false;
+      return api;
+    },
+    hide() { mesh.visible = false; return api; },
+  };
+  return api;
 }
 
-// 電子：InstancedMesh 發光小球
-function particles(count, color, r = 0.085) {
+// 發光粒子（電子、自由基）
+function particles(parent, count, color, r = 0.1) {
   const mesh = new THREE.InstancedMesh(new THREE.SphereGeometry(r, 10, 8), new THREE.MeshBasicMaterial({ color }), count);
   mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-  scene.add(mesh);
+  parent.add(mesh);
   return mesh;
 }
 const tmp = new THREE.Object3D();
 function place(mesh, list) {
-  list.forEach(([x, y, z, s], i) => { tmp.position.set(x, y, z); tmp.scale.setScalar(s); tmp.updateMatrix(); mesh.setMatrixAt(i, tmp.matrix); });
-  for (let i = list.length; i < mesh.count; i++) { tmp.scale.setScalar(0); tmp.updateMatrix(); mesh.setMatrixAt(i, tmp.matrix); }
+  const n = Math.min(list.length, mesh.count);
+  for (let i = 0; i < n; i++) { const [x, y, z, s = 1] = list[i]; tmp.position.set(x, y, z); tmp.scale.setScalar(s); tmp.updateMatrix(); mesh.setMatrixAt(i, tmp.matrix); }
+  tmp.scale.setScalar(0); tmp.updateMatrix();
+  for (let i = n; i < mesh.count; i++) mesh.setMatrixAt(i, tmp.matrix);
   mesh.instanceMatrix.needsUpdate = true;
 }
 
-// ---------- 2D HUD 工具 ----------
+// 導通電子流：閘極開啟時才進入通道（關閉後已在通道內的電子跑完）
+function stream(list, { n, seed, t, speed, x0, x1, lane, gate = () => true, axis = "x" }) {
+  for (let i = 0; i < n; i++) {
+    const ph = fract(rnd(i + seed) + t * speed);
+    if (!gate(t - ph / speed)) continue;
+    const [a, b] = lane(i + seed);
+    const p = lerp(x0, x1, ph);
+    list.push(axis === "x" ? [p, a, b] : [a, b, p]);
+  }
+}
+
+function camOrbit(t, dur, { r = 20, h = 8.5, a0 = 0.2, amp = 0.1, look = [0, 0.6, 0] } = {}) {
+  const a = Math.sin((t / dur) * Math.PI * 2) * amp + a0;
+  camera.position.set(Math.sin(a) * r + look[0], h, Math.cos(a) * r + look[2]);
+  camera.lookAt(look[0], look[1], look[2]);
+}
+
+// ---------- 2D HUD ----------
 function text(s, x, y, o = {}) {
   const c = hctx; c.save();
   c.font = `${o.w || 600} ${o.size || 16}px ${o.mono ? MONO : FONT}`;
@@ -110,12 +147,12 @@ function chip(s, x, y, color, o = {}) {
   const w = c.measureText(s).width + 22, h = (o.size || 14) + 14;
   const bx = o.a === "center" ? x - w / 2 : o.a === "right" ? x - w : x;
   c.globalAlpha = o.alpha ?? 1;
-  c.fillStyle = "rgba(5,7,13,.82)"; c.fillRect(bx, y - h / 2, w, h);
+  c.fillStyle = "rgba(5,7,13,.84)"; c.fillRect(bx, y - h / 2, w, h);
   c.strokeStyle = color; c.lineWidth = 1.5; c.shadowColor = color; c.shadowBlur = 8;
   c.strokeRect(bx + .5, y - h / 2 + .5, w - 1, h - 1);
   c.shadowBlur = 0; c.fillStyle = color; c.textBaseline = "middle"; c.fillText(s, bx + 11, y + 1);
   c.restore();
-  return { x: bx, w, h };
+  return { x: bx, y: y - h / 2, w, h };
 }
 function frame(title, tag) {
   const c = hctx; c.save(); c.strokeStyle = C.cyan; c.lineWidth = 2; c.globalAlpha = .8;
@@ -128,142 +165,483 @@ function frame(title, tag) {
   text(title, 28, 64, { size: 22, w: 700 });
 }
 const proj = (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return [(v.x + 1) / 2 * W, (1 - v.y) / 2 * H]; };
-function leader(from, to, color, alpha = 1) {
-  const c = hctx; c.save(); c.globalAlpha = alpha; c.strokeStyle = color; c.fillStyle = color; c.lineWidth = 1.5;
-  c.beginPath(); c.moveTo(from[0], from[1]); c.lineTo(to[0], to[1]); c.stroke();
-  c.beginPath(); c.arc(from[0], from[1], 3, 0, Math.PI * 2); c.fill(); c.restore();
+// 3D 點拉一條引線到標籤
+function callout(p3, x, y, s, color, o = {}) {
+  const a = o.alpha ?? 1;
+  if (a <= 0.01) return;
+  const p = proj(...p3);
+  const box = chip(s, x, y, color, { ...o, alpha: a });
+  const tx = clamp(p[0], box.x, box.x + box.w), ty = p[1] < box.y ? box.y : box.y + box.h;
+  const c = hctx; c.save(); c.globalAlpha = a; c.strokeStyle = color; c.fillStyle = color; c.lineWidth = 1.5;
+  c.beginPath(); c.moveTo(p[0], p[1]); c.lineTo(tx, ty); c.stroke();
+  c.beginPath(); c.arc(p[0], p[1], 3, 0, Math.PI * 2); c.fill(); c.restore();
 }
-function meter(x, y, label, value, color) {
+function meter(x, y, label, value, color, valueText = "") {
   text(label, x, y, { size: 12, c: C.dim, w: 500 });
+  if (valueText) text(valueText, x + 150, y, { size: 12, c: color, w: 700, a: "right", mono: true });
   const c = hctx; c.save();
   c.strokeStyle = "rgba(232,246,255,.35)"; c.strokeRect(x + .5, y + 6.5, 150, 10);
   c.fillStyle = color; c.shadowColor = color; c.shadowBlur = 8; c.fillRect(x + 2, y + 8, 146 * clamp(value), 7);
   c.restore();
 }
+function bitBox(on) {
+  const col = on ? C.lime : C.red, c = hctx;
+  c.save(); c.strokeStyle = col; c.lineWidth = 2; c.shadowColor = col; c.shadowBlur = 14; c.strokeRect(650, 28, 120, 66); c.restore();
+  text(on ? "1" : "0", 690, 80, { size: 50, mono: true, c: col, glow: col, a: "center", w: 700 });
+  text(on ? "ON" : "OFF", 742, 68, { size: 15, mono: true, c: col, a: "center" });
+}
+function fadeEdges(t, dur, d = 0.25) { // 循環接縫處淡出淡入
+  const a = Math.max(1 - t / d, 1 - (dur - t) / d, 0);
+  if (a > 0) { hctx.save(); hctx.fillStyle = `rgba(5,7,13,${clamp(a)})`; hctx.fillRect(0, 0, W, H); hctx.restore(); }
+}
 
-// ---------- 場景：GIF 2 閘極控制力（3D） ----------
 const SCENES = {};
-{
-  const root = new THREE.Group();
-  scene.add(root);
-  const SUB = 0x0f1a2c, STI = 0x2a3a55, SI = 0x1d78c0, SD = 0x2a5fd0, GATE = 0xb02cc0;
-  const L = 4.6; // 元件半長（z 方向，電流方向）
-  const gateZ = 1.3, chZ = 3.1;
+function addScene(name, def) {
+  const group = new THREE.Group();
+  group.visible = false;
+  scene.add(group);
+  def.setup(group);
+  SCENES[name] = { ...def, group };
+}
 
-  // FinFET（左）
-  const fx = -4.6;
-  box(root, [fx - 3, -2, -L], [fx + 3, -1, L], SUB, { edge: 0x2c4a6e });
-  box(root, [fx - 3, -1, -L], [fx + 3, 0, L], STI, { opacity: 0.3, edge: 0x4a6a95 });
-  const fin = box(root, [fx - 0.5, -1, -chZ], [fx + 0.5, 3, chZ], SI, { edge: 0x4fc3ff, emissive: 0x0a3a66, ei: 0.4, opacity: 0.38 });
-  const gateF = box(root, [fx - 1.9, 0, -gateZ], [fx + 1.9, 4, gateZ], GATE, { opacity: 0.32, edge: 0xff3df2, emissive: 0x6a0a78, ei: 0.5 });
-  // 只畫後方的源極；前方汲極省略，讓鏡頭看得到通道切面
-  box(root, [fx - 1.3, -0.1, -L], [fx + 1.3, 3.4, -chZ], SD, { opacity: 0.22, edge: 0x3a70c0 });
+// =====================================================================
+// GIF 00：電晶體就是開關
+// =====================================================================
+addScene("00-switch", {
+  dur: 4,
+  setup(g) {
+    this.b = {
+      sub: mbox(g, M.sub).set(-5, -2, -2, 5, -1, 2),
+      ch: mbox(g, M.si, { opacity: 0.38, emissive: 0x0a3a66, ei: 0.4 }).set(-2, -1, -1.2, 2, 0, 1.2),
+      s: mbox(g, M.sd, { opacity: 0.4 }).set(-4.6, -1, -1.4, -2, 0.6, 1.4),
+      d: mbox(g, M.sd, { opacity: 0.4 }).set(2, -1, -1.4, 4.6, 0.6, 1.4),
+      ox: mbox(g, M.hik, { opacity: 0.9 }).set(-1.7, 0, -1.2, 1.7, 0.12, 1.2),
+      gate: mbox(g, M.gate, { opacity: 0.35, emissive: 0x6a0a78, ei: 0.5 }).set(-1.7, 0.12, -1.2, 1.7, 2.2, 1.2),
+    };
+    this.e = particles(g, 160, 0x9ff8ff, 0.11);
+    this.res = particles(g, 120, 0x22c5ff, 0.08);
+  },
+  render(t) {
+    camOrbit(t, this.dur, { r: 17, h: 7.5, a0: 0.42, amp: 0.08, look: [0, -0.2, 0] });
+    const isOn = (tt) => fract(tt / 4) < 0.5;
+    const tl = t % 4, on = tl < 2 ? seg(tl, 0, 0.25) : 1 - seg(tl, 2, 2.25);
+    const gm = this.b.gate;
+    gm.mat.emissiveIntensity = 0.2 + 1.3 * on; gm.mat.opacity = 0.2 + 0.2 * on; gm.lines.material.opacity = 0.4 + 0.6 * on;
+    const list = [];
+    stream(list, { n: 90, seed: 0, t, speed: 0.6, x0: -2.2, x1: 2.2, lane: (i) => [-0.9 + rnd(i + 3) * 0.8, -1.1 + rnd(i + 5) * 2.2], gate: isOn });
+    place(this.e, list);
+    const res = [];
+    for (const [x0, x1, sd] of [[-4.4, -2.2, 0], [2.2, 4.4, 99]]) for (let i = 0; i < 55; i++) res.push([lerp(x0, x1, rnd(i + sd)) + Math.sin(t * 3 + i) * 0.05, -0.9 + rnd(i + sd + 7) * 1.4, -1.2 + rnd(i + sd + 9) * 2.4 + Math.cos(t * 2.6 + i) * 0.05]);
+    place(this.res, res);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("電晶體就是開關 Transistor = Switch", "NANOSHEET / 00");
+    bitBox(on > 0.5);
+    callout([-3.3, 0.6, 0], 70, 150, "源極 Source", C.blue);
+    callout([3.3, 0.6, 0], 600, 150, "汲極 Drain", C.blue);
+    callout([0, 2.2, -0.6], 330, 120, "閘極 Gate", C.magenta);
+    callout([0, -0.5, 1.2], 300, 330, "通道 Channel", C.cyan);
+    chip(on > 0.5 ? "閘極加電壓 → 電子流過 = 1" : "閘極不加電壓 → 電子停住 = 0", 400, 395, on > 0.5 ? C.lime : C.red, { a: "center", size: 16 });
+  },
+});
 
-  // Nanosheet（右）
-  const nx = 4.6;
-  box(root, [nx - 3, -2, -L], [nx + 3, -1, L], SUB, { edge: 0x2c4a6e });
-  box(root, [nx - 3, -1, -L], [nx + 3, 0, L], STI, { opacity: 0.3, edge: 0x4a6a95 });
-  box(root, [nx - 0.6, -1, -chZ], [nx + 0.6, 0.2, chZ], SI, { edge: 0x4fc3ff, emissive: 0x0a3a66, ei: 0.3, opacity: 0.6 });
-  const sheetsY = [1.0, 2.0, 3.0], sh = 0.5, sw = 1.5;
-  sheetsY.forEach((y) => box(root, [nx - sw, y - sh / 2, -chZ], [nx + sw, y + sh / 2, chZ], SI, { edge: 0x4fc3ff, emissive: 0x0a3a66, ei: 0.4, opacity: 0.38 }));
-  const gateN = box(root, [nx - 2.2, 0.3, -gateZ], [nx + 2.2, 4, gateZ], GATE, { opacity: 0.32, edge: 0xff3df2, emissive: 0x6a0a78, ei: 0.5 });
-  box(root, [nx - 2, 0.3, -L], [nx + 2, 3.5, -chZ], SD, { opacity: 0.22, edge: 0x3a70c0 });
+// =====================================================================
+// GIF 01：越小越漏電（閘極長度縮短，關閉時仍有電子溜過）
+// =====================================================================
+addScene("01-leakage", {
+  dur: 6,
+  setup(g) {
+    this.b = {
+      sub: mbox(g, M.sub).set(-5, -2, -2, 5, -1, 2),
+      ch: mbox(g, M.si, { opacity: 0.38, emissive: 0x0a3a66, ei: 0.4 }),
+      s: mbox(g, M.sd, { opacity: 0.4 }), d: mbox(g, M.sd, { opacity: 0.4 }),
+      gate: mbox(g, M.gate, { opacity: 0.22, emissive: 0x6a0a78, ei: 0.25 }),
+    };
+    this.b.gate.lines.material.opacity = 0.5;
+    this.e = particles(g, 120, 0xff4d5e, 0.12);
+  },
+  render(t) {
+    camOrbit(t, this.dur, { r: 17, h: 7.5, a0: 0.42, amp: 0.06, look: [0, -0.2, 0] });
+    const k = seg(t, 0.4, 4.2) * (1 - seg(t, 5.4, 5.9)); // 0 = 大、1 = 小
+    const Lg = lerp(1.9, 0.45, k);
+    const b = this.b;
+    b.gate.set(-Lg, 0, -1.2, Lg, 2.2, 1.2);
+    b.ch.set(-Lg - 0.3, -1, -1.2, Lg + 0.3, 0, 1.2);
+    b.s.set(-4.6, -1, -1.4, -Lg - 0.3, 0.6, 1.4);
+    b.d.set(Lg + 0.3, -1, -1.4, 4.6, 0.6, 1.4);
+    const leak = Math.pow(k, 1.6);
+    const list = [];
+    for (let i = 0; i < 110; i++) {
+      if (rnd(i + 40) > leak) continue;
+      const ph = fract(rnd(i) + t * 0.6);
+      list.push([lerp(-Lg - 0.5, Lg + 0.5, ph), -0.9 + rnd(i + 3) * 0.8, -1.1 + rnd(i + 5) * 2.2]);
+    }
+    place(this.e, list);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("越小越漏電 Scaling → Leakage", "NANOSHEET / 01");
+    chip("GATE = OFF（一直是關閉狀態）", 772, 40, C.magenta, { a: "right", mono: true, size: 13 });
+    callout([0, 2.2, -0.4], 330, 112, "閘極越做越短 Gate length ↓", C.magenta);
+    callout([0, -0.5, 1.2], 470, 330, "關閉時仍有電子溜過 = 漏電", C.red, { alpha: seg(leak, 0.05, 0.25) });
+    meter(40, 400, "閘極長度 Gate length（示意）", 1 - k * 0.76, C.magenta);
+    meter(610, 400, "漏電 Leakage", leak, C.red);
+    fadeEdges(t, this.dur);
+  },
+});
 
-  const eOn = particles(420, 0x9ff8ff, 0.11);
-  const eLeak = particles(60, 0xff4d5e, 0.12);
-  const eRes = particles(240, 0x22c5ff, 0.07);
+// =====================================================================
+// GIF 02：閘極控制力 3 面 vs 4 面
+// =====================================================================
+addScene("02-gate-control", {
+  dur: 6,
+  setup(g) {
+    const L = 4.6, gateZ = 1.3, chZ = 3.1;
+    Object.assign(this, { L, gateZ, chZ, fx: -4.6, nx: 4.6, sheetsY: [1.0, 2.0, 3.0], sh: 0.5, sw: 1.5 });
+    const { fx, nx, sheetsY, sh, sw } = this;
+    const SI = { opacity: 0.38, emissive: 0x0a3a66, ei: 0.4 };
+    for (const x of [fx, nx]) {
+      mbox(g, M.sub).set(x - 3, -2, -L, x + 3, -1, L);
+      mbox(g, M.sti, { opacity: 0.3 }).set(x - 3, -1, -L, x + 3, 0, L);
+    }
+    mbox(g, M.si, SI).set(fx - 0.5, -1, -chZ, fx + 0.5, 3, chZ);
+    this.gF = mbox(g, M.gate, { opacity: 0.32, emissive: 0x6a0a78, ei: 0.5 }).set(fx - 1.9, 0, -gateZ, fx + 1.9, 4, gateZ);
+    mbox(g, M.sd, { opacity: 0.22 }).set(fx - 1.3, -0.1, -L, fx + 1.3, 3.4, -chZ);
+    mbox(g, M.si, { ...SI, opacity: 0.3 }).set(nx - 0.6, -1, -chZ, nx + 0.6, 0.2, chZ);
+    sheetsY.forEach((y) => mbox(g, M.si, SI).set(nx - sw, y - sh / 2, -chZ, nx + sw, y + sh / 2, chZ));
+    this.gN = mbox(g, M.gate, { opacity: 0.32, emissive: 0x6a0a78, ei: 0.5 }).set(nx - 2.2, 0.3, -gateZ, nx + 2.2, 4, gateZ);
+    mbox(g, M.sd, { opacity: 0.22 }).set(nx - 2, 0.3, -L, nx + 2, 3.5, -chZ);
+    this.eOn = particles(g, 420, 0x9ff8ff, 0.11);
+    this.eLeak = particles(g, 60, 0xff4d5e, 0.12);
+    this.eRes = particles(g, 160, 0x22c5ff, 0.07);
+  },
+  render(t) {
+    const { L, chZ, fx, nx, sheetsY, sw } = this, DUR = this.dur;
+    camOrbit(t, DUR, { r: 22, h: 8.5, a0: 0.18, amp: 0.1, look: [0, 0.4, 0] });
+    const gateOn = (tt) => fract(tt / DUR) * DUR < 2.6;
+    const tl = t % DUR, on = tl < 2.6 ? 1 - seg(tl, 2.3, 2.6) : seg(tl, 5.7, 6);
+    for (const gm of [this.gF, this.gN]) { gm.mat.emissiveIntensity = 0.25 + 1.1 * on; gm.mat.opacity = 0.22 + 0.16 * on; gm.lines.material.opacity = 0.45 + 0.55 * on; }
+    const list = [];
+    stream(list, { n: 150, seed: 0, t, speed: 0.55, x0: -chZ, x1: chZ, axis: "z", gate: gateOn, lane: (i) => [fx - 0.4 + rnd(i + 3) * 0.8, 0.15 + rnd(i + 5) * 2.7] });
+    sheetsY.forEach((y, s) => stream(list, { n: 80, seed: 500 + s * 97, t, speed: 0.55, x0: -chZ, x1: chZ, axis: "z", gate: gateOn, lane: (i) => [nx - sw + 0.1 + rnd(i + 3) * (sw * 2 - 0.2), y - 0.18 + rnd(i + 5) * 0.36] }));
+    place(this.eOn, list);
+    const leak = [];
+    stream(leak, { n: 40, seed: 900, t, speed: 0.55, x0: -chZ, x1: chZ, axis: "z", lane: (i) => [fx - 0.4 + rnd(i + 1) * 0.8, -0.9 + rnd(i + 2) * 0.8] });
+    place(this.eLeak, leak);
+    this.eLeak.material.color.set(on > 0.5 ? 0x9ff8ff : 0xff4d5e);
+    const res = [];
+    for (const [cx, w, y0, y1] of [[fx, 1.1, 0.1, 3.2], [nx, 1.8, 0.5, 3.3]]) for (let i = 0; i < 60; i++) {
+      const k = i + cx * 10;
+      res.push([cx - w + rnd(k) * 2 * w + Math.sin(t * 3 + i) * 0.05, y0 + rnd(k + 1) * (y1 - y0), -lerp(chZ + 0.15, L - 0.15, rnd(k + 2)) + Math.cos(t * 2.7 + i) * 0.05]);
+    }
+    place(this.eRes, res);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("閘極控制力：3 面 vs 4 面 Gate Control", "NANOSHEET / 02");
+    const pf = proj(fx, 4.4, 0), pn = proj(nx, 4.4, 0);
+    chip("FinFET｜閘極包 3 面", pf[0], pf[1] - 6, C.amber, { a: "center" });
+    chip("Nanosheet｜閘極包 4 面", pn[0], pn[1] - 6, C.lime, { a: "center" });
+    chip(on > 0.5 ? "GATE = ON（導通）" : "GATE = OFF（關閉）", 772, 40, on > 0.5 ? C.cyan : C.magenta, { a: "right", mono: true, size: 13 });
+    const off = 1 - on;
+    if (off > 0.05) {
+      callout([fx, -0.5, chZ * 0.6], 120, 380, "底部閘極管不到 → 漏電", C.red, { alpha: off });
+      callout([nx + sw, 2, chZ * 0.6], 560, 380, "四面包住 → 完全關閉", C.lime, { alpha: off });
+    } else chip("導通：電子從後方源極沿通道流向鏡頭（前方汲極省略）", 400, 380, C.cyan, { a: "center" });
+    meter(40, 412, "FinFET 電流", on > 0.5 ? 0.9 : 0.25, on > 0.5 ? C.cyan : C.red);
+    meter(610, 412, "Nanosheet 電流", on > 0.5 ? 1 : 0, C.cyan);
+    text("關閉時仍有電流 = 漏電", 200, 425, { size: 12, c: C.red, w: 600, alpha: off });
+  },
+});
 
-  const DUR = 6;
-  const gateOn = (tt) => fract(tt / DUR) * DUR < 2.6;
+// =====================================================================
+// GIF 03：多片疊起來 = 多車道
+// =====================================================================
+addScene("03-stacking", {
+  dur: 6,
+  setup(g) {
+    Object.assign(this, { chZ: 3.1, sw: 1.6, sh: 0.5, ys: [1.0, 2.0, 3.0] });
+    const { chZ, sw, sh, ys } = this;
+    mbox(g, M.sub).set(-3.2, -2, -4.6, 3.2, -1, 4.6);
+    mbox(g, M.sti, { opacity: 0.3 }).set(-3.2, -1, -4.6, 3.2, 0, 4.6);
+    mbox(g, M.si, { opacity: 0.3, emissive: 0x0a3a66, ei: 0.3 }).set(-0.6, -1, -chZ, 0.6, 0.2, chZ);
+    this.sheets = ys.map(() => mbox(g, M.si, { opacity: 0.38, emissive: 0x0a3a66, ei: 0.4 }));
+    this.gate = mbox(g, M.gate, { opacity: 0.3, emissive: 0x6a0a78, ei: 1.1 });
+    mbox(g, M.sd, { opacity: 0.22 }).set(-2.1, 0.3, -4.6, 2.1, 3.5, -chZ);
+    // 佔地面積框（地板上）
+    const fp = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(4.4, 0.01, 9.2)), new THREE.LineDashedMaterial({ color: 0xb6ff3d, dashSize: 0.3, gapSize: 0.2 }));
+    fp.position.set(0, 0.02, 0); fp.computeLineDistances(); g.add(fp);
+    this.e = particles(g, 360, 0x9ff8ff, 0.11);
+  },
+  render(t) {
+    const { chZ, sw, sh, ys } = this;
+    camOrbit(t, this.dur, { r: 17, h: 8, a0: 0.5, amp: 0.08, look: [0, 1, 0] });
+    const n = t < 1.6 ? 1 : t < 3.2 ? 2 : 3;
+    const grow = [1, seg(t, 1.6, 2.0), seg(t, 3.2, 3.6)].map((v, i) => i === 0 ? 1 : v * (1 - seg(t, 5.5, 5.9)));
+    ys.forEach((y, i) => { const gk = grow[i]; this.sheets[i].set(-sw, y - sh / 2, -chZ, -sw + 2 * sw * Math.max(gk, 0.001), y + sh / 2, chZ); this.sheets[i].alpha(gk); });
+    const top = ys[Math.max(0, grow.filter((v) => v > 0.5).length - 1)] + 0.9;
+    this.gate.set(-2.2, 0.3, -1.3, 2.2, Math.max(1.6, top), 1.3);
+    const list = [];
+    ys.forEach((y, s) => { if (grow[s] < 0.9) return; stream(list, { n: 45, seed: s * 131, t, speed: 0.55, x0: -chZ, x1: chZ, axis: "z", lane: (i) => [-sw + 0.1 + rnd(i + 3) * (2 * sw - 0.2), y - 0.18 + rnd(i + 5) * 0.36] }); });
+    place(this.e, list);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("多片疊起來 = 多車道 Stacked Sheets", "NANOSHEET / 03");
+    const active = grow.filter((v) => v > 0.9).length;
+    chip(`${active} 片通道 × 電流`, 772, 40, C.cyan, { a: "right", mono: true, size: 13 });
+    callout([2.2, 0.02, 3.5], 560, 360, "佔地面積不變 Same footprint", C.lime);
+    callout([sw, ys[active - 1], chZ * 0.6], 560, 150, `第 ${active} 片 Sheet ${active}`, C.cyan);
+    meter(40, 400, "電流 Drive current", active / 3, C.cyan, `×${active}`);
+    chip("同樣的面積，往上疊越多片，電流越大、速度越快", 400, 432, C.cyan, { a: "center", size: 13, alpha: 0.95 });
+    fadeEdges(t, this.dur);
+  },
+});
 
-  SCENES["02-gate-control-3d"] = {
-    dur: DUR,
+// =====================================================================
+// GIF 04：寬度可以調
+// =====================================================================
+addScene("04-width", {
+  dur: 6,
+  setup(g) {
+    Object.assign(this, { chZ: 3.1, fx: -4.6, nx: 4.6 });
+    const { chZ, fx, nx } = this;
+    for (const x of [fx, nx]) { mbox(g, M.sub).set(x - 3, -2, -4.6, x + 3, -1, 4.6); mbox(g, M.sti, { opacity: 0.3 }).set(x - 3, -1, -4.6, x + 3, 0, 4.6); }
+    this.fins = [0, 1, 2].map(() => mbox(g, M.si, { opacity: 0.38, emissive: 0x0a3a66, ei: 0.4 }));
+    this.gF = mbox(g, M.gate, { opacity: 0.28, emissive: 0x6a0a78, ei: 0.9 });
+    this.sheets = [1.0, 2.0, 3.0].map(() => mbox(g, M.si, { opacity: 0.38, emissive: 0x0a3a66, ei: 0.4 }));
+    this.gN = mbox(g, M.gate, { opacity: 0.28, emissive: 0x6a0a78, ei: 0.9 });
+    mbox(g, M.si, { opacity: 0.3 }).set(nx - 0.5, -1, -chZ, nx + 0.5, 0.2, chZ);
+    this.e = particles(g, 520, 0x9ff8ff, 0.1);
+  },
+  render(t) {
+    const { chZ, fx, nx } = this;
+    camOrbit(t, this.dur, { r: 22, h: 8.5, a0: 0.18, amp: 0.08, look: [0, 0.6, 0] });
+    const nf = t < 2 ? 1 : t < 4 ? 2 : 3; // FinFET：整數跳
+    const xs = { 1: [0], 2: [-0.7, 0.7], 3: [-1.4, 0, 1.4] }[nf];
+    this.fins.forEach((f, i) => i < nf ? f.set(fx + xs[i] - 0.3, -1, -chZ, fx + xs[i] + 0.3, 3, chZ) : f.hide());
+    this.gF.set(fx - 2.4, 0, -1.3, fx + 2.4, 3.8, 1.3);
+    const w = lerp(0.5, 2.4, seg(t, 0.3, 5.2)); // Nanosheet：連續
+    const wr = t > 5.6 ? lerp(w, 0.5, seg(t, 5.6, 5.95)) : w;
+    this.sheets.forEach((s, i) => s.set(nx - wr, 1 + i - 0.25, -chZ, nx + wr, 1 + i + 0.25, chZ));
+    this.gN.set(nx - wr - 0.6, 0.3, -1.3, nx + wr + 0.6, 3.8, 1.3);
+    const list = [];
+    xs.forEach((x, j) => stream(list, { n: 40, seed: j * 77, t, speed: 0.55, x0: -chZ, x1: chZ, axis: "z", lane: (i) => [fx + x - 0.22 + rnd(i + 3) * 0.44, 0.1 + rnd(i + 5) * 2.8] }));
+    [1, 2, 3].forEach((y, s) => stream(list, { n: Math.round(15 + 35 * wr / 2.4), seed: 400 + s * 59, t, speed: 0.55, x0: -chZ, x1: chZ, axis: "z", lane: (i) => [nx - wr + 0.1 + rnd(i + 3) * (2 * wr - 0.2), y - 0.16 + rnd(i + 5) * 0.32] }));
+    place(this.e, list);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("寬度可以調 Tunable Width", "NANOSHEET / 04");
+    const pf = proj(fx, 4.2, 0), pn = proj(nx, 4.2, 0);
+    chip("FinFET｜只能 1、2、3 片鰭整數跳", pf[0], pf[1] - 6, C.amber, { a: "center" });
+    chip("Nanosheet｜薄片寬度連續可調", pn[0], pn[1] - 6, C.lime, { a: "center" });
+    meter(40, 400, "FinFET 寬度", nf / 3, C.amber, `${nf} fin${nf > 1 ? "s" : ""}`);
+    meter(610, 400, "Nanosheet 寬度", wr / 2.4, C.lime, `${(wr * 20).toFixed(0)} nm`);
+    chip("要省電做窄、要效能做寬 —— 設計彈性更大", 400, 432, C.cyan, { a: "center", size: 13 });
+    fadeEdges(t, this.dur);
+  },
+});
+
+// =====================================================================
+// Part 2：製程。共用一個模型，用 s = 0..7 表示做到第幾步
+// =====================================================================
+const ZC = 0.75; // 鰭的正面；閘極類結構切在這裡（剖開），鏡頭看得到閘極下方的疊層
+const XL = 3.6; // 元件半長（電流方向）
+const LAYERS = [0, 0.35, 0.85, 1.2, 1.7, 2.05, 2.55]; // 由下往上：SiGe, Si, SiGe, Si, SiGe, Si
+const STEPS = [
+  { tag: "STEP 1 / 7", title: "疊層磊晶 Superlattice Epi", note: "在矽晶圓上交替長出 SiGe 與 Si，像千層蛋糕；SiGe 之後會被挖掉" },
+  { tag: "STEP 2 / 7", title: "刻出鰭 Fin Etch + STI", note: "把千層疊層刻成長條鰭，兩側填入氧化層（STI）做隔離" },
+  { tag: "STEP 3 / 7", title: "假閘極 Dummy Gate + Spacer", note: "先放一條多晶矽「假閘極」佔位置，兩側加上間隔層" },
+  { tag: "STEP 4 / 7", title: "內間隔層 Inner Spacer", note: "挖開源汲極區，SiGe 從側面內縮，再補上絕緣的內間隔層" },
+  { tag: "STEP 5 / 7", title: "源極 / 汲極磊晶 S/D Epi", note: "從薄片兩端長出源極 / 汲極晶體 —— 電子的入口與出口" },
+  { tag: "STEP 6 / 7", title: "通道釋放 Channel Release", note: "移除假閘極，用化學蝕刻只挖掉 SiGe，Si 薄片懸空（最關鍵的一步）" },
+  { tag: "STEP 7 / 7", title: "金屬閘極 High-k + Metal Gate", note: "高介電層與金屬整圈包住每一片，通電後電子流過" },
+];
+const proc = {};
+function buildProcess(g) {
+  proc.sub = mbox(g, M.sub).set(-XL - 0.8, -2, -3, XL + 0.8, -1, 3);
+  proc.upper = mbox(g, M.sub); // 鰭下方的矽（sub-fin）
+  proc.sti = [mbox(g, M.sti, { opacity: 0.45 }), mbox(g, M.sti, { opacity: 0.45 })];
+  proc.layers = LAYERS.slice(0, -1).map((y0, i) => ({
+    y0, y1: LAYERS[i + 1], sige: i % 2 === 0,
+    L: mbox(g, i % 2 === 0 ? M.sige : M.si), Cm: mbox(g, i % 2 === 0 ? M.sige : M.si, i % 2 ? { opacity: 1, emissive: 0x0a3a66, ei: 0.2 } : {}), R: mbox(g, i % 2 === 0 ? M.sige : M.si),
+  }));
+  proc.dg = [mbox(g, M.poly), mbox(g, M.poly)];
+  proc.sp = [0, 1, 2, 3].map(() => mbox(g, M.spacer));
+  proc.inner = [];
+  proc.layers.forEach((l) => { if (l.sige) proc.inner.push(mbox(g, M.inner), mbox(g, M.inner)); });
+  proc.sd = [mbox(g, M.sd, { opacity: 0.55 }), mbox(g, M.sd, { opacity: 0.55 })];
+  proc.hik = proc.layers.filter((l) => !l.sige).map(() => mbox(g, M.hik, { opacity: 0.4 }));
+  proc.metal = [0, 1, 2, 3, 4].map(() => mbox(g, M.gate, { opacity: 0.55, emissive: 0x6a0a78, ei: 0.4 }));
+  proc.rad = particles(g, 90, 0x6dff6a, 0.08);
+  proc.e = particles(g, 260, 0x9ff8ff, 0.1);
+  proc.res = particles(g, 120, 0x22c5ff, 0.07);
+}
+function setProcess(s, t) {
+  const p1 = seg(s, 0, 1), finE = seg(s, 1, 1.7), stiF = seg(s, 1.7, 2);
+  const dgDrop = seg(s, 2, 2.6), spG = seg(s, 2.6, 3);
+  const rec = seg(s, 3, 3.4), lat = seg(s, 3.4, 3.7), inn = seg(s, 3.7, 4);
+  const epi = seg(s, 4, 5);
+  const dgOut = seg(s, 5, 5.35), rel = seg(s, 5.35, 6);
+  const hk = seg(s, 6, 6.3), mf = seg(s, 6.3, 6.75), on = seg(s, 6.75, 6.9);
+  const zw = lerp(3, 0.75, finE), zBack = -zw, zFront = zw; // 鰭蝕刻：從兩側往內縮
+  // 基板上層 / sub-fin
+  proc.upper.set(-XL - 0.8 * (1 - finE), -1, zBack, XL + 0.8 * (1 - finE), 0, zFront);
+  const stiTop = lerp(-1, 0, stiF);
+  proc.sti[0].set(-XL - 0.8, -1, -3, XL + 0.8, stiTop, -0.75);
+  proc.sti[1].set(-XL - 0.8, -1, 0.75, XL + 0.8, stiTop, 3);
+  // 疊層
+  const xIn = 1.2, xG = 0.8;
+  proc.layers.forEach((l, i) => {
+    const grow = clamp(p1 * 6 - i);
+    let y1 = l.y0 + (l.y1 - l.y0) * grow;
+    const recK = clamp(rec * 6 - (5 - i)); // S/D 區由上往下挖
+    const y1sd = lerp(y1, l.y0, recK);
+    if (s < 3) { // 還沒挖源汲極前，整層是一塊
+      l.L.hide(); l.R.hide();
+      l.Cm.set(-XL, l.y0, zBack, XL, y1, zFront);
+      return;
+    }
+    l.L.set(-XL, l.y0, zBack, -xIn, y1sd, zFront);
+    l.R.set(xIn, l.y0, zBack, XL, y1sd, zFront);
+    if (l.sige) {
+      const xc = lerp(xIn, xG, lat);
+      const relK = rel; // 通道釋放：SiGe 往中間縮到消失
+      const ym = (l.y0 + l.y1) / 2, hh = (l.y1 - l.y0) / 2 * (1 - relK);
+      l.Cm.set(-xc, ym - hh, zBack, xc, ym + hh, zFront);
+      if (relK > 0.98) l.Cm.hide();
+    } else {
+      l.Cm.set(-xIn, l.y0, zBack, xIn, y1, zFront);
+      l.Cm.alpha(s > 6.5 ? 0.5 : 1); // 通電時讓電子透出來
+    }
+  });
+  // 假閘極
+  const top = LAYERS[6], dy = (1 - dgDrop) * 4 + dgOut * 3.5, da = Math.min(dgDrop, 1 - dgOut);
+  proc.dg[0].set(-xG, top + dy, -2.4, xG, 3.6 + dy, ZC).alpha(da);
+  proc.dg[1].set(-xG, 0 + dy, -2.4, xG, top + dy, -0.75).alpha(da);
+  if (da <= 0.01) proc.dg.forEach((b) => b.hide());
+  // 間隔層
+  const sw = 0.4 * spG;
+  [-1, 1].forEach((sgn, j) => {
+    const a = sgn < 0 ? -xG - sw : xG, b = sgn < 0 ? -xG : xG + sw;
+    proc.sp[j * 2].set(a, top, -2.4, b, 3.6, ZC);
+    proc.sp[j * 2 + 1].set(a, 0, -2.4, b, top, -0.75);
+  });
+  // 內間隔層
+  let k = 0;
+  proc.layers.forEach((l) => {
+    if (!l.sige) return;
+    const w = 0.4 * inn;
+    proc.inner[k++].set(-xIn, l.y0, -0.75, -xIn + w, l.y1, ZC);
+    proc.inner[k++].set(xIn - w, l.y0, -0.75, xIn, l.y1, ZC);
+  });
+  // 源極 / 汲極
+  const sdTop = lerp(0, 2.9, epi);
+  proc.sd[0].set(-XL, 0, -0.75, -xIn, sdTop, ZC);
+  proc.sd[1].set(xIn, 0, -0.75, XL, sdTop, ZC);
+  // High-k
+  proc.layers.filter((l) => !l.sige).forEach((l, j) => proc.hik[j].set(-xG, l.y0 - 0.06, -0.81, xG, l.y1 + 0.06, ZC).alpha(hk));
+  if (hk <= 0) proc.hik.forEach((b) => b.hide());
+  // 金屬閘極：由下往上填
+  const lvl = lerp(0, 3.6, mf);
+  const fill = (b, x0, y0, z0, x1, y1, z1) => (lvl > y0 ? b.set(x0, y0, z0, x1, Math.min(y1, lvl), z1) : b.hide());
+  fill(proc.metal[0], -xG, 0, -2.4, xG, 3.6, -0.81);
+  fill(proc.metal[1], -xG, top + 0.06, -0.81, xG, 3.6, ZC);
+  proc.layers.filter((l) => l.sige).forEach((l, j) => fill(proc.metal[2 + j], -xG, l.y0 + (j === 0 ? 0 : 0.06), -0.75, xG, l.y1 - 0.06, ZC));
+  proc.metal.forEach((b) => { b.mat.emissiveIntensity = 0.3 + 1.2 * on; });
+  // 通道釋放時的氟自由基
+  const radOn = rel > 0 && rel < 1 ? Math.sin(rel * Math.PI) : 0, rads = [];
+  if (radOn > 0.02) for (let i = 0; i < 90 * radOn; i++) rads.push([-0.75 + rnd(i) * 1.5 + Math.sin(t * 4 + i) * 0.1, 0.1 + fract(rnd(i + 3) + t * 0.4 * (rnd(i + 7) - 0.5)) * 3.4, -0.7 + rnd(i + 5) * 1.4 + Math.cos(t * 3 + i) * 0.1]);
+  place(proc.rad, rads);
+  // 完成後通電：電子流過三片薄片
+  const list = [], res = [];
+  if (on > 0.5) {
+    proc.layers.filter((l) => !l.sige).forEach((l, j) => stream(list, { n: 60, seed: j * 91, t, speed: 0.45, x0: -1.3, x1: 1.3, lane: (i) => [l.y0 + 0.08 + rnd(i + 3) * (l.y1 - l.y0 - 0.16), -0.6 + rnd(i + 5) * 1.3] }));
+    for (const [x0, x1, sd] of [[-XL + 0.2, -1.4, 0], [1.4, XL - 0.2, 99]]) for (let i = 0; i < 55; i++) res.push([lerp(x0, x1, rnd(i + sd)) + Math.sin(t * 3 + i) * 0.05, 0.1 + rnd(i + sd + 7) * 2.6, -0.65 + rnd(i + sd + 9) * 1.3]);
+  }
+  place(proc.e, list);
+  place(proc.res, res);
+}
+function stepBar(active) {
+  for (let i = 0; i < 7; i++) {
+    const x = 470 + i * 44, on = i <= active, cur = i === active;
+    hctx.save(); hctx.strokeStyle = on ? C.cyan : "rgba(232,246,255,.3)"; hctx.fillStyle = cur ? C.cyan : "rgba(5,7,13,.9)";
+    hctx.lineWidth = 1.5; if (cur) { hctx.shadowColor = C.cyan; hctx.shadowBlur = 10; }
+    hctx.beginPath(); hctx.arc(x, 44, 11, 0, Math.PI * 2); hctx.fill(); hctx.stroke(); hctx.restore();
+    text(String(i + 1), x, 49, { size: 12, mono: true, a: "center", c: cur ? "#05070d" : on ? C.cyan : C.dim });
+    if (i < 6) { hctx.save(); hctx.strokeStyle = i < active ? C.cyan : "rgba(232,246,255,.25)"; hctx.beginPath(); hctx.moveTo(x + 12, 44); hctx.lineTo(x + 32, 44); hctx.stroke(); hctx.restore(); }
+  }
+}
+// 每一步的標註
+function stepLabels(step, s, t) {
+  const a = (v) => clamp(v);
+  if (step === 0) {
+    callout([-3, 2.3, 3], 60, 140, "Si 通道層", C.blue, { alpha: a(s * 2) });
+    callout([-2.4, 1.9, 3], 60, 200, "SiGe 犧牲層（之後挖掉）", C.orange, { alpha: a(s * 2 - 0.6) });
+    callout([3.6, -1.5, 3], 580, 390, "矽晶圓 Si wafer", C.grey);
+  } else if (step === 1) {
+    callout([-2.5, 2.3, 0.75], 60, 140, "鰭 Fin（千層疊層）", C.cyan, { alpha: a((s - 1) * 3 - 1) });
+    callout([3, -0.3, 2], 580, 390, "STI 隔離氧化層", C.grey, { alpha: a((s - 1) * 3 - 2) });
+  } else if (step === 2) {
+    callout([0, 3.6, -1], 380, 110, "假閘極 Dummy gate（多晶矽）", C.grey);
+    callout([1.1, 3.2, ZC], 600, 160, "間隔層 Spacer", C.green, { alpha: a((s - 2) * 3 - 1.8) });
+  } else if (step === 3) {
+    callout([-2.4, 0.05, ZC], 60, 150, "源汲極區挖開 S/D recess", C.cyan);
+    callout([-1.0, 0.18, ZC], 60, 390, "內間隔層 Inner spacer", C.green, { alpha: a((s - 3) * 3 - 2) });
+  } else if (step === 4) {
+    callout([-2.4, 2.4, ZC], 60, 150, "源極 Source epi", C.blue, { alpha: a((s - 4) * 3 - 1) });
+    callout([2.4, 2.4, ZC], 600, 150, "汲極 Drain epi", C.blue, { alpha: a((s - 4) * 3 - 1) });
+  } else if (step === 5) {
+    callout([0, 0.6, ZC], 470, 390, "SiGe 被挖掉 → 空隙", C.orange, { alpha: a((s - 5) * 2) });
+    callout([0, 1.45, ZC], 620, 130, "懸空的 Si 薄片", C.cyan, { alpha: a((s - 5) * 2 - 0.6) });
+    callout([-0.5, 2.9, 0], 60, 130, "氟自由基 F*（化學蝕刻）", C.lime, { alpha: Math.sin(clamp((s - 5.35) / 0.65) * Math.PI) });
+  } else if (step === 6) {
+    callout([0, 0.85, ZC], 620, 130, "High-k 介電層", C.yellow, { alpha: a((s - 6) * 3) });
+    callout([0, 3.2, ZC], 380, 110, "金屬閘極 Metal gate", C.magenta, { alpha: a((s - 6) * 3 - 1) });
+    callout([0.6, 1.45, 0.3], 600, 390, "通電：電子流過 3 片通道", C.cyan, { alpha: a((s - 6.75) * 6) });
+  }
+}
+
+addScene("process", { dur: 1, setup: buildProcess, render() {} });
+const procGroup = SCENES.process.group;
+delete SCENES.process;
+
+// sOf(t) 回傳 [s, 第幾步]
+function processScene(name, dur, sOf, { fps } = {}) {
+  SCENES[name] = {
+    dur, fps, group: procGroup,
     render(t) {
-      // 鏡頭慢慢左右擺動（首尾相接）
-      const a = Math.sin((t / DUR) * Math.PI * 2) * 0.1 + 0.18;
-      camera.position.set(Math.sin(a) * 22, 8.5, Math.cos(a) * 22);
-      camera.lookAt(0, 0.4, 0);
-
-      const tl = t % DUR;
-      const on = tl < 2.6 ? 1 - ease((tl - 2.3) / 0.3) : ease((tl - 5.7) / 0.3);
-      for (const g of [gateF, gateN]) {
-        g.material.emissiveIntensity = 0.25 + 1.1 * on;
-        g.material.opacity = 0.22 + 0.16 * on;
-        g.userData.lines.material.opacity = 0.45 + 0.55 * on;
-      }
-
-      // 導通電子：閘極開啟時才進入通道
-      const speed = 0.55, list = [];
-      const stream = (n, seed, lane) => {
-        for (let i = 0; i < n; i++) {
-          const ph = fract(rnd(i + seed) + t * speed);
-          if (!gateOn(t - ph / speed + DUR * 4)) continue;
-          const [x, y] = lane(i + seed);
-          list.push([x, y, lerp(-chZ, chZ, ph), 1]);
-        }
-      };
-      stream(150, 0, (i) => [fx - 0.4 + rnd(i + 3) * 0.8, 0.15 + rnd(i + 5) * 2.7]);
-      sheetsY.forEach((y, s) => stream(80, 500 + s * 97, (i) => [nx - sw + 0.1 + rnd(i + 3) * (sw * 2 - 0.2), y - 0.18 + rnd(i + 5) * 0.36]));
-      place(eOn, list);
-
-      // FinFET 底部漏電路徑：閘極管不到，一直有電子溜過
-      const leak = [];
-      for (let i = 0; i < 40; i++) {
-        const ph = fract(rnd(i + 900) + t * speed);
-        leak.push([fx - 0.4 + rnd(i + 901) * 0.8, -0.9 + rnd(i + 902) * 0.8, lerp(-chZ, chZ, ph), 1]);
-      }
-      place(eLeak, leak);
-      eLeak.material.color.set(on > 0.5 ? 0x7ff6ff : 0xff4d5e);
-
-      // 源極 / 汲極裡的電子
-      const res = [];
-      for (const [cx, w, y0, y1] of [[fx, 1.1, 0.1, 3.2], [nx, 1.8, 0.5, 3.3]]) {
-        for (const zs of [-1]) {
-          for (let i = 0; i < 60; i++) {
-            const k = i + cx * 10 + zs * 300;
-            res.push([cx - w + rnd(k) * 2 * w + Math.sin(t * 3 + i) * 0.05, y0 + rnd(k + 1) * (y1 - y0), zs * lerp(chZ + 0.15, L - 0.15, rnd(k + 2)) + Math.cos(t * 2.7 + i) * 0.05, 1]);
-          }
-        }
-      }
-      place(eRes, res);
-
+      const [s, step] = sOf(t);
+      setProcess(s, t);
+      camOrbit(t, dur, { r: 12.5, h: 6.5, a0: 0.55, amp: 0.06, look: [0, 0.9, 0] });
       composer.render();
-
-      // HUD
       hctx.clearRect(0, 0, W, H);
-      frame("閘極控制力：3 面 vs 4 面 Gate Control", "NANOSHEET / 02 · 3D");
-      const pf = proj(fx, 4.4, 0), pn = proj(nx, 4.4, 0);
-      chip("FinFET｜閘極包 3 面", pf[0], pf[1] - 6, C.amber, { a: "center" });
-      chip("Nanosheet｜閘極包 4 面", pn[0], pn[1] - 6, C.lime, { a: "center" });
-      chip(on > 0.5 ? "GATE = ON（導通）" : "GATE = OFF（關閉）", 772, 40, on > 0.5 ? C.cyan : C.magenta, { a: "right", mono: true, size: 13 });
-
-      const off = 1 - on;
-      if (off > 0.05) {
-        const lp = proj(fx, -0.5, chZ * 0.6);
-        const c1 = chip("底部閘極管不到 → 漏電", 120, 380, C.red, { alpha: off });
-        leader(lp, [c1.x + c1.w / 2, 380 - c1.h / 2], C.red, off);
-        const np = proj(nx + sw, 2, chZ * 0.6);
-        const c2 = chip("四面包住 → 完全關閉", 560, 380, C.lime, { alpha: off });
-        leader(np, [c2.x + c2.w / 2, 380 - c2.h / 2], C.lime, off);
-      } else {
-        chip("導通：電子從後方源極沿通道流向鏡頭（前方汲極省略）", 400, 380, C.cyan, { a: "center" });
-      }
-      // 電流表
-      meter(40, 412, "FinFET 電流", on > 0.5 ? 0.9 : 0.25, on > 0.5 ? C.cyan : C.red);
-      meter(610, 412, "Nanosheet 電流", on > 0.5 ? 1 : 0.0, C.cyan);
-      text(on > 0.5 ? "" : "關閉時仍有電流 = 漏電", 200, 425, { size: 12, c: C.red, w: 600, alpha: off });
+      const st = STEPS[step];
+      frame(st.title, `NANOSHEET PROCESS · ${st.tag}`);
+      stepBar(step);
+      stepLabels(step, s, t);
+      chip(st.note, 400, 432, C.cyan, { a: "center", size: 13 });
+      fadeEdges(t, dur);
     },
   };
 }
+["05-step1-epi", "06-step2-fin", "07-step3-dummy-gate", "08-step4-inner-spacer", "09-step5-sd-epi", "10-step6-channel-release", "11-step7-hkmg"].forEach((name, i) => {
+  processScene(name, 0.5 + 3.4 + (i === 6 ? 2.2 : 1.0), (t) => [i + seg(t, 0.5, 3.9), i]);
+});
+// 總覽：7 步連續播放，每步 3 秒，最後通電 2.5 秒
+processScene("12-process-overview", 7 * 3 + 2.5, (t) => {
+  const i = Math.min(6, Math.floor(t / 3));
+  return [t >= 21 ? 7 : i + seg(t - i * 3, 0.4, 2.8), i];
+}, { fps: 10 });
 
+// ---------- 匯出 ----------
+for (const k of Object.keys(SCENES)) SCENES[k].fps = SCENES[k].fps || 15;
 window.SCENES = SCENES;
 window.renderAt = (name, t) => {
+  for (const k of Object.keys(SCENES)) SCENES[k].group.visible = false;
+  SCENES[name].group.visible = true;
   SCENES[name].render(t);
   octx.drawImage(glCanvas, 0, 0);
   octx.drawImage(hud, 0, 0);
   return out.toDataURL("image/png");
 };
-window.ready = document.fonts.ready.then(() => true);
 const name = location.hash.slice(1);
 if (name && SCENES[name]) {
   const t0 = performance.now();
