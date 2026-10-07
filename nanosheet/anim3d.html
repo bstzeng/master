@@ -22,7 +22,9 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 
-const W = 800, H = 450;
+const W = 800, H = 450; // 版面座標（所有位置都用這個尺寸寫）
+// 輸出倍率：?scale=2.4 → 1920×1080（1080P）；預設 1 → 800×450 預覽
+const S = parseFloat(new URLSearchParams(location.search).get("scale") || "1");
 const FONT = '"Noto Sans TC", "Noto Sans CJK TC", sans-serif';
 const MONO = '"DejaVu Sans Mono", "DM Mono", monospace';
 const C = { cyan: "#22e5ff", magenta: "#ff3df2", lime: "#b6ff3d", red: "#ff4d5e", amber: "#ffb340", orange: "#ffa04d", green: "#5dffb0", blue: "#5aa0ff", yellow: "#ffd23d", grey: "#c8ced8", text: "#e8f6ff", dim: "rgba(232,246,255,.62)" };
@@ -35,14 +37,16 @@ const lerp = (a, b, k) => a + (b - a) * k;
 
 // ---------- three.js ----------
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-renderer.setPixelRatio(1);
+renderer.setPixelRatio(S);
 renderer.setSize(W, H);
 renderer.setClearColor(0x05070d, 1);
 const glCanvas = renderer.domElement;
 const hud = document.createElement("canvas");
-hud.width = W; hud.height = H;
+hud.width = W * S; hud.height = H * S;
 const hctx = hud.getContext("2d");
+hctx.setTransform(S, 0, 0, S, 0, 0);
 const out = document.getElementById("out");
+out.width = W * S; out.height = H * S;
 const octx = out.getContext("2d");
 
 const scene = new THREE.Scene();
@@ -59,6 +63,7 @@ const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.9, 0.45, 0.55));
 composer.addPass(new OutputPass());
+composer.setPixelRatio(S);
 const grid = new THREE.GridHelper(60, 60, 0x0e3a4a, 0x0a2230);
 grid.position.y = -2.01;
 scene.add(grid);
