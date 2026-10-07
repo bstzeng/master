@@ -60,7 +60,7 @@ Patrick 的個人學習知識庫，目前包含十四個主題：
 - `shimen-reservoir/index.html`：滴滴遊石門水庫兒童動畫影片（播放器、章節、旁白、音效與七個重點；網址加 `?t=秒數` 可直接跳到某個畫面）
 - `airplane-space/index.html`：飛機為什麼不能飛到太空兒童動畫影片
 - `semiconductor-etch/index.html`：半導體蝕刻原理動畫影片（播放器、章節、旁白、音效、全片圖例、重點、反應式小卡與補充；網址加 `?t=秒數` 可直接跳到某個畫面）
-- `nanosheet/index.html`：從 FinFET 到 Nanosheet 主題頁（Part 1 原因、Part 2 製程 7 步驟，每張 GIF 可下載）
+- `nanosheet/index.html`：從 FinFET 到 Nanosheet 主題頁（Part 1 原因、Part 2 製程 7 步驟；網頁顯示 `gifs/preview/` 的 800×450 預覽，下載按鈕提供 `gifs/` 的 1080P 原檔）
 - `moon-phases/index.html`：月亮為什麼會有圓缺 3D 線條兒童動畫影片（Canvas 自製 3D 投影，不用外部套件）
 
 ## 內容維護
@@ -110,7 +110,7 @@ Patrick 的個人學習知識庫，目前包含十四個主題：
 - `semiconductor-etch/gifs/`：影片 7 段各自的 GIF（960×534、每秒 10 格、循環播放，給簡報使用），由影片畫面逐格匯出；改了動畫或字幕時段後要重新匯出
 - `semiconductor-etch/generate_audio.py`：產生 `semiconductor-etch/audio/` 旁白 MP3，並重建 `semiconductor-etch/narration.js`（旁白超過字幕時段會報錯）
 - `nanosheet/anim3d.html`：所有 GIF 的 three.js 3D 場景（2D HUD 疊圖；用本機 http 伺服器開 `anim3d.html#場景名` 可即時預覽）
-- `nanosheet/build_gifs.js`：用 Playwright 逐格錄製場景，交給 `nanosheet/encode_gif.py`（Pillow）合成共用調色盤的循環 GIF，輸出到 `nanosheet/gifs/`
+- `nanosheet/build_gifs.js`：用 Playwright 逐格錄製場景，交給 `nanosheet/encode_gif.py`（Pillow）合成共用調色盤的循環 GIF；預設輸出 1080P（1920×1080）到 `nanosheet/gifs/`，加 `--preview` 輸出 800×450 到 `nanosheet/gifs/preview/`
 - `nanosheet/vendor/three/`：three.js r169 與用到的後製模組（MIT），錄製時不需要連網
 - `shimen-reservoir/data/narration.json`、`shimen-reservoir/generate_audio.py`：水庫影片的字幕與旁白，以及產生 `shimen-reservoir/audio/` 與 `shimen-reservoir/narration.js` 的腳本
 
@@ -160,7 +160,8 @@ python3 semiconductor-etch/generate_audio.py
 修改 `nanosheet/anim3d.html` 後重新產生 GIF（需要 Node.js、Playwright 與 Pillow；可只指定場景名稱）：
 
 ```bash
-node nanosheet/build_gifs.js
+node nanosheet/build_gifs.js                    # 1080P 下載檔
+node nanosheet/build_gifs.js --preview          # 網頁用預覽
 node nanosheet/build_gifs.js 10-step6-channel-release
 ```
 

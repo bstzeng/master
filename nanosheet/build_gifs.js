@@ -1,5 +1,7 @@
 // 用 Playwright 逐格繪製 anim3d.html（three.js）的場景，存成 PNG，再交給 encode_gif.py 合成 GIF
-// 用法：node nanosheet/build_gifs.js [場景名稱...]
+// 用法：node nanosheet/build_gifs.js [--preview] [場景名稱...]
+//   預設輸出 1080P（1920×1080）到 gifs/，給下載與簡報用
+//   --preview 輸出 800×450 到 gifs/preview/，給網頁顯示用（檔案小、載入快）
 const path = require("path"), fs = require("fs"), http = require("http"), os = require("os");
 const { execFileSync } = require("child_process");
 let chromium;
@@ -8,7 +10,8 @@ const PAGES = ["anim3d.html"];
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json" };
 
 (async () => {
-  const dir = __dirname, out = path.join(dir, "gifs"), tmp = fs.mkdtempSync(path.join(os.tmpdir(), "nsgif-"));
+  const args = process.argv.slice(2), preview = args.includes("--preview"), scale = preview ? 1 : 2.4;
+  const dir = __dirname, out = path.join(dir, "gifs", preview ? "preview" : ""), tmp = fs.mkdtempSync(path.join(os.tmpdir(), "nsgif-"));
   fs.mkdirSync(out, { recursive: true });
   // ES module 不能從 file:// 載入，所以起一個只服務本資料夾的本機伺服器
   const server = http.createServer((req, res) => {
@@ -22,9 +25,9 @@ const TYPES = { ".html": "text/html", ".js": "text/javascript", ".json": "applic
 
   const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
   const page = await browser.newPage({ viewport: { width: 800, height: 450 } });
-  const wanted = process.argv.slice(2);
+  const wanted = args.filter((a) => !a.startsWith("--"));
   for (const p of PAGES) {
-    await page.goto(base + p);
+    await page.goto(`${base}${p}?scale=${scale}`);
     await page.waitForFunction(() => window.SCENES && window.renderAt);
     await page.evaluate(() => document.fonts.ready);
     const scenes = await page.evaluate(() => Object.keys(window.SCENES).map((k) => [k, window.SCENES[k].dur, window.SCENES[k].fps]));
