@@ -87,6 +87,9 @@ h1 em { color: var(--orange); font-style: italic; }
 .topic-card.nanosheet-featured { grid-column: 1 / -1; background: #05070d; border-color: #05070d; }
 .topic-card.nanosheet-featured .topic-label { color: #22e5ff; }
 .topic-card.nanosheet-featured:hover .topic-arrow { color: #05070d; background: #22e5ff; }
+.topic-card.plasma-featured { grid-column: 1 / -1; background: #0c0718; border-color: #0c0718; }
+.topic-card.plasma-featured .topic-label { color: #c77dff; }
+.topic-card.plasma-featured:hover .topic-arrow { color: #0c0718; background: #c77dff; }
 .topic-number { font-family: "Playfair Display", serif; font-size: 42px; }
 .topic-content { align-self: end; }
 .topic-label { margin-bottom: 12px; color: var(--orange); }
