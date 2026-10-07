@@ -503,14 +503,17 @@ addScene("00-what-is-etch", {
   dur: 6, fps: 12,
   setup(g) {
     mbox(g, M.sub).set(-5, -3, -2.5, 5, -1.4, 2.5);
-    this.film = profileSolid(g, M.si, { yBottom: -1.4, z0: -2.5, z1: 2.5 });
+    // 目標膜：左右兩塊不動，中間那塊由上往下被吃掉（用方塊畫，吃穿時不會破圖）
+    const F = { emissive: 0x0a3a66, ei: 0.35 };
+    this.film = [mbox(g, M.si, F).set(-5, -1.4, -2.5, -0.9, 0, 2.5), mbox(g, M.si, F).set(0.9, -1.4, -2.5, 5, 0, 2.5), mbox(g, M.si, F)];
     this.res = [mbox(g, M.resist, { emissive: 0x5a3a08, ei: 0.3 }), mbox(g, M.resist, { emissive: 0x5a3a08, ei: 0.3 })];
     this.ions = particles(g, 60, COL.ion, 0.1); this.trail = particles(g, 180, COL.ion, 0.06); this.flash = particles(g, 30, 0xffffff, 0.14);
   },
   render(t) {
     camOrbit(t, this.dur, { r: 13.5, h: 6.5, a0: 0.45, amp: 0.05, look: [0, -0.6, 0] });
     const e = seg(t, 0.6, 3.6), strip = seg(t, 3.8, 4.8), a = 0.9;
-    this.film.update(aniProfile(-5, 5, 0, a, e * 1.4).map(([x, y]) => [x, y]));
+    const top = -1.4 * e; // 中間那塊剩下的頂面
+    if (e < 0.999) this.film[2].set(-a, -1.4, -2.5, a, top, 2.5); else this.film[2].hide();
     const dy = strip * 3;
     this.res[0].set(-5, 0 + dy, -2.5, -a, 0.6 + dy, 2.5).alpha(1 - strip);
     this.res[1].set(a, 0 + dy, -2.5, 5, 0.6 + dy, 2.5).alpha(1 - strip);
