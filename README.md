@@ -16,7 +16,7 @@ Patrick 的個人學習知識庫，目前包含十五個主題：
 - 「月亮為什麼會有圓缺」：給小一小朋友看的 76 秒、6 段 3D 線條動畫影片，小兔子「兔兔」說明太陽照亮月亮的一半、月亮繞地球轉，以及新月到滿月的變化。
 - 「半導體蝕刻原理」：一支約 116 秒、7 段的 HTML Canvas 動畫影片，用 SF₆ 蝕刻矽 Si，對照偏壓蝕刻 bias etch（鞘層讓離子垂直轟擊、非等向性）和化學蝕刻 chemical etch（遠端電漿、只剩自由基、等向性底切），附中文 MP3 旁白、即時合成音效、反應式小卡與補充說明。
 - 「從 FinFET 到 Nanosheet」：給 IT 人的 GAA 電晶體入門，13 張 three.js 3D 動畫 GIF：為什麼從 FinFET 換成 Nanosheet（漏電、4 面閘極控制、疊片、寬度可調），以及 Nanosheet 的 7 個主要製程步驟與總覽。
-- 「電漿蝕刻 Plasma Etching」：13 張 three.js 3D 動畫 GIF：打 RF 之後電子撞分子（激發、解離、游離）、雪崩、鞘層讓離子垂直加速，等向性與非等向性、選擇比、在 Nanosheet 的應用（刻鰭、SiGe 釋放），以及為什麼不用濕蝕刻（底切、pattern collapse）。
+- 「電漿蝕刻 Plasma Etching」：14 張 three.js 3D 動畫 GIF：打 RF 之後電子撞分子（激發、解離、游離）、雪崩、radical etch 怎麼濾掉離子（遠端電漿、復合、接地過濾板、無偏壓）、鞘層讓離子垂直加速，等向性與非等向性、選擇比、在 Nanosheet 的應用（刻鰭、SiGe 釋放），以及為什麼不用濕蝕刻（底切、pattern collapse）。
 
 ## 頁面
 
