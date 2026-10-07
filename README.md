@@ -1,6 +1,6 @@
 # MASTER
 
-Patrick 的個人學習知識庫，目前包含十四個主題：
+Patrick 的個人學習知識庫，目前包含十五個主題：
 
 - 「Python 資料結構與經典演算法」：兩階段、16 個單元與 131 堂獨立課程。
 - 「零基礎韓文」：五階段、26 個單元與 143 堂獨立課程，支援中文、RR 羅馬拼音與網站內建發音。
@@ -16,6 +16,7 @@ Patrick 的個人學習知識庫，目前包含十四個主題：
 - 「月亮為什麼會有圓缺」：給小一小朋友看的 76 秒、6 段 3D 線條動畫影片，小兔子「兔兔」說明太陽照亮月亮的一半、月亮繞地球轉，以及新月到滿月的變化。
 - 「半導體蝕刻原理」：一支約 116 秒、7 段的 HTML Canvas 動畫影片，用 SF₆ 蝕刻矽 Si，對照偏壓蝕刻 bias etch（鞘層讓離子垂直轟擊、非等向性）和化學蝕刻 chemical etch（遠端電漿、只剩自由基、等向性底切），附中文 MP3 旁白、即時合成音效、反應式小卡與補充說明。
 - 「從 FinFET 到 Nanosheet」：給 IT 人的 GAA 電晶體入門，13 張 three.js 3D 動畫 GIF：為什麼從 FinFET 換成 Nanosheet（漏電、4 面閘極控制、疊片、寬度可調），以及 Nanosheet 的 7 個主要製程步驟與總覽。
+- 「電漿蝕刻 Plasma Etching」：13 張 three.js 3D 動畫 GIF：打 RF 之後電子撞分子（激發、解離、游離）、雪崩、鞘層讓離子垂直加速，等向性與非等向性、選擇比、在 Nanosheet 的應用（刻鰭、SiGe 釋放），以及為什麼不用濕蝕刻（底切、pattern collapse）。
 
 ## 頁面
 
@@ -61,6 +62,7 @@ Patrick 的個人學習知識庫，目前包含十四個主題：
 - `airplane-space/index.html`：飛機為什麼不能飛到太空兒童動畫影片
 - `semiconductor-etch/index.html`：半導體蝕刻原理動畫影片（播放器、章節、旁白、音效、全片圖例、重點、反應式小卡與補充；網址加 `?t=秒數` 可直接跳到某個畫面）
 - `nanosheet/index.html`：從 FinFET 到 Nanosheet 主題頁（Part 1 原因、Part 2 製程 7 步驟；網頁顯示 `gifs/preview/` 的 800×450 預覽，下載按鈕提供 `gifs/` 的 1080P 原檔）
+- `plasma-etch/index.html`：電漿蝕刻主題頁（Part 0～5；網頁顯示 `gifs/preview/` 預覽，下載按鈕提供 `gifs/` 的 1080P 原檔）
 - `moon-phases/index.html`：月亮為什麼會有圓缺 3D 線條兒童動畫影片（Canvas 自製 3D 投影，不用外部套件）
 
 ## 內容維護
@@ -112,6 +114,7 @@ Patrick 的個人學習知識庫，目前包含十四個主題：
 - `nanosheet/anim3d.html`：所有 GIF 的 three.js 3D 場景（2D HUD 疊圖；用本機 http 伺服器開 `anim3d.html#場景名` 可即時預覽）
 - `nanosheet/build_gifs.js`：用 Playwright 逐格錄製場景，交給 `nanosheet/encode_gif.py`（Pillow）合成共用調色盤的循環 GIF；預設輸出 1080P（1920×1080）到 `nanosheet/gifs/`，加 `--preview` 輸出 800×450 到 `nanosheet/gifs/preview/`
 - `nanosheet/vendor/three/`：three.js r169 與用到的後製模組（MIT），錄製時不需要連網
+- `plasma-etch/anim3d.html`、`plasma-etch/build_gifs.js`：電漿蝕刻課的 3D 場景與錄製程式，共用 `nanosheet/` 的繪製核心寫法、three.js 與 `encode_gif.py`
 - `shimen-reservoir/data/narration.json`、`shimen-reservoir/generate_audio.py`：水庫影片的字幕與旁白，以及產生 `shimen-reservoir/audio/` 與 `shimen-reservoir/narration.js` 的腳本
 
 修改內容後執行：
@@ -163,6 +166,8 @@ python3 semiconductor-etch/generate_audio.py
 node nanosheet/build_gifs.js                    # 1080P 下載檔
 node nanosheet/build_gifs.js --preview          # 網頁用預覽
 node nanosheet/build_gifs.js 10-step6-channel-release
+node plasma-etch/build_gifs.js                  # 電漿蝕刻課：1080P
+node plasma-etch/build_gifs.js --preview        # 電漿蝕刻課：網頁預覽
 ```
 
 ## 動畫影片的旁白播放方式

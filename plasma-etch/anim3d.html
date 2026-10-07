@@ -243,7 +243,7 @@ function moveTrail(td, pts) { // pts[0] 是現在位置，後面是過去位置
 // GIF 02：電子撞分子（激發、解離、游離）
 // =====================================================================
 addScene("02-electron-impact", {
-  dur: 9,
+  dur: 9, fps: 12,
   setup(g) {
     this.X = [-4.6, 0, 4.6];
     this.mols = this.X.map((x) => { const m = molecule(g, 1.25); m.g.position.set(x, 1.2, 0); return m; });
@@ -327,7 +327,7 @@ addScene("02-electron-impact", {
 // GIF 05：偏壓與鞘層（電子被彈回、離子在鞘層裡加速、自由基不受影響）
 // =====================================================================
 addScene("05-bias-sheath", {
-  dur: 8,
+  dur: 8, fps: 12,
   setup(g) {
     this.zh = 2.6;
     mbox(g, M.sub).set(-6.5, -1.6, -3, 6.5, -0.6, 3); // 下電極 chuck
@@ -401,6 +401,554 @@ addScene("05-bias-sheath", {
     // 圖例
     const lg = [["電子 e⁻：被彈回", C.yellow], ["離子 ⊕：垂直加速", C.red], ["自由基 F*：不受電場影響", C.lime]];
     lg.forEach(([s, c], i) => { hctx.save(); hctx.fillStyle = c; hctx.shadowColor = c; hctx.shadowBlur = 8; hctx.beginPath(); hctx.arc(40, 100 + i * 24, 5, 0, Math.PI * 2); hctx.fill(); hctx.restore(); text(s, 52, 105 + i * 24, { size: 13, c, w: 700 }); });
+  },
+});
+
+
+// ---------- 剖面實體：用 2D 輪廓擠出成 3D（蝕刻形狀每格重建） ----------
+M.resist = [0xc98a2a, 0xffc861];
+M.mask = [0x6c7480, 0xc8ced8];
+M.oxide = [0x3a4a66, 0x8fa8d0];
+M.liquid = [0x1a5fa8, 0x6fc3ff];
+function profileSolid(parent, [face, edge], { yBottom = -4, z0 = -2, z1 = 2, emissive = 0x0a3a66, ei = 0.35 } = {}) {
+  const mat = new THREE.MeshStandardMaterial({ color: face, roughness: 0.45, metalness: 0.1, emissive, emissiveIntensity: ei });
+  const mesh = new THREE.Mesh(new THREE.BufferGeometry(), mat);
+  const lines = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: edge, transparent: true, opacity: 0.9 }));
+  parent.add(mesh); parent.add(lines);
+  return {
+    mesh,
+    update(top) { // top：由左到右的表面輪廓點 [x, y]
+      const sh = new THREE.Shape();
+      sh.moveTo(top[0][0], yBottom);
+      top.forEach(([x, y]) => sh.lineTo(x, y));
+      sh.lineTo(top[top.length - 1][0], yBottom);
+      sh.closePath();
+      const geo = new THREE.ExtrudeGeometry(sh, { depth: z1 - z0, bevelEnabled: false, curveSegments: 1 });
+      geo.translate(0, 0, z0);
+      mesh.geometry.dispose(); mesh.geometry = geo;
+      lines.geometry.dispose(); lines.geometry = new THREE.EdgesGeometry(geo, 25);
+    },
+  };
+}
+// 平底 + 圓角的蝕刻輪廓（等向性：側向 = 深度）
+function isoProfile(x0, x1, openings, d, n = 160) {
+  const pts = [];
+  for (let i = 0; i <= n; i++) {
+    const x = lerp(x0, x1, i / n);
+    let depth = 0;
+    for (const [c, a] of openings) { const dist = Math.max(0, Math.abs(x - c) - a); depth = Math.max(depth, Math.sqrt(Math.max(0, d * d - dist * dist))); }
+    pts.push([x, -depth]);
+  }
+  return pts;
+}
+// 垂直溝槽輪廓（非等向性）
+const aniProfile = (x0, x1, c, a, d) => [[x0, 0], [c - a, 0], [c - a, -d], [c + a, -d], [c + a, 0], [x1, 0]];
+// HUD 量尺：3D 兩點連線 + 文字
+function ruler(a3, b3, s, color, alpha = 1) {
+  if (alpha <= 0.01) return;
+  const a = proj(...a3), b = proj(...b3), c = hctx;
+  c.save(); c.globalAlpha = alpha; c.strokeStyle = color; c.lineWidth = 2; c.shadowColor = color; c.shadowBlur = 6;
+  c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke();
+  [a, b].forEach((p) => { c.beginPath(); c.arc(p[0], p[1], 3, 0, Math.PI * 2); c.fillStyle = color; c.fill(); });
+  c.restore();
+  text(s, (a[0] + b[0]) / 2 + 8, (a[1] + b[1]) / 2 - 6, { size: 13, c: color, w: 700, alpha });
+}
+function legend(items, x = 32, y = 100) {
+  items.forEach(([s, c], i) => {
+    hctx.save(); hctx.fillStyle = c; hctx.shadowColor = c; hctx.shadowBlur = 8; hctx.beginPath(); hctx.arc(x + 8, y + i * 24, 5, 0, Math.PI * 2); hctx.fill(); hctx.restore();
+    text(s, x + 20, y + 5 + i * 24, { size: 13, c, w: 700 });
+  });
+}
+// 離子雨：垂直落下（拖尾）+ 撞擊閃光
+function ionRain(list, trail, flash, { t, n, seed, x0, x1, z0, z1, top, bottom, speed = 0.9 }) {
+  for (let i = 0; i < n; i++) {
+    const ph = fract(rnd(i + seed) + t * speed * (0.8 + 0.4 * rnd(i + seed + 1)));
+    const x = lerp(x0, x1, rnd(i + seed + 2)), z = lerp(z0, z1, rnd(i + seed + 3)), yb = typeof bottom === "function" ? bottom(x) : bottom;
+    const y = lerp(top, yb, ph * ph);
+    list.push([x, y, z]);
+    for (let j = 1; j <= 3; j++) { const pp = Math.max(0, ph - j * 0.05); trail.push([x, lerp(top, yb, pp * pp), z, 1 - j / 4]); }
+    if (ph > 0.94) flash.push([x, yb, z, 1.1]);
+  }
+}
+// 隨機亂飄的粒子（自由基等）
+function drift(list, { t, n, seed, x0, x1, y0, y1, z0, z1, sp = 0.08, ok = null }) {
+  for (let i = 0; i < n; i++) {
+    const p = [lerp(x0, x1, 0.5 + 0.5 * tri(rnd(i + seed) + t * sp * (0.5 + rnd(i + seed + 1)))), lerp(y0, y1, 0.5 + 0.5 * tri(rnd(i + seed + 2) + t * sp * 1.3 * (0.5 + rnd(i + seed + 3)))), lerp(z0, z1, 0.5 + 0.5 * tri(rnd(i + seed + 4) + t * sp * 0.9))];
+    if (!ok || ok(p)) list.push(p);
+  }
+}
+// 產物 SiF₄：從表面往上飄走
+function products(list, { t, n, seed, pts, z0, z1, rise = 3 }) {
+  for (let i = 0; i < n; i++) {
+    const ph = fract(rnd(i + seed) + t * 0.35);
+    const [x, y] = pts[Math.floor(rnd(i + seed + 1) * pts.length) % pts.length];
+    list.push([x + Math.sin(t * 2 + i) * 0.15 * ph, y + ph * rise, lerp(z0, z1, rnd(i + seed + 2)), Math.max(0.01, 1 - ph)]);
+  }
+}
+// 腔體（01、03 共用）
+function chamber(g) {
+  const o = {};
+  mbox(g, [0x0a1424, 0x22e5ff], { opacity: 0.05 }).set(-6.2, -1.2, -3.2, 6.2, 5.6, 3.2);
+  o.topE = mbox(g, M.mask, { emissive: 0x2a2f38, ei: 0.3 }).set(-5.2, 4.7, -2.6, 5.2, 5.1, 2.6);
+  mbox(g, M.sub).set(-5.2, -1.1, -2.6, 5.2, -0.55, 2.6);
+  o.wafer = mbox(g, M.si, { emissive: 0x0a3a66, ei: 0.5 }).set(-4.4, -0.55, -2.2, 4.4, -0.38, 2.2);
+  o.bulk = mbox(g, [0x5a1a8a, 0xc77dff], { opacity: 0.1, emissive: 0x7a2cc0, ei: 0.6 });
+  return o;
+}
+
+// =====================================================================
+// GIF 00：蝕刻在做什麼（圖案轉印）
+// =====================================================================
+addScene("00-what-is-etch", {
+  dur: 6, fps: 12,
+  setup(g) {
+    mbox(g, M.sub).set(-5, -3, -2.5, 5, -1.4, 2.5);
+    this.film = profileSolid(g, M.si, { yBottom: -1.4, z0: -2.5, z1: 2.5 });
+    this.res = [mbox(g, M.resist, { emissive: 0x5a3a08, ei: 0.3 }), mbox(g, M.resist, { emissive: 0x5a3a08, ei: 0.3 })];
+    this.ions = particles(g, 60, COL.ion, 0.1); this.trail = particles(g, 180, COL.ion, 0.06); this.flash = particles(g, 30, 0xffffff, 0.14);
+  },
+  render(t) {
+    camOrbit(t, this.dur, { r: 13.5, h: 6.5, a0: 0.45, amp: 0.05, look: [0, -0.6, 0] });
+    const e = seg(t, 0.6, 3.6), strip = seg(t, 3.8, 4.8), a = 0.9;
+    this.film.update(aniProfile(-5, 5, 0, a, e * 1.4).map(([x, y]) => [x, y]));
+    const dy = strip * 3;
+    this.res[0].set(-5, 0 + dy, -2.5, -a, 0.6 + dy, 2.5).alpha(1 - strip);
+    this.res[1].set(a, 0 + dy, -2.5, 5, 0.6 + dy, 2.5).alpha(1 - strip);
+    const ions = [], tr = [], fl = [];
+    if (e > 0 && e < 1) ionRain(ions, tr, fl, { t, n: 40, seed: 3, x0: -a + 0.1, x1: a - 0.1, z0: -2.3, z1: 2.3, top: 4, bottom: -e * 1.4 });
+    place(this.ions, ions); place(this.trail, tr); place(this.flash, fl);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("蝕刻在做什麼？Pattern Transfer", "PLASMA ETCH / 00");
+    callout([-3, 0.6, 2.5], 40, 130, "光阻 Photoresist（微影畫好的圖案）", C.amber, { alpha: 1 - strip });
+    callout([3, -0.7, 2.5], 772, 330, "目標膜 Film（要被刻的材料）", C.cyan, { a: "right" });
+    callout([0, -0.7, 2.5], 360, 395, "開口處被吃掉 → 圖案刻進材料", C.red, { alpha: seg(t, 1.2, 1.6) });
+    chip(strip > 0.5 ? "移除光阻後，圖案留在膜上" : "蝕刻的兩個關鍵：往哪個方向吃？只吃誰？", 400, 432, C.lime, { a: "center", size: 14 });
+  },
+});
+
+// =====================================================================
+// GIF 01：RF 上電（電場來回翻轉，電子被甩動）
+// =====================================================================
+addScene("01-rf-power", {
+  dur: 8, fps: 12,
+  setup(g) {
+    Object.assign(this, chamber(g));
+    this.arrows = [];
+    for (let i = -2; i <= 2; i++) for (const z of [-1.4, 1.4]) {
+      const a = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.5, 12), new THREE.MeshBasicMaterial({ color: 0x22e5ff, transparent: true, opacity: 0.8 }));
+      g.add(a); this.arrows.push({ a, x: i * 2, z });
+    }
+    this.el = particles(g, 46, COL.e, 0.09);
+    this.hot = [0, 1, 2, 3].map(() => trailDot(g, COL.e, 0.13, 10));
+    this.gas = particles(g, 50, 0xb8c2d0, 0.12);
+  },
+  render(t) {
+    camOrbit(t, this.dur, { r: 17, h: 5.5, a0: 0.3, amp: 0.06, look: [0, 2, 0] });
+    const w = Math.PI; // 放慢：每 2 秒一個週期
+    const E = Math.sin(w * t), glow = seg(t, 0.5, 5);
+    this.bulk.set(-5, 0.2, -2.4, 5, 4.4, 2.4);
+    this.bulk.mat.emissiveIntensity = 0.1 + 0.9 * glow; this.bulk.mat.opacity = 0.03 + 0.12 * glow;
+    this.arrows.forEach(({ a, x, z }) => { a.position.set(x, 2.2, z); a.rotation.set(E >= 0 ? 0 : Math.PI, 0, 0); a.scale.setScalar(0.5 + 0.8 * Math.abs(E)); a.material.opacity = 0.25 + 0.65 * Math.abs(E); });
+    const amp = (tt) => 0.35 + 1.4 * seg(tt, 0.3, 6);
+    const el = [];
+    for (let i = 0; i < 46; i++) el.push([-4.6 + rnd(i) * 9.2 + Math.sin(t * 0.7 + i) * 0.3, 2.3 + (rnd(i + 1) - 0.5) * 2.4 + amp(t) * 0.6 * Math.sin(w * t + rnd(i + 2) * 0.6), -2.1 + rnd(i + 3) * 4.2]);
+    place(this.el, el);
+    this.hot.forEach((b, j) => {
+      const pts = [];
+      for (let k = 0; k < 10; k++) { const tt = t - k * 0.05; pts.push([-3 + j * 2 + Math.sin(tt * 0.6 + j) * 0.4, 2.3 + (j - 1.5) * 0.25 + amp(tt) * Math.sin(w * tt + j * 0.2), 1.2 - j * 0.6]); }
+      moveTrail(b, pts);
+    });
+    const gas = [];
+    for (let i = 0; i < 50; i++) { const ph = fract(rnd(i + 30) + t * 0.08); gas.push([-4.6 + rnd(i + 31) * 9.2 + Math.sin(t + i) * 0.2, lerp(4.5, -0.2, ph), -2.1 + rnd(i + 32) * 4.2]); }
+    place(this.gas, gas);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("打 RF 之後：電子被電場甩動 RF Power On", "PLASMA ETCH / 01");
+    chip(`RF 13.56 MHz · 電場 E ${E >= 0 ? "↑" : "↓"}`, 772, 40, C.magenta, { a: "right", mono: true, size: 13 });
+    callout([-4.5, 5.0, 2.6], 40, 110, "上電極 / 噴氣頭 Showerhead（SF₆ 從這裡進來）", C.grey);
+    callout([3.8, -0.45, 2.2], 772, 380, "下電極 + 晶圓 Wafer", C.cyan, { a: "right" });
+    callout([1.8, 2.3, 2.2], 772, 170, "電場方向每秒翻轉 1356 萬次（畫面放慢）", C.cyan, { a: "right" });
+    legend([["電子 e⁻：很輕，被甩動、越跑越快", C.yellow], ["SF₆ 氣體分子", C.grey]], 32, 300);
+    chip("電子吸收電場的能量 → 撞分子 → 點燃電漿（發出輝光）", 400, 432, C.cyan, { a: "center", size: 13 });
+  },
+});
+
+// =====================================================================
+// GIF 03：雪崩與穩態（電子越撞越多，電漿裡有什麼）
+// =====================================================================
+addScene("03-avalanche", {
+  dur: 9, fps: 12,
+  setup(g) {
+    Object.assign(this, chamber(g));
+    this.N = 90;
+    this.el = particles(g, this.N, COL.e, 0.09);
+    this.ions = particles(g, this.N, COL.ion, 0.11);
+    this.rad = particles(g, this.N * 3, COL.rad, 0.08);
+    this.pop = particles(g, 30, 0xffffff, 0.16);
+  },
+  render(t) {
+    camOrbit(t, this.dur, { r: 17, h: 5.5, a0: 0.3, amp: 0.06, look: [0, 2, 0] });
+    const born = (i) => 0.8 * Math.log2(i + 1) + 0.2; // 第 i 顆電子出生的時間（倍增）
+    const n = this.N, box = [-4.6, 0.4, -2.1, 4.6, 4.2, 2.1];
+    const pos = (i, sp, s) => [lerp(box[0], box[3], 0.5 + 0.5 * tri(rnd(i + s) + t * sp * (0.5 + rnd(i + s + 1)))), lerp(box[1], box[4], 0.5 + 0.5 * tri(rnd(i + s + 2) + t * sp * 1.4 * (0.5 + rnd(i + s + 3)))), lerp(box[2], box[5], 0.5 + 0.5 * tri(rnd(i + s + 4) + t * sp))];
+    const el = [], ions = [], rad = [], pop = [];
+    let ne = 0;
+    for (let i = 0; i < n; i++) {
+      const b = born(i);
+      if (t < b) continue;
+      ne++;
+      el.push(pos(i, 0.35, 0));
+      if (i > 0) { ions.push(pos(i, 0.05, 500)); if (t - b < 0.4) { const p = pos(i, 0.05, 500); pop.push([...p, 1.4 * (1 - (t - b) / 0.4)]); } }
+      for (let k = 0; k < 3; k++) rad.push(pos(i * 3 + k, 0.08, 900));
+    }
+    place(this.el, el); place(this.ions, ions); place(this.rad, rad); place(this.pop, pop);
+    const level = ne / n;
+    this.bulk.set(-5, 0.2, -2.4, 5, 4.4, 2.4);
+    this.bulk.mat.emissiveIntensity = 0.1 + 0.9 * level; this.bulk.mat.opacity = 0.03 + 0.12 * level;
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("雪崩與穩態 Avalanche → Plasma", "PLASMA ETCH / 03");
+    const steady = t > born(n - 1) + 0.3;
+    chip(steady ? "穩態：產生 = 損失（撞牆、復合）" : "雪崩中：1 → 2 → 4 → 8 …", 772, 40, steady ? C.lime : C.yellow, { a: "right", size: 13 });
+    meter(40, 340, "電子 e⁻", level * 0.33, C.yellow);
+    meter(40, 372, "離子 ⊕（≈ 電子數）", Math.max(0, ne - 1) / n * 0.33, C.red);
+    meter(40, 404, "自由基 F*（遠多於離子）", level, C.lime);
+    callout([3, 3.4, 2.1], 772, 130, "每次游離多一顆電子，再去撞下一個分子", C.yellow, { a: "right" });
+    callout([-2, 1.2, 2.1], 772, 200, "電漿 Plasma：帶電粒子 + 大量自由基", C.magenta, { a: "right", alpha: seg(t, 3, 4) });
+    chip("自由基負責「吃」材料，離子負責「定方向」", 520, 432, C.cyan, { a: "center", size: 13 });
+  },
+});
+
+// =====================================================================
+// GIF 04：等向性 Isotropic（只有自由基，四面八方，底切）
+// =====================================================================
+addScene("04-isotropic", {
+  dur: 8, fps: 12,
+  setup(g) {
+    this.si = profileSolid(g, M.si, { yBottom: -4.2, z0: -2, z1: 2 });
+    this.res = [mbox(g, M.resist, { emissive: 0x5a3a08, ei: 0.3 }).set(-5, 0, -2, -0.8, 0.55, 2), mbox(g, M.resist, { emissive: 0x5a3a08, ei: 0.3 }).set(0.8, 0, -2, 5, 0.55, 2)];
+    this.rad = particles(g, 120, COL.rad, 0.09);
+    this.prod = particles(g, 30, 0x4fc3ff, 0.1);
+  },
+  render(t) {
+    camOrbit(t, this.dur, { r: 12.5, h: 4.5, a0: 0.35, amp: 0.05, look: [0, -1, 0] });
+    const d = lerp(0.05, 2.4, seg(t, 0.4, 6.6)), a = 0.8;
+    const prof = isoProfile(-5, 5, [[0, a]], d);
+    this.si.update(prof);
+    const rad = [];
+    drift(rad, { t, n: 90, seed: 1, x0: -3.4, x1: 3.4, y0: 0.7, y1: 4, z0: -1.8, z1: 1.8, sp: 0.1 });
+    drift(rad, { t, n: 40, seed: 300, x0: -a - d, x1: a + d, y0: -d, y1: 0.6, z0: -1.8, z1: 1.8, sp: 0.12, ok: ([x, y]) => -y < Math.sqrt(Math.max(0, d * d - Math.max(0, Math.abs(x) - a) ** 2)) || y > 0 });
+    place(this.rad, rad);
+    const surf = prof.filter(([x, y]) => y < -0.02);
+    const pr = [];
+    if (surf.length) products(pr, { t, n: 30, seed: 7, pts: surf, z0: -1.8, z1: 1.8 });
+    place(this.prod, pr);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("等向性蝕刻 Isotropic", "PLASMA ETCH / 04");
+    chip("Si + 4F* → SiF₄↑", 772, 40, C.lime, { a: "right", mono: true, size: 13 });
+    legend([["自由基 F*：四面八方亂飄", C.lime], ["SiF₄：反應產物，飄走被抽掉", C.blue]], 32, 100);
+    ruler([0, 0, 2.05], [0, -d, 2.05], "往下 d", C.yellow, seg(t, 1.5, 2));
+    ruler([a, -0.15, 2.05], [a + d, -0.15, 2.05], "往旁邊 d", C.yellow, seg(t, 1.5, 2));
+    callout([-a - d * 0.75, -d * 0.6, 2], 40, 380, "底切 Undercut：鑽到光阻底下", C.red, { alpha: seg(t, 3, 3.5) });
+    callout([2.6, 0.55, 2], 772, 150, "光阻 Photoresist", C.amber, { a: "right" });
+    chip("往下吃多深，往旁邊就吃多寬 —— 線寬會變大", 520, 432, C.cyan, { a: "center", size: 13 });
+  },
+});
+
+// =====================================================================
+// GIF 06：非等向性 Anisotropic（離子打底部 + 側壁保護 → 垂直）
+// =====================================================================
+addScene("06-anisotropic", {
+  dur: 8, fps: 12,
+  setup(g) {
+    this.si = profileSolid(g, M.si, { yBottom: -4.2, z0: -2, z1: 2 });
+    this.res = [mbox(g, M.resist, { emissive: 0x5a3a08, ei: 0.3 }).set(-5, 0, -2, -0.8, 0.55, 2), mbox(g, M.resist, { emissive: 0x5a3a08, ei: 0.3 }).set(0.8, 0, -2, 5, 0.55, 2)];
+    this.pass = [mbox(g, M.spacer, { emissive: 0x0a5a3a, ei: 0.6 }), mbox(g, M.spacer, { emissive: 0x0a5a3a, ei: 0.6 })];
+    this.ions = particles(g, 50, COL.ion, 0.11); this.trail = particles(g, 150, COL.ion, 0.07); this.flash = particles(g, 30, 0xffffff, 0.15);
+    this.rad = particles(g, 70, COL.rad, 0.08);
+    this.prod = particles(g, 24, 0x4fc3ff, 0.1);
+  },
+  render(t) {
+    camOrbit(t, this.dur, { r: 12.5, h: 4.5, a0: 0.35, amp: 0.05, look: [0, -1, 0] });
+    const d = lerp(0.05, 3.4, seg(t, 0.4, 6.6)), a = 0.8, pw = 0.08 * seg(d, 0.2, 0.8);
+    this.si.update(aniProfile(-5, 5, 0, a, d));
+    this.pass[0].set(-a, -d + 0.05, -2, -a + pw, 0, 2);
+    this.pass[1].set(a - pw, -d + 0.05, -2, a, 0, 2);
+    const ions = [], tr = [], fl = [];
+    ionRain(ions, tr, fl, { t, n: 40, seed: 11, x0: -a + 0.15, x1: a - 0.15, z0: -1.8, z1: 1.8, top: 4, bottom: -d });
+    ionRain(ions, tr, fl, { t, n: 10, seed: 77, x0: -4, x1: 4, z0: -1.8, z1: 1.8, top: 4, bottom: 0.55 });
+    place(this.ions, ions); place(this.trail, tr); place(this.flash, fl);
+    const rad = [];
+    drift(rad, { t, n: 70, seed: 5, x0: -3.4, x1: 3.4, y0: 0.7, y1: 4, z0: -1.8, z1: 1.8, sp: 0.1 });
+    place(this.rad, rad);
+    const pr = [];
+    products(pr, { t, n: 24, seed: 9, pts: [[-0.4, -d], [0, -d], [0.4, -d]], z0: -1.6, z1: 1.6, rise: 4 });
+    place(this.prod, pr);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("非等向性蝕刻 Anisotropic", "PLASMA ETCH / 06");
+    chip("離子 + 自由基 + 側壁保護", 772, 40, C.red, { a: "right", size: 13 });
+    legend([["離子 ⊕：被鞘層加速，垂直往下", C.red], ["自由基 F*：負責化學反應", C.lime], ["SiF₄：產物飄走", C.blue]], 32, 100);
+    callout([0, -d, 2], 360, 400, "離子只打得到底部 → 底部吃得快", C.red, { alpha: seg(t, 1, 1.5) });
+    callout([a - 0.04, -d * 0.5, 2], 772, 300, "側壁保護層 Passivation：側壁幾乎不動", C.green, { a: "right", alpha: seg(t, 2.5, 3) });
+    callout([2.6, 0.55, 2], 772, 150, "光阻 Photoresist", C.amber, { a: "right" });
+    chip("又深又直，線寬不變 —— 乾式蝕刻能做奈米級細線的原因", 400, 432, C.cyan, { a: "center", size: 13 });
+  },
+});
+
+// =====================================================================
+// GIF 07：並排比較（同一開口）
+// =====================================================================
+addScene("07-compare", {
+  dur: 8, fps: 12,
+  setup(g) {
+    this.L = profileSolid(g, M.si, { yBottom: -4.2, z0: -1.6, z1: 1.6 });
+    this.R = profileSolid(g, M.si, { yBottom: -4.2, z0: -1.6, z1: 1.6 });
+    const r = (x0, x1) => mbox(g, M.resist, { emissive: 0x5a3a08, ei: 0.3 }).set(x0, 0, -1.6, x1, 0.5, 1.6);
+    r(-7.4, -4.9); r(-3.9, -1.4); r(1.4, 3.9); r(4.9, 7.4);
+    this.pass = [mbox(g, M.spacer), mbox(g, M.spacer)];
+    this.ions = particles(g, 30, COL.ion, 0.1); this.trail = particles(g, 90, COL.ion, 0.06); this.flash = particles(g, 20, 0xffffff, 0.14);
+    this.rad = particles(g, 110, COL.rad, 0.08);
+  },
+  render(t) {
+    camOrbit(t, this.dur, { r: 17, h: 5, a0: 0.12, amp: 0.04, look: [0, -1, 0] });
+    const k = seg(t, 0.4, 6.4), a = 0.5, cL = -4.4, cR = 4.4;
+    const dI = lerp(0.05, 1.9, k), dA = lerp(0.05, 3.2, k);
+    this.L.update(isoProfile(-7.4, -1.4, [[cL, a]], dI));
+    this.R.update(aniProfile(1.4, 7.4, cR, a, dA));
+    const pw = 0.07 * seg(dA, 0.2, 0.8);
+    this.pass[0].set(cR - a, -dA + 0.05, -1.6, cR - a + pw, 0, 1.6); this.pass[1].set(cR + a - pw, -dA + 0.05, -1.6, cR + a, 0, 1.6);
+    const ions = [], tr = [], fl = [];
+    ionRain(ions, tr, fl, { t, n: 24, seed: 4, x0: cR - a + 0.1, x1: cR + a - 0.1, z0: -1.4, z1: 1.4, top: 3.5, bottom: -dA });
+    place(this.ions, ions); place(this.trail, tr); place(this.flash, fl);
+    const rad = [];
+    drift(rad, { t, n: 60, seed: 2, x0: -7, x1: -1.8, y0: 0.6, y1: 3.5, z0: -1.4, z1: 1.4, sp: 0.1 });
+    drift(rad, { t, n: 40, seed: 50, x0: 1.8, x1: 7, y0: 0.6, y1: 3.5, z0: -1.4, z1: 1.4, sp: 0.1 });
+    place(this.rad, rad);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("等向性 vs 非等向性 Side by Side", "PLASMA ETCH / 07");
+    const pl = proj(cL, 3.4, 0), pr = proj(cR, 3.4, 0);
+    chip("等向性 Isotropic：只有自由基", pl[0], Math.max(110, pl[1]), C.lime, { a: "center" });
+    chip("非等向性 Anisotropic：離子 + 自由基", pr[0], Math.max(110, pr[1]), C.red, { a: "center" });
+    ruler([cL - a - dI, 0.02, 1.65], [cL + a + dI, 0.02, 1.65], `開口寬度 ×${((2 * a + 2 * dI) / (2 * a)).toFixed(1)}`, C.yellow, seg(t, 2, 2.5));
+    ruler([cR - a, 0.02, 1.65], [cR + a, 0.02, 1.65], "開口寬度 ×1.0", C.yellow, seg(t, 2, 2.5));
+    chip("同樣的開口：等向性越挖越寬，非等向性只往下", 400, 432, C.cyan, { a: "center", size: 13 });
+  },
+});
+
+// =====================================================================
+// GIF 08：選擇比 Selectivity
+// =====================================================================
+addScene("08-selectivity", {
+  dur: 8, fps: 12,
+  setup(g) {
+    this.under = profileSolid(g, M.oxide, { yBottom: -2.2, z0: -2, z1: 2, emissive: 0x1a2a44 });
+    this.tL = mbox(g, M.si, { emissive: 0x0a3a66, ei: 0.35 }); this.tR = mbox(g, M.si, { emissive: 0x0a3a66, ei: 0.35 }); this.tC = mbox(g, M.si, { emissive: 0x0a3a66, ei: 0.35 });
+    this.mL = mbox(g, M.mask); this.mR = mbox(g, M.mask);
+    this.ions = particles(g, 50, COL.ion, 0.1); this.trail = particles(g, 150, COL.ion, 0.06); this.flash = particles(g, 40, 0xffffff, 0.15);
+  },
+  render(t) {
+    camOrbit(t, this.dur, { r: 12.5, h: 4.5, a0: 0.35, amp: 0.05, look: [0, 0, 0] });
+    const a = 0.8, yU = -0.8, yT = 1.4, k = seg(t, 0.4, 4.6), over = seg(t, 4.6, 6.6);
+    const front = lerp(yT, yU, k); // 目標膜蝕刻到哪
+    const maskLoss = 0.1 * k + 0.02 * over, underLoss = 0.03 * over;
+    this.under.update(aniProfile(-5, 5, 0, a, underLoss).map(([x, y]) => [x, y + yU]));
+    this.tL.set(-5, yU, -2, -a, yT, 2); this.tR.set(a, yU, -2, 5, yT, 2); this.tC.set(-a, yU, -2, a, front, 2);
+    this.mL.set(-5, yT, -2, -a, yT + 0.5 - maskLoss, 2); this.mR.set(a, yT, -2, 5, yT + 0.5 - maskLoss, 2);
+    const ions = [], tr = [], fl = [];
+    ionRain(ions, tr, fl, { t, n: 36, seed: 21, x0: -a + 0.1, x1: a - 0.1, z0: -1.8, z1: 1.8, top: 5, bottom: Math.max(front, yU - underLoss) });
+    ionRain(ions, tr, fl, { t, n: 14, seed: 88, x0: -4.5, x1: 4.5, z0: -1.8, z1: 1.8, top: 5, bottom: yT + 0.5 - maskLoss });
+    place(this.ions, ions); place(this.trail, tr); place(this.flash, fl);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("選擇比 Selectivity", "PLASMA ETCH / 08");
+    chip("選擇比 = 目標膜蝕刻速率 ÷ 其他材料蝕刻速率", 772, 40, C.cyan, { a: "right", size: 13 });
+    callout([-3, yT + 0.4, 2], 40, 130, "硬遮罩 Hard mask：要撐得住", C.grey);
+    callout([3, 0.3, 2], 772, 150, "目標膜 Si：要吃掉的材料", C.cyan, { a: "right" });
+    callout([3, yU - 0.6, 2], 772, 330, "底層 SiO₂：碰到要停住", C.blue, { a: "right" });
+    if (over > 0.05) callout([0, yU, 2], 360, 395, "碰到底層 → 幾乎不再往下（Stop on layer）", C.lime, { alpha: over });
+    const nmT = Math.round(60 * k), nmM = (60 / 20 * k + 0.6 * over).toFixed(1), nmU = (0.6 * over).toFixed(1);
+    meter(40, 300, `Si 目標膜：${nmT} nm`, k, C.cyan);
+    meter(40, 332, `硬遮罩：${nmM} nm（選擇比 20 : 1）`, k / 20 + over * 0.01, C.grey);
+    meter(40, 364, `SiO₂ 底層：${nmU} nm（選擇比 100 : 1）`, over * 0.01, C.blue);
+    chip("選擇比高：光罩撐得住、底層不被傷", 520, 432, C.lime, { a: "center", size: 13 });
+  },
+});
+
+// =====================================================================
+// 疊層工具（09、10 共用）
+// =====================================================================
+const STACK = [0, 0.35, 0.85, 1.2, 1.7, 2.05, 2.55]; // 由下往上：SiGe, Si, SiGe, Si, SiGe, Si
+
+// =====================================================================
+// GIF 09：非等向性刻 Nanosheet 鰭（對照等向性的後果）
+// =====================================================================
+addScene("09-nanosheet-fin", {
+  dur: 8, fps: 12,
+  setup(g) {
+    this.sides = [-4.2, 4.2].map((cx) => {
+      mbox(g, M.sub).set(cx - 3.2, -1.6, -2, cx + 3.2, -0.6, 2);
+      const sub = [mbox(g, M.sub), mbox(g, M.sub), mbox(g, M.sub)]; // 中間 sub-fin + 左右兩側
+      const layers = STACK.slice(0, -1).map((y0, i) => ({ y0, y1: STACK[i + 1], C: mbox(g, i % 2 ? M.si : M.sige, i % 2 ? { emissive: 0x0a3a66, ei: 0.3 } : {}), L: mbox(g, i % 2 ? M.si : M.sige), R: mbox(g, i % 2 ? M.si : M.sige) }));
+      const mask = mbox(g, M.mask);
+      return { cx, sub, layers, mask };
+    });
+    this.ions = particles(g, 60, COL.ion, 0.1); this.trail = particles(g, 180, COL.ion, 0.06);
+    this.rad = particles(g, 90, COL.rad, 0.08);
+  },
+  render(t) {
+    camOrbit(t, this.dur, { r: 17, h: 6, a0: 0.18, amp: 0.04, look: [0, 0.8, 0] });
+    const k = seg(t, 0.4, 6.4), a = 0.7, top = STACK[6];
+    const front = lerp(top, -0.6, k); // 蝕刻前緣（由上往下）
+    this.sides.forEach(({ cx, sub, layers, mask }, side) => {
+      const iso = side === 1;
+      mask.set(cx - a, top, -2, cx + a, top + 0.35, 2);
+      // 等向性：每一層從被蝕刻前緣經過後就開始被側向吃，越上面的層被吃越久 → 越窄
+      const latOf = (y0, y1) => iso ? clamp(((y0 + y1) / 2 - front) * 0.4, 0, a - 0.15) : 0;
+      layers.forEach((l) => {
+        const w = a - latOf(l.y0, l.y1);
+        l.C.set(cx - w, l.y0, -2, cx + w, l.y1, 2);
+        const yTop = clamp(front, l.y0, l.y1);
+        l.L.set(cx - 3.2, l.y0, -2, cx - w, yTop, 2);
+        l.R.set(cx + w, l.y0, -2, cx + 3.2, yTop, 2);
+      });
+      const ws = a - latOf(-0.6, 0), ys = clamp(front, -0.6, 0);
+      sub[0].set(cx - ws, -0.6, -2, cx + ws, 0, 2);
+      sub[1].set(cx - 3.2, -0.6, -2, cx - ws, ys, 2);
+      sub[2].set(cx + ws, -0.6, -2, cx + 3.2, ys, 2);
+    });
+    const ions = [], tr = [], fl = [], rad = [];
+    ionRain(ions, tr, fl, { t, n: 50, seed: 31, x0: -7.2, x1: -1.2, z0: -1.8, z1: 1.8, top: 5.5, bottom: (x) => Math.abs(x + 4.2) < a ? top + 0.35 : front });
+    place(this.ions, ions); place(this.trail, tr);
+    drift(rad, { t, n: 50, seed: 41, x0: 1.2, x1: 7.2, y0: Math.max(front, -0.5), y1: 5, z0: -1.8, z1: 1.8, sp: 0.1 });
+    drift(rad, { t, n: 30, seed: 61, x0: -7.2, x1: -1.2, y0: 3.2, y1: 5, z0: -1.8, z1: 1.8, sp: 0.1 });
+    place(this.rad, rad);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("非等向性刻 Nanosheet 鰭 Fin Etch", "PLASMA ETCH / 09");
+    const pl = proj(-4.2, 4.4, 0), pr = proj(4.2, 4.4, 0);
+    chip("非等向性：側壁垂直，3 片一樣寬", pl[0], Math.max(110, pl[1]), C.lime, { a: "center" });
+    chip("如果是等向性：越上面被吃越多", pr[0], Math.max(110, pr[1]), C.red, { a: "center" });
+    const done = seg(t, 6.4, 6.8);
+    text("W1 = W2 = W3 → 電流一致", pl[0], 395, { a: "center", size: 14, c: C.lime, w: 700, alpha: done });
+    text("W1 < W2 < W3 → 電流不一致", pr[0], 395, { a: "center", size: 14, c: C.red, w: 700, alpha: done });
+    chip("疊層又高、層數又多，只有非等向性刻得直；源汲極凹槽 S/D recess 也一樣", 400, 432, C.cyan, { a: "center", size: 13 });
+  },
+});
+
+// =====================================================================
+// GIF 10：高選擇比的通道釋放（只吃 SiGe、不吃 Si）
+// =====================================================================
+addScene("10-sige-release", {
+  dur: 8, fps: 12,
+  setup(g) {
+    mbox(g, M.sub).set(-4.4, -1.6, -2.4, 4.4, -0.6, 2.4);
+    mbox(g, M.sti, { opacity: 0.4 }).set(-4.4, -0.6, -2.4, 4.4, 0, 2.4);
+    mbox(g, M.sub).set(-3.6, -0.6, -0.75, 3.6, 0, 0.75);
+    this.layers = STACK.slice(0, -1).map((y0, i) => ({ y0, y1: STACK[i + 1], sige: i % 2 === 0, b: mbox(g, i % 2 ? M.si : M.sige, i % 2 ? { emissive: 0x0a3a66, ei: 0.4 } : {}) }));
+    this.sd = [mbox(g, M.sd, { opacity: 0.55 }).set(-3.6, 0, -0.75, -1.6, 2.9, 0.75), mbox(g, M.sd, { opacity: 0.55 }).set(1.6, 0, -0.75, 3.6, 2.9, 0.75)];
+    this.inner = [];
+    this.layers.forEach((l) => { if (l.sige) this.inner.push(mbox(g, M.inner).set(-1.6, l.y0, -0.75, -1.2, l.y1, 0.75), mbox(g, M.inner).set(1.2, l.y0, -0.75, 1.6, l.y1, 0.75)); });
+    this.rad = particles(g, 110, COL.rad, 0.08);
+    this.prod = particles(g, 30, 0xffa04d, 0.09);
+  },
+  render(t) {
+    camOrbit(t, this.dur, { r: 11, h: 5.5, a0: 0.75, amp: 0.05, look: [0, 1.2, 0] });
+    const k = seg(t, 0.6, 6.2), zw = 0.75 * (1 - k);
+    this.layers.forEach((l) => {
+      if (l.sige) { const ym = (l.y0 + l.y1) / 2; l.b.set(-1.2, l.y0, -zw, 1.2, l.y1, zw); if (zw < 0.01) l.b.hide(); }
+      else l.b.set(-1.6, l.y0, -0.75, 1.6, l.y1, 0.75);
+    });
+    const rad = [];
+    drift(rad, { t, n: 70, seed: 3, x0: -1.2, x1: 1.2, y0: 0.05, y1: 4, z0: -2.2, z1: 2.2, sp: 0.12, ok: ([x, y, z]) => Math.abs(z) > zw + 0.05 || y > STACK[6] });
+    drift(rad, { t, n: 40, seed: 99, x0: -1.15, x1: 1.15, y0: 0.05, y1: 2.0, z0: -0.7, z1: 0.7, sp: 0.15, ok: ([x, y, z]) => Math.abs(z) > zw && STACK.slice(0, -1).some((y0, i) => i % 2 === 0 && y >= y0 && y <= STACK[i + 1]) });
+    place(this.rad, rad);
+    const pr = [];
+    if (k > 0 && k < 1) for (let i = 0; i < 30; i++) { const ph = fract(rnd(i) + t * 0.5), L = [0, 2, 4][i % 3], sg = i % 2 ? 1 : -1; pr.push([-1 + rnd(i + 1) * 2, (STACK[L] + STACK[L + 1]) / 2 + ph * 0.3, sg * (zw + ph * 2), 1 - ph]); }
+    place(this.prod, pr);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("高選擇比：只吃 SiGe Channel Release", "PLASMA ETCH / 10");
+    chip("等向性，但選擇比 SiGe : Si > 100 : 1", 772, 40, C.lime, { a: "right", size: 13 });
+    callout([0, 0.17, zw], 40, 360, "SiGe 從兩側被挖空", C.orange, { alpha: 1 - seg(t, 5.8, 6.2) });
+    callout([0.6, 1.0, 0.75], 772, 160, "Si 薄片：幾乎沒被吃", C.cyan, { a: "right" });
+    callout([-2.6, 2.6, 0.75], 40, 120, "源極 / 汲極 + 內間隔層（固定薄片兩端）", C.blue);
+    meter(560, 350, "SiGe 蝕刻量", k, C.orange, `${Math.round(k * 100)}%`);
+    meter(560, 382, "Si 蝕刻量", k * 0.01, C.cyan, `${(k).toFixed(1)}%`);
+    chip("這一步不需要方向，需要的是「只吃 SiGe」—— 選擇比", 400, 432, C.cyan, { a: "center", size: 13 });
+  },
+});
+
+// =====================================================================
+// GIF 11：濕蝕刻是等向性的（線寬變大、吃穿）
+// =====================================================================
+addScene("11-wet-isotropic", {
+  dur: 8, fps: 12,
+  setup(g) {
+    this.si = profileSolid(g, M.si, { yBottom: -3.6, z0: -2, z1: 2 });
+    this.op = [-2.4, 0, 2.4]; this.a = 0.35;
+    const xs = [-5, ...this.op.flatMap((c) => [c - this.a, c + this.a]), 5];
+    this.res = [];
+    for (let i = 0; i < xs.length; i += 2) this.res.push(mbox(g, M.resist, { emissive: 0x5a3a08, ei: 0.3 }).set(xs[i], 0, -2, xs[i + 1], 0.45, 2));
+    this.liq = mbox(g, M.liquid, { opacity: 0.22, emissive: 0x0a3a66, ei: 0.5 }).set(-5, -0.05, -2, 5, 2.4, 2);
+    this.bub = particles(g, 50, 0x9fe0ff, 0.08);
+  },
+  render(t) {
+    camOrbit(t, this.dur, { r: 12.5, h: 4.5, a0: 0.35, amp: 0.05, look: [0, -0.6, 0] });
+    const d = lerp(0.05, 1.5, seg(t, 0.4, 6.4));
+    this.si.update(isoProfile(-5, 5, this.op.map((c) => [c, this.a]), d, 240));
+    const b = [];
+    for (let i = 0; i < 50; i++) { const ph = fract(rnd(i) + t * 0.3); const c = this.op[i % 3]; b.push([c + (rnd(i + 1) - 0.5) * 1.4, lerp(-d * 0.7, 2.3, ph), -1.8 + rnd(i + 2) * 3.6, 1 - ph * 0.5]); }
+    place(this.bub, b);
+    const merged = d > 2.4 / 2 - this.a;
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("濕蝕刻：泡在藥水裡 Wet Etch", "PLASMA ETCH / 11");
+    chip("藥水 = 液體，沒有方向 → 等向性", 772, 40, C.blue, { a: "right", size: 13 });
+    callout([4, 2.2, 2], 772, 120, "藥水 Etchant（例如 HF、KOH）", C.blue, { a: "right" });
+    callout([1.2, -0.3, 2], 772, 300, merged ? "相鄰開口被吃穿、連在一起" : "每個開口都被吃成碗狀", merged ? C.red : C.yellow, { a: "right" });
+    ruler([-this.a - d, 0.02, 2.05], [this.a + d, 0.02, 2.05], `線寬 CD ×${((this.a + d) / this.a).toFixed(1)}`, C.yellow, seg(t, 1.5, 2));
+    chip("圖案到奈米級時，底切誤差比線寬本身還大", 400, 432, C.cyan, { a: "center", size: 13 });
+  },
+});
+
+// =====================================================================
+// GIF 12：乾燥時結構被拉倒（pattern collapse）
+// =====================================================================
+addScene("12-pattern-collapse", {
+  dur: 8, fps: 12,
+  setup(g) {
+    mbox(g, M.sub).set(-5, -1.6, -2, 5, -0.6, 2);
+    this.xs = [-3.2, -1.6, 0, 1.6, 3.2];
+    this.fins = this.xs.map((x) => {
+      const piv = new THREE.Group(); piv.position.set(x, -0.6, 0); g.add(piv);
+      const b = mbox(piv, M.si, { emissive: 0x0a3a66, ei: 0.4 }).set(-0.22, 0, -1.8, 0.22, 4.2, 1.8);
+      return piv;
+    });
+    this.liq = this.xs.slice(0, -1).map(() => mbox(g, M.liquid, { opacity: 0.4, emissive: 0x0a3a66, ei: 0.6 }));
+    this.arr = particles(g, 40, 0xff3df2, 0.09);
+  },
+  render(t) {
+    camOrbit(t, this.dur, { r: 13, h: 5, a0: 0.3, amp: 0.05, look: [0, 1.2, 0] });
+    const dry = seg(t, 0.4, 4.8), lvl = lerp(4.2, 1.0, dry);
+    const pull = seg(t, 2.2, 5.6), touch = t > 5.4;
+    const ang = 0.135 * pull; // 兩兩往內倒，頂端碰在一起
+    this.fins.forEach((p, i) => { p.rotation.z = i === 4 ? 0 : (i % 2 === 0 ? -ang : ang); });
+    this.liq.forEach((b, i) => { const x0 = this.xs[i] + 0.22, x1 = this.xs[i + 1] - 0.22; if (dry < 1) b.set(x0, -0.6, -1.8, x1, -0.6 + lvl, 1.8); else b.hide(); });
+    const ar = [];
+    if (pull > 0.05 && pull < 0.98) for (let i = 0; i < 4; i++) { if (i % 2) continue; const c = (this.xs[i] + this.xs[i + 1]) / 2; for (let k = 0; k < 6; k++) { const ph = fract(k / 6 + t); ar.push([c - 0.7 + ph * 0.5, lvl * 0.6, 1.85, 1 - ph]); ar.push([c + 0.7 - ph * 0.5, lvl * 0.6, 1.85, 1 - ph]); } }
+    place(this.arr, ar);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("乾燥時被拉倒 Pattern Collapse", "PLASMA ETCH / 12");
+    chip("細高結構 + 液體 = 危險", 772, 40, C.red, { a: "right", size: 13 });
+    callout([-2.4, -0.6 + lvl, 1.8], 40, 120, "藥水乾燥中，液面下降", C.blue, { alpha: 1 - dry });
+    callout([-2.4, 2.2, 1.8], 40, 300, "表面張力把相鄰結構往內拉", C.magenta, { alpha: seg(t, 2.4, 2.8) });
+    if (touch) callout([0.8, 4.0, 1.8], 772, 140, "倒塌黏在一起（stiction）", C.red, { a: "right" });
+    chip("乾式蝕刻沒有液體 → 沒有表面張力的問題", 400, 432, C.lime, { a: "center", size: 13 });
   },
 });
 
