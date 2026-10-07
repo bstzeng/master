@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<title>Isotropic etch 3D GIF renderer</title>
+<style>
+  body { margin: 0; background: #05070d; }
+  canvas { display: block; }
+</style>
+<script type="importmap">
+  { "imports": { "three": "../nanosheet/vendor/three/three.module.min.js", "three/addons/": "../nanosheet/vendor/three/addons/" } }
+</script>
+</head>
+<body>
+<canvas id="out" width="800" height="450"></canvas>
+<script type="module">
+// 等向性蝕刻種類課的 3D 場景：與 nanosheet/anim3d.html 共用同一套繪製核心與 three.js（../nanosheet/vendor）。
+// 需要用 http 伺服器開啟（ES module 不能用 file://）。預覽：isotropic-etch/anim3d.html#01-ash
+import * as THREE from "three";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+
+const W = 800, H = 450; // 版面座標（所有位置都用這個尺寸寫）
+// 輸出倍率：?scale=2.4 → 1920×1080（1080P）；預設 1 → 800×450 預覽
+const S = parseFloat(new URLSearchParams(location.search).get("scale") || "1");
+const FONT = '"Noto Sans TC", "Noto Sans CJK TC", sans-serif';
+const MONO = '"DejaVu Sans Mono", "DM Mono", monospace';
+const C = { cyan: "#22e5ff", magenta: "#ff3df2", lime: "#b6ff3d", red: "#ff4d5e", amber: "#ffb340", orange: "#ffa04d", green: "#5dffb0", blue: "#5aa0ff", yellow: "#ffd23d", grey: "#c8ced8", text: "#e8f6ff", dim: "rgba(232,246,255,.62)" };
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const ease = (k) => { k = clamp(k); return k * k * (3 - 2 * k); };
+const seg = (v, a, b) => ease((v - a) / (b - a)); // v 在 a..b 之間的平滑進度
+const fract = (v) => v - Math.floor(v);
+const rnd = (i) => fract(Math.sin(i * 127.1 + 311.7) * 43758.5453);
+const lerp = (a, b, k) => a + (b - a) * k;
+const tri = (v) => 1 - 4 * Math.abs(fract(v) - 0.5); // -1..1 三角波（彈跳用）
+
+// ---------- three.js ----------
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(S);
+renderer.setSize(W, H);
+renderer.setClearColor(0x05070d, 1);
+const glCanvas = renderer.domElement;
+const hud = document.createElement("canvas");
+hud.width = W * S; hud.height = H * S;
+const hctx = hud.getContext("2d");
+hctx.setTransform(S, 0, 0, S, 0, 0);
+const out = document.getElementById("out");
+out.width = W * S; out.height = H * S;
+const octx = out.getContext("2d");
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x05070d, 24, 44);
+const camera = new THREE.PerspectiveCamera(36, W / H, 0.1, 100);
+scene.add(new THREE.AmbientLight(0x8fb4ff, 0.9));
+const key = new THREE.DirectionalLight(0xffffff, 1.6);
+key.position.set(6, 12, 8);
+scene.add(key);
+const rim = new THREE.DirectionalLight(0xff3df2, 0.6);
+rim.position.set(-8, 4, -6);
+scene.add(rim);
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.9, 0.45, 0.55));
+composer.addPass(new OutputPass());
+composer.setPixelRatio(S);
+const grid = new THREE.GridHelper(60, 60, 0x0e3a4a, 0x0a2230);
+grid.position.y = -2.01;
+scene.add(grid);
+
+// 材料顏色（面, 邊）
+const M = {
+  sub: [0x0f1a2c, 0x2c4a6e], sti: [0x2a3a55, 0x4a6a95], si: [0x1d78c0, 0x4fc3ff], sige: [0xd9822b, 0xffa04d],
+  poly: [0x7c828c, 0xc8ced8], spacer: [0x1f9e6a, 0x5dffb0], inner: [0x14c88a, 0x8dffd0], sd: [0x2a5fd0, 0x5aa0ff],
+  hik: [0xffd23d, 0xffe680], gate: [0xb02cc0, 0xff3df2],
+};
+
+// 單位方塊：用 set(x0,y0,z0,x1,y1,z1) 改尺寸位置，任何一邊為 0 就隱藏
+function mbox(parent, [face, edge], { opacity = 1, emissive = 0x000000, ei = 0, edges = true } = {}) {
+  const g = new THREE.BoxGeometry(1, 1, 1);
+  const mat = new THREE.MeshStandardMaterial({ color: face, transparent: opacity < 1, opacity, roughness: 0.45, metalness: 0.1, emissive, emissiveIntensity: ei, depthWrite: opacity >= 1 });
+  const mesh = new THREE.Mesh(g, mat);
+  parent.add(mesh);
+  let lines = null;
+  if (edges) { lines = new THREE.LineSegments(new THREE.EdgesGeometry(g), new THREE.LineBasicMaterial({ color: edge, transparent: true, opacity: 0.95 })); mesh.add(lines); }
+  const base = { opacity, line: 0.95 };
+  const api = {
+    mesh, mat, lines,
+    set(x0, y0, z0, x1, y1, z1) {
+      const sx = x1 - x0, sy = y1 - y0, sz = z1 - z0;
+      if (sx < 1e-3 || sy < 1e-3 || sz < 1e-3) { mesh.visible = false; return api; }
+      mesh.visible = true;
+      mesh.scale.set(sx, sy, sz);
+      mesh.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+      return api;
+    },
+    alpha(a) { // 0..1 淡入淡出
+      mat.transparent = true; mat.opacity = base.opacity * a; mat.depthWrite = a >= 1 && base.opacity >= 1;
+      if (lines) lines.material.opacity = base.line * a;
+      if (a <= 0.001) mesh.visible = false;
+      return api;
+    },
+    hide() { mesh.visible = false; return api; },
+  };
+  return api;
+}
+
+// 發光粒子（電子、自由基）
+function particles(parent, count, color, r = 0.1) {
+  const mesh = new THREE.InstancedMesh(new THREE.SphereGeometry(r, 10, 8), new THREE.MeshBasicMaterial({ color }), count);
+  mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  parent.add(mesh);
+  return mesh;
+}
+const tmp = new THREE.Object3D();
+function place(mesh, list) {
+  const n = Math.min(list.length, mesh.count);
+  for (let i = 0; i < n; i++) { const [x, y, z, s = 1] = list[i]; tmp.position.set(x, y, z); tmp.scale.setScalar(s); tmp.updateMatrix(); mesh.setMatrixAt(i, tmp.matrix); }
+  tmp.scale.setScalar(0); tmp.updateMatrix();
+  for (let i = n; i < mesh.count; i++) mesh.setMatrixAt(i, tmp.matrix);
+  mesh.instanceMatrix.needsUpdate = true;
+}
+
+// 導通電子流：閘極開啟時才進入通道（關閉後已在通道內的電子跑完）
+function stream(list, { n, seed, t, speed, x0, x1, lane, gate = () => true, axis = "x" }) {
+  for (let i = 0; i < n; i++) {
+    const ph = fract(rnd(i + seed) + t * speed);
+    if (!gate(t - ph / speed)) continue;
+    const [a, b] = lane(i + seed);
+    const p = lerp(x0, x1, ph);
+    list.push(axis === "x" ? [p, a, b] : [a, b, p]);
+  }
+}
+
+function camOrbit(t, dur, { r = 20, h = 8.5, a0 = 0.2, amp = 0.1, look = [0, 0.6, 0] } = {}) {
+  const a = Math.sin((t / dur) * Math.PI * 2) * amp + a0;
+  camera.position.set(Math.sin(a) * r + look[0], h, Math.cos(a) * r + look[2]);
+  camera.lookAt(look[0], look[1], look[2]);
+}
+
+// ---------- 2D HUD ----------
+function text(s, x, y, o = {}) {
+  const c = hctx; c.save();
+  c.font = `${o.w || 600} ${o.size || 16}px ${o.mono ? MONO : FONT}`;
+  c.textAlign = o.a || "left"; c.globalAlpha = o.alpha ?? 1;
+  if (o.glow) { c.shadowColor = o.glow; c.shadowBlur = 10; }
+  c.fillStyle = o.c || C.text; c.fillText(s, x, y); c.restore();
+}
+function chip(s, x, y, color, o = {}) {
+  const c = hctx; c.save();
+  c.font = `700 ${o.size || 14}px ${o.mono ? MONO : FONT}`;
+  const w = c.measureText(s).width + 22, h = (o.size || 14) + 14;
+  const bx = o.a === "center" ? x - w / 2 : o.a === "right" ? x - w : x;
+  c.globalAlpha = o.alpha ?? 1;
+  c.fillStyle = "rgba(5,7,13,.84)"; c.fillRect(bx, y - h / 2, w, h);
+  c.strokeStyle = color; c.lineWidth = 1.5; c.shadowColor = color; c.shadowBlur = 8;
+  c.strokeRect(bx + .5, y - h / 2 + .5, w - 1, h - 1);
+  c.shadowBlur = 0; c.fillStyle = color; c.textBaseline = "middle"; c.fillText(s, bx + 11, y + 1);
+  c.restore();
+  return { x: bx, y: y - h / 2, w, h };
+}
+function frame(title, tag) {
+  const c = hctx; c.save(); c.strokeStyle = C.cyan; c.lineWidth = 2; c.globalAlpha = .8;
+  const L = 18;
+  [[12, 12, 1, 1], [W - 12, 12, -1, 1], [12, H - 12, 1, -1], [W - 12, H - 12, -1, -1]].forEach(([x, y, sx, sy]) => {
+    c.beginPath(); c.moveTo(x, y + sy * L); c.lineTo(x, y); c.lineTo(x + sx * L, y); c.stroke();
+  });
+  c.restore();
+  text(tag, 28, 40, { size: 12, mono: true, c: C.cyan, w: 500 });
+  text(title, 28, 64, { size: 22, w: 700 });
+}
+const proj = (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return [(v.x + 1) / 2 * W, (1 - v.y) / 2 * H]; };
+// 3D 點拉一條引線到標籤
+function callout(p3, x, y, s, color, o = {}) {
+  const a = o.alpha ?? 1;
+  if (a <= 0.01) return;
+  const p = proj(...p3);
+  const box = chip(s, x, y, color, { ...o, alpha: a });
+  const tx = clamp(p[0], box.x, box.x + box.w), ty = p[1] < box.y ? box.y : box.y + box.h;
+  const c = hctx; c.save(); c.globalAlpha = a; c.strokeStyle = color; c.fillStyle = color; c.lineWidth = 1.5;
+  c.beginPath(); c.moveTo(p[0], p[1]); c.lineTo(tx, ty); c.stroke();
+  c.beginPath(); c.arc(p[0], p[1], 3, 0, Math.PI * 2); c.fill(); c.restore();
+}
+function meter(x, y, label, value, color, valueText = "") {
+  text(label, x, y, { size: 12, c: C.dim, w: 500 });
+  if (valueText) text(valueText, x + 150, y, { size: 12, c: color, w: 700, a: "right", mono: true });
+  const c = hctx; c.save();
+  c.strokeStyle = "rgba(232,246,255,.35)"; c.strokeRect(x + .5, y + 6.5, 150, 10);
+  c.fillStyle = color; c.shadowColor = color; c.shadowBlur = 8; c.fillRect(x + 2, y + 8, 146 * clamp(value), 7);
+  c.restore();
+}
+function bitBox(on) {
+  const col = on ? C.lime : C.red, c = hctx;
+  c.save(); c.strokeStyle = col; c.lineWidth = 2; c.shadowColor = col; c.shadowBlur = 14; c.strokeRect(650, 28, 120, 66); c.restore();
+  text(on ? "1" : "0", 690, 80, { size: 50, mono: true, c: col, glow: col, a: "center", w: 700 });
+  text(on ? "ON" : "OFF", 742, 68, { size: 15, mono: true, c: col, a: "center" });
+}
+
+const SCENES = {};
+function addScene(name, def) {
+  const group = new THREE.Group();
+  group.visible = false;
+  scene.add(group);
+  def.setup(group);
+  SCENES[name] = { ...def, group };
+}
+
+
+// ---------- 共用：分子、電子、光子 ----------
+const COL = { e: 0xfff27a, ion: 0xff4d5e, rad: 0x6dff6a, s: 0xd8dde6, f: 0x8fd3ff, photon: 0xc77dff };
+const sphere = (r, color, basic = false, opts = {}) => new THREE.Mesh(new THREE.SphereGeometry(r, 20, 14), basic ? new THREE.MeshBasicMaterial({ color, transparent: true, ...opts }) : new THREE.MeshStandardMaterial({ color, roughness: 0.35, metalness: 0.1, emissive: color, emissiveIntensity: 0.15, transparent: true, ...opts }));
+const F_DIRS = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+// SF₆：中心 S + 6 個 F（八面體）
+function molecule(parent, scale = 1) {
+  const g = new THREE.Group();
+  const s = sphere(0.36 * scale, COL.s);
+  g.add(s);
+  const fs = F_DIRS.map(([x, y, z]) => { const f = sphere(0.24 * scale, COL.f); f.position.set(x * 0.62 * scale, y * 0.62 * scale, z * 0.62 * scale); g.add(f); return f; });
+  const bonds = F_DIRS.map(([x, y, z]) => {
+    const b = new THREE.Mesh(new THREE.CylinderGeometry(0.05 * scale, 0.05 * scale, 0.62 * scale, 8), new THREE.MeshStandardMaterial({ color: 0x9aa7b8, transparent: true }));
+    b.position.set(x * 0.31 * scale, y * 0.31 * scale, z * 0.31 * scale);
+    b.lookAt(x * 2, y * 2, z * 2); b.rotateX(Math.PI / 2); g.add(b); return b;
+  });
+  parent.add(g);
+  return { g, s, fs, bonds };
+}
+// 發光尾跡的單顆粒子
+function trailDot(parent, color, r = 0.12, n = 8) {
+  const head = sphere(r, color, true);
+  parent.add(head);
+  const tail = particles(parent, n, color, r * 0.7);
+  return { head, tail, n };
+}
+function moveTrail(td, pts) { // pts[0] 是現在位置，後面是過去位置
+  if (!pts.length) { td.head.visible = false; place(td.tail, []); return; }
+  td.head.visible = true;
+  td.head.position.set(...pts[0]);
+  place(td.tail, pts.slice(1).map((p, i) => [...p, 1 - (i + 1) / (pts.length + 1)]));
+}
+
+
+
+
+// ---------- 剖面實體：用 2D 輪廓擠出成 3D（蝕刻形狀每格重建） ----------
+M.resist = [0xc98a2a, 0xffc861];
+M.mask = [0x6c7480, 0xc8ced8];
+M.oxide = [0x3a4a66, 0x8fa8d0];
+M.liquid = [0x1a5fa8, 0x6fc3ff];
+function profileSolid(parent, [face, edge], { yBottom = -4, z0 = -2, z1 = 2, emissive = 0x0a3a66, ei = 0.35 } = {}) {
+  const mat = new THREE.MeshStandardMaterial({ color: face, roughness: 0.45, metalness: 0.1, emissive, emissiveIntensity: ei });
+  const mesh = new THREE.Mesh(new THREE.BufferGeometry(), mat);
+  const lines = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: edge, transparent: true, opacity: 0.9 }));
+  parent.add(mesh); parent.add(lines);
+  return {
+    mesh,
+    update(top) { // top：由左到右的表面輪廓點 [x, y]
+      const sh = new THREE.Shape();
+      sh.moveTo(top[0][0], yBottom);
+      top.forEach(([x, y]) => sh.lineTo(x, y));
+      sh.lineTo(top[top.length - 1][0], yBottom);
+      sh.closePath();
+      const geo = new THREE.ExtrudeGeometry(sh, { depth: z1 - z0, bevelEnabled: false, curveSegments: 1 });
+      geo.translate(0, 0, z0);
+      mesh.geometry.dispose(); mesh.geometry = geo;
+      lines.geometry.dispose(); lines.geometry = new THREE.EdgesGeometry(geo, 25);
+    },
+  };
+}
+// 平底 + 圓角的蝕刻輪廓（等向性：側向 = 深度）
+function isoProfile(x0, x1, openings, d, n = 160) {
+  const pts = [];
+  for (let i = 0; i <= n; i++) {
+    const x = lerp(x0, x1, i / n);
+    let depth = 0;
+    for (const [c, a] of openings) { const dist = Math.max(0, Math.abs(x - c) - a); depth = Math.max(depth, Math.sqrt(Math.max(0, d * d - dist * dist))); }
+    pts.push([x, -depth]);
+  }
+  return pts;
+}
+// 垂直溝槽輪廓（非等向性）
+const aniProfile = (x0, x1, c, a, d) => [[x0, 0], [c - a, 0], [c - a, -d], [c + a, -d], [c + a, 0], [x1, 0]];
+// HUD 量尺：3D 兩點連線 + 文字
+function ruler(a3, b3, s, color, alpha = 1) {
+  if (alpha <= 0.01) return;
+  const a = proj(...a3), b = proj(...b3), c = hctx;
+  c.save(); c.globalAlpha = alpha; c.strokeStyle = color; c.lineWidth = 2; c.shadowColor = color; c.shadowBlur = 6;
+  c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke();
+  [a, b].forEach((p) => { c.beginPath(); c.arc(p[0], p[1], 3, 0, Math.PI * 2); c.fillStyle = color; c.fill(); });
+  c.restore();
+  text(s, (a[0] + b[0]) / 2 + 8, (a[1] + b[1]) / 2 - 6, { size: 13, c: color, w: 700, alpha });
+}
+function legend(items, x = 32, y = 100) {
+  items.forEach(([s, c], i) => {
+    hctx.save(); hctx.fillStyle = c; hctx.shadowColor = c; hctx.shadowBlur = 8; hctx.beginPath(); hctx.arc(x + 8, y + i * 24, 5, 0, Math.PI * 2); hctx.fill(); hctx.restore();
+    text(s, x + 20, y + 5 + i * 24, { size: 13, c, w: 700 });
+  });
+}
+// 離子雨：垂直落下（拖尾）+ 撞擊閃光
+function ionRain(list, trail, flash, { t, n, seed, x0, x1, z0, z1, top, bottom, speed = 0.9 }) {
+  for (let i = 0; i < n; i++) {
+    const ph = fract(rnd(i + seed) + t * speed * (0.8 + 0.4 * rnd(i + seed + 1)));
+    const x = lerp(x0, x1, rnd(i + seed + 2)), z = lerp(z0, z1, rnd(i + seed + 3)), yb = typeof bottom === "function" ? bottom(x) : bottom;
+    const y = lerp(top, yb, ph * ph);
+    list.push([x, y, z]);
+    for (let j = 1; j <= 3; j++) { const pp = Math.max(0, ph - j * 0.05); trail.push([x, lerp(top, yb, pp * pp), z, 1 - j / 4]); }
+    if (ph > 0.94) flash.push([x, yb, z, 1.1]);
+  }
+}
+// 隨機亂飄的粒子（自由基等）
+function drift(list, { t, n, seed, x0, x1, y0, y1, z0, z1, sp = 0.08, ok = null }) {
+  for (let i = 0; i < n; i++) {
+    const p = [lerp(x0, x1, 0.5 + 0.5 * tri(rnd(i + seed) + t * sp * (0.5 + rnd(i + seed + 1)))), lerp(y0, y1, 0.5 + 0.5 * tri(rnd(i + seed + 2) + t * sp * 1.3 * (0.5 + rnd(i + seed + 3)))), lerp(z0, z1, 0.5 + 0.5 * tri(rnd(i + seed + 4) + t * sp * 0.9))];
+    if (!ok || ok(p)) list.push(p);
+  }
+}
+// 產物 SiF₄：從表面往上飄走
+function products(list, { t, n, seed, pts, z0, z1, rise = 3 }) {
+  for (let i = 0; i < n; i++) {
+    const ph = fract(rnd(i + seed) + t * 0.35);
+    const [x, y] = pts[Math.floor(rnd(i + seed + 1) * pts.length) % pts.length];
+    list.push([x + Math.sin(t * 2 + i) * 0.15 * ph, y + ph * rise, lerp(z0, z1, rnd(i + seed + 2)), Math.max(0.01, 1 - ph)]);
+  }
+}
+// 腔體（01、03 共用）
+function chamber(g) {
+  const o = {};
+  mbox(g, [0x0a1424, 0x22e5ff], { opacity: 0.05 }).set(-6.2, -1.2, -3.2, 6.2, 5.6, 3.2);
+  o.topE = mbox(g, M.mask, { emissive: 0x2a2f38, ei: 0.3 }).set(-5.2, 4.7, -2.6, 5.2, 5.1, 2.6);
+  mbox(g, M.sub).set(-5.2, -1.1, -2.6, 5.2, -0.55, 2.6);
+  o.wafer = mbox(g, M.si, { emissive: 0x0a3a66, ei: 0.5 }).set(-4.4, -0.55, -2.2, 4.4, -0.38, 2.2);
+  o.bulk = mbox(g, [0x5a1a8a, 0xc77dff], { opacity: 0.1, emissive: 0x7a2cc0, ei: 0.6 });
+  return o;
+}
+
+
+
+
+
+
+
+
+// =====================================================================
+// 疊層工具（09、10 共用）
+// =====================================================================
+const STACK = [0, 0.35, 0.85, 1.2, 1.7, 2.05, 2.55]; // 由下往上：SiGe, Si, SiGe, Si, SiGe, Si
+
+
+
+
+
+
+
+
+// ---------- 本課共用 ----------
+M.poly = [0xc4704f, 0xffa98a];
+M.nitride = [0x1f7a5c, 0x5dffb0];
+M.salt = [0xd9d4c4, 0xffffff];
+M.residue = [0x8a5a2a, 0xffb36b];
+M.treated = [0x0f6a7a, 0x22e5ff];
+const RC = { O: 0xff8a3d, H: 0xd8f3ff, F: 0x6dff6a, NH4F: 0xfff1a8, gasA: 0x9fd0ff, gasB: 0x6dff6a, gasC: 0x4fc3ff, co2: 0xe6e6e6 };
+// 表面上的點往上飄走（產物）
+function rise(list, { t, n, seed, pts, z0, z1, h = 3, sp = 0.35, a = 1 }) {
+  if (!pts.length) return;
+  for (let i = 0; i < n; i++) {
+    const ph = fract(rnd(i + seed) + t * sp), [x, y] = pts[Math.floor(rnd(i + seed + 1) * pts.length) % pts.length];
+    list.push([x + Math.sin(t * 2 + i) * 0.2 * ph, y + ph * h, lerp(z0, z1, rnd(i + seed + 2)), Math.max(0.01, (1 - ph) * a)]);
+  }
+}
+const FINS = [-2.4, 0, 2.4];
+function fins(g, { h = 2.6, w = 0.3, z = 2 } = {}) {
+  return FINS.map((x) => mbox(g, M.si, { emissive: 0x0a3a66, ei: 0.4 }).set(x - w, 0, -z, x + w, h, z));
+}
+
+// =====================================================================
+// GIF 01：Ash 灰化（去光阻）
+// =====================================================================
+addScene("01-ash", {
+  dur: 8, fps: 12,
+  setup(g) {
+    mbox(g, M.sub).set(-5, -2, -2.2, 5, -1, 2.2);
+    this.lines = [[-5, -2.6], [-1.4, 1.4], [2.6, 5]];
+    this.lines.forEach(([a, b]) => mbox(g, M.oxide, { emissive: 0x1a2a44, ei: 0.4 }).set(a, -1, -2.2, b, 0.4, 2.2));
+    this.res = this.lines.map(() => mbox(g, M.resist, { emissive: 0x5a3a08, ei: 0.35 }));
+    this.rad = particles(g, 110, RC.O, 0.09);
+    this.gas = particles(g, 50, RC.co2, 0.09);
+  },
+  render(t) {
+    camOrbit(t, this.dur, { r: 13, h: 6, a0: 0.4, amp: 0.05, look: [0, 0, 0] });
+    const k = seg(t, 0.6, 6.4), s = 1.05 * k; // 上面和側面以同樣速度被吃
+    const pts = [];
+    this.res.forEach((r, i) => {
+      const [a, b] = this.lines[i], x0 = a + (i === 0 ? 0 : s), x1 = b - (i === 2 ? 0 : s), y1 = 1.4 - s;
+      if (y1 > 0.41 && x1 > x0) { r.set(x0, 0.4, -2.2, x1, y1, 2.2); pts.push([x0, y1], [(x0 + x1) / 2, y1], [x1, y1], [x1, (0.4 + y1) / 2]); } else r.hide();
+    });
+    const rad = [], gas = [];
+    drift(rad, { t, n: 90, seed: 1, x0: -4.8, x1: 4.8, y0: 0.5, y1: 3.6, z0: -2, z1: 2, sp: 0.1 });
+    place(this.rad, rad);
+    if (k < 0.98) rise(gas, { t, n: 50, seed: 3, pts, z0: -2, z1: 2, h: 3 });
+    place(this.gas, gas);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("Ash 灰化：用 O* 把光阻燒掉", "ISOTROPIC ETCH / 01");
+    chip("O* + 光阻 CₓHᵧ → CO₂↑ + H₂O↑", 772, 40, C.orange, { a: "right", mono: true, size: 13 });
+    legend([["氧自由基 O*（遠端 O₂ 電漿）", C.orange], ["CO₂ / H₂O：產物，被抽走", C.grey]], 32, 100);
+    callout([0, 1.4 - 1.05 * k, 2.2], 772, 150, "光阻：上面和側面一起變薄（等向性）", C.amber, { a: "right", alpha: k < 0.97 ? 1 : 0 });
+    callout([3.8, -0.3, 2.2], 772, 330, "底下的膜不受影響（選擇比高）", C.blue, { a: "right" });
+    chip("蝕刻 / 離子佈植完成後，用來把光阻乾淨地去掉；不需要方向，要乾淨、不傷底層", 400, 432, C.cyan, { a: "center", size: 13 });
+  },
+});
+
+// =====================================================================
+// GIF 02：Surface treatment 表面處理
+// =====================================================================
+addScene("02-surface-treatment", {
+  dur: 8, fps: 12,
+  setup(g) {
+    mbox(g, M.sub).set(-4.4, -1.6, -2.2, 4.4, -0.6, 2.2);
+    mbox(g, M.sti, { opacity: 0.5 }).set(-4.4, -0.6, -2.2, 4.4, 0, 2.2);
+    fins(g, { h: 2.6, w: 0.3 });
+    this.shell = FINS.map(() => [mbox(g, M.residue, { emissive: 0x4a2a08, ei: 0.5 }), mbox(g, M.residue, { emissive: 0x4a2a08, ei: 0.5 }), mbox(g, M.residue, { emissive: 0x4a2a08, ei: 0.5 })]);
+    this.treat = FINS.map(() => [mbox(g, M.treated, { opacity: 0.8, emissive: 0x0a6a7a, ei: 1 }), mbox(g, M.treated, { opacity: 0.8, emissive: 0x0a6a7a, ei: 1 }), mbox(g, M.treated, { opacity: 0.8, emissive: 0x0a6a7a, ei: 1 })]);
+    this.rad = particles(g, 120, RC.H, 0.08);
+    this.gas = particles(g, 40, 0xffb36b, 0.08);
+  },
+  render(t) {
+    camOrbit(t, this.dur, { r: 12, h: 5.5, a0: 0.45, amp: 0.05, look: [0, 1.1, 0] });
+    const k = seg(t, 0.6, 4.2), tr = seg(t, 4.4, 5.6);
+    const th = 0.09 * (1 - k), w = 0.3;
+    const pts = [];
+    FINS.forEach((x, i) => {
+      const [top, L, R] = this.shell[i];
+      if (th > 0.004) {
+        top.set(x - w - th, 2.6, -2, x + w + th, 2.6 + th, 2);
+        L.set(x - w - th, 0, -2, x - w, 2.6, 2); R.set(x + w, 0, -2, x + w + th, 2.6, 2);
+        pts.push([x, 2.6 + th], [x - w - th, 1.3], [x + w + th, 1.9]);
+      } else [top, L, R].forEach((b) => b.hide());
+      const tt = 0.045;
+      const [a, b2, c] = this.treat[i];
+      a.set(x - w - tt, 2.6, -2, x + w + tt, 2.6 + tt, 2).alpha(tr);
+      b2.set(x - w - tt, 0, -2, x - w, 2.6, 2).alpha(tr);
+      c.set(x + w, 0, -2, x + w + tt, 2.6, 2).alpha(tr);
+      if (tr <= 0) [a, b2, c].forEach((q) => q.hide());
+    });
+    const rad = [], gas = [];
+    drift(rad, { t, n: 120, seed: 5, x0: -4, x1: 4, y0: 0.1, y1: 4.4, z0: -1.9, z1: 1.9, sp: 0.1, ok: ([x, y]) => !FINS.some((f) => Math.abs(x - f) < 0.42 && y < 2.75) });
+    place(this.rad, rad);
+    if (k > 0 && k < 1) rise(gas, { t, n: 40, seed: 9, pts, z0: -2, z1: 2, h: 2.5 });
+    place(this.gas, gas);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("Surface Treatment 表面處理", "ISOTROPIC ETCH / 02");
+    chip("只動表面幾個原子層（~1 nm）", 772, 40, C.cyan, { a: "right", size: 13 });
+    legend([["H* 等自由基（遠端電漿）", C.grey], ["殘留物 / 原生氧化層被帶走", C.orange]], 32, 100);
+    callout([FINS[2] + 0.35, 1.9, 2], 772, 150, tr > 0.5 ? "處理後：表面鈍化、乾淨一致" : "表面殘留物 / 原生氧化層", tr > 0.5 ? C.cyan : C.orange, { a: "right" });
+    callout([FINS[0] - 0.35, 1.2, 2], 40, 320, "頂部和兩側同時被處理（共形 conformal）", C.lime, { alpha: seg(t, 1.2, 1.6) });
+    chip("例：去原生氧化層、去殘留物（descum）、表面鈍化 —— 沒有離子轟擊，不傷結構", 400, 432, C.cyan, { a: "center", size: 13 });
+  },
+});
+
+// =====================================================================
+// GIF 03：Poly recess 多晶矽回蝕
+// =====================================================================
+addScene("03-poly-recess", {
+  dur: 8, fps: 12,
+  setup(g) {
+    mbox(g, M.sub).set(-5, -1.6, -2.2, 5, -0.6, 2.2);
+    mbox(g, M.oxide, { emissive: 0x1a2a44, ei: 0.4 }).set(-5, -0.6, -2.2, 5, 0, 2.2);
+    this.walls = [-3.9, -1.3, 1.3, 3.9];
+    this.walls.forEach((x) => { mbox(g, M.oxide, { emissive: 0x1a2a44, ei: 0.4 }).set(x - 0.4, 0, -2.2, x + 0.4, 2.6, 2.2); mbox(g, M.nitride, { emissive: 0x0a4a3a, ei: 0.5 }).set(x - 0.4, 2.6, -2.2, x + 0.4, 3.0, 2.2); });
+    this.tr = [[-3.5, -1.7], [-0.9, 0.9], [1.7, 3.5]];
+    this.poly = this.tr.map(() => mbox(g, M.poly, { emissive: 0x4a1a08, ei: 0.4 }));
+    this.target = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(10, 0.001, 4.4)), new THREE.LineDashedMaterial({ color: 0xffd23d, dashSize: 0.25, gapSize: 0.18 }));
+    this.target.position.y = 1.2; this.target.computeLineDistances(); g.add(this.target);
+    this.rad = particles(g, 100, RC.F, 0.08);
+    this.gas = particles(g, 40, RC.gasC, 0.09);
+  },
+  render(t) {
+    camOrbit(t, this.dur, { r: 13, h: 6, a0: 0.4, amp: 0.05, look: [0, 1, 0] });
+    const k = seg(t, 0.6, 6), lvl = lerp(3.0, 1.2, k);
+    const pts = [];
+    this.poly.forEach((p, i) => { const [a, b] = this.tr[i]; p.set(a, 0, -2.2, b, lvl, 2.2); pts.push([(a + b) / 2, lvl], [a + 0.3, lvl], [b - 0.3, lvl]); });
+    const rad = [], gas = [];
+    drift(rad, { t, n: 100, seed: 7, x0: -4.6, x1: 4.6, y0: lvl + 0.1, y1: 4.8, z0: -2, z1: 2, sp: 0.1, ok: ([x, y]) => y > 3.05 || this.tr.some(([a, b]) => x > a + 0.05 && x < b - 0.05) });
+    place(this.rad, rad);
+    if (k > 0 && k < 1) rise(gas, { t, n: 40, seed: 11, pts, z0: -2, z1: 2, h: 3.5 });
+    place(this.gas, gas);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("Poly Recess 多晶矽回蝕", "ISOTROPIC ETCH / 03");
+    chip("Si(poly) + 4F* → SiF₄↑", 772, 40, C.lime, { a: "right", mono: true, size: 13 });
+    legend([["F* 自由基", C.lime], ["SiF₄：產物", C.blue]], 32, 100);
+    callout([0, lvl, 2.2], 560, 135, "poly 均勻下降，像水位一樣", C.orange);
+    callout([-4.6, 1.2, 2.2], 40, 330, "目標深度 Recess target：要準、每個溝槽一樣深", C.yellow);
+    callout([3.9, 2.8, 2.2], 772, 220, "氧化層 / SiN 幾乎不被吃（選擇比高）", C.green, { a: "right" });
+    chip("兩側有牆擋住，等向性蝕刻就只會往下 —— 重點是深度均勻、選擇比高", 400, 432, C.cyan, { a: "center", size: 13 });
+  },
+});
+
+// =====================================================================
+// GIF 04：OX recess 氧化層回蝕（純化學，形成 AFS 鹽）
+// =====================================================================
+const OX_SEG = [[-4.6, -2.7], [-2.1, -0.3], [0.3, 2.1], [2.7, 4.6]];
+function oxStack(g) {
+  mbox(g, M.sub).set(-4.6, -1.6, -2.2, 4.6, -0.6, 2.2);
+  mbox(g, M.si, { emissive: 0x0a3a66, ei: 0.3 }).set(-4.6, -0.6, -2.2, 4.6, 0, 2.2);
+  fins(g, { h: 2.6, w: 0.3, z: 2.2 });
+  return { ox: OX_SEG.map(() => mbox(g, M.oxide, { emissive: 0x1a2a44, ei: 0.45 })), salt: OX_SEG.map(() => mbox(g, M.salt, { emissive: 0x6a665a, ei: 0.5 })) };
+}
+addScene("04-ox-recess", {
+  dur: 9, fps: 12,
+  setup(g) {
+    Object.assign(this, oxStack(g));
+    this.mol = particles(g, 70, RC.NH4F, 0.075);
+    this.h2o = particles(g, 30, 0x9fd0ff, 0.07);
+  },
+  render(t) {
+    camOrbit(t, this.dur, { r: 12.5, h: 6, a0: 0.42, amp: 0.05, look: [0, 1, 0] });
+    const k = seg(t, 0.6, 7), lvl = lerp(2.6, 1.0, k), salt = 0.42 * k;
+    const pts = [];
+    OX_SEG.forEach(([a, b], i) => { this.ox[i].set(a, 0, -2.2, b, lvl, 2.2); this.salt[i].set(a, lvl, -2.2, b, lvl + salt, 2.2); pts.push([(a + b) / 2, lvl + salt]); });
+    const mol = [], h2o = [];
+    drift(mol, { t, n: 70, seed: 13, x0: -4.4, x1: 4.4, y0: lvl + salt + 0.1, y1: 4.6, z0: -2, z1: 2, sp: 0.09, ok: ([x, y]) => y > 2.75 || !FINS.some((f) => Math.abs(x - f) < 0.42) });
+    place(this.mol, mol);
+    if (k > 0 && k < 1) rise(h2o, { t, n: 30, seed: 17, pts, z0: -2, z1: 2, h: 2.5 });
+    place(this.h2o, h2o);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("OX Recess 氧化層回蝕（純化學）", "ISOTROPIC ETCH / 04");
+    chip("NH₄F·HF + SiO₂ → (NH₄)₂SiF₆（AFS 固體鹽）+ H₂O", 772, 40, C.yellow, { a: "right", mono: true, size: 12 });
+    legend([["NH₄F / NH₄F·HF（NF₃ + NH₃ 遠端電漿產生）", C.yellow], ["H₂O：產物", C.blue]], 32, 100);
+    callout([OX_SEG[0][0] + 0.6, lvl - 0.4, 2.2], 40, 330, "氧化層 SiO₂ 往下退（不需離子、低溫 ~35°C）", C.blue);
+    callout([OX_SEG[3][1] - 0.5, lvl + salt, 2.2], 772, 300, "變成白色的鹽 AFS，留在表面", C.grey, { a: "right", alpha: seg(t, 1.5, 2) });
+    callout([FINS[1], 2.4, 2.2], 772, 140, "露出鰭 Fin reveal：Si 幾乎不被吃", C.cyan, { a: "right", alpha: seg(t, 3, 3.5) });
+    chip("鹽越積越厚會擋住反應物 → 反應自己慢下來（self-limiting），需要加熱把鹽趕走", 400, 432, C.cyan, { a: "center", size: 13 });
+  },
+});
+
+// =====================================================================
+// GIF 05：AFS 需要高溫才能移除（昇華）
+// =====================================================================
+addScene("05-afs-sublimation", {
+  dur: 9, fps: 12,
+  setup(g) {
+    Object.assign(this, oxStack(g));
+    this.heater = mbox(g, [0x3a0a0a, 0xff6a3d], { emissive: 0xff3a10, ei: 0.2 }).set(-4.9, -2.2, -2.5, 4.9, -1.6, 2.5);
+    this.gA = particles(g, 40, RC.gasA, 0.085); this.gB = particles(g, 40, RC.gasB, 0.085); this.gC = particles(g, 40, RC.gasC, 0.095);
+  },
+  render(t) {
+    camOrbit(t, this.dur, { r: 12.5, h: 6, a0: 0.42, amp: 0.05, look: [0, 0.8, 0] });
+    const heat = seg(t, 0.5, 3.5), T = Math.round(lerp(35, 180, heat));
+    const sub = seg(t, 2.6, 7), lvl = 1.0, salt = 0.42 * (1 - sub);
+    OX_SEG.forEach(([a, b], i) => { this.ox[i].set(a, 0, -2.2, b, lvl, 2.2); if (salt > 0.005) this.salt[i].set(a, lvl, -2.2, b, lvl + salt, 2.2); else this.salt[i].hide(); });
+    this.heater.mat.emissiveIntensity = 0.15 + 1.6 * heat;
+    const pts = OX_SEG.flatMap(([a, b]) => [[lerp(a, b, 0.25), lvl + salt], [lerp(a, b, 0.75), lvl + salt]]);
+    const A = [], B = [], Cc = [];
+    if (sub > 0 && sub < 1) { rise(A, { t, n: 40, seed: 21, pts, z0: -2, z1: 2, h: 3.4, sp: 0.4 }); rise(B, { t, n: 40, seed: 41, pts, z0: -2, z1: 2, h: 3.4, sp: 0.4 }); rise(Cc, { t, n: 40, seed: 61, pts, z0: -2, z1: 2, h: 3.4, sp: 0.4 }); }
+    place(this.gA, A); place(this.gB, B); place(this.gC, Cc);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("AFS 要高溫才能移除 Sublimation", "ISOTROPIC ETCH / 05");
+    chip("(NH₄)₂SiF₆ → SiF₄↑ + 2NH₃↑ + 2HF↑", 772, 40, C.lime, { a: "right", mono: true, size: 13 });
+    // 溫度計
+    const c = hctx, x = 40, y0 = 300, hgt = 170;
+    c.save(); c.strokeStyle = "rgba(232,246,255,.5)"; c.strokeRect(x + .5, y0 - hgt + .5, 22, hgt);
+    const col = heat > 0.45 ? "#ff6a3d" : "#ffb340"; c.fillStyle = col; c.shadowColor = col; c.shadowBlur = 12;
+    c.fillRect(x + 3, y0 - (hgt - 4) * (0.12 + 0.88 * heat), 17, (hgt - 4) * (0.12 + 0.88 * heat));
+    c.restore();
+    const y100 = y0 - (hgt - 4) * (0.12 + 0.88 * ((100 - 35) / 145));
+    c.save(); c.strokeStyle = C.yellow; c.setLineDash([4, 3]); c.beginPath(); c.moveTo(x - 4, y100); c.lineTo(x + 30, y100); c.stroke(); c.restore();
+    text("100°C 開始昇華", x + 34, y100 + 4, { size: 12, c: C.yellow, w: 700 });
+    text(`${T}°C`, x + 11, y0 + 22, { size: 18, mono: true, a: "center", c: col, w: 700 });
+    legend([["NH₃", C.blue], ["HF", C.lime], ["SiF₄", C.cyan]], 140, 110);
+    callout([2.6, -1.9, 2.5], 772, 380, "晶圓下方加熱（常用 ~180°C）", C.red, { a: "right" });
+    callout([OX_SEG[3][1] - 0.5, lvl + salt, 2.2], 772, 250, sub < 0.98 ? "AFS 固體鹽 → 直接變成氣體（昇華）" : "鹽清乾淨：氧化層表面乾淨，可再做下一循環", sub < 0.98 ? C.grey : C.lime, { a: "right", alpha: seg(t, 1, 1.4) });
+    chip("AFS 常溫是固體，不加熱就會留在表面變成缺陷、擋住下一次反應", 400, 432, C.cyan, { a: "center", size: 13 });
+  },
+});
+
+// ---------- 匯出 ----------
+for (const k of Object.keys(SCENES)) SCENES[k].fps = SCENES[k].fps || 15;
+window.SCENES = SCENES;
+window.renderAt = (name, t) => {
+  for (const k of Object.keys(SCENES)) SCENES[k].group.visible = false;
+  SCENES[name].group.visible = true;
+  SCENES[name].render(t);
+  octx.drawImage(glCanvas, 0, 0);
+  octx.drawImage(hud, 0, 0);
+  return out.toDataURL("image/png");
+};
+const name = location.hash.slice(1);
+if (name && SCENES[name]) {
+  const t0 = performance.now();
+  (function loop() { renderAt(name, ((performance.now() - t0) / 1000) % SCENES[name].dur); requestAnimationFrame(loop); })();
+}
+</script>
+</body>
+</html>
