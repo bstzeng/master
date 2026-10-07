@@ -195,10 +195,6 @@ function bitBox(on) {
   text(on ? "1" : "0", 690, 80, { size: 50, mono: true, c: col, glow: col, a: "center", w: 700 });
   text(on ? "ON" : "OFF", 742, 68, { size: 15, mono: true, c: col, a: "center" });
 }
-function fadeEdges(t, dur, d = 0.25) { // 循環接縫處淡出淡入
-  const a = Math.max(1 - t / d, 1 - (dur - t) / d, 0);
-  if (a > 0) { hctx.save(); hctx.fillStyle = `rgba(5,7,13,${clamp(a)})`; hctx.fillRect(0, 0, W, H); hctx.restore(); }
-}
 
 const SCENES = {};
 function addScene(name, def) {
@@ -290,7 +286,6 @@ addScene("01-leakage", {
     callout([0, -0.5, 1.2], 470, 330, "關閉時仍有電子溜過 = 漏電", C.red, { alpha: seg(leak, 0.05, 0.25) });
     meter(40, 400, "閘極長度 Gate length（示意）", 1 - k * 0.76, C.magenta);
     meter(610, 400, "漏電 Leakage", leak, C.red);
-    fadeEdges(t, this.dur);
   },
 });
 
@@ -396,7 +391,6 @@ addScene("03-stacking", {
     callout([sw, ys[active - 1], chZ * 0.6], 560, 150, `第 ${active} 片 Sheet ${active}`, C.cyan);
     meter(40, 400, "電流 Drive current", active / 3, C.cyan, `×${active}`);
     chip("同樣的面積，往上疊越多片，電流越大、速度越快", 400, 432, C.cyan, { a: "center", size: 13, alpha: 0.95 });
-    fadeEdges(t, this.dur);
   },
 });
 
@@ -440,7 +434,6 @@ addScene("04-width", {
     meter(40, 400, "FinFET 寬度", nf / 3, C.amber, `${nf} fin${nf > 1 ? "s" : ""}`);
     meter(610, 400, "Nanosheet 寬度", wr / 2.4, C.lime, `${(wr * 20).toFixed(0)} nm`);
     chip("要省電做窄、要效能做寬 —— 設計彈性更大", 400, 432, C.cyan, { a: "center", size: 13 });
-    fadeEdges(t, this.dur);
   },
 });
 
@@ -623,7 +616,6 @@ function processScene(name, dur, sOf, { fps } = {}) {
       stepBar(step);
       stepLabels(step, s, t);
       chip(st.note, 400, 432, C.cyan, { a: "center", size: 13 });
-      fadeEdges(t, dur);
     },
   };
 }
