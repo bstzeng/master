@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="用 5 張 3D 動畫 GIF 看懂四種電漿源：ICP（側繞式與平面 TCP）、CCP、ECR 與 Remote plasma，各自怎麼加熱電子、電漿在哪裡最濃、適合做什麼。" />
+    <meta name="theme-color" content="#05070d" />
+    <title>電漿源 ICP / CCP / ECR / Remote｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #05070d;
+        --bg-2: #0b1220;
+        --paper: #e8f6ff;
+        --muted: rgba(232, 246, 255, 0.62);
+        --line: rgba(34, 229, 255, 0.18);
+        --cyan: #22e5ff;
+        --magenta: #ff3df2;
+        --lime: #b6ff3d;
+        --amber: #ffb340;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body { margin: 0; overflow-x: hidden; color: var(--paper); background: var(--bg); font-family: "Noto Sans TC", sans-serif; -webkit-font-smoothing: antialiased;
+        background-image: linear-gradient(rgba(34,229,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(34,229,255,.045) 1px, transparent 1px); background-size: 40px 40px; }
+      a { color: inherit; text-decoration: none; }
+      h1, h2, h3, p { margin-top: 0; }
+
+      .site-header { display: flex; justify-content: space-between; align-items: center; width: min(1240px, calc(100% - 32px)); min-height: 76px; margin: 0 auto; border-bottom: 1px solid var(--line); }
+      .brand { display: inline-flex; align-items: center; gap: 11px; font-family: "DM Mono", monospace; font-size: 16px; font-weight: 500; letter-spacing: .18em; }
+      .brand-dot { width: 11px; height: 11px; background: var(--cyan); border-radius: 50%; box-shadow: 12px 0 0 var(--magenta), 0 0 12px var(--cyan); }
+      .header-back { padding-bottom: 3px; border-bottom: 1px solid var(--paper); font-family: "DM Mono", monospace; font-size: 11px; letter-spacing: .12em; }
+
+      main { width: min(1240px, calc(100% - 32px)); margin: 0 auto; }
+      .intro { display: grid; grid-template-columns: 1fr .75fr; gap: 60px; align-items: end; padding: 70px 0 30px; }
+      .eyebrow { margin-bottom: 18px; color: var(--cyan); font-family: "DM Mono", monospace; font-size: 12px; letter-spacing: .14em; }
+      h1 { margin-bottom: 0; font-size: clamp(38px, 5.6vw, 74px); line-height: 1.1; letter-spacing: -.02em; }
+      h1 em { color: var(--cyan); font-style: normal; text-shadow: 0 0 24px rgba(34,229,255,.45); }
+      .intro > p { margin-bottom: 6px; color: var(--muted); font-size: 16px; line-height: 1.9; }
+      .hero-gif { margin: 20px 0 0; padding: 10px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 0 40px rgba(34,229,255,.08); }
+      .hero-gif img { display: block; width: 100%; height: auto; border-radius: 8px; }
+      .hero-gif figcaption { padding: 10px 4px 2px; color: var(--muted); font-size: 14px; }
+
+      section.block { padding: 80px 0 10px; }
+      .section-index { margin-bottom: 12px; color: var(--magenta); font: 12px "DM Mono", monospace; letter-spacing: .14em; }
+      section.block h2 { margin-bottom: 14px; font-size: clamp(28px, 3.6vw, 44px); letter-spacing: -.01em; }
+      .lead { max-width: 780px; margin-bottom: 30px; color: var(--muted); font-size: 16px; line-height: 1.85; }
+
+      .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+      .card, .step { background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+      .card figure, .step figure { margin: 0; background: #05070d; }
+      .card img, .step img { display: block; width: 100%; height: auto; }
+      .card-body { padding: 20px 22px 22px; }
+      .tag { margin-bottom: 8px; color: var(--cyan); font: 11px "DM Mono", monospace; letter-spacing: .1em; }
+      .card h3, .step h3 { margin-bottom: 10px; font-size: 21px; }
+      .card h3 span, .step h3 span { color: var(--muted); font-size: 15px; font-weight: 500; }
+      .card-body > p:not(.tag) { margin-bottom: 14px; color: var(--muted); font-size: 15px; line-height: 1.85; }
+      .link-note a { color: var(--lime); border-bottom: 1px solid var(--lime); }
+      .dl { display: inline-block; padding: 8px 14px; color: #05070d; background: var(--cyan); border-radius: 8px; font-size: 14px; font-weight: 700; box-shadow: 0 0 14px rgba(34,229,255,.35); }
+
+      .compare { width: 100%; margin-top: 26px; border-collapse: collapse; font-size: 15px; }
+      .compare th, .compare td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--line); }
+      .compare thead th { color: var(--cyan); font: 12px "DM Mono", monospace; letter-spacing: .1em; }
+      
+      .compare tbody th { color: var(--muted); font-weight: 500; }
+      .table-wrap { overflow-x: auto; }
+
+      h2 .en { color: var(--muted); font-size: .55em; font-weight: 500; }
+      .facts { width: 100%; margin: 4px 0 18px; border-collapse: collapse; font-size: 14px; }
+      .facts th, .facts td { padding: 9px 10px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+      .facts th { width: 6.5em; color: var(--cyan); font-weight: 500; white-space: nowrap; }
+      .facts td { color: var(--paper); }
+      .step { grid-template-columns: 1.15fr 1fr; }
+      .steps { display: grid; gap: 22px; }
+      .step { display: grid; grid-template-columns: 1.15fr 1fr; align-items: center; }
+      .step:nth-child(even) figure { order: 2; }
+      .overview { margin-top: 30px; }
+      .future { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+      .future article { padding: 26px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px; }
+      .future h3 { margin-bottom: 10px; font-size: 20px; }
+      .future p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.85; }
+      .note { margin-top: 26px; color: var(--muted); font-size: 14px; line-height: 1.8; }
+
+      footer { display: flex; justify-content: space-between; width: min(1240px, calc(100% - 32px)); margin: 90px auto 0; padding: 36px 0; color: var(--muted); border-top: 1px solid var(--line); font: 10px "DM Mono", monospace; letter-spacing: .08em; }
+
+      @media (max-width: 880px) {
+        .intro, .cards, .future { grid-template-columns: 1fr; gap: 22px; }
+        .step { grid-template-columns: 1fr; }
+        .step:nth-child(even) figure { order: 0; }
+      }
+      @media (max-width: 560px) {
+        .intro { padding-top: 44px; }
+        .card-body { padding: 16px; }
+        .compare th, .compare td { padding: 10px 8px; font-size: 14px; }
+        footer { flex-direction: column; gap: 8px; }
+      }
+      @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot" aria-hidden="true"></span><span>MASTER</span></a>
+      <a class="header-back" href="../index.html#topics">← 所有主題</a>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">PLASMA SOURCES / 3D GIF</p>
+          <h1 id="page-title">電漿源<br /><em>ICP / CCP / ECR / Remote</em></h1>
+        </div>
+        <p>所有電漿源都在做同一件事：想辦法把能量交給電子，讓電子去撞分子、點燃電漿。差別只在「怎麼推電子」和「電漿在哪裡最濃」。這一頁用 5 張 3D 動畫 GIF 一次對照：ICP 的兩種線圈擺法、CCP 的平行電極、ECR 的微波加磁場，以及只讓自由基下來的 Remote plasma。</p>
+      </section>
+
+      <section class="block" aria-labelledby="cmp-title">
+        <p class="section-index">OVERVIEW</p>
+        <h2 id="cmp-title">一張表看懂四種電漿源</h2>
+        <div class="table-wrap">
+          <table class="compare">
+            <thead><tr><th>電漿源</th><th>怎麼推電子</th><th>電子運動方向</th><th>電漿密度</th><th>離子能量控制</th><th>典型用途</th></tr></thead>
+            <tbody>
+              <tr><th><a href="#s01-title">ICP</a>（<a href="#s01-title">側繞式</a> / <a href="#s02-title">TCP</a>）</th><td>線圈的感應電場</td><td>沿圓周來回</td><td>高</td><td>下電極 bias，獨立控制</td><td>導體蝕刻（Si、poly、金屬）</td></tr>
+              <tr><th><a href="#s03-title">CCP</a></th><td>兩片電極間的 RF 電場</td><td>上下來回</td><td>中</td><td>和密度綁在一起（雙頻可部分分開）</td><td>介電層蝕刻（氧化層、氮化層）</td></tr>
+              <tr><th><a href="#s04-title">ECR</a></th><td>微波 + 磁場共振</td><td>沿磁力線螺旋迴旋</td><td>高（極低壓）</td><td>下電極 bias</td><td>低壓高密度製程</td></tr>
+              <tr><th><a href="#s05-title">Remote</a></th><td>在上游腔體產生</td><td>（晶圓處幾乎沒有離子）</td><td>晶圓處只剩自由基</td><td>不加偏壓</td><td>灰化、表面處理、等向性蝕刻</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">一句話記憶：CCP 是「電場上下推」，ICP 是「感應電場繞圈推」，ECR 是「磁場讓電子轉圈、微波共振加能量」，Remote 是「在遠處產生、只送自由基下來」。</p>
+      </section>
+
+      <section class="block" aria-labelledby="s01-title">
+        <p class="section-index">SOURCE 01</p>
+        <h2 id="s01-title">ICP（側繞式） <span class="en">Inductively Coupled Plasma — Side Coil</span></h2>
+        <div class="step">
+          <figure><img src="gifs/preview/01-icp-side.gif" alt="ICP（側繞式） Inductively Coupled Plasma — Side Coil 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>線圈繞在石英或陶瓷圓筒外面，通 RF 電流。線圈的磁場沿著腔體軸心上下穿過，磁場一變化，就在貼近側壁的地方感應出一圈環形電場，電子被推著沿圓周來回擺動、加熱，所以側壁附近的電漿最濃，再往中心擴散。</p>
+            <table class="facts"><tr><th>電子怎麼被加熱</th><td>感應電場（沿圓周）</td></tr><tr><th>電漿最濃處</th><td>貼近側壁的一圈</td></tr><tr><th>優點</th><td>高密度、低壓；線圈不碰電漿</td></tr><tr><th>限制</th><td>晶圓越大，中心與邊緣越難一致</td></tr></table>
+            <a class="dl" href="gifs/01-icp-side.gif" download="plasma-sources-01-icp-side.gif">下載 1080P GIF（18.5 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="s02-title">
+        <p class="section-index">SOURCE 02</p>
+        <h2 id="s02-title">ICP（平面 TCP） <span class="en">Transformer Coupled Plasma — Planar Coil</span></h2>
+        <div class="step">
+          <figure><img src="gifs/preview/02-icp-tcp.gif" alt="ICP（平面 TCP） Transformer Coupled Plasma — Planar Coil 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>把線圈改成平放在腔體頂部的介電窗上方。原理相同：電流 → 磁場 → 感應電場 → 電子沿圓周擺動，只是加熱區變成窗下的一層，往下擴散到晶圓，均勻性比較好，所以 300 mm 導體蝕刻機多採用這種結構。下電極另外接一組 RF bias，離子能量和電漿密度可以分開控制。</p>
+            <table class="facts"><tr><th>電子怎麼被加熱</th><td>感應電場（沿圓周）</td></tr><tr><th>電漿最濃處</th><td>介電窗下方一層</td></tr><tr><th>優點</th><td>高密度、均勻性好；密度與離子能量分開控制</td></tr><tr><th>典型用途</th><td>矽、多晶矽、金屬等導體蝕刻</td></tr></table>
+            <a class="dl" href="gifs/02-icp-tcp.gif" download="plasma-sources-02-icp-tcp.gif">下載 1080P GIF（11.8 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="s03-title">
+        <p class="section-index">SOURCE 03</p>
+        <h2 id="s03-title">CCP 電容耦合 <span class="en">Capacitively Coupled Plasma</span></h2>
+        <div class="step">
+          <figure><img src="gifs/preview/03-ccp.gif" alt="CCP 電容耦合 Capacitively Coupled Plasma 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>上下兩片平行電極就像一個電容，加上 RF 電壓後，電場在兩片之間上下來回，電子跟著上下擺動、被加熱，電漿就夾在兩片電極之間。結構簡單、大面積均勻，但同一組 RF 同時決定電漿密度和離子能量，兩者綁在一起；雙頻 CCP（高頻管密度、低頻管離子能量）可以部分分開。</p>
+            <table class="facts"><tr><th>電子怎麼被加熱</th><td>上下方向的 RF 電場</td></tr><tr><th>電漿最濃處</th><td>兩片電極之間</td></tr><tr><th>優點</th><td>結構簡單、均勻、離子能量高</td></tr><tr><th>典型用途</th><td>氧化層、氮化層等介電層蝕刻</td></tr></table>
+            <a class="dl" href="gifs/03-ccp.gif" download="plasma-sources-03-ccp.gif">下載 1080P GIF（10.2 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="s04-title">
+        <p class="section-index">SOURCE 04</p>
+        <h2 id="s04-title">ECR 電子迴旋共振 <span class="en">Electron Cyclotron Resonance</span></h2>
+        <div class="step">
+          <figure><img src="gifs/preview/04-ecr.gif" alt="ECR 電子迴旋共振 Electron Cyclotron Resonance 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>外圍的電磁鐵產生強的靜磁場，電子被磁場逼著沿磁力線螺旋迴旋。從上方導入 2.45 GHz 微波，在磁場強度約 875 G 的地方，電子迴旋的頻率剛好等於微波頻率（共振），電子在這一層大量吸收能量，所以在很低的壓力下也能得到高密度電漿。</p>
+            <table class="facts"><tr><th>電子怎麼被加熱</th><td>微波 + 磁場共振（875 G ↔ 2.45 GHz）</td></tr><tr><th>電漿最濃處</th><td>共振面附近</td></tr><tr><th>優點</th><td>極低壓也能高密度</td></tr><tr><th>限制</th><td>需要大型電磁鐵，設備複雜</td></tr></table>
+            <a class="dl" href="gifs/04-ecr.gif" download="plasma-sources-04-ecr.gif">下載 1080P GIF（11.5 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="s05-title">
+        <p class="section-index">SOURCE 05</p>
+        <h2 id="s05-title">Remote Plasma 遠端電漿 <span class="en">Remote / Downstream Plasma</span></h2>
+        <div class="step">
+          <figure><img src="gifs/preview/05-remote.gif" alt="Remote Plasma 遠端電漿 Remote / Downstream Plasma 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>電漿在上游的獨立腔體產生，再往下輸送到晶圓。途中離子和電子撞到管壁、彼此復合，或被接地的過濾板中和，抵達晶圓的只剩自由基；晶圓也不加偏壓。所以它是純化學、等向性、低損傷的處理方式，常用於灰化、表面處理和選擇性移除。</p>
+            <table class="facts"><tr><th>電子怎麼被加熱</th><td>在上游腔體（ICP 或微波）</td></tr><tr><th>到晶圓的粒子</th><td>幾乎只有自由基</td></tr><tr><th>優點</th><td>低損傷、選擇比高、等向性</td></tr><tr><th>典型用途</th><td>灰化、表面處理、等向性蝕刻</td></tr></table>
+            <a class="dl" href="gifs/05-remote.gif" download="plasma-sources-05-remote.gif">下載 1080P GIF（11.5 MB）</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="block" aria-labelledby="more-title">
+        <p class="section-index">RELATED</p>
+        <h2 id="more-title">延伸閱讀</h2>
+        <div class="future">
+          <article><h3><a href="../plasma-etch/index.html">電漿蝕刻 Plasma Etching →</a></h3><p>電子撞分子、鞘層、等向性與非等向性、選擇比，以及 radical etch 怎麼濾掉離子。</p></article>
+          <article><h3><a href="../isotropic-etch/index.html">等向性蝕刻的種類 →</a></h3><p>Remote plasma 實際拿來做什麼：Ash、表面處理、Poly / OX recess 與 AFS。</p></article>
+        </div>
+        <p class="note">動畫為教學用示意：RF 與微波的頻率、粒子數量與尺寸都經過放慢或簡化，結構為通用示意，並非特定廠牌或機台。網頁上顯示的是 800×450 的預覽；按「下載 1080P GIF」可取得 1920×1080 的原檔，循環播放、第一格就是完整畫面，可直接放進簡報。</p>
+      </section>
+    </main>
+
+    <footer>
+      <span>MASTER / PLASMA SOURCES</span>
+      <span>3D 動畫為教學示意，非特定廠牌或機台</span>
+    </footer>
+  </body>
+</html>

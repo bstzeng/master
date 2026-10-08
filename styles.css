@@ -93,6 +93,9 @@ h1 em { color: var(--orange); font-style: italic; }
 .topic-card.isoetch-featured { grid-column: 1 / -1; background: #071314; border-color: #071314; }
 .topic-card.isoetch-featured .topic-label { color: #6dff6a; }
 .topic-card.isoetch-featured:hover .topic-arrow { color: #071314; background: #6dff6a; }
+.topic-card.sources-featured { grid-column: 1 / -1; background: #140a1c; border-color: #140a1c; }
+.topic-card.sources-featured .topic-label { color: #ff8a3d; }
+.topic-card.sources-featured:hover .topic-arrow { color: #140a1c; background: #ff8a3d; }
 .topic-number { font-family: "Playfair Display", serif; font-size: 42px; }
 .topic-content { align-self: end; }
 .topic-label { margin-bottom: 12px; color: var(--orange); }
