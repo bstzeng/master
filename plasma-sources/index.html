@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="用 5 張 3D 動畫 GIF 看懂四種電漿源：ICP（側繞式與平面 TCP）、CCP、ECR 與 Remote plasma，各自怎麼加熱電子、電漿在哪裡最濃、適合做什麼。" />
+    <meta name="description" content="用 6 張 3D 動畫 GIF 看懂四種電漿源：ICP（側繞式與平面 TCP）、CCP、ECR、Remote plasma，以及不點電漿的純化學氣相蝕刻。" />
     <meta name="theme-color" content="#05070d" />
     <title>電漿源 ICP / CCP / ECR / Remote｜MASTER</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -111,12 +111,12 @@
           <p class="eyebrow">PLASMA SOURCES / 3D GIF</p>
           <h1 id="page-title">電漿源<br /><em>ICP / CCP / ECR / Remote</em></h1>
         </div>
-        <p>所有電漿源都在做同一件事：想辦法把能量交給電子，讓電子去撞分子、點燃電漿。差別只在「怎麼推電子」和「電漿在哪裡最濃」。這一頁用 5 張 3D 動畫 GIF 一次對照：ICP 的兩種線圈擺法、CCP 的平行電極、ECR 的微波加磁場，以及只讓自由基下來的 Remote plasma。</p>
+        <p>所有電漿源都在做同一件事：想辦法把能量交給電子，讓電子去撞分子、點燃電漿。差別只在「怎麼推電子」和「電漿在哪裡最濃」。這一頁用 6 張 3D 動畫 GIF 一次對照：ICP 的兩種線圈擺法、CCP 的平行電極、ECR 的微波加磁場、只讓自由基下來的 Remote plasma，最後再看完全不點電漿的純化學氣相蝕刻。</p>
       </section>
 
       <section class="block" aria-labelledby="cmp-title">
         <p class="section-index">OVERVIEW</p>
-        <h2 id="cmp-title">一張表看懂四種電漿源</h2>
+        <h2 id="cmp-title">一張表看懂四種電漿源 + 純化學</h2>
         <div class="table-wrap">
           <table class="compare">
             <thead><tr><th>電漿源</th><th>怎麼推電子</th><th>電子運動方向</th><th>電漿密度</th><th>離子能量控制</th><th>典型用途</th></tr></thead>
@@ -125,10 +125,11 @@
               <tr><th><a href="#s03-title">CCP</a></th><td>兩片電極間的 RF 電場</td><td>上下來回</td><td>中</td><td>和密度綁在一起（雙頻可部分分開）</td><td>介電層蝕刻（氧化層、氮化層）</td></tr>
               <tr><th><a href="#s04-title">ECR</a></th><td>微波 + 磁場共振</td><td>沿磁力線螺旋迴旋</td><td>高（極低壓）</td><td>下電極 bias</td><td>低壓高密度製程</td></tr>
               <tr><th><a href="#s05-title">Remote</a></th><td>在上游腔體產生</td><td>（晶圓處幾乎沒有離子）</td><td>晶圓處只剩自由基</td><td>不加偏壓</td><td>灰化、表面處理、等向性蝕刻</td></tr>
+              <tr><th><a href="#s06-title">純化學（無電漿）</a></th><td>不需要（沒有電漿）</td><td>—</td><td>沒有電漿</td><td>沒有離子</td><td>氧化層 recess、預清洗</td></tr>
             </tbody>
           </table>
         </div>
-        <p class="note">一句話記憶：CCP 是「電場上下推」，ICP 是「感應電場繞圈推」，ECR 是「磁場讓電子轉圈、微波共振加能量」，Remote 是「在遠處產生、只送自由基下來」。</p>
+        <p class="note">一句話記憶：CCP 是「電場上下推」，ICP 是「感應電場繞圈推」，ECR 是「磁場讓電子轉圈、微波共振加能量」，Remote 是「在遠處產生、只送自由基下來」，純化學則「完全不用電漿，靠低溫反應 + 加熱昇華」。</p>
       </section>
 
       <section class="block" aria-labelledby="s01-title">
@@ -188,6 +189,18 @@
             <p>電漿在上游的獨立腔體產生，再往下輸送到晶圓。途中離子和電子撞到管壁、彼此復合，或被接地的過濾板中和，抵達晶圓的只剩自由基；晶圓也不加偏壓。所以它是純化學、等向性、低損傷的處理方式，常用於灰化、表面處理和選擇性移除。</p>
             <table class="facts"><tr><th>電子怎麼被加熱</th><td>在上游腔體（ICP 或微波）</td></tr><tr><th>到晶圓的粒子</th><td>幾乎只有自由基</td></tr><tr><th>優點</th><td>低損傷、選擇比高、等向性</td></tr><tr><th>典型用途</th><td>灰化、表面處理、等向性蝕刻</td></tr></table>
             <a class="dl" href="gifs/05-remote.gif" download="plasma-sources-05-remote.gif">下載 1080P GIF（11.5 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="s06-title">
+        <p class="section-index">SOURCE 06</p>
+        <h2 id="s06-title">純化學氣相蝕刻（無電漿） <span class="en">Plasma-free Chemical Vapor Etch</span></h2>
+        <div class="step">
+          <figure><img src="gifs/preview/06-chemical.gif" alt="純化學氣相蝕刻（無電漿） Plasma-free Chemical Vapor Etch 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>完全不點電漿：把 HF 和 NH₃ 等反應氣體直接送進腔體，在約 35°C 的低溫下吸附在氧化層表面反應，把氧化層變成固態的鹽（AFS）。鹽變厚會擋住反應，蝕刻自己停下來（自我限制）；接著把晶圓加熱到 100°C 以上（常用約 180°C），讓鹽昇華抽走。重複「反應 → 加熱」的循環，就能精準控制氧化層往下退多少。</p>
+            <table class="facts"><tr><th>電子怎麼被加熱</th><td>不需要（沒有電漿）</td></tr><tr><th>到晶圓的粒子</th><td>中性的反應氣體分子</td></tr><tr><th>優點</th><td>零電漿損傷、選擇比極高、深度好控制</td></tr><tr><th>典型用途</th><td>氧化層 recess、預清洗、去原生氧化層</td></tr></table>
+            <a class="dl" href="gifs/06-chemical.gif" download="plasma-sources-06-chemical.gif">下載 1080P GIF（9.7 MB）</a>
           </div>
         </div>
       </section>
