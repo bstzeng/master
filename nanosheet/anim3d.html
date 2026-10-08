@@ -445,7 +445,7 @@ const XL = 3.6; // 元件半長（電流方向）
 const LAYERS = [0, 0.35, 0.85, 1.2, 1.7, 2.05, 2.55]; // 由下往上：SiGe, Si, SiGe, Si, SiGe, Si
 const STEPS = [
   { tag: "STEP 1 / 7", title: "疊層磊晶 Superlattice Epi", note: "在矽晶圓上交替長出 SiGe 與 Si，像千層蛋糕；SiGe 之後會被挖掉" },
-  { tag: "STEP 2 / 7", title: "刻出鰭 Fin Etch + STI", note: "把千層疊層刻成長條鰭，兩側填入氧化層（STI）做隔離" },
+  { tag: "STEP 2 / 7", title: "刻出鰭 Fin Etch + STI", note: "硬遮罩擋住鰭，兩側的疊層由上往下被刻掉；再填入氧化層（STI）做隔離" },
   { tag: "STEP 3 / 7", title: "假閘極 Dummy Gate + Spacer", note: "先放一條多晶矽「假閘極」佔位置，兩側加上間隔層" },
   { tag: "STEP 4 / 7", title: "內間隔層 Inner Spacer", note: "挖開源汲極區，SiGe 從側面內縮，再補上絕緣的內間隔層" },
   { tag: "STEP 5 / 7", title: "源極 / 汲極磊晶 S/D Epi", note: "從薄片兩端長出源極 / 汲極晶體 —— 電子的入口與出口" },
@@ -456,9 +456,12 @@ const proc = {};
 function buildProcess(g) {
   proc.sub = mbox(g, M.sub).set(-XL - 0.8, -2, -3, XL + 0.8, -1, 3);
   proc.upper = mbox(g, M.sub); // 鰭下方的矽（sub-fin）
+  proc.upSide = [0, 1, 2, 3].map(() => mbox(g, M.sub)); // 鰭以外的上層矽（兩側 + 兩端），刻鰭時由上往下被吃掉
+  proc.hm = mbox(g, M.poly, { emissive: 0x2a2f38, ei: 0.3 }); // 硬遮罩：標出鰭的位置
   proc.sti = [mbox(g, M.sti, { opacity: 0.45 }), mbox(g, M.sti, { opacity: 0.45 })];
   proc.layers = LAYERS.slice(0, -1).map((y0, i) => ({
     y0, y1: LAYERS[i + 1], sige: i % 2 === 0,
+    Sa: mbox(g, i % 2 === 0 ? M.sige : M.si), Sb: mbox(g, i % 2 === 0 ? M.sige : M.si), // 鰭兩側、刻鰭時被吃掉的部分
     L: mbox(g, i % 2 === 0 ? M.sige : M.si), Cm: mbox(g, i % 2 === 0 ? M.sige : M.si, i % 2 ? { opacity: 1, emissive: 0x0a3a66, ei: 0.2 } : {}), R: mbox(g, i % 2 === 0 ? M.sige : M.si),
   }));
   proc.dg = [mbox(g, M.poly), mbox(g, M.poly)];
@@ -479,9 +482,21 @@ function setProcess(s, t) {
   const epi = seg(s, 4, 5);
   const dgOut = seg(s, 5, 5.35), rel = seg(s, 5.35, 6);
   const hk = seg(s, 6, 6.3), mf = seg(s, 6.3, 6.75), on = seg(s, 6.75, 6.9);
-  const zw = lerp(3, 0.75, finE), zBack = -zw, zFront = zw; // 鰭蝕刻：從兩側往內縮
+  // 刻鰭：硬遮罩擋住鰭（z = ±0.75），兩側的疊層由上往下被吃掉，一路刻進下方的矽（到 y = -1）
+  const zBack = -0.75, zFront = 0.75;
+  const front = lerp(LAYERS[6], -1, finE); // 蝕刻前緣的高度
+  const hmA = seg(s, 1, 1.08) * (1 - seg(s, 1.92, 2));
+  if (hmA > 0.01) proc.hm.set(-XL, LAYERS[6], zBack, XL, LAYERS[6] + 0.22, zFront).alpha(hmA); else proc.hm.hide();
   // 基板上層 / sub-fin
-  proc.upper.set(-XL - 0.8 * (1 - finE), -1, zBack, XL + 0.8 * (1 - finE), 0, zFront);
+  const W0 = XL + 0.8, upTop = clamp(front, -1, 0);
+  if (finE <= 0) { proc.upper.set(-W0, -1, -3, W0, 0, 3); proc.upSide.forEach((b) => b.hide()); }
+  else {
+    proc.upper.set(-XL, -1, zBack, XL, 0, zFront);
+    proc.upSide[0].set(-W0, -1, -3, W0, upTop, zBack);
+    proc.upSide[1].set(-W0, -1, zFront, W0, upTop, 3);
+    proc.upSide[2].set(-W0, -1, zBack, -XL, upTop, zFront);
+    proc.upSide[3].set(XL, -1, zBack, W0, upTop, zFront);
+  }
   const stiTop = lerp(-1, 0, stiF);
   proc.sti[0].set(-XL - 0.8, -1, -3, XL + 0.8, stiTop, -0.75);
   proc.sti[1].set(-XL - 0.8, -1, 0.75, XL + 0.8, stiTop, 3);
@@ -492,11 +507,16 @@ function setProcess(s, t) {
     let y1 = l.y0 + (l.y1 - l.y0) * grow;
     const recK = clamp(rec * 6 - (5 - i)); // S/D 區由上往下挖
     const y1sd = lerp(y1, l.y0, recK);
-    if (s < 3) { // 還沒挖源汲極前，整層是一塊
+    if (s < 3) { // 還沒挖源汲極前，沿 x 方向整層是一塊
       l.L.hide(); l.R.hide();
+      if (finE <= 0) { l.Sa.hide(); l.Sb.hide(); l.Cm.set(-XL, l.y0, -3, XL, y1, 3); return; } // 磊晶：整片晶圓
+      const ySide = clamp(front, l.y0, y1); // 鰭兩側：由上往下被吃掉
+      l.Sa.set(-XL, l.y0, -3, XL, ySide, zBack);
+      l.Sb.set(-XL, l.y0, zFront, XL, ySide, 3);
       l.Cm.set(-XL, l.y0, zBack, XL, y1, zFront);
       return;
     }
+    l.Sa.hide(); l.Sb.hide();
     l.L.set(-XL, l.y0, zBack, -xIn, y1sd, zFront);
     l.R.set(xIn, l.y0, zBack, XL, y1sd, zFront);
     if (l.sige) {
@@ -575,8 +595,11 @@ function stepLabels(step, s, t) {
     callout([-2.4, 1.9, 3], 60, 200, "SiGe 犧牲層（之後挖掉）", C.orange, { alpha: a(s * 2 - 0.6) });
     callout([3.6, -1.5, 3], 580, 390, "矽晶圓 Si wafer", C.grey);
   } else if (step === 1) {
-    callout([-2.5, 2.3, 0.75], 60, 140, "鰭 Fin（千層疊層）", C.cyan, { alpha: a((s - 1) * 3 - 1) });
-    callout([3, -0.3, 2], 580, 390, "STI 隔離氧化層", C.grey, { alpha: a((s - 1) * 3 - 2) });
+    const fr = lerp(LAYERS[6], -1, seg(s, 1, 1.7));
+    callout([-2.5, LAYERS[6] + 0.22, 0], 60, 120, "硬遮罩 Hard mask：擋住鰭的位置", C.grey, { alpha: a((s - 1) * 6) * (1 - a((s - 1.9) * 10)) });
+    callout([2.5, fr, 1.9], 772, 150, "兩側由上往下被刻掉（高度降低）", C.red, { a: "right", alpha: a((s - 1.05) * 8) * (1 - a((s - 1.7) * 8)) });
+    callout([-2.5, 1.3, 0.75], 60, 330, "鰭 Fin（千層疊層 + 下方 sub-fin）", C.cyan, { alpha: a((s - 1.5) * 5) });
+    callout([3, -0.3, 2], 580, 390, "STI 隔離氧化層", C.grey, { alpha: a((s - 1.7) * 6) });
   } else if (step === 2) {
     callout([0, 3.6, -1], 380, 110, "假閘極 Dummy gate（多晶矽）", C.grey);
     callout([1.1, 3.2, ZC], 600, 160, "間隔層 Spacer", C.green, { alpha: a((s - 2) * 3 - 1.8) });
