@@ -782,6 +782,62 @@ addScene("05-remote", {
   },
 });
 
+
+// =====================================================================
+// GIF 06：純化學氣相蝕刻（無電漿）
+// =====================================================================
+function cylY(o, y0, y1) { // 依高度縮放圓柱（高度 0 就隱藏）
+  const h = y1 - y0;
+  if (h < 0.004) { o.mesh.visible = false; return; }
+  o.mesh.visible = true; o.mesh.scale.y = h; o.mesh.position.y = (y0 + y1) / 2;
+}
+addScene("06-chemical", {
+  dur: 9, fps: 12,
+  setup(g) {
+    cyl(g, 3.4, 0, 5, [0x0a1424, 0x22e5ff], { opacity: 0.06, open: true });
+    this.chuck = cyl(g, 3.0, -0.7, 0, [0x3a0a0a, 0xff6a3d], { emissive: 0xff3a10, ei: 0.1 });
+    cyl(g, 2.6, 0, 0.14, M.si, { emissive: 0x0a3a66, ei: 0.5 });
+    this.ox = cyl(g, 2.6, 0, 1, M.oxide, { emissive: 0x1a2a44, ei: 0.5 });
+    this.salt = cyl(g, 2.6, 0, 1, M.salt, { emissive: 0x6a665a, ei: 0.5 });
+    this.top = cyl(g, 3.0, 4.6, 4.9, M.mask, { opacity: 0.4 }); // 噴氣頭
+    this.pipes = [[-1.1, 0x6dff6a], [1.1, 0x9fd0ff]].map(([x, c]) => { const p = cyl(g, 0.22, 4.9, 5.9, [c, c], { opacity: 0.35 }); p.mesh.position.x = x; return { x, c }; });
+    this.hf = particles(g, 50, 0x6dff6a, 0.08);
+    this.nh3 = particles(g, 50, 0x9fd0ff, 0.08);
+    this.gas = particles(g, 60, 0xe8e4d8, 0.08);
+  },
+  render(t) {
+    camOrbit(t, this.dur, { r: 17, h: 9.5, a0: 0.3, amp: 0.06, look: [0, 2.9, 0] });
+    const react = seg(t, 0.6, 5), heat = seg(t, 5.2, 6.4), sub = seg(t, 5.8, 8.6);
+    const base = 0.14, oxT = lerp(0.45, 0.2, react), saltT = 0.32 * react * (1 - sub);
+    cylY(this.ox, base, base + oxT);
+    cylY(this.salt, base + oxT, base + oxT + saltT);
+    this.chuck.mat.emissiveIntensity = 0.1 + 1.4 * heat;
+    const T = Math.round(lerp(35, 180, heat));
+    // 兩路氣體：從上方進來、往下擴散到晶圓表面（加熱階段停止供氣）
+    const flow = 1 - seg(t, 5.0, 5.4), hf = [], nh3 = [];
+    [[hf, -1.1, 1], [nh3, 1.1, 300]].forEach(([list, x0, sd]) => {
+      for (let i = 0; i < 50 * flow; i++) {
+        const ph = fract(rnd(i + sd) + t * 0.22), r = Math.sqrt(rnd(i + sd + 1)) * 2.4 * Math.min(1, ph * 1.6), th = rnd(i + sd + 2) * Math.PI * 2;
+        const y = lerp(5.8, base + oxT + saltT + 0.15, ph);
+        list.push([lerp(x0, Math.cos(th) * r, Math.min(1, ph * 1.5)), y, Math.sin(th) * r * Math.min(1, ph * 1.5)]);
+      }
+    });
+    place(this.hf, hf); place(this.nh3, nh3);
+    // 昇華的氣體：SiF₄ / NH₃ / HF 往上飄走
+    const gas = [];
+    if (sub > 0 && sub < 1) for (let i = 0; i < 60; i++) { const ph = fract(rnd(i + 600) + t * 0.45), r = Math.sqrt(rnd(i + 601)) * 2.5, th = rnd(i + 602) * Math.PI * 2; gas.push([Math.cos(th) * r, base + oxT + saltT + ph * 4, Math.sin(th) * r, 1 - ph]); }
+    place(this.gas, gas);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("純化學氣相蝕刻：不點電漿 Chemical Vapor Etch", "PLASMA SOURCES / 06");
+    chip(`晶圓溫度 ${T}°C`, 772, 40, heat > 0.4 ? C.red : C.cyan, { a: "right", mono: true, size: 13 });
+    callout([1.1, 5.7, 0.2], 772, 92, "① 不點電漿：HF + NH₃ 氣體直接送進腔體（沒有電子、離子）", C.lime, { a: "right" });
+    callout([2.4, base + oxT + saltT * 0.5, 0.8], 772, 200, "② 低溫（~35°C）反應：氧化層變成 AFS 鹽，鹽變厚就自我限制", C.grey, { a: "right" });
+    callout([2.8, -0.35, 1.0], 772, 330, "③ 加熱到 >100°C（常用 ~180°C）：AFS 昇華被抽走", C.red, { a: "right" });
+    flowChain([["通入氣體", C.lime], ["表面反應成鹽", C.grey], ["加熱昇華", C.red], ["重複循環", C.cyan]]);
+  },
+});
+
 // ---------- 匯出 ----------
 for (const k of Object.keys(SCENES)) SCENES[k].fps = SCENES[k].fps || 15;
 window.SCENES = SCENES;

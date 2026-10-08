@@ -18,7 +18,7 @@ Patrick 的個人學習知識庫，目前包含十七個主題：
 - 「從 FinFET 到 Nanosheet」：給 IT 人的 GAA 電晶體入門，13 張 three.js 3D 動畫 GIF：為什麼從 FinFET 換成 Nanosheet（漏電、4 面閘極控制、疊片、寬度可調），以及 Nanosheet 的 7 個主要製程步驟與總覽。
 - 「電漿蝕刻 Plasma Etching」：14 張 three.js 3D 動畫 GIF：打 RF 之後電子撞分子（激發、解離、游離）、雪崩、radical etch 怎麼濾掉離子（遠端電漿、復合、接地過濾板、無偏壓）、鞘層讓離子垂直加速，等向性與非等向性、選擇比、在 Nanosheet 的應用（刻鰭、SiGe 釋放），以及為什麼不用濕蝕刻（底切、pattern collapse）。
 - 「等向性蝕刻的種類」：5 張 three.js 3D 動畫 GIF：自由基蝕刻的 Ash 灰化、Surface Treatment 表面處理、Poly Recess 多晶矽回蝕，純化學的 OX Recess 氧化層回蝕（形成 AFS 鹽），以及 AFS 要高溫昇華才能移除。
-- 「電漿源 ICP / CCP / ECR / Remote」：5 張 three.js 3D 動畫 GIF 一頁對照：ICP（側繞式與平面 TCP）、CCP、ECR、Remote plasma 的電子加熱方式、電漿分布與用途。
+- 「電漿源 ICP / CCP / ECR / Remote」：6 張 three.js 3D 動畫 GIF 一頁對照：ICP（側繞式與平面 TCP）、CCP、ECR、Remote plasma 的電子加熱方式、電漿分布與用途，以及不點電漿的純化學氣相蝕刻。
 
 ## 頁面
 
@@ -66,7 +66,7 @@ Patrick 的個人學習知識庫，目前包含十七個主題：
 - `nanosheet/index.html`：從 FinFET 到 Nanosheet 主題頁（Part 1 原因、Part 2 製程 7 步驟；網頁顯示 `gifs/preview/` 的 800×450 預覽，下載按鈕提供 `gifs/` 的 1080P 原檔）
 - `plasma-etch/index.html`：電漿蝕刻主題頁（Part 0～5；網頁顯示 `gifs/preview/` 預覽，下載按鈕提供 `gifs/` 的 1080P 原檔）
 - `isotropic-etch/index.html`：等向性蝕刻的種類主題頁（5 頁；網頁顯示 `gifs/preview/` 預覽，下載按鈕提供 `gifs/` 的 1080P 原檔）
-- `plasma-sources/index.html`：電漿源主題頁（單頁 5 張 GIF 與比較表；網頁顯示 `gifs/preview/` 預覽，下載按鈕提供 `gifs/` 的 1080P 原檔）
+- `plasma-sources/index.html`：電漿源主題頁（單頁 6 張 GIF 與比較表；網頁顯示 `gifs/preview/` 預覽，下載按鈕提供 `gifs/` 的 1080P 原檔）
 - `moon-phases/index.html`：月亮為什麼會有圓缺 3D 線條兒童動畫影片（Canvas 自製 3D 投影，不用外部套件）
 
 ## 內容維護
