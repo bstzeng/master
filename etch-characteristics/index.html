@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="用 12 張 3D 動畫 GIF 看懂蝕刻的常見特性：first wafer effect、seasoning、腔壁漂移、WAC、微粒與記憶效應、RF tool shift、loading effect、ESC 溫度與 Hydra、endpoint、輪廓缺陷。" />
+    <meta name="theme-color" content="#05070d" />
+    <title>蝕刻製程特性與機台狀態｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #05070d;
+        --bg-2: #0b1220;
+        --paper: #e8f6ff;
+        --muted: rgba(232, 246, 255, 0.62);
+        --line: rgba(34, 229, 255, 0.18);
+        --cyan: #22e5ff;
+        --magenta: #ff3df2;
+        --lime: #b6ff3d;
+        --amber: #ffb340;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body { margin: 0; overflow-x: hidden; color: var(--paper); background: var(--bg); font-family: "Noto Sans TC", sans-serif; -webkit-font-smoothing: antialiased;
+        background-image: linear-gradient(rgba(34,229,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(34,229,255,.045) 1px, transparent 1px); background-size: 40px 40px; }
+      a { color: inherit; text-decoration: none; }
+      h1, h2, h3, p { margin-top: 0; }
+
+      .site-header { display: flex; justify-content: space-between; align-items: center; width: min(1240px, calc(100% - 32px)); min-height: 76px; margin: 0 auto; border-bottom: 1px solid var(--line); }
+      .brand { display: inline-flex; align-items: center; gap: 11px; font-family: "DM Mono", monospace; font-size: 16px; font-weight: 500; letter-spacing: .18em; }
+      .brand-dot { width: 11px; height: 11px; background: var(--cyan); border-radius: 50%; box-shadow: 12px 0 0 var(--magenta), 0 0 12px var(--cyan); }
+      .header-back { padding-bottom: 3px; border-bottom: 1px solid var(--paper); font-family: "DM Mono", monospace; font-size: 11px; letter-spacing: .12em; }
+
+      main { width: min(1240px, calc(100% - 32px)); margin: 0 auto; }
+      .intro { display: grid; grid-template-columns: 1fr .75fr; gap: 60px; align-items: end; padding: 70px 0 30px; }
+      .eyebrow { margin-bottom: 18px; color: var(--cyan); font-family: "DM Mono", monospace; font-size: 12px; letter-spacing: .14em; }
+      h1 { margin-bottom: 0; font-size: clamp(38px, 5.6vw, 74px); line-height: 1.1; letter-spacing: -.02em; }
+      h1 em { color: var(--cyan); font-style: normal; text-shadow: 0 0 24px rgba(34,229,255,.45); }
+      .intro > p { margin-bottom: 6px; color: var(--muted); font-size: 16px; line-height: 1.9; }
+      .hero-gif { margin: 20px 0 0; padding: 10px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 0 40px rgba(34,229,255,.08); }
+      .hero-gif img { display: block; width: 100%; height: auto; border-radius: 8px; }
+      .hero-gif figcaption { padding: 10px 4px 2px; color: var(--muted); font-size: 14px; }
+
+      section.block { padding: 80px 0 10px; }
+      .section-index { margin-bottom: 12px; color: var(--magenta); font: 12px "DM Mono", monospace; letter-spacing: .14em; }
+      section.block h2 { margin-bottom: 14px; font-size: clamp(28px, 3.6vw, 44px); letter-spacing: -.01em; }
+      .lead { max-width: 780px; margin-bottom: 30px; color: var(--muted); font-size: 16px; line-height: 1.85; }
+
+      .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+      .card, .step { background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+      .card figure, .step figure { margin: 0; background: #05070d; }
+      .card img, .step img { display: block; width: 100%; height: auto; }
+      .card-body { padding: 20px 22px 22px; }
+      .tag { margin-bottom: 8px; color: var(--cyan); font: 11px "DM Mono", monospace; letter-spacing: .1em; }
+      .card h3, .step h3 { margin-bottom: 10px; font-size: 21px; }
+      .card h3 span, .step h3 span { color: var(--muted); font-size: 15px; font-weight: 500; }
+      .card-body > p:not(.tag) { margin-bottom: 14px; color: var(--muted); font-size: 15px; line-height: 1.85; }
+      .link-note a { color: var(--lime); border-bottom: 1px solid var(--lime); }
+      .dl { display: inline-block; padding: 8px 14px; color: #05070d; background: var(--cyan); border-radius: 8px; font-size: 14px; font-weight: 700; box-shadow: 0 0 14px rgba(34,229,255,.35); }
+
+      .compare { width: 100%; margin-top: 26px; border-collapse: collapse; font-size: 15px; }
+      .compare th, .compare td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--line); }
+      .compare thead th { color: var(--cyan); font: 12px "DM Mono", monospace; letter-spacing: .1em; }
+      
+      .compare tbody th { color: var(--muted); font-weight: 500; }
+      .table-wrap { overflow-x: auto; }
+
+      h2 .en { color: var(--muted); font-size: .55em; font-weight: 500; }
+      .facts { width: 100%; margin: 4px 0 18px; border-collapse: collapse; font-size: 14px; }
+      .facts th, .facts td { padding: 9px 10px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+      .facts th { width: 6.5em; color: var(--cyan); font-weight: 500; white-space: nowrap; }
+      .facts td { color: var(--paper); }
+      .step { grid-template-columns: 1.15fr 1fr; }
+      .steps { display: grid; gap: 22px; }
+      .step { display: grid; grid-template-columns: 1.15fr 1fr; align-items: center; }
+      .step:nth-child(even) figure { order: 2; }
+      .overview { margin-top: 30px; }
+      .future { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+      .future article { padding: 26px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px; }
+      .future h3 { margin-bottom: 10px; font-size: 20px; }
+      .future p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.85; }
+      .note { margin-top: 26px; color: var(--muted); font-size: 14px; line-height: 1.8; }
+
+      footer { display: flex; justify-content: space-between; width: min(1240px, calc(100% - 32px)); margin: 90px auto 0; padding: 36px 0; color: var(--muted); border-top: 1px solid var(--line); font: 10px "DM Mono", monospace; letter-spacing: .08em; }
+
+      @media (max-width: 880px) {
+        .intro, .cards, .future { grid-template-columns: 1fr; gap: 22px; }
+        .step { grid-template-columns: 1fr; }
+        .step:nth-child(even) figure { order: 0; }
+      }
+      @media (max-width: 560px) {
+        .intro { padding-top: 44px; }
+        .card-body { padding: 16px; }
+        .compare th, .compare td { padding: 10px 8px; font-size: 14px; }
+        footer { flex-direction: column; gap: 8px; }
+      }
+      @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot" aria-hidden="true"></span><span>MASTER</span></a>
+      <a class="header-back" href="../index.html#topics">← 所有主題</a>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">ETCH CHARACTERISTICS / 3D GIF</p>
+          <h1 id="page-title">蝕刻製程特性<br /><em>與機台狀態</em></h1>
+        </div>
+        <p>同一個 recipe，為什麼今天跑出來和昨天不一樣？答案常常不在 recipe，而在腔壁、RF 零件、晶圓上的圖形和 ESC 溫度。這一頁用 12 張 3D 動畫 GIF，把蝕刻常見的特性一個一個拆開看：左邊看機制，右邊看工程師平常盯的趨勢圖。GIF 沒有編號，可以依課程需要自由穿插使用。</p>
+      </section>
+
+      <section class="block" aria-labelledby="map-title">
+        <p class="section-index">OVERVIEW</p>
+        <h2 id="map-title">本頁內容</h2>
+        <div class="table-wrap">
+          <table class="compare">
+            <tbody>
+              <tr><th>腔體狀態</th><td><a href="#first-wafer-title">First wafer effect</a>、<a href="#seasoning-title">Seasoning</a>、<a href="#wall-drift-title">腔壁沉積與漂移</a>、<a href="#wac-title">WAC（Waferless Auto Clean）</a>、<a href="#flaking-title">剝落微粒與記憶效應</a></td></tr><tr><th>RF 效應（tool shift）</th><td><a href="#rf-match-title">RF 傳輸、匹配與老化</a></td></tr><tr><th>Loading effect</th><td><a href="#macro-loading-title">Macro loading</a>、<a href="#micro-loading-title">Micro loading（iso / dense）</a></td></tr><tr><th>ESC 溫度控制</th><td><a href="#esc-temp-title">ESC 溫度效應</a>、<a href="#hydra-title">Hydra 多區溫控</a></td></tr><tr><th>製程監控與輪廓</th><td><a href="#endpoint-title">Endpoint 偵測（OES）</a>、<a href="#profile-defects-title">常見的輪廓缺陷</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="block" aria-labelledby="first-wafer-title">
+        <p class="section-index">CHAMBER CONDITION</p>
+        <h2 id="first-wafer-title">First wafer effect <span class="en">前幾片為什麼跑不準</span></h2>
+        <div class="step">
+          <figure><img src="gifs/preview/first-wafer.gif" alt="First wafer effect 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>腔體閒置或 PM 後，腔壁是乾淨的。乾淨的壁面會吃掉較多自由基，壁溫也還沒爬到穩定值，所以前幾片的蝕刻率和 CD 會偏離。跑過幾片、腔壁長出一層塗層之後，結果才會收斂到穩定值。</p>
+            <table class="facts"><tr><th>原因</th><td>乾淨腔壁吃掉自由基、壁溫未穩定</td></tr><tr><th>怎麼看</th><td>首片 ER / CD、SPC 趨勢圖</td></tr><tr><th>怎麼處理</th><td>Seasoning、閒置後先跑 dummy wafer</td></tr></table>
+            <a class="dl" href="gifs/first-wafer.gif" download="etch-first-wafer.gif">下載 1080P GIF（8.0 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="seasoning-title">
+        <p class="section-index">CHAMBER CONDITION</p>
+        <h2 id="seasoning-title">Seasoning <span class="en">先把腔壁養到穩定再跑貨</span></h2>
+        <div class="step">
+          <figure><img src="gifs/preview/seasoning.gif" alt="Seasoning 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>正式跑產品之前，先用 dummy wafer 或 seasoning recipe 在腔壁長出塗層，把腔體「養」到和穩定生產時一樣的狀態。這樣第一片產品晶圓就不會有 first wafer effect。片數越多越穩，但會花時間和 dummy wafer，所以要找出夠用的最少片數。</p>
+            <table class="facts"><tr><th>時機</th><td>PM、長時間閒置、換 recipe 之後</td></tr><tr><th>確認方式</th><td>OES、測試片蝕刻率</td></tr><tr><th>取捨</th><td>穩定度 vs. 時間與 dummy wafer 成本</td></tr></table>
+            <a class="dl" href="gifs/seasoning.gif" download="etch-seasoning.gif">下載 1080P GIF（7.2 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="wall-drift-title">
+        <p class="section-index">CHAMBER CONDITION</p>
+        <h2 id="wall-drift-title">腔壁沉積與漂移 <span class="en">越積越厚，結果慢慢偏</span></h2>
+        <div class="step">
+          <figure><img src="gifs/preview/wall-drift.gif" alt="腔壁沉積與漂移 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>每片晶圓的蝕刻產物和聚合物都會沉積在腔壁、上電極和 liner 上，一層層越積越厚。壁面吸附與復合自由基的狀況、沉積物被打回電漿的量都在改變，蝕刻率和 CD 會隨累積片數慢慢漂移，最後超出管制界線。</p>
+            <table class="facts"><tr><th>原因</th><td>腔壁沉積累積，壁面條件改變</td></tr><tr><th>怎麼看</th><td>SPC 趨勢、RF 小時數、OES</td></tr><tr><th>怎麼處理</th><td>WAC、season、定期清潔 / PM</td></tr></table>
+            <a class="dl" href="gifs/wall-drift.gif" download="etch-wall-drift.gif">下載 1080P GIF（6.4 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="wac-title">
+        <p class="section-index">CHAMBER CONDITION</p>
+        <h2 id="wac-title">WAC（Waferless Auto Clean） <span class="en">每片之間把腔壁清回原點</span></h2>
+        <div class="step">
+          <figure><img src="gifs/preview/wac.gif" alt="WAC（Waferless Auto Clean） 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>出片後不放晶圓，直接點 O₂ 或 NF₃ 等電漿，把腔壁沉積吃掉、產物抽走，再接一段短的 season 長回薄塗層。每一片開始時腔壁都在同一個狀態，蝕刻率就不會一路漂移。沒有晶圓時 ESC 是裸露的，WAC recipe 要避免傷到 ESC。</p>
+            <table class="facts"><tr><th>做什麼</th><td>無晶圓電漿清潔 + 短 season</td></tr><tr><th>效果</th><td>每片從同一個腔壁條件開始</td></tr><tr><th>要點</th><td>太強傷 ESC / 零件，太弱清不乾淨</td></tr></table>
+            <a class="dl" href="gifs/wac.gif" download="etch-wac.gif">下載 1080P GIF（9.0 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="flaking-title">
+        <p class="section-index">CHAMBER CONDITION</p>
+        <h2 id="flaking-title">剝落微粒與記憶效應 <span class="en">沉積太厚會掉、上一個 recipe 會留下來</span></h2>
+        <div class="step">
+          <figure><img src="gifs/preview/flaking.gif" alt="剝落微粒與記憶效應 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>腔壁沉積太厚時，應力累積會讓它龜裂剝落，碎片掉到晶圓上變成微粒缺陷，微粒數在接近 PM 前快速上升。另外，上一個 recipe 留在壁上的殘留物，換 recipe 後會被放回電漿裡（記憶效應），讓前幾片的結果偏掉。</p>
+            <table class="facts"><tr><th>微粒</th><td>監控微粒數與 RF 小時，控制 PM 週期</td></tr><tr><th>記憶效應</th><td>換 recipe 後監看前幾片 ER / CD</td></tr><tr><th>怎麼處理</th><td>定期 WAC；換 recipe 前 WAC + season，或分機台</td></tr></table>
+            <a class="dl" href="gifs/flaking.gif" download="etch-flaking.gif">下載 1080P GIF（7.1 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="rf-match-title">
+        <p class="section-index">RF / TOOL SHIFT</p>
+        <h2 id="rf-match-title">RF 傳輸、匹配與老化 <span class="en">設定功率 ≠ 送進電漿的功率</span></h2>
+        <div class="step">
+          <figure><img src="gifs/preview/rf-match.gif" alt="RF 傳輸、匹配與老化 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>產生器設定 1000 W，不代表電漿就拿到 1000 W。接頭、電纜、電極隨 RF 小時老化，接觸電阻變大，一部分功率變成熱；腔體阻抗漂移時匹配器調到極限，反射功率變多。實際送進電漿的功率變少，蝕刻率就跟著 shift。PM 換零件後也常出現一次 shift。</p>
+            <table class="facts"><tr><th>功率去哪了</th><td>反射回產生器、接頭 / 電纜損耗</td></tr><tr><th>怎麼看</th><td>反射功率、Vpp / Vdc、匹配器位置、RF 小時</td></tr><tr><th>怎麼處理</th><td>定期 PM 換耗材、RF 校正、機台 matching</td></tr></table>
+            <a class="dl" href="gifs/rf-match.gif" download="etch-rf-match.gif">下載 1080P GIF（6.8 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="macro-loading-title">
+        <p class="section-index">LOADING EFFECT</p>
+        <h2 id="macro-loading-title">Macro loading <span class="en">開口面積越大，蝕刻越慢</span></h2>
+        <div class="step">
+          <figure><img src="gifs/preview/macro-loading.gif" alt="Macro loading 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>整片晶圓露出要蝕刻的面積（開口率）越大，消耗的自由基越多，腔體裡的自由基濃度就越低，蝕刻率下降。同一個 recipe 換到開口率不同的產品，蝕刻時間和 endpoint 都要重新調整。</p>
+            <table class="facts"><tr><th>原因</th><td>開口多 → 自由基被消耗 → 濃度降低</td></tr><tr><th>影響</th><td>換產品時蝕刻率、時間、endpoint 不同</td></tr><tr><th>怎麼處理</th><td>依產品調 recipe / 時間、用 endpoint 控制</td></tr></table>
+            <a class="dl" href="gifs/macro-loading.gif" download="etch-macro-loading.gif">下載 1080P GIF（19.1 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="micro-loading-title">
+        <p class="section-index">LOADING EFFECT</p>
+        <h2 id="micro-loading-title">Micro loading（iso / dense） <span class="en">密集區和孤立區蝕刻得不一樣</span></h2>
+        <div class="step">
+          <figure><img src="gifs/preview/micro-loading.gif" alt="Micro loading（iso / dense） 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>同一片晶圓上，圖形密集的區域附近自由基很快被吃光，局部濃度低，蝕刻得比孤立區慢；CD 也會因為側壁沉積量不同而有 iso / dense bias。有些條件下會反過來，密集區反而比較快（reverse loading）。</p>
+            <table class="facts"><tr><th>原因</th><td>局部自由基被消耗的程度不同</td></tr><tr><th>怎麼看</th><td>dense / iso 深度與 CD 差異</td></tr><tr><th>怎麼處理</th><td>調壓力、氣體流量、聚合物比例</td></tr></table>
+            <a class="dl" href="gifs/micro-loading.gif" download="etch-micro-loading.gif">下載 1080P GIF（15.5 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="esc-temp-title">
+        <p class="section-index">ESC TEMPERATURE</p>
+        <h2 id="esc-temp-title">ESC 溫度效應 <span class="en">溫度改變側壁保護</span></h2>
+        <div class="step">
+          <figure><img src="gifs/preview/esc-temp.gif" alt="ESC 溫度效應 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>晶圓溫度會影響聚合物沉積的速度。溫度低時聚合物容易沉積，側壁保護厚，線寬（CD）偏大、輪廓偏斜；溫度高時聚合物少，側向被吃，CD 變小，太熱會 undercut。所以 ESC 溫度是調 CD 的有效旋鈕，方向與幅度依 chemistry 而定。</p>
+            <table class="facts"><tr><th>機制</th><td>溫度 → 聚合物沉積 → 側壁保護 → CD</td></tr><tr><th>怎麼看</th><td>ESC 溫度、He 背壓</td></tr><tr><th>應用</th><td>中心 / 邊緣溫區調 CD 均勻度</td></tr></table>
+            <a class="dl" href="gifs/esc-temp.gif" download="etch-esc-temp.gif">下載 1080P GIF（4.7 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="hydra-title">
+        <p class="section-index">ESC TEMPERATURE</p>
+        <h2 id="hydra-title">Hydra 多區溫控 <span class="en">依量測做 by-site 補償</span></h2>
+        <div class="step">
+          <figure><img src="gifs/preview/hydra.gif" alt="Hydra 多區溫控 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>一般 ESC 只有幾個同心圓溫區，只能修徑向（中心到邊緣）的差異。Hydra 把 ESC 分成很多個可獨立控制的加熱小區，拿前段量到的 CD 地圖（例如微影後）算出每一區該設多少溫度：CD 偏大的地方調高溫度，讓那裡被吃小一點。蝕刻後再量一次、回饋給下一批，晶圓內的 CDU 3σ 就能明顯縮小。</p>
+            <table class="facts"><tr><th>一般 ESC</th><td>少數同心圓溫區，只修徑向</td></tr><tr><th>Hydra</th><td>很多個獨立加熱小區，修不對稱的局部偏差</td></tr><tr><th>流程</th><td>量測 CD 地圖 → 算每區溫度 → 蝕刻補償 → 回饋（APC）</td></tr></table>
+            <a class="dl" href="gifs/hydra.gif" download="etch-hydra.gif">下載 1080P GIF（7.2 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="endpoint-title">
+        <p class="section-index">MONITOR & PROFILE</p>
+        <h2 id="endpoint-title">Endpoint 偵測（OES） <span class="en">什麼時候該停</span></h2>
+        <div class="step">
+          <figure><img src="gifs/preview/endpoint.gif" alt="Endpoint 偵測（OES） 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>電漿的光經視窗和光纖送進光譜儀，持續監看某一條譜線。上層膜還在蝕刻時，產物發出的譜線很強；蝕穿到下層後產物變少，強度掉下來，跨過門檻就判定 endpoint，之後再加一段 over-etch，把各處殘留清乾淨。</p>
+            <table class="facts"><tr><th>訊號</th><td>監看譜線強度的變化</td></tr><tr><th>為什麼要 over-etch</th><td>晶圓上各處蝕穿的時間不同</td></tr><tr><th>限制</th><td>開口率太低時訊號弱、不好抓</td></tr></table>
+            <a class="dl" href="gifs/endpoint.gif" download="etch-endpoint.gif">下載 1080P GIF（10.2 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="profile-defects-title">
+        <p class="section-index">MONITOR & PROFILE</p>
+        <h2 id="profile-defects-title">常見的輪廓缺陷 <span class="en">Bowing、microtrenching、notching、footing</span></h2>
+        <div class="step">
+          <figure><img src="gifs/preview/profile-defects.gif" alt="常見的輪廓缺陷 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>Bowing 是離子散射打到側壁中段，把中段挖大；microtrenching 是離子被傾斜的側壁反射、集中到溝底兩角；notching 是蝕到絕緣層時電荷累積，讓離子轉向、在底部側向挖出缺口；footing 是底角聚合物太多或蝕刻不足，留下殘留。</p>
+            <table class="facts"><tr><th>Bowing</th><td>加強側壁保護</td></tr><tr><th>Microtrenching</th><td>調側壁角度、離子能量</td></tr><tr><th>Notching</th><td>脈衝電漿、減少 over-etch</td></tr><tr><th>Footing</th><td>調聚合物比例、加 over-etch</td></tr></table>
+            <a class="dl" href="gifs/profile-defects.gif" download="etch-profile-defects.gif">下載 1080P GIF（4.1 MB）</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="block" aria-labelledby="more-title">
+        <p class="section-index">RELATED</p>
+        <h2 id="more-title">延伸閱讀</h2>
+        <div class="future">
+          <article><h3><a href="../plasma-etch/index.html">電漿蝕刻 Plasma Etching →</a></h3><p>電子撞分子、鞘層、等向性與非等向性、選擇比，以及 radical etch 怎麼濾掉離子。</p></article>
+          <article><h3><a href="../plasma-sources/index.html">電漿源 ICP / CCP / ECR / Remote →</a></h3><p>各種電漿源怎麼推電子、電漿在哪裡最濃、適合做什麼。</p></article>
+        </div>
+        <p class="note">動畫為教學用示意：趨勢圖上的數值（蝕刻率、CD、3σ、功率、溫度）都是示意值，用來說明方向與量級，並非特定機台或製程的實際數據；結構與腔體也經過簡化。網頁上顯示的是 800×450 的預覽；按「下載 1080P GIF」可取得 1920×1080 的原檔，循環播放、第一格就是完整畫面，可直接放進簡報。</p>
+      </section>
+    </main>
+
+    <footer>
+      <span>MASTER / ETCH CHARACTERISTICS</span>
+      <span>3D 動畫為教學示意，數值皆為示意值</span>
+    </footer>
+  </body>
+</html>
