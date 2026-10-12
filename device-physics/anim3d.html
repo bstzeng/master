@@ -315,9 +315,9 @@ function ecProfile(dev, vg, vd, { xs = 0.3, xd = 0.7, w = 0.03, wd = 0.07 } = {}
   const sig = (u) => 1 / (1 + Math.exp(-u)), phi = dev.phiB(vg, vd), Ecs = -0.06;
   return (x) => Ecs + (phi - Ecs) * sig((x - xs) / w) * (1 - sig((x - xd) / w)) - vd * sig((x - xd) / wd);
 }
-function bandPanel(y, h, { dev, vg, vd, t, geo, title = "能帶圖：沿通道 源 → 汲", scale = 90, top = 0.55, ev = false, ghost = null }) {
+function bandPanel(y, h, { dev, vg, vd, t, geo, title = "能帶圖：沿通道 源 → 汲", scale = 90, top = 0.55, ev = false, ghost = null, cap = null, move = {} }) {
   panel(PX, y, PW, h, title, C.yellow);
-  const x0 = PX + 18, x1 = PX + PW - 18, yz = y + 34 + top * scale;
+  const x0 = PX + 18, x1 = PX + PW - 18, yz = y + 64 + top * scale;
   const XB = (u) => lerp(x0, x1, u), YE = (E) => yz - E * scale;
   const Ec = ecProfile(dev, vg, vd, geo), N = 120, us = [...Array(N + 1).keys()].map((i) => i / N);
   // 區域底色：源 / 通道（閘極下）/ 汲
@@ -351,6 +351,12 @@ function bandPanel(y, h, { dev, vg, vd, t, geo, title = "能帶圖：沿通道 �
     const e = Math.max(Ec(u) + 0.02, u < um ? e0 : lerp(e0, Ec(u) + 0.02, clamp((u - um) / 0.2)));
     dot(XB(u), YE(e), "#fff27a", 3, 1);
   }
+  // 這一段在做什麼（步驟說明）
+  if (cap) { const c2 = hctx; c2.save(); c2.fillStyle = "rgba(255,210,61,.08)"; c2.fillRect(PX + 6, y + 26, PW - 12, 34); c2.restore(); cap.forEach((s, i) => text(s, PX + 12, y + 40 + i * 15, { size: 11.5, c: i ? C.text : C.yellow, w: i ? 500 : 700 })); }
+  // 正在改變的電壓：在能帶上畫箭頭，標出被推的方向
+  const push = (u, sgn, s, col, left = false) => { if (!sgn) return; const xx = XB(u), ye = YE(Ec(u)), ya = sgn > 0 ? ye - 30 : ye - 8, yb = sgn > 0 ? ye - 8 : ye - 30; line([[xx, ya], [xx, yb]], col, { w: 2.5 }); const c3 = hctx; c3.save(); c3.fillStyle = col; c3.beginPath(); c3.moveTo(xx, yb + (sgn > 0 ? 4 : -4)); c3.lineTo(xx - 6, yb + (sgn > 0 ? -6 : 6)); c3.lineTo(xx + 6, yb + (sgn > 0 ? -6 : 6)); c3.fill(); c3.restore(); text(s, xx + (left ? -9 : 9), (ya + yb) / 2 + 4, { size: 11, c: col, w: 700, mono: true, a: left ? "right" : "left" }); };
+  push((xs + xd) / 2, move.g, move.g > 0 ? "Vg↑ 往下壓" : "Vg↓ 升回來", C.magenta);
+  push(xd + 0.13, move.d, move.d > 0 ? "Vd↑ 往下拉" : "Vd↓", C.green, true);
   return { XB, YE, Ec, um, top: top0, x1 };
 }
 const fmtV = (v) => `${v.toFixed(2)} V`;
@@ -365,7 +371,14 @@ addScene("b6-barrier", {
   setup(g) { this.dev = makeDev({ eta: 0.03 }); this.f = finfet(g, { lg: 1.9 }); },
   render(t) {
     camLeft(t, this.dur, { r: 14.5, h: 7.2, a0: 0.62, amp: 0.05, look: [0, 0.4, 0] });
-    const dev = this.dev, vg = VDD * (seg(t, 0.3, 4) - seg(t, 7, 9)), vd = VDLIN + (VDD - VDLIN) * (seg(t, 4.3, 5.5) - seg(t, 9, 9.8)), id = dev.id(vg, vd);
+    const VG = (t) => VDD * (seg(t, 0.3, 4) - seg(t, 7, 9)), VD = (t) => VDLIN + (VDD - VDLIN) * (seg(t, 4.3, 5.5) - seg(t, 9, 9.8));
+    const dev = this.dev, vg = VG(t), vd = VD(t), id = dev.id(vg, vd), dir = (F) => Math.sign(Math.round((F(t + 0.1) - F(t)) * 200));
+    const cap = t < 0.3 ? ["① Vg = 0（關閉）", "源端有一座能障 φB，電子翻不過去"]
+      : t < 4.3 ? ["② 只把 Vg 往上加（Vd 固定 0.05 V）", "閘極把通道的能帶往下壓 → φB 變低，翻過去的電子變多"]
+      : t < 5.5 ? ["③ Vg 不動，把 Vd 拉到 0.75 V", "汲極的能帶和 Ef 往下拉 qVd → 電子一路「下坡」到汲極"]
+      : t < 7 ? ["④ 導通 + 飽和", "電流由源端能障決定，Vd 再大 Id 也只多一點"]
+      : t < 9 ? ["⑤ 把 Vg 降回 0", "通道能帶升回來，能障重新擋住電子 → Id 指數下降"]
+      : ["⑥ 把 Vd 降回 0.05 V", "回到起點，重新循環"];
     const f = this.f, on = clamp((vg - 0.1) / 0.5);
     f.gate.mat.emissiveIntensity = 0.3 + 1.2 * on;
     f.drn.mat.emissiveIntensity = 0.3 + 1.0 * (vd - VDLIN) / (VDD - VDLIN);
@@ -379,10 +392,10 @@ addScene("b6-barrier", {
     callout([2.6, 1.9, 0.5], 430, 150, "汲極 D", C.blue, { a: "right" });
     callout([-1.6, 1.66, 0], 40, 330, "黃線 = 右下能帶圖的取線（鰭頂，源 → 汲）", C.yellow);
     const sat = seg(t, 4.3, 5.5);
-    idvgPanel(80, 176, dev, [{ vd: VDLIN, color: C.cyan, to: t < 4 ? vg : 0.8, label: "Vd 0.05 V" }, { vd: VDD, color: C.magenta, alpha: sat, label: "Vd 0.75 V" }], { vg, vd });
-    const b = bandPanel(262, 178, { dev, vg, vd, t, ev: 0.42, scale: 72, top: 0.5, title: "能帶圖：源 → 汲" });
+    idvgPanel(80, 146, dev, [{ vd: VDLIN, color: C.cyan, to: t < 4 ? vg : 0.8, label: "Vd 0.05 V" }, { vd: VDD, color: C.magenta, alpha: sat, label: "Vd 0.75 V" }], { vg, vd });
+    const b = bandPanel(232, 208, { dev, vg, vd, t, ev: 0.42, scale: 64, top: 0.45, title: "能帶圖：源 → 汲", cap, move: { g: dir(VG), d: dir(VD) } });
     if (b.top > 0.05) arrow2(b.XB(b.um) + 16, b.YE(0), b.YE(b.top), C.red, `φB ${b.top.toFixed(2)} eV`);
-    if (vd > 0.15) arrow2(b.XB(0.88), b.YE(0), b.YE(-vd), C.green, "qVd", { left: true });
+    if (vd > 0.15 && !dir(VD)) arrow2(b.XB(0.95), b.YE(0), b.YE(-vd), C.green, "qVd", { left: true });
     formula("Id ∝ exp(−qφB / kT)", 378, C.lime);
     formula("φB 每降 60 meV → Id × 10（300 K）", 410, C.lime, { size: 12 });
   },
@@ -410,7 +423,14 @@ addScene("15-dibl", {
   render(t) {
     camLeft(t, this.dur, { r: 14.5, h: 7.2, a0: 0.62, amp: 0.05, look: [0, 0.4, 0] });
     const dev = this.dev;
-    const vg = VDD * (seg(t, 0.3, 3) - seg(t, 3, 3.8) + seg(t, 5, 7.6) - seg(t, 8.2, 9)), up = seg(t, 4, 4.8) - seg(t, 9.1, 9.8), vd = VDLIN + (VDD - VDLIN) * up, id = dev.id(vg, vd);
+    const VG = (t) => VDD * (seg(t, 0.3, 3) - seg(t, 3, 3.8) + seg(t, 5, 7.6) - seg(t, 8.2, 9)), UP = (t) => seg(t, 4, 4.8) - seg(t, 9.1, 9.8);
+    const vg = VG(t), up = UP(t), vd = VDLIN + (VDD - VDLIN) * up, id = dev.id(vg, vd), dir = (F) => Math.sign(Math.round((F(t + 0.1) - F(t)) * 200));
+    const cap = t < 3 ? ["① 先在 Vd = 0.05 V 量 Id–Vg（藍線）", "Vg↑ 把通道能帶往下壓，能障變低、電流變大"]
+      : t < 4 ? ["① 量完，Vg 降回 0", "能障升回原本高度（關閉狀態）"]
+      : t < 5 ? ["② Vg 不動（= 0），只把 Vd 拉到 0.75 V", "短通道：汲極一拉，源端能障也降 ΔφB（灰虛線＝原本）"]
+      : t < 7.6 ? ["③ 在 Vd = 0.75 V 再量一次（紫線）", "能障一開始就低一截 → 同樣 Vg 下電流更大，曲線左移"]
+      : t < 9.1 ? ["④ 在同一個 Icrit 比較兩條線", "Vt 差了 ΔVt → DIBL = ΔVt / ΔVd"]
+      : ["⑤ 把 Vd 降回 0.05 V", "能障回到原本高度，重新循環"];
     const f = this.f;
     f.gate.mat.emissiveIntensity = 0.3 + 1.2 * clamp((vg - 0.1) / 0.5);
     f.drn.mat.emissiveIntensity = 0.3 + 1.0 * up;
@@ -424,7 +444,7 @@ addScene("15-dibl", {
     callout([0.6, 0.75, 0], 40, 330, "Vd ↑：汲極電場伸進通道（橘線）", C.orange, { alpha: up });
     // Id–Vg：先量 Vd = 0.05 V，再量 Vd = 0.75 V
     const linTo = t < 3 ? vg : 0.8, satTo = t < 5 ? 0 : t < 7.6 ? vg : 0.8;
-    const P = idvgPanel(80, 176, dev, [{ vd: VDLIN, color: C.cyan, to: linTo, label: "Vd 0.05 V" }, { vd: VDD, color: C.magenta, to: satTo, label: "Vd 0.75 V" }], { vg, vd });
+    const P = idvgPanel(80, 146, dev, [{ vd: VDLIN, color: C.cyan, to: linTo, label: "Vd 0.05 V" }, { vd: VDD, color: C.magenta, to: satTo, label: "Vd 0.75 V" }], { vg, vd });
     const k = seg(t, 7.6, 8.2);
     if (k > 0) {
       const yc = P.Y(ICRIT), a = P.X(this.vts), b = P.X(this.vtl);
@@ -434,7 +454,7 @@ addScene("15-dibl", {
       line([[a, yc + 12], [b, yc + 12]], C.yellow, { w: 1.5, alpha: k, glow: 0 });
       text("ΔVt", (a + b) / 2, yc + 26, { size: 11, c: C.yellow, w: 700, mono: true, a: "center", alpha: k });
     }
-    const b = bandPanel(262, 178, { dev, vg, vd, t, geo: { xs: 0.38, xd: 0.62, w: 0.025, wd: 0.12 }, scale: 92, top: 0.45, ghost: up > 0.05 ? VDLIN : null, title: "能帶圖：源 → 汲" });
+    const b = bandPanel(232, 208, { dev, vg, vd, t, geo: { xs: 0.38, xd: 0.62, w: 0.025, wd: 0.12 }, scale: 86, top: 0.42, ghost: up > 0.05 ? VDLIN : null, title: "能帶圖：源 → 汲", cap, move: { g: dir(VG), d: dir(UP) } });
     if (up > 0.05 && b.top > 0.05) {
       const g0 = Math.max(...[...Array(61).keys()].map((i) => ecProfile(dev, vg, VDLIN, { xs: 0.38, xd: 0.62, w: 0.025, wd: 0.12 })(0.3 + i * 0.006)));
       arrow2(b.XB(b.um) - 10, b.YE(g0), b.YE(b.top), C.red, "ΔφB", { left: true });
