@@ -1027,78 +1027,83 @@ addScene("profile-defects", {
 });
 
 // =====================================================================
-// Pulsing：RF 脈衝 ON / OFF 的好處
+// Pulsing：左邊連續 RF（沒有 pulsing）、右邊 pulsing，比較差在哪裡
 // =====================================================================
 addScene("pulsing", {
   dur: 12, fps: 15,
   setup(g) {
-    this.cs = [-1.3, 1.3]; this.a = 0.32; this.d = 2.4;
-    mbox(g, M.oxide, { emissive: 0x1a2a44, ei: 0.5 }).set(-3.2, -2.8, -1.2, 3.2, -2.4, 1.2);
-    this.sol = profileSolid(g, M.si, { yBottom: -2.4, z0: -1.2, z1: 1.2 });
-    const a = this.a, pts = [[-3.2, 0]];
-    this.cs.forEach((c) => pts.push([c - a, 0], [c - a, -this.d], [c + a, -this.d], [c + a, 0]));
-    pts.push([3.2, 0]); this.sol.update(pts);
-    [[-3.2, -1.3 - a], [-1.3 + a, 1.3 - a], [1.3 + a, 3.2]].forEach(([x0, x1]) => mbox(g, M.mask, { opacity: 0.9 }).set(x0, 0, -1.2, x1, 0.35, 1.2));
-    this.sheath = mbox(g, [0x0a3a4a, 0x22e5ff], { opacity: 0.25, emissive: 0x22e5ff, ei: 0.3 });
-    this.plasma = mbox(g, [0x5a1a8a, 0xc77dff], { opacity: 0.12, emissive: 0x9a3ce0, ei: 0.8 }); this.plasma.lines.visible = false;
-    this.ions = particles(g, 40, COL.ion, 0.08); this.trail = particles(g, 120, COL.ion, 0.05);
-    this.el = particles(g, 40, COL.e, 0.07); this.rad = particles(g, 40, COL.rad, 0.07); this.prod = particles(g, 30, 0xd8dde6, 0.07);
-    this.plus = particles(g, 20, 0xff4d5e, 0.1); this.minus = particles(g, 16, 0x4fb0ff, 0.08);
+    this.a = 0.55; this.top = 0; this.d = 2.4;
+    this.S = [[-4.2, false], [4.2, true]].map(([c, pulse]) => {
+      mbox(g, M.oxide, { emissive: 0x1a2a44, ei: 0.5 }).set(c - 2.6, -2.8, -1.2, c + 2.6, -2.4, 1.2);
+      const sol = profileSolid(g, M.si, { yBottom: -2.4, z0: -1.2, z1: 1.2 });
+      [[c - 2.6, c - this.a], [c + this.a, c + 2.6]].forEach(([x0, x1]) => mbox(g, M.mask, { opacity: 0.9 }).set(x0, 0, -1.2, x1, 0.35, 1.2));
+      const sheath = mbox(g, [0x0a3a4a, 0x22e5ff], { opacity: 0.22, emissive: 0x22e5ff, ei: 0.3 });
+      const plasma = mbox(g, [0x5a1a8a, 0xc77dff], { opacity: 0.12, emissive: 0x9a3ce0, ei: 0.8 }); plasma.lines.visible = false;
+      return { c, pulse, sol, sheath, plasma, ions: particles(g, 24, COL.ion, 0.08), trail: particles(g, 72, COL.ion, 0.05), bent: particles(g, 10, 0xffa04d, 0.1), el: particles(g, 20, COL.e, 0.07), prod: particles(g, 30, 0xd8dde6, 0.08), plus: particles(g, 14, 0xff4d5e, 0.1), minus: particles(g, 10, 0x4fb0ff, 0.08), dmg: particles(g, 12, 0xc77dff, 0.09) };
+    });
   },
   render(t) {
-    camLeft(t, this.dur, { r: 15, h: 5, a0: 0.15, amp: 0.04, look: [0, 0.4, 0] });
-    const T = 3, Ton = 1.8, tau = t % T, on = tau < Ton, a = this.a, d = this.d;
-    const q = (tt) => { const u = ((tt % T) + T) % T; return u < Ton ? 1 - 0.95 * Math.exp(-u / 0.6) : (1 - 0.95 * Math.exp(-Ton / 0.6)) * Math.exp(-(u - Ton) / 0.25); };
-    const te = (tt) => { const u = ((tt % T) + T) % T; return u < Ton ? 1 - 0.85 * Math.exp(-u / 0.08) : 0.15 + 0.85 * Math.exp(-(u - Ton) / 0.12); };
-    const qn = q(t), sh = on ? 1 - Math.exp(-tau / 0.08) : Math.exp(-(tau - Ton) / 0.1);
-    this.sheath.set(-3.2, 0.35, -1.2, 3.2, 0.35 + 0.7 * sh, 1.2).alpha(Math.max(0.02, sh));
-    this.plasma.set(-3.2, 1.05, -1.2, 3.2, 2.5, 1.2); this.plasma.mat.opacity = 0.03 + 0.11 * te(t); this.plasma.mat.emissiveIntensity = 0.2 + 0.8 * te(t);
-    const ions = [], tr = [];
-    if (on) ionRain(ions, tr, [], { t, n: 40, seed: 5, x0: -1.7, x1: 1.7, z0: -1, z1: 1, top: 3.0, bottom: -d, speed: 0.9 });
-    const inT = ([x, y]) => y > 0.4 || this.cs.some((c) => Math.abs(x - c) < a - 0.06);
-    place(this.ions, ions.filter(inT)); place(this.trail, tr.filter(inT));
-    const el = [], rad = [], pr = [];
-    if (!on) {
-      const k = (tau - Ton) / (T - Ton);
-      this.cs.forEach((c, j) => {
-        for (let i = 0; i < 16; i++) { const ph = fract(rnd(i + j * 40) + k * 1.6), x = c + (rnd(i + j * 40 + 1) - 0.5) * 2 * (a - 0.1); el.push([x, lerp(1.6, -d + 0.1, ph), (rnd(i + j * 40 + 2) - 0.5) * 1.6]); }
-        for (let i = 0; i < 14; i++) { const ph = fract(rnd(i + j * 60) + k * 1.2), x = c + (rnd(i + j * 60 + 1) - 0.5) * 2 * (a - 0.1); pr.push([x, lerp(-d + 0.1, 1.8, ph), (rnd(i + j * 60 + 2) - 0.5) * 1.6, 1 - ph * 0.5]); rad.push([c + (rnd(i + j * 70) - 0.5) * 2 * (a - 0.1), lerp(1.8, -d + 0.2, fract(rnd(i + j * 70 + 1) + k)), (rnd(i + j * 70 + 2) - 0.5) * 1.6]); }
-      });
-    }
-    place(this.el, el); place(this.rad, rad); place(this.prod, pr);
-    const pl = [], mi = [];
-    this.cs.forEach((c, j) => {
-      for (let i = 0; i < Math.round(10 * qn); i++) pl.push([c + (rnd(i + j * 9) - 0.5) * 2 * (a - 0.08), -d + 0.08, (rnd(i + j * 9 + 3) - 0.5) * 1.8]);
-      for (let i = 0; i < Math.round(8 * qn); i++) mi.push([c + (i % 2 ? 1 : -1) * (a - 0.04), -0.15 - Math.floor(i / 2) * 0.2, (rnd(i + j * 5) - 0.5) * 1.8]);
+    camOrbit(t, this.dur, { r: 16, h: 3.6, a0: 0.1, amp: 0.03, look: [0, -0.6, 0] });
+    camera.setViewOffset(W, H, 0, H * 0.02, W, H);
+    const T = 2, Ton = 1.2, a = this.a, d = this.d, reset = 1 - seg(t, 11.3, 11.9);
+    const p = seg(t, 0.3, 6.5) * reset, depth = d * p, reach = seg(p, 0.85, 1) * seg(t, 6.5, 9.5) + (t >= 9.5 ? 1 : 0) * 0;
+    const over = seg(t, 6.5, 10) * reset; // 蝕到停止層之後的 over-etch
+    const tau = t % T, onR = tau < Ton;
+    const qR = (() => { const u = tau; return u < Ton ? 1 - 0.95 * Math.exp(-u / 0.5) : (1 - 0.95 * Math.exp(-Ton / 0.5)) * Math.exp(-(u - Ton) / 0.18); })() * 0.45;
+    const teR = onR ? 1 - 0.85 * Math.exp(-tau / 0.06) : 0.15 + 0.85 * Math.exp(-(tau - Ton) / 0.1);
+    const qL = seg(t, 0.4, 3) * reset;
+    const vals = [];
+    this.S.forEach((s) => {
+      const on = s.pulse ? onR : true, sh = s.pulse ? (onR ? 1 - Math.exp(-tau / 0.06) : Math.exp(-(tau - Ton) / 0.08)) : 1;
+      const q = s.pulse ? qR * (p > 0.3 ? 1 : p / 0.3) : qL, te = s.pulse ? teR : 1;
+      const notch = (s.pulse ? 0.06 : 0.7) * over;
+      const c = s.c, L = [], R = [], N = 12;
+      for (let i = 0; i <= N; i++) { const k = i / N, y = -k * depth, b = k > 0.86 ? notch * ((k - 0.86) / 0.14) : 0; L.push([c - a - b, y]); R.push([c + a + b * 0.35, y]); }
+      s.sol.update(depth < 0.01 ? [[c - 2.6, 0], [c + 2.6, 0]] : [[c - 2.6, 0], ...L, ...R.reverse(), [c + 2.6, 0]]);
+      s.sheath.set(c - 2.6, 0.35, -1.2, c + 2.6, 0.35 + 0.6 * sh, 1.2).alpha(Math.max(0.02, sh));
+      s.plasma.set(c - 2.6, 1.0, -1.2, c + 2.6, 1.8, 1.2); s.plasma.mat.opacity = 0.03 + 0.11 * te; s.plasma.mat.emissiveIntensity = 0.2 + 0.8 * te;
+      const ions = [], tr = [], ok = ([x, y]) => y > 0.4 || Math.abs(x - c) < a - 0.06;
+      if (on) ionRain(ions, tr, [], { t, n: 24, seed: 5 + c, x0: c - 1.2, x1: c + 1.2, z0: -1, z1: 1, top: 1.8, bottom: -depth, speed: 0.9 });
+      place(s.ions, ions.filter(ok)); place(s.trail, tr.filter(ok));
+      // 溝底正電荷把離子推向側壁 → notching
+      const bent = [];
+      if (on && q > 0.3 && p > 0.85) for (let i = 0; i < 3; i++) { const ph = fract(i / 3 + t * 0.7), [x, y] = along([[c + 0.05, 0.2], [c, -depth + 0.45], [c - a - notch * 0.9, -depth + 0.1]], ph); bent.push([x, y, (rnd(i) - 0.5) * 1.4, q]); }
+      place(s.bent, bent);
+      const pl = [], mi = [];
+      for (let i = 0; i < Math.round(14 * q); i++) pl.push([c + (rnd(i + c) - 0.5) * 2 * (a - 0.08), -depth + 0.08, (rnd(i + c + 3) - 0.5) * 1.8]);
+      for (let i = 0; i < Math.round(10 * q); i++) mi.push([c + (i % 2 ? 1 : -1) * (a - 0.04), -0.15 - Math.floor(i / 2) * 0.2, (rnd(i + c * 5) - 0.5) * 1.8]);
+      place(s.plus, pl); place(s.minus, mi);
+      // OFF：電子進到溝底中和電荷
+      const el = [];
+      if (!on) for (let i = 0; i < 18; i++) { const ph = fract(rnd(i + 40) + (tau - Ton) * 1.4); el.push([c + (rnd(i + 41) - 0.5) * 2 * (a - 0.1), lerp(1.4, -depth + 0.1, ph), (rnd(i + 42) - 0.5) * 1.6]); }
+      place(s.el, el);
+      // 溝內產物：連續 RF 時塞在溝裡出不去；pulsing 在 OFF 時被排出
+      const pr = [], np = s.pulse ? (onR ? Math.round(10 * tau / Ton) : Math.round(10 * Math.exp(-(tau - Ton) / 0.25))) : Math.round(26 * p);
+      for (let i = 0; i < np; i++) { const ph = s.pulse && !onR ? fract(rnd(i + 70) + (tau - Ton) * 1.2) : 0.15 * Math.sin(t * 1.5 + i) + 0.2; pr.push([c + (rnd(i + 71) - 0.5) * 2 * (a - 0.1), lerp(-depth + 0.3 + rnd(i + 72) * depth * 0.7, 1.5, clamp(ph)), (rnd(i + 73) - 0.5) * 1.6]); }
+      place(s.prod, depth > 0.3 ? pr : []);
+      // 電漿損傷（高 Te / UV）：在溝底閃
+      const dm = [], nd = Math.round(12 * Math.max(0, te - 0.3) * (s.pulse ? 0.3 : 1) * (depth > 0.5 ? 1 : 0));
+      for (let i = 0; i < nd; i++) dm.push([c + (rnd(i + Math.floor(t * 8) * 3 + c) - 0.5) * 2 * (a - 0.1), -depth + 0.05, (rnd(i * 7 + Math.floor(t * 8)) - 0.5) * 1.8, 0.7 + rnd(i + t)]);
+      place(s.dmg, dm);
+      s.notch = notch; s.depth = depth;
+      vals.push({ q: q / 1, notch: notch / 0.7, prod: np / 26, te: s.pulse ? 0.3 + 0.2 * teR : 1 });
     });
-    place(this.plus, pl); place(this.minus, mi);
     composer.render();
     hctx.clearRect(0, 0, W, H);
-    frame("Pulsing：RF 脈衝的好處", TAG);
-    chip(on ? "Pulse ON" : "Pulse OFF", 772, 40, on ? C.magenta : C.blue, { a: "right", size: 13 });
-    caption(on ? ["Pulse ON：電漿點亮、鞘層形成", "離子垂直往下打；電子到不了溝底 → 底部累積正電荷（＋）"]
-      : ["Pulse OFF：鞘層消失、電子溫度很快下降", "電子進到溝底中和正電荷；產物排出、自由基補充進來"]);
-    callout([this.cs[1], -d + 0.1, 1.0], 434, 336, "溝底累積的正電荷（＋）", C.red, { a: "right", alpha: 0.3 + 0.7 * qn });
-    callout([-3.0, 0.35 + 0.35 * sh, 1.2], 40, 336, "鞘層（OFF 時消失）", C.cyan);
-    // 右上：三條時間波形
-    panel(PX, 80, PW, 228, "波形（畫面放慢，示意）", C.cyan);
-    const x0 = PX + 92, x1 = PX + PW - 14, X = (v) => lerp(x0, x1, v / this.dur);
-    [["RF 功率", (v) => (((v % T) + T) % T < Ton ? 1 : 0), C.magenta], ["電子溫度 Te", te, C.yellow], ["溝底正電荷", q, C.red]].forEach(([s, f, col], r) => {
-      const yb = 150 + r * 64, h = 40;
-      text(s, PX + 12, yb - 12, { size: 11.5, c: col, w: 700 });
-      line([[x0, yb], [x1, yb]], "rgba(232,246,255,.25)", { w: 1, glow: 0 });
-      const pts = []; for (let i = 0; i <= 360; i++) { const v = (this.dur * i) / 360; if (v > t) break; pts.push([X(v), yb - h * f(v)]); }
-      line(pts, col, { w: 1.8 });
-      dot(X(t), yb - h * f(t), col, 3.5);
+    frame("Pulsing：有沒有脈衝，差在哪裡", TAG);
+    const c2 = hctx; c2.save(); c2.fillStyle = "rgba(4,8,16,.82)"; c2.fillRect(24, 82, W - 48, 26); c2.restore();
+    text(t < 6.5 ? "同樣的 recipe 往下蝕刻：左邊 RF 一直開著，右邊 RF 開 / 關交替" : "蝕到停止層、繼續 over-etch：左邊溝底側向被挖出 notch，右邊幾乎沒有", W / 2, 100, { size: 13, c: C.yellow, w: 700, a: "center" });
+    this.S.forEach((s) => { if (over > 0.25) callout([s.c - a - s.notch * 0.6, -s.depth + 0.15, 1.2], s.c < 0 ? 300 : 700, 318, s.pulse ? "幾乎沒有 notch" : "Notch：溝底側向被挖", s.pulse ? C.lime : C.orange, { a: "center", alpha: seg(over, 0.25, 0.5) }); });
+    line([[W / 2, 116], [W / 2, 436]], "rgba(232,246,255,.35)", { w: 1.5, dash: [6, 5], glow: 0 });
+    chip("沒有 pulsing（RF 連續開）", W / 4, 136, C.red, { a: "center", size: 15 });
+    chip("有 pulsing（RF 開 / 關）", (3 * W) / 4, 136, C.lime, { a: "center", size: 15 });
+    chip(onR ? "ON" : "OFF", (3 * W) / 4 + 128, 136, onR ? C.magenta : C.blue, { a: "center", mono: true, size: 12 });
+    // 下方比較：四個量表
+    [["溝底正電荷（＋）", "q", C.red], ["Notching", "notch", C.orange], ["溝內產物", "prod", C.grey], ["電子溫度 Te（損傷）", "te", C.magenta]].forEach(([s, k, col], i) => {
+      vals.forEach((v, j) => meter(40 + j * 400 + (i % 2) * 175, 366 + Math.floor(i / 2) * 36, s, v[k], col));
     });
-    for (let k = 0; k < 4; k++) { const xa = X(k * T), xb = X(k * T + Ton); hctx.save(); hctx.fillStyle = "rgba(255,61,242,.05)"; hctx.fillRect(xa, 104, xb - xa, 196); hctx.restore(); }
-    text("Duty cycle = ON 時間 / 週期（此例 60%）", PX + 12, 300, { size: 10.5, c: C.dim, w: 500 });
-    // 右下：好處
-    panel(PX, 316, PW, 120, "Pulsing 的好處", C.lime);
-    [["中和溝底電荷 → 減少 notching / 輪廓扭曲", !on], ["Te 降低 → 減少 UV 與電漿損傷", !on], ["產物排出、自由基補充 → 改善 ARDE", !on], ["離子能量 / 通量可分開調 → 選擇比、輪廓", on]].forEach(([s, hl], i) => {
-      text(`${"①②③④"[i]} ${s}`, PX + 14, 350 + i * 22, { size: 11.5, c: hl ? C.lime : C.text, w: hl ? 700 : 500 });
-    });
-    bottomChips("參數：脈衝頻率、duty cycle", "source / bias 可同步或錯開脈衝");
+    text(onR ? "ON：和左邊一樣在蝕刻" : "OFF：電子中和電荷、產物排出、Te 降下來", (3 * W) / 4, 436, { size: 12, c: onR ? C.dim : C.lime, w: 700, a: "center" });
+    text("電荷一直累積、產物塞在溝裡、Te 一直很高", W / 4, 436, { size: 12, c: C.red, w: 700, a: "center" });
   },
 });
 
