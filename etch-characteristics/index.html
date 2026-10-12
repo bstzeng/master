@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="用 12 張 3D 動畫 GIF 看懂蝕刻的常見特性：first wafer effect、seasoning、腔壁漂移、WAC、微粒與記憶效應、RF tool shift、loading effect、ESC 溫度與 Hydra、endpoint、輪廓缺陷。" />
+    <meta name="description" content="用 13 張 3D 動畫 GIF 看懂蝕刻的常見特性：first wafer effect、season、腔壁漂移、WAC、微粒與記憶效應、RF tool shift、loading effect、ESC 溫度與 Hydra、pulsing、endpoint、輪廓缺陷。" />
     <meta name="theme-color" content="#05070d" />
     <title>蝕刻製程特性與機台狀態｜MASTER</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -111,7 +111,7 @@
           <p class="eyebrow">ETCH CHARACTERISTICS / 3D GIF</p>
           <h1 id="page-title">蝕刻製程特性<br /><em>與機台狀態</em></h1>
         </div>
-        <p>同一個 recipe，為什麼今天跑出來和昨天不一樣？答案常常不在 recipe，而在腔壁、RF 零件、晶圓上的圖形和 ESC 溫度。這一頁用 12 張 3D 動畫 GIF，把蝕刻常見的特性一個一個拆開看：左邊看機制，右邊看工程師平常盯的趨勢圖。GIF 沒有編號，可以依課程需要自由穿插使用。</p>
+        <p>同一個 recipe，為什麼今天跑出來和昨天不一樣？答案常常不在 recipe，而在腔壁、RF 零件、晶圓上的圖形和 ESC 溫度。這一頁用 13 張 3D 動畫 GIF，把蝕刻常見的特性一個一個拆開看：左邊看機制，右邊看工程師平常盯的趨勢圖。GIF 沒有編號，可以依課程需要自由穿插使用。</p>
       </section>
 
       <section class="block" aria-labelledby="map-title">
@@ -120,7 +120,7 @@
         <div class="table-wrap">
           <table class="compare">
             <tbody>
-              <tr><th>腔體狀態</th><td><a href="#first-wafer-title">First wafer effect</a>、<a href="#seasoning-title">Seasoning</a>、<a href="#wall-drift-title">腔壁沉積與漂移</a>、<a href="#wac-title">WAC（Waferless Auto Clean）</a>、<a href="#flaking-title">剝落微粒與記憶效應</a></td></tr><tr><th>RF 效應（tool shift）</th><td><a href="#rf-match-title">RF 傳輸、匹配與老化</a></td></tr><tr><th>Loading effect</th><td><a href="#macro-loading-title">Macro loading</a>、<a href="#micro-loading-title">Micro loading（iso / dense）</a></td></tr><tr><th>ESC 溫度控制</th><td><a href="#esc-temp-title">ESC 溫度效應</a>、<a href="#hydra-title">Hydra 多區溫控</a></td></tr><tr><th>製程監控與輪廓</th><td><a href="#endpoint-title">Endpoint 偵測（OES）</a>、<a href="#profile-defects-title">常見的輪廓缺陷</a></td></tr>
+              <tr><th>腔體狀態</th><td><a href="#first-wafer-title">First wafer effect</a>、<a href="#season-title">Season</a>、<a href="#wall-drift-title">腔壁沉積與漂移</a>、<a href="#wac-title">WAC（Waferless Auto Clean）</a>、<a href="#flaking-title">剝落微粒與記憶效應</a></td></tr><tr><th>RF 效應（tool shift）</th><td><a href="#rf-match-title">RF 傳輸、匹配與老化</a></td></tr><tr><th>Loading effect</th><td><a href="#macro-loading-title">Macro loading</a>、<a href="#micro-loading-title">Micro loading（iso / dense）</a></td></tr><tr><th>ESC 溫度控制</th><td><a href="#esc-temp-title">ESC 溫度效應</a>、<a href="#hydra-title">Hydra 多區溫控</a></td></tr><tr><th>脈衝電漿</th><td><a href="#pulsing-title">Pulsing</a></td></tr><tr><th>製程監控與輪廓</th><td><a href="#endpoint-title">Endpoint 偵測（OES）</a>、<a href="#profile-defects-title">常見的輪廓缺陷</a></td></tr>
             </tbody>
           </table>
         </div>
@@ -133,20 +133,20 @@
           <figure><img src="gifs/preview/first-wafer.gif" alt="First wafer effect 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
           <div class="card-body">
             <p>腔體閒置或 PM 後，腔壁是乾淨的。乾淨的壁面會吃掉較多自由基，壁溫也還沒爬到穩定值，所以前幾片的蝕刻率和 CD 會偏離。跑過幾片、腔壁長出一層塗層之後，結果才會收斂到穩定值。</p>
-            <table class="facts"><tr><th>原因</th><td>乾淨腔壁吃掉自由基、壁溫未穩定</td></tr><tr><th>怎麼看</th><td>首片 ER / CD、SPC 趨勢圖</td></tr><tr><th>怎麼處理</th><td>Seasoning、閒置後先跑 dummy wafer</td></tr></table>
+            <table class="facts"><tr><th>原因</th><td>乾淨腔壁吃掉自由基、壁溫未穩定</td></tr><tr><th>怎麼看</th><td>首片 ER / CD、SPC 趨勢圖</td></tr><tr><th>怎麼處理</th><td>Season、閒置後先跑 dummy wafer</td></tr></table>
             <a class="dl" href="gifs/first-wafer.gif" download="etch-first-wafer.gif">下載 1080P GIF（8.0 MB）</a>
           </div>
         </div>
       </section>
-      <section class="block" aria-labelledby="seasoning-title">
+      <section class="block" aria-labelledby="season-title">
         <p class="section-index">CHAMBER CONDITION</p>
-        <h2 id="seasoning-title">Seasoning <span class="en">先把腔壁養到穩定再跑貨</span></h2>
+        <h2 id="season-title">Season <span class="en">先把腔壁養到穩定再跑貨</span></h2>
         <div class="step">
-          <figure><img src="gifs/preview/seasoning.gif" alt="Seasoning 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <figure><img src="gifs/preview/season.gif" alt="Season 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
           <div class="card-body">
-            <p>正式跑產品之前，先用 dummy wafer 或 seasoning recipe 在腔壁長出塗層，把腔體「養」到和穩定生產時一樣的狀態。這樣第一片產品晶圓就不會有 first wafer effect。片數越多越穩，但會花時間和 dummy wafer，所以要找出夠用的最少片數。</p>
+            <p>正式跑產品之前，先用 dummy wafer 或 season recipe 在腔壁長出塗層，把腔體「養」到和穩定生產時一樣的狀態。這樣第一片產品晶圓就不會有 first wafer effect。片數越多越穩，但會花時間和 dummy wafer，所以要找出夠用的最少片數。</p>
             <table class="facts"><tr><th>時機</th><td>PM、長時間閒置、換 recipe 之後</td></tr><tr><th>確認方式</th><td>OES、測試片蝕刻率</td></tr><tr><th>取捨</th><td>穩定度 vs. 時間與 dummy wafer 成本</td></tr></table>
-            <a class="dl" href="gifs/seasoning.gif" download="etch-seasoning.gif">下載 1080P GIF（7.2 MB）</a>
+            <a class="dl" href="gifs/season.gif" download="etch-season.gif">下載 1080P GIF（7.3 MB）</a>
           </div>
         </div>
       </section>
@@ -168,9 +168,9 @@
         <div class="step">
           <figure><img src="gifs/preview/wac.gif" alt="WAC（Waferless Auto Clean） 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
           <div class="card-body">
-            <p>出片後不放晶圓，直接點 O₂ 或 NF₃ 等電漿，把腔壁沉積吃掉、產物抽走，再接一段短的 season 長回薄塗層。每一片開始時腔壁都在同一個狀態，蝕刻率就不會一路漂移。沒有晶圓時 ESC 是裸露的，WAC recipe 要避免傷到 ESC。</p>
-            <table class="facts"><tr><th>做什麼</th><td>無晶圓電漿清潔 + 短 season</td></tr><tr><th>效果</th><td>每片從同一個腔壁條件開始</td></tr><tr><th>要點</th><td>太強傷 ESC / 零件，太弱清不乾淨</td></tr></table>
-            <a class="dl" href="gifs/wac.gif" download="etch-wac.gif">下載 1080P GIF（9.0 MB）</a>
+            <p>出片後不放晶圓，直接點 O₂ 或 NF₃ 等電漿，把腔壁沉積吃掉、產物抽走，接著下一片進腔再 etch，也就是 Etch → WAC → Etch 的循環。每一片開始時腔壁都在同一個乾淨的狀態，蝕刻率就不會一路漂移。沒有晶圓時 ESC 是裸露的，WAC recipe 要避免傷到 ESC。</p>
+            <table class="facts"><tr><th>做什麼</th><td>每片之間插一次無晶圓電漿清潔</td></tr><tr><th>效果</th><td>每片從同一個腔壁條件開始</td></tr><tr><th>要點</th><td>太強傷 ESC / 零件，太弱清不乾淨</td></tr></table>
+            <a class="dl" href="gifs/wac.gif" download="etch-wac.gif">下載 1080P GIF（9.2 MB）</a>
           </div>
         </div>
       </section>
@@ -200,13 +200,13 @@
       </section>
       <section class="block" aria-labelledby="macro-loading-title">
         <p class="section-index">LOADING EFFECT</p>
-        <h2 id="macro-loading-title">Macro loading <span class="en">開口面積越大，蝕刻越慢</span></h2>
+        <h2 id="macro-loading-title">Macro loading <span class="en">開口越大，蝕刻越慢</span></h2>
         <div class="step">
           <figure><img src="gifs/preview/macro-loading.gif" alt="Macro loading 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
           <div class="card-body">
-            <p>整片晶圓露出要蝕刻的面積（開口率）越大，消耗的自由基越多，腔體裡的自由基濃度就越低，蝕刻率下降。同一個 recipe 換到開口率不同的產品，蝕刻時間和 endpoint 都要重新調整。</p>
-            <table class="facts"><tr><th>原因</th><td>開口多 → 自由基被消耗 → 濃度降低</td></tr><tr><th>影響</th><td>換產品時蝕刻率、時間、endpoint 不同</td></tr><tr><th>怎麼處理</th><td>依產品調 recipe / 時間、用 endpoint 控制</td></tr></table>
-            <a class="dl" href="gifs/macro-loading.gif" download="etch-macro-loading.gif">下載 1080P GIF（19.1 MB）</a>
+            <p>同一片晶圓上，iso pattern 和 long width pattern 一起蝕刻。大面積開口一次消耗大量自由基，附近的自由基濃度變低，所以 long width pattern 蝕刻得比較慢。同樣的道理，整片晶圓開口率高時整體蝕刻率也會下降，換產品時蝕刻時間和 endpoint 都要重新調整。</p>
+            <table class="facts"><tr><th>原因</th><td>開口面積大 → 自由基被大量消耗 → 濃度降低</td></tr><tr><th>怎麼看</th><td>不同 pattern 的深度差、換產品後的 ER</td></tr><tr><th>怎麼處理</th><td>依產品調 recipe / 時間、用 endpoint 控制</td></tr></table>
+            <a class="dl" href="gifs/macro-loading.gif" download="etch-macro-loading.gif">下載 1080P GIF（15.0 MB）</a>
           </div>
         </div>
       </section>
@@ -243,6 +243,18 @@
             <p>一般 ESC 只有幾個同心圓溫區，只能修徑向（中心到邊緣）的差異。Hydra 把 ESC 分成很多個可獨立控制的加熱小區，拿前段量到的 CD 地圖（例如微影後）算出每一區該設多少溫度：CD 偏大的地方調高溫度，讓那裡被吃小一點。蝕刻後再量一次、回饋給下一批，晶圓內的 CDU 3σ 就能明顯縮小。</p>
             <table class="facts"><tr><th>一般 ESC</th><td>少數同心圓溫區，只修徑向</td></tr><tr><th>Hydra</th><td>很多個獨立加熱小區，修不對稱的局部偏差</td></tr><tr><th>流程</th><td>量測 CD 地圖 → 算每區溫度 → 蝕刻補償 → 回饋（APC）</td></tr></table>
             <a class="dl" href="gifs/hydra.gif" download="etch-hydra.gif">下載 1080P GIF（7.2 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="pulsing-title">
+        <p class="section-index">PULSED PLASMA</p>
+        <h2 id="pulsing-title">Pulsing <span class="en">RF 脈衝的好處</span></h2>
+        <div class="step">
+          <figure><img src="gifs/preview/pulsing.gif" alt="Pulsing 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>把 RF 功率改成 ON / OFF 的脈衝。ON 時電漿點亮、鞘層形成，離子垂直往下打，但電子到不了溝底，底部會累積正電荷。OFF 時鞘層消失、電子溫度很快下降，電子進到溝底把正電荷中和掉，蝕刻產物趁機排出、自由基補充進來。所以 pulsing 可以減少 charging 造成的 notching 與輪廓扭曲、降低電漿損傷、改善 ARDE，也讓離子能量和通量多了可以調的旋鈕。</p>
+            <table class="facts"><tr><th>ON</th><td>離子往下打，溝底累積正電荷</td></tr><tr><th>OFF</th><td>中和電荷、Te 下降、產物排出、自由基補充</td></tr><tr><th>好處</th><td>少 notching、低損傷、改善 ARDE 與選擇比</td></tr><tr><th>參數</th><td>脈衝頻率、duty cycle、source / bias 同步或錯開</td></tr></table>
+            <a class="dl" href="gifs/pulsing.gif" download="etch-pulsing.gif">下載 1080P GIF（9.7 MB）</a>
           </div>
         </div>
       </section>
