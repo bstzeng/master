@@ -313,12 +313,12 @@ addScene("first-wafer", {
     hctx.clearRect(0, 0, W, H);
     frame("First wafer effect：前幾片為什麼跑不準", TAG);
     const idle = !run;
-    chip(idle ? "閒置 / 濕式清潔 / PM 後" : `Wafer #${n}`, 772, 40, idle ? C.grey : C.yellow, { a: "right", mono: !idle, size: 13 });
-    if (idle) caption(["腔壁回到乾淨狀態", "閒置、濕式清潔或 PM 後，腔壁上的塗層不見了"]);
+    chip(idle ? "閒置 / PM 後" : `Wafer #${n}`, 772, 40, idle ? C.grey : C.yellow, { a: "right", mono: !idle, size: 13 });
+    if (idle) caption(["腔壁回到乾淨狀態", "閒置或 PM 後，腔壁上的塗層不見了"]);
     else if (n <= 3) caption([`第 ${n} 片：腔壁還很乾淨`, "自由基撞壁就被吃掉 → 到晶圓的變少", "壁溫也還沒穩定 → 蝕刻率偏低"]);
     else if (n <= 6) caption([`第 ${n} 片：腔壁慢慢長出一層塗層`, "壁面吃掉的自由基變少，壁溫往穩定值爬"]);
     else caption([`第 ${n} 片：腔壁狀態穩定`, "每片的蝕刻率一致 → 進入穩定生產"]);
-    callout([-3.1, 3.4, 0.8], 40, 336, coat < 0.5 ? "乾淨的腔壁（白光 = 自由基撞壁被吃掉）" : "腔壁塗層（聚合物 / 蝕刻產物）", coat < 0.5 ? C.grey : C.amber);
+    callout([-3.1, 3.4, 0.8], 40, 336, "白光 = 自由基撞到乾淨腔壁被吃掉（塗層長好後變少）", C.grey);
     // 右上：蝕刻率對片號
     const py = 80, ph1 = 226;
     panel(PX, py, PW, ph1, "蝕刻率 vs. 片號（相對穩定值）", C.cyan);
