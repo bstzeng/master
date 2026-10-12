@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="用 13 張 3D 動畫 GIF 看懂蝕刻的常見特性：first wafer effect、season、腔壁漂移、WAC、微粒與記憶效應、RF tool shift、loading effect、ESC 溫度與 Hydra、pulsing、endpoint、輪廓缺陷。" />
+    <meta name="description" content="用 14 張 3D 動畫 GIF 看懂蝕刻實務：BT / ME / OE 步驟、first wafer effect、season、腔壁漂移、WAC、微粒與記憶效應、RF tool shift、loading effect、ESC 溫度與 Hydra、pulsing、endpoint、輪廓缺陷。" />
     <meta name="theme-color" content="#05070d" />
-    <title>蝕刻製程特性與機台狀態｜MASTER</title>
+    <title>蝕刻實務介紹｜MASTER</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
@@ -108,10 +108,10 @@
     <main>
       <section class="intro" aria-labelledby="page-title">
         <div>
-          <p class="eyebrow">ETCH CHARACTERISTICS / 3D GIF</p>
-          <h1 id="page-title">蝕刻製程特性<br /><em>與機台狀態</em></h1>
+          <p class="eyebrow">ETCH IN PRACTICE / 3D GIF</p>
+          <h1 id="page-title">蝕刻實務<br /><em>介紹</em></h1>
         </div>
-        <p>同一個 recipe，為什麼今天跑出來和昨天不一樣？答案常常不在 recipe，而在腔壁、RF 零件、晶圓上的圖形和 ESC 溫度。這一頁用 13 張 3D 動畫 GIF，把蝕刻常見的特性一個一個拆開看：左邊看機制，右邊看工程師平常盯的趨勢圖。GIF 沒有編號，可以依課程需要自由穿插使用。</p>
+        <p>同一個 recipe，為什麼今天跑出來和昨天不一樣？答案常常不在 recipe，而在腔壁、RF 零件、晶圓上的圖形和 ESC 溫度。這一頁用 14 張 3D 動畫 GIF，先看一個 recipe 的 BT / ME / OE 三個步驟，再把蝕刻常見的特性一個一個拆開看：左邊看機制，右邊看工程師平常盯的趨勢圖。GIF 沒有編號，可以依課程需要自由穿插使用。</p>
       </section>
 
       <section class="block" aria-labelledby="map-title">
@@ -120,12 +120,24 @@
         <div class="table-wrap">
           <table class="compare">
             <tbody>
-              <tr><th>腔體狀態</th><td><a href="#first-wafer-title">First wafer effect</a>、<a href="#season-title">Season</a>、<a href="#wall-drift-title">腔壁沉積與漂移</a>、<a href="#wac-title">WAC（Waferless Auto Clean）</a>、<a href="#flaking-title">剝落微粒與記憶效應</a></td></tr><tr><th>RF 效應（tool shift）</th><td><a href="#rf-match-title">RF 傳輸、匹配與老化</a></td></tr><tr><th>Loading effect</th><td><a href="#macro-loading-title">Macro loading</a>、<a href="#micro-loading-title">Micro loading（iso / dense）</a></td></tr><tr><th>ESC 溫度控制</th><td><a href="#esc-temp-title">ESC 溫度效應</a>、<a href="#hydra-title">Hydra 多區溫控</a></td></tr><tr><th>脈衝電漿</th><td><a href="#pulsing-title">Pulsing</a></td></tr><tr><th>製程監控與輪廓</th><td><a href="#endpoint-title">Endpoint 偵測（OES）</a>、<a href="#profile-defects-title">常見的輪廓缺陷</a></td></tr>
+              <tr><th>蝕刻步驟</th><td><a href="#bt-me-oe-title">BT / ME / OE</a></td></tr><tr><th>腔體狀態</th><td><a href="#first-wafer-title">First wafer effect</a>、<a href="#season-title">Season</a>、<a href="#wall-drift-title">腔壁沉積與漂移</a>、<a href="#wac-title">WAC（Waferless Auto Clean）</a>、<a href="#flaking-title">剝落微粒與記憶效應</a></td></tr><tr><th>RF 效應（tool shift）</th><td><a href="#rf-match-title">RF 傳輸、匹配與老化</a></td></tr><tr><th>Loading effect</th><td><a href="#macro-loading-title">Macro loading</a>、<a href="#micro-loading-title">Micro loading（iso / dense）</a></td></tr><tr><th>ESC 溫度控制</th><td><a href="#esc-temp-title">ESC 溫度效應</a>、<a href="#hydra-title">Hydra 多區溫控</a></td></tr><tr><th>脈衝電漿</th><td><a href="#pulsing-title">Pulsing</a></td></tr><tr><th>製程監控與輪廓</th><td><a href="#endpoint-title">Endpoint 偵測（OES）</a>、<a href="#profile-defects-title">常見的輪廓缺陷</a></td></tr>
             </tbody>
           </table>
         </div>
       </section>
 
+      <section class="block" aria-labelledby="bt-me-oe-title">
+        <p class="section-index">RECIPE STEPS</p>
+        <h2 id="bt-me-oe-title">BT / ME / OE <span class="en">一個蝕刻 recipe 的三個步驟</span></h2>
+        <div class="step">
+          <figure><img src="gifs/preview/bt-me-oe.gif" alt="BT / ME / OE 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>一個蝕刻 recipe 通常分成三步。BT（Breakthrough）先用高離子能量、幾乎沒有選擇比的條件，在很短的時間內打穿表面的原生氧化層。ME（Main Etch）是蝕刻主體，速率高，側壁輪廓在這一步決定，並用 OES 監看 endpoint。抓到 endpoint 後換到 OE（Over Etch），用低離子能量、對停止層選擇比高的條件，把較慢處的殘留和底角 footing 清乾淨，又不打穿停止層。</p>
+            <table class="facts"><tr><th>BT</th><td>打開原生氧化層：時間短、離子能量高、選擇比低</td></tr><tr><th>ME</th><td>蝕刻主體、決定輪廓：用 endpoint 結束</td></tr><tr><th>OE</th><td>清殘留與 footing：離子能量低、選擇比高，時間常用 ME 的 %</td></tr><tr><th>OE 的取捨</th><td>太少 → 殘留、footing；太多 → 傷停止層、側壁被吃</td></tr></table>
+            <a class="dl" href="gifs/bt-me-oe.gif" download="etch-bt-me-oe.gif">下載 1080P GIF（7.1 MB）</a>
+          </div>
+        </div>
+      </section>
       <section class="block" aria-labelledby="first-wafer-title">
         <p class="section-index">CHAMBER CONDITION</p>
         <h2 id="first-wafer-title">First wafer effect <span class="en">前幾片為什麼跑不準</span></h2>
@@ -295,7 +307,7 @@
     </main>
 
     <footer>
-      <span>MASTER / ETCH CHARACTERISTICS</span>
+      <span>MASTER / ETCH IN PRACTICE</span>
       <span>3D 動畫為教學示意，數值皆為示意值</span>
     </footer>
   </body>
