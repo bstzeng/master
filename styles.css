@@ -99,6 +99,9 @@ h1 em { color: var(--orange); font-style: italic; }
 .topic-card.tides-featured { grid-column: 1 / -1; background: #0f4c8a; border-color: #0f4c8a; }
 .topic-card.tides-featured .topic-label { color: #ffd43b; }
 .topic-card.tides-featured:hover .topic-arrow { color: #0f4c8a; background: #8fd3ff; }
+.topic-card.etchchar-featured { grid-column: 1 / -1; background: #0d1a14; border-color: #0d1a14; }
+.topic-card.etchchar-featured .topic-label { color: #5dffb0; }
+.topic-card.etchchar-featured:hover .topic-arrow { color: #0d1a14; background: #5dffb0; }
 .topic-number { font-family: "Playfair Display", serif; font-size: 42px; }
 .topic-content { align-self: end; }
 .topic-label { margin-bottom: 12px; color: var(--orange); }
