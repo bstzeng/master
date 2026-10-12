@@ -1,0 +1,1054 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<title>Etch characteristics 3D GIF renderer</title>
+<style>
+  body { margin: 0; background: #05070d; }
+  canvas { display: block; }
+</style>
+<script type="importmap">
+  { "imports": { "three": "../nanosheet/vendor/three/three.module.min.js", "three/addons/": "../nanosheet/vendor/three/addons/" } }
+</script>
+</head>
+<body>
+<canvas id="out" width="800" height="450"></canvas>
+<script type="module">
+// 蝕刻製程特性與機台狀態課的 3D 場景：與 nanosheet/anim3d.html 共用同一套繪製核心與 three.js（../nanosheet/vendor）。
+// 需要用 http 伺服器開啟（ES module 不能用 file://）。預覽：etch-characteristics/anim3d.html#first-wafer
+import * as THREE from "three";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+
+const W = 800, H = 450; // 版面座標（所有位置都用這個尺寸寫）
+// 輸出倍率：?scale=2.4 → 1920×1080（1080P）；預設 1 → 800×450 預覽
+const S = parseFloat(new URLSearchParams(location.search).get("scale") || "1");
+const FONT = '"Noto Sans TC", "Noto Sans CJK TC", sans-serif';
+const MONO = '"DejaVu Sans Mono", "DM Mono", monospace';
+const C = { cyan: "#22e5ff", magenta: "#ff3df2", lime: "#b6ff3d", red: "#ff4d5e", amber: "#ffb340", orange: "#ffa04d", green: "#5dffb0", blue: "#5aa0ff", yellow: "#ffd23d", grey: "#c8ced8", text: "#e8f6ff", dim: "rgba(232,246,255,.62)" };
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const ease = (k) => { k = clamp(k); return k * k * (3 - 2 * k); };
+const seg = (v, a, b) => ease((v - a) / (b - a)); // v 在 a..b 之間的平滑進度
+const fract = (v) => v - Math.floor(v);
+const rnd = (i) => fract(Math.sin(i * 127.1 + 311.7) * 43758.5453);
+const lerp = (a, b, k) => a + (b - a) * k;
+const tri = (v) => 1 - 4 * Math.abs(fract(v) - 0.5); // -1..1 三角波（彈跳用）
+
+// ---------- three.js ----------
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(S);
+renderer.setSize(W, H);
+renderer.setClearColor(0x05070d, 1);
+const glCanvas = renderer.domElement;
+const hud = document.createElement("canvas");
+hud.width = W * S; hud.height = H * S;
+const hctx = hud.getContext("2d");
+hctx.setTransform(S, 0, 0, S, 0, 0);
+const out = document.getElementById("out");
+out.width = W * S; out.height = H * S;
+const octx = out.getContext("2d");
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x05070d, 24, 44);
+const camera = new THREE.PerspectiveCamera(36, W / H, 0.1, 100);
+scene.add(new THREE.AmbientLight(0x8fb4ff, 0.9));
+const key = new THREE.DirectionalLight(0xffffff, 1.6);
+key.position.set(6, 12, 8);
+scene.add(key);
+const rim = new THREE.DirectionalLight(0xff3df2, 0.6);
+rim.position.set(-8, 4, -6);
+scene.add(rim);
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.9, 0.45, 0.55));
+composer.addPass(new OutputPass());
+composer.setPixelRatio(S);
+const grid = new THREE.GridHelper(60, 60, 0x0e3a4a, 0x0a2230);
+grid.position.y = -2.01;
+scene.add(grid);
+
+// 材料顏色（面, 邊）
+const M = {
+  sub: [0x0f1a2c, 0x2c4a6e], sti: [0x2a3a55, 0x4a6a95], si: [0x1d78c0, 0x4fc3ff], sige: [0xd9822b, 0xffa04d],
+  poly: [0x7c828c, 0xc8ced8], spacer: [0x1f9e6a, 0x5dffb0], inner: [0x14c88a, 0x8dffd0], sd: [0x2a5fd0, 0x5aa0ff],
+  hik: [0xffd23d, 0xffe680], gate: [0xb02cc0, 0xff3df2],
+};
+
+// 單位方塊：用 set(x0,y0,z0,x1,y1,z1) 改尺寸位置，任何一邊為 0 就隱藏
+function mbox(parent, [face, edge], { opacity = 1, emissive = 0x000000, ei = 0, edges = true } = {}) {
+  const g = new THREE.BoxGeometry(1, 1, 1);
+  const mat = new THREE.MeshStandardMaterial({ color: face, transparent: opacity < 1, opacity, roughness: 0.45, metalness: 0.1, emissive, emissiveIntensity: ei, depthWrite: opacity >= 1 });
+  const mesh = new THREE.Mesh(g, mat);
+  parent.add(mesh);
+  let lines = null;
+  if (edges) { lines = new THREE.LineSegments(new THREE.EdgesGeometry(g), new THREE.LineBasicMaterial({ color: edge, transparent: true, opacity: 0.95 })); mesh.add(lines); }
+  const base = { opacity, line: 0.95 };
+  const api = {
+    mesh, mat, lines,
+    set(x0, y0, z0, x1, y1, z1) {
+      const sx = x1 - x0, sy = y1 - y0, sz = z1 - z0;
+      if (sx < 1e-3 || sy < 1e-3 || sz < 1e-3) { mesh.visible = false; return api; }
+      mesh.visible = true;
+      mesh.scale.set(sx, sy, sz);
+      mesh.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+      return api;
+    },
+    alpha(a) { // 0..1 淡入淡出
+      mat.transparent = true; mat.opacity = base.opacity * a; mat.depthWrite = a >= 1 && base.opacity >= 1;
+      if (lines) lines.material.opacity = base.line * a;
+      if (a <= 0.001) mesh.visible = false;
+      return api;
+    },
+    hide() { mesh.visible = false; return api; },
+  };
+  return api;
+}
+
+// 發光粒子（電子、自由基）
+function particles(parent, count, color, r = 0.1) {
+  const mesh = new THREE.InstancedMesh(new THREE.SphereGeometry(r, 10, 8), new THREE.MeshBasicMaterial({ color }), count);
+  mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  parent.add(mesh);
+  return mesh;
+}
+const tmp = new THREE.Object3D();
+function place(mesh, list) {
+  const n = Math.min(list.length, mesh.count);
+  for (let i = 0; i < n; i++) { const [x, y, z, s = 1] = list[i]; tmp.position.set(x, y, z); tmp.scale.setScalar(s); tmp.updateMatrix(); mesh.setMatrixAt(i, tmp.matrix); }
+  tmp.scale.setScalar(0); tmp.updateMatrix();
+  for (let i = n; i < mesh.count; i++) mesh.setMatrixAt(i, tmp.matrix);
+  mesh.instanceMatrix.needsUpdate = true;
+}
+
+// 導通電子流：閘極開啟時才進入通道（關閉後已在通道內的電子跑完）
+function stream(list, { n, seed, t, speed, x0, x1, lane, gate = () => true, axis = "x" }) {
+  for (let i = 0; i < n; i++) {
+    const ph = fract(rnd(i + seed) + t * speed);
+    if (!gate(t - ph / speed)) continue;
+    const [a, b] = lane(i + seed);
+    const p = lerp(x0, x1, ph);
+    list.push(axis === "x" ? [p, a, b] : [a, b, p]);
+  }
+}
+
+function camOrbit(t, dur, { r = 20, h = 8.5, a0 = 0.2, amp = 0.1, look = [0, 0.6, 0] } = {}) {
+  const a = Math.sin((t / dur) * Math.PI * 2) * amp + a0;
+  camera.position.set(Math.sin(a) * r + look[0], h, Math.cos(a) * r + look[2]);
+  camera.lookAt(look[0], look[1], look[2]);
+}
+
+// ---------- 2D HUD ----------
+function text(s, x, y, o = {}) {
+  const c = hctx; c.save();
+  c.font = `${o.w || 600} ${o.size || 16}px ${o.mono ? MONO : FONT}`;
+  c.textAlign = o.a || "left"; c.globalAlpha = o.alpha ?? 1;
+  if (o.glow) { c.shadowColor = o.glow; c.shadowBlur = 10; }
+  c.fillStyle = o.c || C.text; c.fillText(s, x, y); c.restore();
+}
+function chip(s, x, y, color, o = {}) {
+  const c = hctx; c.save();
+  c.font = `700 ${o.size || 14}px ${o.mono ? MONO : FONT}`;
+  const w = c.measureText(s).width + 22, h = (o.size || 14) + 14;
+  const bx = o.a === "center" ? x - w / 2 : o.a === "right" ? x - w : x;
+  c.globalAlpha = o.alpha ?? 1;
+  c.fillStyle = "rgba(5,7,13,.84)"; c.fillRect(bx, y - h / 2, w, h);
+  c.strokeStyle = color; c.lineWidth = 1.5; c.shadowColor = color; c.shadowBlur = 8;
+  c.strokeRect(bx + .5, y - h / 2 + .5, w - 1, h - 1);
+  c.shadowBlur = 0; c.fillStyle = color; c.textBaseline = "middle"; c.fillText(s, bx + 11, y + 1);
+  c.restore();
+  return { x: bx, y: y - h / 2, w, h };
+}
+function frame(title, tag) {
+  const c = hctx; c.save(); c.strokeStyle = C.cyan; c.lineWidth = 2; c.globalAlpha = .8;
+  const L = 18;
+  [[12, 12, 1, 1], [W - 12, 12, -1, 1], [12, H - 12, 1, -1], [W - 12, H - 12, -1, -1]].forEach(([x, y, sx, sy]) => {
+    c.beginPath(); c.moveTo(x, y + sy * L); c.lineTo(x, y); c.lineTo(x + sx * L, y); c.stroke();
+  });
+  c.restore();
+  text(tag, 28, 40, { size: 12, mono: true, c: C.cyan, w: 500 });
+  text(title, 28, 64, { size: 22, w: 700 });
+}
+const proj = (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return [(v.x + 1) / 2 * W, (1 - v.y) / 2 * H]; };
+// 3D 點拉一條引線到標籤
+function callout(p3, x, y, s, color, o = {}) {
+  const a = o.alpha ?? 1;
+  if (a <= 0.01) return;
+  const p = proj(...p3);
+  const box = chip(s, x, y, color, { ...o, alpha: a });
+  const tx = clamp(p[0], box.x, box.x + box.w), ty = p[1] < box.y ? box.y : box.y + box.h;
+  const c = hctx; c.save(); c.globalAlpha = a; c.strokeStyle = color; c.fillStyle = color; c.lineWidth = 1.5;
+  c.beginPath(); c.moveTo(p[0], p[1]); c.lineTo(tx, ty); c.stroke();
+  c.beginPath(); c.arc(p[0], p[1], 3, 0, Math.PI * 2); c.fill(); c.restore();
+}
+function meter(x, y, label, value, color, valueText = "") {
+  text(label, x, y, { size: 12, c: C.dim, w: 500 });
+  if (valueText) text(valueText, x + 150, y, { size: 12, c: color, w: 700, a: "right", mono: true });
+  const c = hctx; c.save();
+  c.strokeStyle = "rgba(232,246,255,.35)"; c.strokeRect(x + .5, y + 6.5, 150, 10);
+  c.fillStyle = color; c.shadowColor = color; c.shadowBlur = 8; c.fillRect(x + 2, y + 8, 146 * clamp(value), 7);
+  c.restore();
+}
+function bitBox(on) {
+  const col = on ? C.lime : C.red, c = hctx;
+  c.save(); c.strokeStyle = col; c.lineWidth = 2; c.shadowColor = col; c.shadowBlur = 14; c.strokeRect(650, 28, 120, 66); c.restore();
+  text(on ? "1" : "0", 690, 80, { size: 50, mono: true, c: col, glow: col, a: "center", w: 700 });
+  text(on ? "ON" : "OFF", 742, 68, { size: 15, mono: true, c: col, a: "center" });
+}
+
+const SCENES = {};
+function addScene(name, def) {
+  const group = new THREE.Group();
+  group.visible = false;
+  scene.add(group);
+  def.setup(group);
+  SCENES[name] = { ...def, group };
+}
+
+const COL = { e: 0xfff27a, ion: 0xff4d5e, rad: 0x6dff6a, s: 0xd8dde6, f: 0x8fd3ff, photon: 0xc77dff };
+// 離子雨：垂直落下（拖尾）+ 撞擊閃光
+function ionRain(list, trail, flash, { t, n, seed, x0, x1, z0, z1, top, bottom, speed = 0.9 }) {
+  for (let i = 0; i < n; i++) {
+    const ph = fract(rnd(i + seed) + t * speed * (0.8 + 0.4 * rnd(i + seed + 1)));
+    const x = lerp(x0, x1, rnd(i + seed + 2)), z = lerp(z0, z1, rnd(i + seed + 3)), yb = typeof bottom === "function" ? bottom(x) : bottom;
+    const y = lerp(top, yb, ph * ph);
+    list.push([x, y, z]);
+    for (let j = 1; j <= 3; j++) { const pp = Math.max(0, ph - j * 0.05); trail.push([x, lerp(top, yb, pp * pp), z, 1 - j / 4]); }
+    if (ph > 0.94) flash.push([x, yb, z, 1.1]);
+  }
+}
+// 隨機亂飄的粒子（自由基等）
+function drift(list, { t, n, seed, x0, x1, y0, y1, z0, z1, sp = 0.08, ok = null }) {
+  for (let i = 0; i < n; i++) {
+    const p = [lerp(x0, x1, 0.5 + 0.5 * tri(rnd(i + seed) + t * sp * (0.5 + rnd(i + seed + 1)))), lerp(y0, y1, 0.5 + 0.5 * tri(rnd(i + seed + 2) + t * sp * 1.3 * (0.5 + rnd(i + seed + 3)))), lerp(z0, z1, 0.5 + 0.5 * tri(rnd(i + seed + 4) + t * sp * 0.9))];
+    if (!ok || ok(p)) list.push(p);
+  }
+}
+// 產物 SiF₄：從表面往上飄走
+// ---------- 本課共用：左下流程圖 ----------
+function flowChain(items, y = 372) {
+  let x = 40;
+  items.forEach(([s, c], i) => { const b = chip(s, x, y, c, { size: 13 }); x = b.x + b.w + 6; if (i < items.length - 1) { text("→", x + 4, y + 5, { size: 15, c: C.dim, w: 700 }); x += 22; } });
+}
+// ---------- 本課共用：圓柱腔體 ----------
+function cyl(parent, r, y0, y1, [face, edge], { opacity = 1, emissive = 0, ei = 0, seg = 48, open = false } = {}) {
+  const g = new THREE.CylinderGeometry(r, r, y1 - y0, seg, 1, open);
+  const mat = new THREE.MeshStandardMaterial({ color: face, transparent: opacity < 1, opacity, roughness: 0.45, metalness: 0.1, emissive, emissiveIntensity: ei, depthWrite: opacity >= 1, side: open ? THREE.DoubleSide : THREE.FrontSide });
+  const m = new THREE.Mesh(g, mat);
+  m.position.y = (y0 + y1) / 2;
+  parent.add(m);
+  const lines = new THREE.LineSegments(new THREE.EdgesGeometry(g, 30), new THREE.LineBasicMaterial({ color: edge, transparent: true, opacity: 0.8 }));
+  m.add(lines);
+  return { mesh: m, mat, lines };
+}
+const ring = (parent, r, y, color, tube = 0.04) => {
+  const m = new THREE.Mesh(new THREE.TorusGeometry(r, tube, 8, 96), new THREE.MeshBasicMaterial({ color, transparent: true }));
+  m.rotation.x = Math.PI / 2; m.position.y = y; parent.add(m); return m;
+};
+
+// =====================================================================
+// 本課共用：右側面板、線段、圓點；3D 放在左半邊
+// =====================================================================
+const TAG = "ETCH CHARACTERISTICS";
+const PX = 452, PW = 334;
+function panel(x, y, w, h, title, color = C.cyan) {
+  const c = hctx; c.save();
+  c.fillStyle = "rgba(4,8,16,.9)"; c.fillRect(x, y, w, h);
+  c.strokeStyle = color; c.globalAlpha = 0.55; c.lineWidth = 1; c.strokeRect(x + .5, y + .5, w - 1, h - 1); c.restore();
+  text(title, x + 10, y + 18, { size: 13, c: color, w: 700 });
+}
+function line(pts, color, { w = 2, dash = null, alpha = 1, glow = 6 } = {}) {
+  if (pts.length < 2) return;
+  const c = hctx; c.save(); c.globalAlpha = alpha; c.strokeStyle = color; c.lineWidth = w; c.shadowColor = color; c.shadowBlur = glow;
+  if (dash) c.setLineDash(dash);
+  c.beginPath(); pts.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke(); c.restore();
+}
+function dot(x, y, color, r = 4, alpha = 1) {
+  const c = hctx; c.save(); c.globalAlpha = alpha; c.fillStyle = color; c.shadowColor = color; c.shadowBlur = 10; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill(); c.restore();
+}
+function camLeft(t, dur, o) { camOrbit(t, dur, o); camera.setViewOffset(W, H, W * 0.235, -H * 0.02, W, H); }
+// 步驟說明條（左上，標題下方）
+function caption(lines, y = 96) {
+  const c = hctx; c.save(); c.fillStyle = "rgba(4,8,16,.82)"; c.fillRect(24, y - 14, 410, lines.length * 18 + 10); c.restore();
+  lines.forEach((s, i) => text(s, 32, y + 2 + i * 18, { size: i ? 12.5 : 14, c: i ? C.text : C.yellow, w: i ? 500 : 700 }));
+}
+
+// =====================================================================
+// First wafer effect：腔壁從乾淨到被塗層覆蓋，前幾片的蝕刻率偏離
+// =====================================================================
+addScene("first-wafer", {
+  dur: 10, fps: 15,
+  setup(g) {
+    this.wall = cyl(g, 3.2, 0, 5, [0x3a4658, 0x8fa8d0], { opacity: 0.16, open: true, emissive: 0x1a2433, ei: 0.4 });
+    this.coat = cyl(g, 3.12, 0.15, 4.85, [0x8a5a2a, 0xffb36b], { opacity: 0.5, open: true, emissive: 0x6a3a10, ei: 0.5 });
+    this.coat.lines.visible = false;
+    cyl(g, 3.3, 5, 5.3, [0x6c7480, 0xc8ced8], { opacity: 0.3 });
+    cyl(g, 2.7, -0.8, 0, [0x0f1a2c, 0x2c4a6e]);
+    this.wafer = cyl(g, 2.3, 0, 0.12, M.si, { emissive: 0x0a3a66, ei: 0.5 });
+    this.plasma = cyl(g, 2.9, 0.5, 4.6, [0x5a1a8a, 0xc77dff], { opacity: 0.1, emissive: 0x9a3ce0, ei: 0.7 });
+    this.plasma.lines.visible = false;
+    this.rad = particles(g, 90, COL.rad, 0.08);
+    this.loss = particles(g, 40, 0xffffff, 0.12);
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 23, h: 10.5, a0: 0.35, amp: 0.05, look: [0, 3.0, 0] });
+    const N = 12, t0 = 0.4, cyc = 0.76, tw = (t - t0) / cyc, n = clamp(Math.floor(tw) + 1, 1, N), ph = fract(tw);
+    const run = t >= t0 && t < t0 + N * cyc, on = run && ph > 0.12 && ph < 0.92 ? 1 : 0;
+    const reset = 1 - seg(t, 9.6, 9.95), nEff = clamp(tw, 0, N);
+    const coat = (1 - Math.exp(-nEff / 2.2)) * reset, Tw = (1 - Math.exp(-nEff / 3)) * reset;
+    this.coat.mat.opacity = 0.03 + 0.55 * coat;
+    this.wall.mat.emissiveIntensity = 0.3 + 0.6 * Tw;
+    this.plasma.mat.opacity = 0.11 * on; this.plasma.mat.emissiveIntensity = 0.8 * on;
+    this.wafer.mat.emissiveIntensity = 0.4 + (run && ph < 0.12 ? 1.2 * (1 - ph / 0.12) : 0);
+    // 自由基：在電漿裡亂飄
+    const rad = [];
+    if (on) drift(rad, { t, n: 110, seed: 3, x0: -2.9, x1: 2.9, y0: 0.3, y1: 4.6, z0: -2.9, z1: 2.9, sp: 0.1, ok: ([x, , z]) => x * x + z * z < 2.9 ** 2 });
+    place(this.rad, rad);
+    // 腔壁乾淨時：自由基撞壁就被吃掉（白色閃光）；塗層長好後就少了
+    const loss = [], nl = Math.round(40 * (1 - coat) * on);
+    for (let i = 0; i < nl; i++) { const th = rnd(i + Math.floor(t * 8) * 13) * Math.PI * 2, y = 0.4 + rnd(i * 3 + Math.floor(t * 8)) * 4.2; loss.push([Math.cos(th) * 3.05, y, Math.sin(th) * 3.05, 0.6 + 0.6 * rnd(i + t)]); }
+    place(this.loss, loss);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("First wafer effect：前幾片為什麼跑不準", TAG);
+    const idle = !run;
+    chip(idle ? "閒置 / PM 後" : `Wafer #${n}`, 772, 40, idle ? C.grey : C.yellow, { a: "right", mono: !idle, size: 13 });
+    if (idle) caption(["腔壁回到乾淨狀態", "閒置或 PM 後，腔壁上的塗層不見了"]);
+    else if (n <= 3) caption([`第 ${n} 片：腔壁還很乾淨`, "自由基撞壁就被吃掉 → 到晶圓的變少", "壁溫也還沒穩定 → 蝕刻率偏低"]);
+    else if (n <= 6) caption([`第 ${n} 片：腔壁慢慢長出一層塗層`, "壁面吃掉的自由基變少，壁溫往穩定值爬"]);
+    else caption([`第 ${n} 片：腔壁狀態穩定`, "每片的蝕刻率一致 → 進入穩定生產"]);
+    callout([-3.1, 3.4, 0.8], 40, 336, "白光 = 自由基撞到乾淨腔壁被吃掉（塗層長好後變少）", C.grey);
+    // 右上：蝕刻率對片號
+    const py = 80, ph1 = 226;
+    panel(PX, py, PW, ph1, "蝕刻率 vs. 片號（相對穩定值）", C.cyan);
+    const x0 = PX + 46, x1 = PX + PW - 16, y0 = py + ph1 - 28, y1 = py + 34;
+    const X = (k) => lerp(x0, x1, (k - 1) / (N - 1)), Y = (v) => lerp(y0, y1, (v - 88) / 14);
+    const c = hctx; c.save(); c.fillStyle = "rgba(93,255,176,.08)"; c.fillRect(x0, Y(101), x1 - x0, Y(99) - Y(101)); c.restore();
+    line([[x0, Y(100)], [x1, Y(100)]], C.green, { w: 1, dash: [4, 3], glow: 0 });
+    text("穩定值", x1, Y(100) - 5, { size: 10, c: C.green, w: 700, a: "right" });
+    line([[x0, y1], [x0, y0], [x1, y0]], "rgba(232,246,255,.4)", { w: 1, glow: 0 });
+    [90, 95, 100].forEach((v) => text(`${v}%`, x0 - 5, Y(v) + 4, { size: 10, c: C.dim, mono: true, w: 500, a: "right" }));
+    [1, 4, 8, 12].forEach((k) => text(`#${k}`, X(k), y0 + 15, { size: 10, c: C.dim, mono: true, w: 500, a: "center" }));
+    const er = (k) => 100 - 9 * Math.exp(-(k - 1) / 1.6);
+    const done = idle ? (t < t0 ? 0 : N) : ph > 0.5 ? n : n - 1, pts = [];
+    for (let k = 1; k <= done; k++) pts.push([X(k), Y(er(k))]);
+    line(pts, C.cyan, { w: 2 });
+    pts.forEach(([x, y], i) => dot(x, y, i + 1 === done && !idle ? C.yellow : C.cyan, i + 1 === done && !idle ? 5 : 3.5));
+    // 右下：腔壁狀態
+    panel(PX, 316, PW, 86, "腔壁狀態", C.amber);
+    meter(PX + 14, 352, "塗層覆蓋", coat, C.amber, coat > 0.85 ? "穩定" : "累積中");
+    meter(PX + 176, 352, "腔壁溫度", Tw, C.red, Tw > 0.85 ? "穩定" : "上升中");
+    text("自由基在壁上被吃掉的比例", PX + 14, 390, { size: 11, c: C.dim, w: 500 });
+    text(`${Math.round(100 * (0.55 - 0.4 * coat))}%（示意）`, PX + PW - 14, 390, { size: 11, c: C.grey, w: 700, mono: true, a: "right" });
+    chip("監控：首片 ER / CD、SPC 趨勢圖", 28, 376, C.cyan, { size: 13 });
+    chip("對策：Seasoning、閒置後先跑 dummy wafer", 28, 410, C.lime, { size: 13 });
+  },
+});
+
+// =====================================================================
+// Hydra：多區溫控 ESC，依量測到的 CD 地圖做 by-site 補償
+// =====================================================================
+const HOT = (k) => { k = clamp(k); return new THREE.Color().setRGB(0.15 + 0.85 * clamp(k * 1.6), 0.12 + 0.75 * clamp(k * 1.6 - 0.6), 0.25 * clamp(k * 3 - 2) + 0.05); };
+const CDC = (d) => { const k = clamp(d / 2.4, -1, 1); return k >= 0 ? new THREE.Color().setRGB(0.12 + 0.88 * k, 0.16 + 0.1 * k, 0.2 + 0.75 * k) : new THREE.Color().setRGB(0.12, 0.16 + 0.74 * -k, 0.2 + 0.8 * -k); };
+function cdDev(x, z, i) { // 進來的 CD 偏差（nm）：有徑向、也有左右不對稱的成分
+  return 1.6 * (1.0 * Math.exp(-((x - 0.9) ** 2 + (z + 0.7) ** 2) / 1.1) - 0.9 * Math.exp(-((x + 1.0) ** 2 + (z - 0.9) ** 2) / 0.9) + 1.5 * ((x * x + z * z) / 5.3 - 0.45) + 0.18 * (rnd(i + 5) - 0.5));
+}
+const sigma3 = (a) => { const m = a.reduce((s, v) => s + v, 0) / a.length; return 3 * Math.sqrt(a.reduce((s, v) => s + (v - m) ** 2, 0) / a.length); };
+addScene("hydra", {
+  dur: 12, fps: 15,
+  setup(g) {
+    cyl(g, 2.75, -1.0, -0.02, [0x2a3040, 0x6c7a90]);
+    // 晶圓上的量測點
+    const sites = [], st = 0.34;
+    for (let x = -2.2; x <= 2.21; x += st) for (let z = -2.2; z <= 2.21; z += st) if (x * x + z * z < 2.25 ** 2) sites.push([x, z]);
+    this.sites = sites;
+    this.inc = sites.map(([x, z], i) => cdDev(x, z, i));
+    // 一般 ESC：4 個同心圓溫區，只能修各圈的平均值
+    const ringOf = (x, z) => Math.min(3, Math.floor(Math.hypot(x, z) / 0.6));
+    const sum = [0, 0, 0, 0], cnt = [0, 0, 0, 0];
+    sites.forEach(([x, z], i) => { const r = ringOf(x, z); sum[r] += this.inc[i]; cnt[r]++; });
+    this.ringAvg = sum.map((s, i) => s / cnt[i]);
+    this.radRes = sites.map(([x, z], i) => this.inc[i] - this.ringAvg[ringOf(x, z)]);
+    this.hydRes = sites.map((_, i) => 0.28 * (rnd(i + 91) - 0.5));
+    this.s3 = [sigma3(this.inc), sigma3(this.radRes), sigma3(this.hydRes)];
+    this.wafer = cyl(g, 2.4, 0, 0.08, M.si, { emissive: 0x0a3a66, ei: 0.3, opacity: 0.9 });
+    this.tiles = new THREE.InstancedMesh(new THREE.BoxGeometry(st * 0.86, 0.03, st * 0.86), new THREE.MeshBasicMaterial({ transparent: true }), sites.length);
+    g.add(this.tiles);
+    // ESC 加熱小區
+    const zones = [], zs = 0.46;
+    for (let x = -2.3; x <= 2.31; x += zs) for (let z = -2.3; z <= 2.31; z += zs) if (x * x + z * z < 2.45 ** 2) zones.push([x, z]);
+    this.zones = zones;
+    const near = (x, z) => { let s = 0, w = 0; sites.forEach(([a, b], i) => { const d = Math.exp(-((a - x) ** 2 + (b - z) ** 2) / 0.12); s += d * this.inc[i]; w += d; }); return s / w; };
+    this.zHyd = zones.map(([x, z]) => near(x, z));
+    this.zRad = zones.map(([x, z]) => this.ringAvg[ringOf(x, z)]);
+    this.ztiles = new THREE.InstancedMesh(new THREE.BoxGeometry(zs * 0.9, 0.05, zs * 0.9), new THREE.MeshBasicMaterial({ transparent: true }), zones.length);
+    g.add(this.ztiles);
+    this.plasma = cyl(g, 2.5, 0.4, 3.4, [0x5a1a8a, 0xc77dff], { opacity: 0.1, emissive: 0x9a3ce0, ei: 0.7 });
+    this.plasma.lines.visible = false;
+    this.ions = particles(g, 40, COL.ion, 0.08); this.trail = particles(g, 120, COL.ion, 0.05); this.flash = particles(g, 30, 0xffffff, 0.1);
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 12.5, h: 9.5, a0: 0.3, amp: 0.05, look: [0, 1.1, 0] });
+    const lift = seg(t, 2.6, 3.4) - seg(t, 7.0, 7.6), wy = 1.6 * lift;
+    const radial = seg(t, 3.4, 3.9) * (1 - seg(t, 5.2, 5.6)), hyd = seg(t, 5.2, 5.8), escOn = Math.max(radial, hyd) * (1 - seg(t, 11.4, 12));
+    const etch = seg(t, 7.8, 10), back = seg(t, 11.4, 12);
+    this.wafer.mesh.position.y = 0.04 + wy;
+    // 晶圓上的 CD：蝕刻中逐步被補償，最後一段換下一片（新的 CD 地圖）
+    const cd = this.inc.map((v, i) => lerp(lerp(v, this.hydRes[i], etch), v, back));
+    const tmp = new THREE.Object3D();
+    this.sites.forEach(([x, z], i) => { tmp.position.set(x, 0.1 + wy, z); tmp.updateMatrix(); this.tiles.setMatrixAt(i, tmp.matrix); this.tiles.setColorAt(i, CDC(cd[i])); });
+    this.tiles.instanceMatrix.needsUpdate = true; this.tiles.instanceColor.needsUpdate = true;
+    // ESC 溫區：CD 偏大的地方調高溫度（聚合物少 → CD 被吃小）
+    this.zones.forEach(([x, z], i) => {
+      tmp.position.set(x, 0.0, z); tmp.scale.setScalar(escOn > 0.01 ? 1 : 0); tmp.updateMatrix(); this.ztiles.setMatrixAt(i, tmp.matrix);
+      const v = lerp(this.zRad[i], this.zHyd[i], hyd);
+      this.ztiles.setColorAt(i, HOT(0.42 + 0.2 * v * escOn).multiplyScalar(0.7).lerp(new THREE.Color(0x2a3040), 1 - escOn));
+    });
+    tmp.scale.setScalar(1);
+    this.ztiles.instanceMatrix.needsUpdate = true; this.ztiles.instanceColor.needsUpdate = true;
+    const on = t > 7.7 && t < 10.2 ? 1 : 0;
+    this.plasma.mat.opacity = 0.1 * on;
+    const ions = [], tr = [], fl = [];
+    if (on) ionRain(ions, tr, fl, { t, n: 40, seed: 5, x0: -2.2, x1: 2.2, z0: -2.2, z1: 2.2, top: 3.2, bottom: 0.12, speed: 0.7 });
+    const keep = ([x, , z]) => x * x + z * z < 4.8;
+    place(this.ions, ions.filter(keep)); place(this.trail, tr.filter(keep)); place(this.flash, fl.filter(keep));
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("Hydra：多區溫控 ESC 的 by-site 補償", TAG);
+    const step = t < 2.6 ? 0 : t < 5.2 ? 1 : t < 7.6 ? 2 : t < 10.2 ? 3 : t < 11.4 ? 4 : 5;
+    caption([
+      ["① 先量進來的 CD 地圖（例如微影後）", "紫 = CD 偏大、青 = CD 偏小，有些偏差是左右不對稱的"],
+      ["② 一般 ESC：只有幾個同心圓溫區", "只能修徑向（中心 ↔ 邊緣），不對稱的偏差修不到"],
+      ["③ Hydra：ESC 分成很多個獨立加熱小區", "依 CD 地圖算出每一區的溫度：CD 偏大的地方調高溫度"],
+      ["④ 蝕刻：各區溫度不同 → 局部 CD 被修正", "溫度高 → 側壁聚合物少 → CD 被吃小（反之亦然）"],
+      ["⑤ 蝕刻後再量一次 → 回饋給下一批", "CD 地圖變均勻，晶圓內 CDU 3σ 變小"],
+      ["下一片：新的 CD 地圖", "每片 / 每批依自己的量測結果重新計算"],
+    ][step]);
+    chip(["量測", "一般 ESC", "Hydra 溫度地圖", "蝕刻中", "量測回饋", "下一片"][step], 772, 40, C.yellow, { a: "right", size: 13 });
+    if (escOn > 0.3) callout([1.6, 0, 1.6], 40, 372, hyd > 0.5 ? "ESC 加熱小區（亮 = 溫度高；區數為示意）" : "一般 ESC：4 個同心圓溫區", C.orange);
+    // 右上：CD 偏差分布
+    const py = 80, ph1 = 196;
+    panel(PX, py, PW, ph1, "晶圓內 CD 偏差分布（每個量測點）", C.magenta);
+    const x0 = PX + 20, x1 = PX + PW - 20, y0 = py + ph1 - 28, bins = 15, lo = -3, hi = 3, hist = new Array(bins).fill(0);
+    cd.forEach((v) => { hist[clamp(Math.floor(((v - lo) / (hi - lo)) * bins), 0, bins - 1)]++; });
+    const bw = (x1 - x0) / bins, hmax = Math.max(40, ...hist);
+    hist.forEach((cnt, i) => {
+      const hgt = (cnt / hmax) * (ph1 - 70), mid = lo + ((i + 0.5) / bins) * (hi - lo);
+      hctx.save(); hctx.fillStyle = `#${CDC(mid).getHexString()}`; hctx.globalAlpha = 0.9; hctx.fillRect(x0 + i * bw + 1, y0 - hgt, bw - 2, hgt); hctx.restore();
+    });
+    line([[x0, y0], [x1, y0]], "rgba(232,246,255,.4)", { w: 1, glow: 0 });
+    line([[(x0 + x1) / 2, y0], [(x0 + x1) / 2, py + 32]], C.green, { w: 1, dash: [3, 3], glow: 0 });
+    text("目標", (x0 + x1) / 2 + 4, py + 40, { size: 10, c: C.green, w: 700 });
+    [-3, 0, 3].forEach((v) => text(`${v > 0 ? "+" : ""}${v} nm`, lerp(x0, x1, (v - lo) / (hi - lo)), y0 + 15, { size: 10, c: C.dim, mono: true, w: 500, a: "center" }));
+    // 右下：3σ 比較
+    panel(PX, 284, PW, 118, "CDU 3σ（示意值）", C.cyan);
+    const rows = [["進來", this.s3[0], C.grey, true], ["一般 ESC（只修徑向）", this.s3[1], C.orange, step >= 1], ["Hydra by-site", this.s3[2], C.lime, etch > 0.95 && back < 0.5]];
+    rows.forEach(([s, v, col, show], i) => {
+      const yy = 316 + i * 28, a = show ? 1 : 0.15;
+      text(s, PX + 14, yy + 4, { size: 12, c: col, w: 700, alpha: a });
+      hctx.save(); hctx.globalAlpha = a; hctx.fillStyle = col; hctx.shadowColor = col; hctx.shadowBlur = 8; hctx.fillRect(PX + 168, yy - 6, (v / this.s3[0]) * 110, 12); hctx.restore();
+      text(`${v.toFixed(1)} nm`, PX + PW - 12, yy + 4, { size: 11, c: col, w: 700, mono: true, a: "right", alpha: a });
+    });
+    flowChain([["量測 CD 地圖", C.magenta], ["算每區溫度", C.orange], ["蝕刻補償", C.cyan], ["量測回饋（APC）", C.lime]], 418);
+  },
+});
+
+// =====================================================================
+// 本課共用（其餘頁面）：腔體、趨勢圖、擠出的剖面實體
+// =====================================================================
+M.oxide = [0x3a4a66, 0x8fa8d0];
+M.mask = [0x6c7480, 0xc8ced8];
+M.resist = [0xc98a2a, 0xffc861];
+M.polymer = [0x8a5a2a, 0xffb36b];
+function profileSolid(parent, [face, edge], { yBottom = -4, z0 = -2, z1 = 2, emissive = 0x0a3a66, ei = 0.35 } = {}) {
+  const mat = new THREE.MeshStandardMaterial({ color: face, roughness: 0.45, metalness: 0.1, emissive, emissiveIntensity: ei });
+  const mesh = new THREE.Mesh(new THREE.BufferGeometry(), mat);
+  const lines = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: edge, transparent: true, opacity: 0.9 }));
+  parent.add(mesh); parent.add(lines);
+  return {
+    mesh,
+    update(top) { // top：由左到右的表面輪廓點 [x, y]
+      const sh = new THREE.Shape();
+      sh.moveTo(top[0][0], yBottom);
+      top.forEach(([x, y]) => sh.lineTo(x, y));
+      sh.lineTo(top[top.length - 1][0], yBottom);
+      sh.closePath();
+      const geo = new THREE.ExtrudeGeometry(sh, { depth: z1 - z0, bevelEnabled: false, curveSegments: 1 });
+      geo.translate(0, 0, z0);
+      mesh.geometry.dispose(); mesh.geometry = geo;
+      lines.geometry.dispose(); lines.geometry = new THREE.EdgesGeometry(geo, 25);
+    },
+  };
+}
+function legend(items, x = 32, y = 100) {
+  items.forEach(([s, c], i) => {
+    hctx.save(); hctx.fillStyle = c; hctx.shadowColor = c; hctx.shadowBlur = 8; hctx.beginPath(); hctx.arc(x + 8, y + i * 24, 5, 0, Math.PI * 2); hctx.fill(); hctx.restore();
+    text(s, x + 20, y + 5 + i * 24, { size: 13, c, w: 700 });
+  });
+}
+// 離子雨：垂直落下（拖尾）+ 撞擊閃光
+const DUMMY = 0x5a606a, PROD = 0x1d78c0;
+function rig(g, { R = 3.2, H = 5 } = {}) {
+  const o = { R, H };
+  o.wall = cyl(g, R, 0, H, [0x3a4658, 0x8fa8d0], { opacity: 0.16, open: true, emissive: 0x1a2433, ei: 0.4 });
+  o.coat = cyl(g, R - 0.08, 0.15, H - 0.15, M.polymer, { opacity: 0.5, open: true, emissive: 0x6a3a10, ei: 0.5 });
+  o.coat.lines.visible = false;
+  cyl(g, R + 0.1, H, H + 0.3, M.mask, { opacity: 0.3 });
+  o.chuck = cyl(g, 2.7, -0.8, 0, [0x0f1a2c, 0x2c4a6e]);
+  o.wafer = cyl(g, 2.3, 0, 0.12, M.si, { emissive: 0x0a3a66, ei: 0.5 });
+  o.plasma = cyl(g, R - 0.3, 0.5, H - 0.4, [0x5a1a8a, 0xc77dff], { opacity: 0.1, emissive: 0x9a3ce0, ei: 0.7 });
+  o.plasma.lines.visible = false;
+  o.rad = particles(g, 110, COL.rad, 0.08);
+  return o;
+}
+// 電漿開關 + 顏色；自由基在電漿裡亂飄
+function rigPlasma(o, t, on, color = 0xc77dff, nRad = 110) {
+  o.plasma.mat.opacity = 0.11 * on; o.plasma.mat.emissiveIntensity = 0.8 * on;
+  o.plasma.mat.color.set(color); o.plasma.mat.emissive.set(color).multiplyScalar(0.75);
+  const rad = [], r = o.R - 0.3;
+  if (on > 0.5) drift(rad, { t, n: nRad, seed: 3, x0: -r, x1: r, y0: 0.3, y1: o.H - 0.4, z0: -r, z1: r, sp: 0.1, ok: ([x, , z]) => x * x + z * z < r * r });
+  place(o.rad, rad);
+}
+const RIGCAM = { r: 23, h: 10.5, a0: 0.35, amp: 0.05, look: [0, 3.0, 0] };
+// 趨勢圖：回傳座標換算
+function chart(py, ph, title, color, { xa, xb, ya, yb, xt = [], yt = [], xl = "", foot = 0 }) {
+  panel(PX, py, PW, ph, title, color);
+  const x0 = PX + 46, x1 = PX + PW - 16, y0 = py + ph - 28 - foot, y1 = py + 34;
+  const X = (v) => lerp(x0, x1, (v - xa) / (xb - xa)), Y = (v) => lerp(y0, y1, (v - ya) / (yb - ya));
+  line([[x0, y1], [x0, y0], [x1, y0]], "rgba(232,246,255,.4)", { w: 1, glow: 0 });
+  yt.forEach(([v, s]) => text(s, x0 - 5, Y(v) + 4, { size: 10, c: C.dim, mono: true, w: 500, a: "right" }));
+  xt.forEach(([v, s]) => text(s, X(v), y0 + 15, { size: 10, c: C.dim, mono: true, w: 500, a: "center" }));
+  if (xl) text(xl, x1, y0 - 6, { size: 10, c: C.dim, w: 500, a: "right" });
+  return { X, Y, x0, x1, y0, y1 };
+}
+function plot(P, f, a, b, color, o = {}) { const n = o.n || 60, pts = []; for (let i = 0; i <= n; i++) { const v = lerp(a, b, i / n); pts.push([P.X(v), P.Y(f(v))]); } line(pts, color, o); }
+function hline(P, v, color, s, o = {}) { line([[P.x0, P.Y(v)], [P.x1, P.Y(v)]], color, { w: 1, dash: [4, 3], glow: 0 }); if (s) text(s, o.left ? P.x0 + 4 : P.x1, P.Y(v) - 5, { size: 10, c: color, w: 700, a: o.left ? "left" : "right" }); }
+function legendRow(x, y, items) { let xx = x; items.forEach(([s, col, dsh]) => { line([[xx, y - 4], [xx + 16, y - 4]], col, { w: 2, dash: dsh ? [3, 2] : null, glow: 0 }); text(s, xx + 20, y, { size: 11, c: col, w: 700 }); hctx.font = `700 11px ${FONT}`; xx += hctx.measureText(s).width + 34; }); }
+// 任意多邊形擠出（每格可更新形狀）
+function polySolid(parent, [face, edge], { z0 = -1, z1 = 1, emissive = 0x000000, ei = 0, opacity = 1 } = {}) {
+  const mat = new THREE.MeshStandardMaterial({ color: face, roughness: 0.45, metalness: 0.1, emissive, emissiveIntensity: ei, transparent: opacity < 1, opacity });
+  const mesh = new THREE.Mesh(new THREE.BufferGeometry(), mat), lines = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: edge, transparent: true, opacity: 0.9 }));
+  parent.add(mesh); parent.add(lines);
+  return {
+    mesh, mat,
+    update(pts) {
+      if (!pts || pts.length < 3) { mesh.visible = lines.visible = false; return; }
+      mesh.visible = lines.visible = true;
+      const sh = new THREE.Shape(); sh.moveTo(...pts[0]); pts.slice(1).forEach((p) => sh.lineTo(...p)); sh.closePath();
+      const geo = new THREE.ExtrudeGeometry(sh, { depth: z1 - z0, bevelEnabled: false, curveSegments: 1 }); geo.translate(0, 0, z0);
+      mesh.geometry.dispose(); mesh.geometry = geo; lines.geometry.dispose(); lines.geometry = new THREE.EdgesGeometry(geo, 25);
+    },
+  };
+}
+// 沿折線走：ph 0..1
+function along(pts, ph) {
+  const seglen = pts.slice(1).map((p, i) => Math.hypot(p[0] - pts[i][0], p[1] - pts[i][1])), L = seglen.reduce((a, b) => a + b, 0);
+  let d = ph * L;
+  for (let i = 0; i < seglen.length; i++) { if (d <= seglen[i] || i === seglen.length - 1) { const k = clamp(d / seglen[i]); return [lerp(pts[i][0], pts[i + 1][0], k), lerp(pts[i][1], pts[i + 1][1], k)]; } d -= seglen[i]; }
+  return pts[pts.length - 1];
+}
+function bottomChips(a, b) { chip(a, 28, 376, C.cyan, { size: 13 }); chip(b, 28, 410, C.lime, { size: 13 }); }
+
+// =====================================================================
+// Seasoning：用 dummy wafer 先把腔壁養到穩定
+// =====================================================================
+addScene("seasoning", {
+  dur: 10, fps: 15,
+  setup(g) { this.o = rig(g); this.ready = ring(g, 2.95, -0.4, 0x5dffb0, 0.06); },
+  render(t) {
+    camLeft(t, this.dur, RIGCAM);
+    const o = this.o, cyc = 0.76, D = 5, tD = 0.4, tR = tD + D * cyc, tP = tR + 0.6, P = 6, tE = tP + P * cyc;
+    const dummy = t >= tD && t < tR, prod = t >= tP && t < tE, ready = t >= tR && t < tP;
+    const u = dummy ? (t - tD) / cyc : prod ? (t - tP) / cyc : 0, k = Math.floor(u) + 1, ph = fract(u);
+    const on = (dummy || prod) && ph > 0.12 && ph < 0.92 ? 1 : 0;
+    const coat = (1 - Math.exp(-clamp((t - tD) / cyc, 0, D) / 1.3)) * (1 - seg(t, 9.55, 9.95));
+    o.coat.mat.opacity = 0.03 + 0.55 * coat;
+    o.wafer.mat.color.set(prod ? PROD : DUMMY);
+    o.wafer.mat.emissiveIntensity = 0.4 + ((dummy || prod) && ph < 0.12 ? 1.2 * (1 - ph / 0.12) : 0);
+    this.ready.material.opacity = t >= tR && t < tE ? 0.5 + 0.4 * Math.abs(Math.sin(t * 4)) : 0.06;
+    rigPlasma(o, t, on);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("Seasoning：先把腔壁養到穩定再跑貨", TAG);
+    chip(dummy ? `Dummy #${k}` : prod ? `Product #${k}` : ready ? "Ready" : "PM 後：腔壁乾淨", 772, 40, ready ? C.green : prod ? C.cyan : C.grey, { a: "right", size: 13 });
+    caption(dummy ? [`Seasoning：跑 dummy wafer #${k}`, "用 dummy wafer 或 seasoning recipe 在腔壁長出塗層"]
+      : ready ? ["腔壁狀態到達目標 → Ready", "可用 OES、測試片蝕刻率確認腔體已經穩定"]
+      : prod ? [`產品晶圓 #${k}`, "第一片就和穩定生產時一樣，不會有 first wafer effect"]
+      : ["PM 後：腔壁乾淨", "直接跑產品的話，前幾片會偏（first wafer effect）"]);
+    callout([2.0, 0.12, 1.0], 40, 336, "灰色 = dummy wafer、藍色 = 產品晶圓", C.grey);
+    const Pc = chart(80, 226, "產品晶圓的蝕刻率（相對穩定值）", C.cyan, { xa: 1, xb: 6, ya: 88, yb: 102, xt: [[1, "#1"], [3, "#3"], [6, "#6"]], yt: [[90, "90%"], [95, "95%"], [100, "100%"]], foot: 20 });
+    hline(Pc, 100, C.green, "穩定值");
+    plot(Pc, (v) => 100 - 9 * Math.exp(-(v - 1) / 1.3), 1, 6, C.grey, { dash: [4, 3], w: 1.5, glow: 0 });
+    const done = prod ? (ph > 0.5 ? k : k - 1) : t >= tE ? P : 0, pts = [];
+    for (let i = 1; i <= done; i++) pts.push([Pc.X(i), Pc.Y(100 - 0.4 * (rnd(i) - 0.5))]);
+    line(pts, C.lime); pts.forEach(([x, y]) => dot(x, y, C.lime, 3.5));
+    legendRow(Pc.x0 + 6, 296, [["沒有 seasoning", C.grey, true], ["有 seasoning", C.lime, false]]);
+    panel(PX, 316, PW, 86, "腔壁狀態", C.amber);
+    meter(PX + 14, 352, "塗層覆蓋", coat, C.amber, coat > 0.95 ? "到達目標" : "累積中");
+    text("Dummy wafer 片數（示意）", PX + 176, 352, { size: 12, c: C.dim, w: 500 });
+    text(`${dummy ? k : t >= tR ? D : 0} / ${D}`, PX + PW - 14, 372, { size: 16, c: C.grey, w: 700, mono: true, a: "right" });
+    bottomChips("時機：PM、長時間閒置、換 recipe 之後", "取捨：片數越多越穩，但耗時間和 dummy wafer");
+  },
+});
+
+// =====================================================================
+// 腔壁沉積與漂移：越積越厚 → 蝕刻率慢慢偏移
+// =====================================================================
+addScene("wall-drift", {
+  dur: 10, fps: 15,
+  setup(g) {
+    this.o = rig(g); this.o.coat.mesh.visible = false;
+    this.layers = [0, 1, 2, 3, 4, 5].map((i) => { const c = cyl(g, 3.1 - i * 0.07, 0.15, 4.85, i % 2 ? [0xa8743a, 0xffc861] : M.polymer, { opacity: 0.4, open: true, emissive: 0x6a3a10, ei: 0.5 }); c.lines.visible = false; return c; });
+    this.top = cyl(g, 2.9, 4.6, 4.98, M.polymer, { opacity: 0.6, emissive: 0x6a3a10, ei: 0.5 }); this.top.lines.visible = false;
+  },
+  render(t) {
+    camLeft(t, this.dur, RIGCAM);
+    const o = this.o, Wn = 500 * clamp((t - 0.3) / 8.4), reset = 1 - seg(t, 9.2, 9.8), L = (Wn / 500) * 6 * reset;
+    this.layers.forEach((c, i) => { const a = clamp(L - i); c.mat.opacity = 0.42 * a; c.mesh.visible = a > 0.01; });
+    const th = (Wn / 500) * 0.38 * reset; this.top.mesh.visible = th > 0.01; this.top.mesh.scale.y = Math.max(0.01, th / 0.38); this.top.mesh.position.y = 4.98 - th / 2;
+    o.wafer.mat.emissiveIntensity = 0.4 + 0.5 * Math.abs(Math.sin(t * 9));
+    rigPlasma(o, t, t < 8.8 ? 1 : 0);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("腔壁沉積與漂移：越積越厚，結果慢慢偏", TAG);
+    const er = (w) => 100 - 0.012 * w, out = er(Wn) < 96;
+    chip(t < 9.2 ? `累積 ${Math.round(Wn)} 片` : "清潔 / PM 後", 772, 40, out ? C.red : C.yellow, { a: "right", mono: true, size: 13 });
+    caption(t >= 9.2 ? ["清潔 / PM：沉積清掉，回到起點", "之後再 season 才能回到穩定狀態"]
+      : Wn < 150 ? ["每片晶圓的產物和聚合物都會沉積在腔壁、上電極上", "一層一層越積越厚"]
+      : !out ? ["壁面條件慢慢改變", "吸附 / 復合自由基的狀況、沉積物被打回電漿的量都在變", "→ 蝕刻率、CD 慢慢漂移"]
+      : ["蝕刻率超出管制界線", "要排清潔或 PM，或靠 WAC 讓腔壁每片都回到同一個起點"]);
+    callout([-3.0, 3.6, 0.6], 40, 336, "腔壁沉積（一層層變厚）", C.amber, { alpha: reset });
+    const P = chart(80, 300, "蝕刻率 vs. 累積片數", C.cyan, { xa: 0, xb: 500, ya: 92, yb: 104, xt: [[0, "0"], [250, "250"], [500, "500"]], yt: [[94, "94%"], [98, "98%"], [102, "102%"]], xl: "片" });
+    hline(P, 100, C.green, "目標", { left: true }); hline(P, 96, C.red, "LCL"); hline(P, 104, C.red, "UCL");
+    const pts = []; for (let w = 0; w <= Wn; w += 20) pts.push([P.X(w), P.Y(er(w) + 0.5 * (rnd(w) - 0.5))]);
+    line(pts, C.cyan, { w: 1.5 }); pts.forEach(([x, y], i) => dot(x, y, er(i * 20) < 96 ? C.red : C.cyan, 2.5));
+    bottomChips("監控：SPC 趨勢、RF 小時數、OES", "對策：WAC、season、定期清潔 / PM");
+  },
+});
+
+// =====================================================================
+// WAC：沒有晶圓時點電漿，把腔壁清回同一個起點
+// =====================================================================
+addScene("wac", {
+  dur: 12, fps: 15,
+  setup(g) {
+    this.o = rig(g);
+    this.esc = ring(g, 2.5, 0.03, 0xff4d5e, 0.06);
+    this.pump = cyl(g, 0.6, -1.6, -0.8, [0x2a3040, 0x6c7a90]); this.pump.mesh.position.x = 2.0;
+    this.prod = particles(g, 80, 0xd8dde6, 0.07);
+  },
+  render(t) {
+    camLeft(t, this.dur, RIGCAM);
+    const o = this.o, u = t % 6;
+    const etch = u >= 0.3 && u < 2.3, wac = u >= 2.7 && u < 4.6, seas = u >= 4.6 && u < 5.6, hasW = u < 2.5 || u >= 5.8;
+    const coat = u < 0.3 ? 0.25 : u < 2.3 ? lerp(0.25, 0.6, (u - 0.3) / 2) : u < 2.7 ? 0.6 : u < 4.6 ? lerp(0.6, 0, seg(u, 2.8, 4.4)) : u < 5.6 ? lerp(0, 0.25, seg(u, 4.6, 5.5)) : 0.25;
+    o.coat.mat.opacity = 0.03 + 0.6 * coat;
+    o.wafer.mesh.visible = hasW;
+    o.wafer.mat.emissiveIntensity = 0.4 + (u >= 5.8 ? 1.2 * (u - 5.8) / 0.2 : u < 0.3 ? 1.2 * (1 - u / 0.3) : 0);
+    rigPlasma(o, t, etch || wac || seas ? 1 : 0, wac ? 0x7fe9ff : 0xc77dff, wac ? 60 : 110);
+    this.esc.material.opacity = wac ? 0.5 + 0.4 * Math.abs(Math.sin(t * 6)) : 0;
+    // WAC 時：腔壁沉積被吃掉，產物被抽走
+    const pr = [];
+    if (wac) for (let i = 0; i < 80; i++) { const ph = fract(rnd(i + 5) + t * 0.5), th = rnd(i + 6) * Math.PI * 2, y = 0.5 + rnd(i + 7) * 4; const a = [Math.cos(th) * 3.0, y, Math.sin(th) * 3.0], b = [2.0, -1.0, 0]; pr.push([lerp(a[0], b[0], ph * ph), lerp(a[1], b[1], ph), lerp(a[2], b[2], ph * ph), 1 - ph * 0.6]); }
+    place(this.prod, pr);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("WAC：每片之間把腔壁清回原點", TAG);
+    const st = etch || u < 0.3 ? 0 : u < 2.7 ? 1 : wac ? 2 : seas ? 3 : 4;
+    chip(["蝕刻產品晶圓", "出片", "WAC（無晶圓）", "短 season", "下一片進腔"][st], 772, 40, [C.cyan, C.grey, C.blue, C.amber, C.grey][st], { a: "right", size: 13 });
+    caption([["蝕刻產品晶圓", "產物和聚合物沉積在腔壁上"], ["出片：腔壁上多了一層沉積", "不清的話，下一片的腔壁條件就不一樣"], ["WAC：不放晶圓，點 O₂ / NF₃ 等電漿", "把腔壁沉積吃掉，產物被抽走"], ["短 season：再長一層薄塗層", "讓每一片開始時腔壁都在同一個狀態"], ["下一片進腔", "每片都從同一個起點開始 → 結果穩定"]][st]);
+    callout([2.0, 0.05, 1.2], 40, 336, "沒有晶圓：ESC 裸露，WAC recipe 要避免傷到 ESC", C.red, { alpha: wac ? 1 : 0 });
+    const P = chart(80, 214, "蝕刻率 vs. 片號", C.cyan, { xa: 1, xb: 20, ya: 90, yb: 102, xt: [[1, "#1"], [10, "#10"], [20, "#20"]], yt: [[92, "92%"], [96, "96%"], [100, "100%"]], foot: 20 });
+    hline(P, 100, C.green, "");
+    plot(P, (v) => 100 - 0.35 * (v - 1), 1, 20, C.grey, { dash: [4, 3], w: 1.5, glow: 0 });
+    const pts = []; for (let i = 1; i <= 20; i++) pts.push([P.X(i), P.Y(100 - 0.5 * (rnd(i) - 0.5))]);
+    line(pts, C.lime, { w: 1.5 }); pts.forEach(([x, y]) => dot(x, y, C.lime, 2.5));
+    legendRow(P.x0 + 6, 284, [["沒有 WAC：一路漂", C.grey, true], ["每片 WAC", C.lime, false]]);
+    // 一個循環的時間軸
+    panel(PX, 304, PW, 98, "每片的循環", C.amber);
+    const segs = [["蝕刻", 0.3, 2.3, C.cyan], ["出片", 2.3, 2.7, C.grey], ["WAC", 2.7, 4.6, C.blue], ["season", 4.6, 5.6, C.amber], ["進片", 5.6, 6, C.grey]];
+    const bx = (v) => lerp(PX + 14, PX + PW - 14, v / 6);
+    segs.forEach(([s, a, b, col]) => { hctx.save(); hctx.globalAlpha = 0.75; hctx.fillStyle = col; hctx.fillRect(bx(a) + 1, 338, bx(b) - bx(a) - 2, 16); hctx.restore(); if (b - a > 0.6) text(s, (bx(a) + bx(b)) / 2, 374, { size: 11, c: col, w: 700, a: "center" }); });
+    line([[bx(u), 330], [bx(u), 362]], C.yellow, { w: 2 });
+    text("WAC 加長每片時間，但換到穩定的腔壁條件", PX + 14, 394, { size: 11, c: C.dim, w: 500 });
+    bottomChips("監控：WAC 後的 OES、蝕刻率趨勢", "要點：WAC 太強傷 ESC / 零件，太弱清不乾淨");
+  },
+});
+
+// =====================================================================
+// 剝落微粒與記憶效應
+// =====================================================================
+addScene("flaking", {
+  dur: 12, fps: 15,
+  setup(g) { this.o = rig(g); this.flakes = particles(g, 40, 0xffb36b, 0.1); this.def = particles(g, 60, 0xff4d5e, 0.07); this.out = particles(g, 70, 0x6dff6a, 0.09); },
+  render(t) {
+    camLeft(t, this.dur, RIGCAM);
+    const o = this.o, A = t < 6, h = 1000 * clamp(t / 5.6);
+    o.coat.mat.opacity = A ? 0.55 + 0.25 * (h / 1000) : 0.5;
+    o.coat.mat.color.set(A ? 0x8a5a2a : 0x2f6a3a); o.coat.mat.emissive.set(A ? 0x6a3a10 : 0x1a5a20);
+    rigPlasma(o, t, 1, A ? 0xc77dff : 0x7fb0ff, A ? 110 : 70);
+    // A：剝落的碎片掉到晶圓上
+    const pr = h > 600 ? (h - 600) / 400 : 0, fl = [], df = [];
+    if (A) {
+      const nf = Math.round(40 * pr);
+      for (let i = 0; i < nf; i++) { const ph = fract(rnd(i + 3) + t * 0.35), th = rnd(i + 4) * Math.PI * 2, r0 = 3.05, r1 = rnd(i + 5) * 2.1, y0 = 1.5 + rnd(i + 6) * 3; fl.push([Math.cos(th) * lerp(r0, r1, ph), lerp(y0, 0.15, ph * ph), Math.sin(th) * lerp(r0, r1, ph)]); }
+      const nd = Math.round(60 * pr * pr);
+      for (let i = 0; i < nd; i++) { const r = Math.sqrt(rnd(i + 50)) * 2.2, th = rnd(i + 51) * Math.PI * 2; df.push([Math.cos(th) * r, 0.14, Math.sin(th) * r]); }
+    }
+    place(this.flakes, fl); place(this.def, df);
+    // B：上一個 recipe 的殘留從腔壁放出來
+    const ou = [], tb = (t - 6) / 6;
+    if (!A) { const n = Math.round(70 * Math.exp(-tb * 2.5)); for (let i = 0; i < n; i++) { const ph = fract(rnd(i + 80) + t * 0.4), th = rnd(i + 81) * Math.PI * 2, y = 0.6 + rnd(i + 82) * 3.8; ou.push([Math.cos(th) * lerp(3.0, 1.2, ph), y + ph * 0.3, Math.sin(th) * lerp(3.0, 1.2, ph), 1 - ph * 0.5]); } }
+    place(this.out, ou);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("剝落微粒與記憶效應", TAG);
+    chip(A ? `RF ${Math.round(h)} h` : "換成 recipe B", 772, 40, A ? (h > 800 ? C.red : C.yellow) : C.blue, { a: "right", mono: A, size: 13 });
+    caption(A ? (h < 600 ? ["微粒：腔壁沉積越來越厚", "沉積還附著得住，微粒數低"] : ["沉積太厚 → 應力累積、龜裂剝落", "碎片掉到晶圓上 → 微粒缺陷（紅點）"])
+      : ["記憶效應：換 recipe 後，腔壁放出上一個 recipe 的殘留", "（綠點）混進新的電漿 → 前幾片的結果偏掉，之後才穩定"]);
+    callout([-3.0, 3.4, 0.6], 40, 336, A ? "腔壁沉積（橘）：太厚會剝落" : "腔壁上 recipe A 的殘留（綠）", A ? C.amber : C.lime);
+    const P1 = chart(80, 160, "微粒數 vs. RF 小時", C.red, { xa: 0, xb: 1000, ya: 0, yb: 100, xt: [[0, "0"], [500, "500"], [1000, "1000 h"]], yt: [[0, "0"], [50, "50"], [100, "100"]] });
+    const pc = (v) => 4 + 90 * Math.max(0, (v - 600) / 400) ** 2;
+    hline(P1, 30, C.red, "管制上限");
+    plot(P1, pc, 0, A ? h : 1000, C.red, { alpha: A ? 1 : 0.35 });
+    if (A) dot(P1.X(h), P1.Y(pc(h)), C.yellow, 4.5);
+    const P2 = chart(246, 156, "換 recipe 後：蝕刻率 vs. 片號", C.lime, { xa: 1, xb: 8, ya: 88, yb: 102, xt: [[1, "#1"], [4, "#4"], [8, "#8"]], yt: [[90, "90%"], [100, "100%"]] });
+    hline(P2, 100, C.green, "");
+    const nb = A ? 0 : 1 + 7 * clamp(tb / 0.9), pts = [];
+    for (let i = 1; i <= Math.floor(nb); i++) pts.push([P2.X(i), P2.Y(100 - 10 * Math.exp(-(i - 1) / 1.4))]);
+    line(pts, C.lime); pts.forEach(([x, y]) => dot(x, y, C.lime, 3));
+    if (A) text("（下半段播放）", (P2.x0 + P2.x1) / 2, (P2.y0 + P2.y1) / 2, { size: 12, c: C.dim, a: "center", w: 500 });
+    bottomChips(A ? "監控：微粒數、RF 小時數" : "監控：換 recipe 後前幾片的 ER / CD", A ? "對策：定期 WAC、控制 PM 週期、腔壁溫度控制" : "對策：換 recipe 前先 WAC + season，或分機台");
+  },
+});
+
+// =====================================================================
+// RF 傳輸、匹配與老化：設定功率 ≠ 送進電漿的功率
+// =====================================================================
+addScene("rf-match", {
+  dur: 10, fps: 15,
+  setup(g) {
+    this.gen = mbox(g, [0x1a2233, 0x5aa0ff], { emissive: 0x1a3a99, ei: 0.4 }).set(-5.6, -0.2, -0.8, -3.8, 1.4, 0.8);
+    this.mbx = mbox(g, [0x22283a, 0xffb340], { emissive: 0x3a2a10, ei: 0.4 }).set(-2.6, -0.2, -0.7, -1.0, 1.2, 0.7);
+    this.knobs = [-2.2, -1.4].map((x) => { const k = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.2, 6), new THREE.MeshStandardMaterial({ color: 0xffb340, emissive: 0x6a4a10, emissiveIntensity: 0.6 })); k.position.set(x, 1.3, 0); g.add(k); return k; });
+    this.ch = cyl(g, 2.2, 0, 3.6, [0x3a4658, 0x8fa8d0], { opacity: 0.16, open: true });
+    cyl(g, 2.3, 3.6, 3.85, M.mask, { opacity: 0.3 });
+    this.ch.mesh.position.x = 2.4;
+    const chuck = cyl(g, 1.8, -0.6, 0, [0x0f1a2c, 0x2c4a6e]); chuck.mesh.position.x = 2.4;
+    const wafer = cyl(g, 1.6, 0, 0.1, M.si, { emissive: 0x0a3a66, ei: 0.5 }); wafer.mesh.position.x = 2.4;
+    this.plasma = cyl(g, 1.9, 0.4, 3.3, [0x5a1a8a, 0xc77dff], { opacity: 0.12, emissive: 0x9a3ce0, ei: 0.8 }); this.plasma.mesh.position.x = 2.4; this.plasma.lines.visible = false;
+    this.conn = mbox(g, [0x6a6a6a, 0xffffff], { emissive: 0xff3a10, ei: 0 }).set(2.1, -1.3, -0.3, 2.7, -0.6, 0.3);
+    this.path = new THREE.CatmullRomCurve3([[-3.8, 0.5, 0], [-2.6, 0.5, 0], [-1.0, 0.5, 0], [0.4, 0.5, 0], [1.2, -1.0, 0], [2.4, -1.0, 0], [2.4, -0.6, 0]].map((p) => new THREE.Vector3(...p)), false, "catmullrom", 0.1);
+    this.cable = new THREE.Mesh(new THREE.TubeGeometry(this.path, 120, 0.1, 8, false), new THREE.MeshStandardMaterial({ color: 0x5a3a20, emissive: 0xff5a10, emissiveIntensity: 0 }));
+    g.add(this.cable);
+    this.fwd = particles(g, 40, 0xffd23d, 0.12); this.ref = particles(g, 30, 0xff4d5e, 0.12);
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 18, h: 7.5, a0: 0.25, amp: 0.05, look: [-1.0, 1.7, 0] });
+    const reset = seg(t, 9.3, 9.8), h = 2000 * clamp((t - 0.4) / 8.6) * (1 - reset), k = h / 2000;
+    const loss = 2 + 6 * k ** 1.5, refl = 0.5 + 4 * k ** 2.2, del = 100 - loss - refl, er = 100 - 1.05 * (loss + refl - 2.5);
+    this.cable.material.emissiveIntensity = 0.15 * k; this.conn.mat.emissiveIntensity = 1.4 * k ** 1.5;
+    this.knobs.forEach((kb, i) => { kb.rotation.y = (i ? -1 : 1) * (k * 2.4 + 0.15 * Math.sin(t * 3)); });
+    this.plasma.mat.opacity = 0.08 + 0.06 * del / 100; this.plasma.mat.emissiveIntensity = 0.5 + 0.5 * (del - 85) / 15;
+    const fw = [], rf = [];
+    for (let i = 0; i < 40; i++) fw.push([...this.path.getPointAt(fract(i / 40 + t * 0.12)).toArray(), 0.9]);
+    const nr = Math.round(30 * clamp(refl / 4.5));
+    for (let i = 0; i < nr; i++) rf.push([...this.path.getPointAt(1 - fract(i / 30 + t * 0.15)).toArray(), 0.8]);
+    place(this.fwd, fw); place(this.ref, rf);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("RF 傳輸、匹配與老化：設定功率 ≠ 送進電漿的功率", TAG);
+    chip(reset > 0.3 ? "PM：更換零件" : `RF ${Math.round(h)} h`, 772, 40, k > 0.7 ? C.red : C.yellow, { a: "right", mono: reset <= 0.3, size: 13 });
+    caption(reset > 0.3 ? ["PM：更換電纜、接頭、耗材 → 回到起點", "換完零件常伴隨一次 shift，要重新確認 / matching"]
+      : k < 0.2 ? ["新零件：匹配良好", "送進電漿的功率 ≈ 設定值"]
+      : k < 0.6 ? ["RF 小時累積：接頭、電纜、電極老化", "接觸電阻變大 → 一部分功率變成熱（接頭發紅）"]
+      : ["腔體阻抗漂移 → 匹配器調到極限", "反射功率（紅點）變多 → 實際送進電漿的更少"]);
+    callout([-4.7, 1.4, 0.8], 40, 160, "RF 產生器（設定 1000 W）", C.blue);
+    callout([-1.8, 1.4, 0.4], 250, 160, "匹配器：電容自動調整", C.amber);
+    callout([2.4, -0.95, 0.35], 40, 336, "接頭 / 電纜：老化發熱 = 損耗", C.red);
+    const P = chart(80, 196, "隨 RF 小時漂移", C.cyan, { xa: 0, xb: 2000, ya: 84, yb: 102, xt: [[0, "0"], [1000, "1000"], [2000, "2000 h"]], yt: [[86, "86%"], [94, "94%"], [100, "100%"]], foot: 20 });
+    const fD = (v) => 100 - (2 + 6 * (v / 2000) ** 1.5) - (0.5 + 4 * (v / 2000) ** 2.2), fE = (v) => 100 - 1.05 * (100 - fD(v) - 2.5);
+    plot(P, fD, 0, h, C.yellow); plot(P, fE, 0, h, C.magenta);
+    dot(P.X(h), P.Y(del), C.yellow, 4); dot(P.X(h), P.Y(er), C.magenta, 4);
+    legendRow(P.x0 + 6, 268, [["送進電漿的功率", C.yellow], ["蝕刻率", C.magenta]]);
+    panel(PX, 284, PW, 118, "功率去哪了（設定 1000 W）", C.yellow);
+    [["正向功率（產生器輸出）", 1000, C.blue], ["反射回產生器", refl * 10, C.red], ["接頭 / 電纜損耗", loss * 10, C.orange], ["送進電漿", del * 10, C.yellow]].forEach(([s, v, col], i) => {
+      text(s, PX + 14, 322 + i * 21, { size: 12, c: col, w: 600 });
+      text(`${Math.round(v)} W`, PX + PW - 14, 322 + i * 21, { size: 12, c: col, w: 700, mono: true, a: "right" });
+    });
+    bottomChips("監控：反射功率、Vpp / Vdc、匹配器位置、RF 小時", "對策：定期 PM 換耗材、RF 校正、機台 matching");
+  },
+});
+
+// =====================================================================
+// Macro loading：開口面積越大，自由基被吃得越多
+// =====================================================================
+addScene("macro-loading", {
+  dur: 10, fps: 15,
+  setup(g) {
+    this.W = [-2.6, 2.6].map((cx) => {
+      cyl(g, 2.1, -0.5, 0, [0x0f1a2c, 0x2c4a6e]).mesh.position.x = cx;
+      const sites = []; for (let x = -1.8; x <= 1.81; x += 0.3) for (let z = -1.8; z <= 1.81; z += 0.3) if (x * x + z * z < 1.9 ** 2) sites.push([x, z]);
+      const order = sites.map((_, i) => i).sort((a, b) => rnd(a + 17) - rnd(b + 17));
+      const rank = []; order.forEach((s, i) => (rank[s] = i / sites.length));
+      const tiles = new THREE.InstancedMesh(new THREE.BoxGeometry(0.27, 0.12, 0.27), new THREE.MeshStandardMaterial({ roughness: 0.5 }), sites.length);
+      g.add(tiles);
+      const pl = cyl(g, 1.95, 0.3, 3.2, [0x5a1a8a, 0xc77dff], { opacity: 0.07, emissive: 0x9a3ce0, ei: 0.6 }); pl.mesh.position.x = cx; pl.lines.visible = false;
+      return { cx, sites, rank, tiles, rad: particles(g, 90, COL.rad, 0.08), fl: particles(g, 30, 0xffffff, 0.09) };
+    });
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 16.5, h: 8.5, a0: 0.0, amp: 0.04, look: [0, 1.9, 0] });
+    const fR = 0.1 + 0.6 * (seg(t, 0.5, 4.5) - seg(t, 6, 9.5)), fs = [0.1, fR], tmp = new THREE.Object3D();
+    const erf = (f) => (100 * (1 + 2.2 * 0.1)) / (1 + 2.2 * f);
+    this.W.forEach((w, j) => {
+      const f = fs[j], er = erf(f) / 100;
+      w.sites.forEach(([x, z], i) => { const open = w.rank[i] < f; tmp.position.set(w.cx + x, open ? 0.02 - 0.05 * er : 0.06, z); tmp.updateMatrix(); w.tiles.setMatrixAt(i, tmp.matrix); w.tiles.setColorAt(i, new THREE.Color(open ? 0x4fc3ff : 0xc98a2a).multiplyScalar(open ? 0.9 : 0.55)); });
+      w.tiles.instanceMatrix.needsUpdate = true; w.tiles.instanceColor.needsUpdate = true;
+      const rad = []; drift(rad, { t, n: Math.round(90 * (1 - 0.85 * (f - 0.1) / 0.6) * 0.9 + 6), seed: 3 + j * 50, x0: -1.9, x1: 1.9, y0: 0.3, y1: 3.1, z0: -1.9, z1: 1.9, sp: 0.1, ok: ([x, , z]) => x * x + z * z < 3.4 });
+      place(w.rad, rad.map(([x, y, z]) => [x + w.cx, y, z]));
+      const fl = [], opens = w.sites.filter((_, i) => w.rank[i] < f);
+      for (let i = 0; i < Math.min(30, Math.round(40 * f)); i++) { const [x, z] = opens[Math.floor(rnd(i + Math.floor(t * 10) * 7 + j) * opens.length) % opens.length]; fl.push([w.cx + x, 0.12, z]); }
+      place(w.fl, fl);
+    });
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("Macro loading：開口面積越大，蝕刻越慢", TAG);
+    chip(`右片開口 ${Math.round(fR * 100)}%`, 772, 40, C.yellow, { a: "right", mono: true, size: 13 });
+    caption(["整片晶圓的開口面積（露出要蝕刻的面積）不同", "開口越多，消耗的自由基越多 → 濃度變低 → 蝕刻率下降"]);
+    this.W.forEach((w, j) => {
+      const p = proj(w.cx, 3.4, 0);
+      text(j ? "開口多" : "開口少（10%）", p[0], p[1], { size: 14, c: j ? C.orange : C.cyan, w: 700, a: "center" });
+      const q = proj(w.cx, -0.6, 2.2);
+      chip(`ER ${Math.round(erf(fs[j]))}%`, q[0], q[1] + 8, j ? C.orange : C.cyan, { a: "center", mono: true, size: 13 });
+    });
+    const P = chart(80, 260, "蝕刻率 vs. 開口面積", C.cyan, { xa: 0, xb: 80, ya: 30, yb: 110, xt: [[0, "0%"], [40, "40%"], [80, "80%"]], yt: [[40, "40%"], [70, "70%"], [100, "100%"]], xl: "開口面積比例" });
+    plot(P, (v) => erf(v / 100), 2, 80, C.cyan);
+    dot(P.X(10), P.Y(erf(0.1)), C.cyan, 4.5); dot(P.X(fR * 100), P.Y(erf(fR)), C.orange, 5);
+    panel(PX, 350, PW, 52, "", C.amber);
+    text("藍 = 開口（露出的 Si）、橘 = 遮罩、白光 = 自由基被消耗", PX + 12, 372, { size: 11, c: C.text, w: 600 });
+    text("換產品（開口率不同）→ 時間 / endpoint 要重調（示意）", PX + 12, 392, { size: 11, c: C.amber, w: 600 });
+    chip("對策：依產品調 recipe / 時間、用 endpoint 控制", 28, 418, C.lime, { size: 13 });
+  },
+});
+
+// =====================================================================
+// Micro loading：密集區與孤立區的蝕刻率不同
+// =====================================================================
+addScene("micro-loading", {
+  dur: 10, fps: 15,
+  setup(g) {
+    this.sol = profileSolid(g, M.si, { yBottom: -3, z0: -1.4, z1: 1.4 });
+    this.dense = [-4.0, -3.4, -2.8, -2.2, -1.6, -1.0]; this.iso = 2.6; this.a = 0.15;
+    const edges = [-5.2, ...this.dense.flatMap((c) => [c - this.a, c + this.a]), this.iso - this.a, this.iso + this.a, 5.2];
+    for (let i = 0; i < edges.length; i += 2) mbox(g, M.mask, { opacity: 0.85 }).set(edges[i], 0, -1.4, edges[i + 1], 0.35, 1.4);
+    this.rad = particles(g, 120, COL.rad, 0.07); this.fl = particles(g, 30, 0xffffff, 0.08);
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 19, h: 7, a0: 0.12, amp: 0.04, look: [0, 0.3, 0] });
+    const p = seg(t, 0.4, 8.2) * (1 - seg(t, 9.3, 9.9)), dI = 2.4 * p, dD = 0.75 * dI, a = this.a;
+    const pts = [[-5.2, 0]];
+    this.dense.forEach((c) => pts.push([c - a, 0], [c - a, -dD], [c + a, -dD], [c + a, 0]));
+    pts.push([this.iso - a, 0], [this.iso - a, -dI], [this.iso + a, -dI], [this.iso + a, 0], [5.2, 0]);
+    this.sol.update(pts);
+    const rad = [];
+    drift(rad, { t, n: 120, seed: 9, x0: -5, x1: 5, y0: 0.5, y1: 3.2, z0: -1.3, z1: 1.3, sp: 0.1, ok: ([x, y, z]) => !(x > -4.4 && x < -0.6) || rnd(Math.floor(x * 10) + Math.floor(z * 10) * 31) > 0.82 });
+    place(this.rad, rad);
+    const fl = []; if (p > 0 && p < 1) for (let i = 0; i < 24; i++) { const c = i < 18 ? this.dense[i % 6] : this.iso; fl.push([c + (rnd(i + Math.floor(t * 10)) - 0.5) * 0.2, (c === this.iso ? -dI : -dD) + 0.05, (rnd(i * 3 + Math.floor(t * 10)) - 0.5) * 2]); }
+    place(this.fl, fl);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("Micro loading：密集區和孤立區蝕刻得不一樣", TAG);
+    caption(["同一片晶圓上，局部圖形密度不同", "密集區附近的自由基很快被吃光 → 局部濃度低 → 蝕刻較慢"]);
+    const pd = proj(-2.5, 0.6, 0), pi = proj(this.iso, 0.6, 0);
+    text("密集區 dense", pd[0], pd[1] - 30, { size: 14, c: C.orange, w: 700, a: "center" });
+    text("孤立區 iso", pi[0], pi[1] - 30, { size: 14, c: C.cyan, w: 700, a: "center" });
+    const P = chart(80, 226, "蝕刻深度 vs. 時間", C.cyan, { xa: 0, xb: 1, ya: 0, yb: 2.6, xt: [[0, "0"], [1, "時間"]], yt: [[0, "0"], [1.2, "中"], [2.4, "深"]], foot: 20 });
+    const pp = seg(t, 0.4, 8.2);
+    plot(P, (v) => 2.4 * v, 0, pp, C.cyan); plot(P, (v) => 1.8 * v, 0, pp, C.orange);
+    legendRow(P.x0 + 6, 296, [["孤立區", C.cyan], ["密集區", C.orange]]);
+    panel(PX, 316, PW, 86, "Micro loading（示意）", C.amber);
+    text("= (ER iso − ER dense) / ER iso ≈ 25%", PX + 14, 350, { size: 13, c: C.amber, w: 700, mono: true });
+    text("CD 也會有 iso / dense bias（側壁沉積量不同）", PX + 14, 372, { size: 11.5, c: C.text, w: 500 });
+    text("有些條件會反過來（dense 較快 = reverse loading）", PX + 14, 392, { size: 11, c: C.dim, w: 500 });
+    bottomChips("監控：dense / iso 深度與 CD 的差異", "對策：調壓力、氣體流量、聚合物比例");
+  },
+});
+
+// =====================================================================
+// ESC 溫度效應：溫度 → 側壁聚合物 → CD 與輪廓
+// =====================================================================
+addScene("esc-temp", {
+  dur: 10, fps: 15,
+  setup(g) {
+    this.esc = mbox(g, [0x2a3040, 0x6c7a90], { emissive: 0xff3a10, ei: 0.2 }).set(-4.2, -3.6, -1.6, 4.2, -2.9, 1.6);
+    this.sol = profileSolid(g, M.si, { yBottom: -2.9, z0: -1.4, z1: 1.4 });
+    this.cs = [-1.6, 1.6]; this.a0 = 0.45;
+    [[-4, -1.6 - 0.45], [-1.6 + 0.45, 1.6 - 0.45], [1.6 + 0.45, 4]].forEach(([a, b]) => mbox(g, M.mask, { opacity: 0.85 }).set(a, 0, -1.4, b, 0.35, 1.4));
+    this.poly = [0, 1, 2, 3].map(() => polySolid(g, M.polymer, { z0: -1.38, z1: 1.38, emissive: 0x6a3a10, ei: 0.6 }));
+    this.ions = particles(g, 30, COL.ion, 0.07); this.trail = particles(g, 90, COL.ion, 0.04); this.flash = particles(g, 20, 0xffffff, 0.08);
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 15.5, h: 4.5, a0: 0.15, amp: 0.04, look: [0, -0.3, 0] });
+    const k = 0.5 - 0.5 * Math.cos((2 * Math.PI * t) / this.dur), T = Math.round(30 + 40 * k), d = 2.3, a0 = this.a0;
+    const pt = lerp(0.16, 0.02, k), at = a0 + 0.1 * k, ab = a0 - lerp(0.26, -0.04, k);
+    this.esc.mat.emissiveIntensity = 0.1 + 1.2 * k; this.esc.mat.color.set(new THREE.Color(0x2a4a8a).lerp(new THREE.Color(0x8a2a1a), k));
+    const pts = [[-4, 0]];
+    this.cs.forEach((c) => pts.push([c - at, 0], [c - lerp(at, ab, 0.5) - 0.06 * k, -d / 2], [c - ab, -d], [c + ab, -d], [c + lerp(at, ab, 0.5) + 0.06 * k, -d / 2], [c + at, 0]));
+    pts.push([4, 0]);
+    this.sol.update(pts);
+    this.cs.forEach((c, j) => {
+      this.poly[j * 2].update([[c - at, 0], [c - at + pt, 0], [c - ab + pt * 0.6, -d], [c - ab, -d]]);
+      this.poly[j * 2 + 1].update([[c + at - pt, 0], [c + at, 0], [c + ab, -d], [c + ab - pt * 0.6, -d]]);
+    });
+    const ions = [], tr = [], fl = [];
+    ionRain(ions, tr, fl, { t, n: 30, seed: 5, x0: -2.0, x1: 2.0, z0: -1.2, z1: 1.2, top: 3.2, bottom: -d, speed: 0.6 });
+    const ok = ([x]) => this.cs.some((c) => Math.abs(x - c) < ab - 0.05);
+    place(this.ions, ions.filter(ok)); place(this.trail, tr.filter(ok)); place(this.flash, fl.filter(ok));
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("ESC 溫度效應：溫度改變側壁保護", TAG);
+    chip(`ESC 溫度 ${T}°C（示意）`, 772, 40, k > 0.5 ? C.red : C.blue, { a: "right", mono: true, size: 13 });
+    caption(k < 0.35 ? ["溫度低：聚合物容易沉積", "側壁保護厚 → 線寬（CD）偏大、輪廓偏斜"] : k > 0.65 ? ["溫度高：聚合物不容易沉積", "側壁保護薄 → 側向被吃 → CD 變小，太熱會 undercut"] : ["溫度上升中", "聚合物沉積變少，側壁保護變薄"]);
+    callout([this.cs[1] + ab - 0.05, -d / 2, 1.4], 434, 336, "側壁聚合物（橘）", C.amber, { a: "right" });
+    callout([-3.5, -3.25, 1.6], 40, 336, "ESC：溫度控制晶圓溫度", k > 0.5 ? C.red : C.blue);
+    const cd = (T) => 46 - 0.18 * (T - 50);
+    const P = chart(80, 226, "線寬 CD vs. ESC 溫度", C.cyan, { xa: 30, xb: 70, ya: 38, yb: 54, xt: [[30, "30°C"], [50, "50°C"], [70, "70°C"]], yt: [[40, "40"], [46, "46"], [52, "52 nm"]] });
+    plot(P, cd, 30, 70, C.cyan); dot(P.X(T), P.Y(cd(T)), C.yellow, 5);
+    panel(PX, 316, PW, 86, "重點", C.amber);
+    text("溫度是調 CD 的有效旋鈕 → 多區 ESC 可修 CD 分布", PX + 14, 350, { size: 12, c: C.amber, w: 700 });
+    text("方向與幅度依 chemistry 而定（數值為示意）", PX + 14, 372, { size: 11.5, c: C.text, w: 500 });
+    text("延伸：Hydra 多區溫控（by-site 補償）", PX + 14, 392, { size: 11, c: C.dim, w: 500 });
+    bottomChips("監控：ESC 溫度、He 背壓（晶圓與 ESC 的熱傳）", "應用：中心 / 邊緣溫區調 CD 均勻度");
+  },
+});
+
+// =====================================================================
+// Endpoint 偵測（OES）
+// =====================================================================
+addScene("endpoint", {
+  dur: 10, fps: 15,
+  setup(g) {
+    this.o = rig(g); this.o.coat.mesh.visible = false;
+    this.ox = cyl(g, 2.3, 0.12, 0.22, M.oxide, { emissive: 0x1a2a44, ei: 0.6 });
+    this.film = cyl(g, 2.3, 0.22, 0.6, M.resist, { emissive: 0x6a4a10, ei: 0.5 });
+    this.win = mbox(g, [0x8fd3ff, 0xbfe9ff], { opacity: 0.6, emissive: 0x2a6a99, ei: 0.8 }).set(3.15, 2.0, -0.5, 3.35, 3.0, 0.5);
+    this.spec = mbox(g, [0x1a2233, 0x5dffb0], { emissive: 0x1a6a4a, ei: 0.5 }).set(4.6, 1.7, -0.7, 6.0, 3.3, 0.7);
+    const fiber = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.3, 8), new THREE.MeshStandardMaterial({ color: 0x5dffb0, emissive: 0x2a8a5a, emissiveIntensity: 0.6 }));
+    fiber.rotation.z = Math.PI / 2; fiber.position.set(3.95, 2.5, 0); g.add(fiber);
+    this.ph = particles(g, 30, 0xffffff, 0.08);
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 23, h: 10, a0: 0.55, amp: 0.04, look: [1.0, 2.8, 0] });
+    const o = this.o, tc = 5.0, on = t > 0.4 && t < 7.0 ? 1 : 0, reset = seg(t, 9.3, 9.8);
+    const th = Math.max(0, 0.38 * (1 - clamp((t - 0.4) / (tc - 0.4)))) * (1 - reset) + 0.38 * reset * (t > 9.3 ? 1 : 0);
+    this.film.mesh.visible = th > 0.004; this.film.mesh.scale.y = Math.max(0.01, th / 0.38); this.film.mesh.position.y = 0.22 + th / 2;
+    const S = (tt) => (tt < 0.4 ? 0.1 : 0.25 + 0.75 / (1 + Math.exp((tt - (tc + 0.2)) / 0.12)));
+    const sig = S(t), clear = t > tc + 0.2, col = clear ? 0x7fb0ff : 0xff7ad9;
+    rigPlasma(o, t, on, col, 90);
+    const p = []; if (on) for (let i = 0; i < 30; i++) { const ph = fract(rnd(i) + t * 0.6), a = [rnd(i + 1) * 2 - 1, 2.0 + rnd(i + 2) * 1.5, rnd(i + 3) - 0.5], b = [3.25, 2.5, 0], c = [5.2, 2.5, 0]; p.push(ph < 0.6 ? [lerp(a[0], b[0], ph / 0.6), lerp(a[1], b[1], ph / 0.6), lerp(a[2], b[2], ph / 0.6)] : [lerp(b[0], c[0], (ph - 0.6) / 0.4), 2.5, 0]); }
+    place(this.ph, p); this.ph.material.color.set(col);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("Endpoint 偵測（OES）：什麼時候該停", TAG);
+    const st = t < 0.4 || t >= 9.3 ? 0 : t < tc + 0.25 ? 1 : t < 7 ? 2 : 3;
+    chip(["待機", "主蝕刻", "Endpoint → Over-etch", "停止"][st], 772, 40, [C.grey, C.magenta, C.yellow, C.grey][st], { a: "right", size: 13 });
+    caption([["電漿的光從視窗經光纖進到光譜儀（OES）", "持續監看某一條譜線的強度"], ["主蝕刻：上層膜（橘）被蝕刻", "蝕刻產物發出的譜線很強"], ["上層膜蝕穿 → 產物變少 → 譜線強度掉下來", "抓到 endpoint 後再加一段 over-etch"], ["Over-etch 結束 → 停止", "清乾淨各處殘留，又不能傷到下層太多"]][st]);
+    callout([3.25, 3.0, 0.5], 434, 290, "視窗 → 光纖 → 光譜儀", C.green, { a: "right" });
+    callout([-1.6, 0.5, 1.4], 40, 336, "橘 = 要蝕刻的膜、藍 = 下層（停止層）", C.amber);
+    const P = chart(80, 196, "監看譜線的強度 vs. 時間", C.magenta, { xa: 0, xb: 8, ya: 0, yb: 1.15, xt: [[0, "0"], [4, "4 s"], [8, "8 s"]], yt: [[0.25, "低"], [1, "高"]] });
+    hline(P, 0.62, C.grey, "門檻", { left: true });
+    const te = 5.25;
+    if (t > te) { hctx.save(); hctx.fillStyle = "rgba(255,210,61,.12)"; hctx.fillRect(P.X(te), P.y1, P.X(7) - P.X(te), P.y0 - P.y1); hctx.restore(); text("over-etch", (P.X(te) + P.X(7)) / 2, P.y1 + 14, { size: 10, c: C.yellow, w: 700, a: "center" }); line([[P.X(te), P.y1], [P.X(te), P.y0]], C.yellow, { w: 1.5, glow: 0 }); text("endpoint", P.X(te) - 4, P.y1 + 14, { size: 10, c: C.yellow, w: 700, a: "right" }); }
+    const tn = Math.min(t, 7), pts = []; for (let i = 0; i <= 140; i++) { const tt = (tn * i) / 140; pts.push([P.X(tt), P.Y(S(tt) + 0.03 * Math.sin(tt * 37))]); }
+    if (t < 9.3) line(pts, C.magenta);
+    panel(PX, 284, PW, 118, "光譜（示意）", C.green);
+    const bx0 = PX + 20, bw = (PW - 40) / 24;
+    for (let i = 0; i < 24; i++) {
+      const hl = i === 9, v = hl ? (on ? sig : 0.05) : on ? 0.15 + 0.35 * rnd(i + 3) * (clear && i === 15 ? 2 : 1) : 0.03, hh = v * 70;
+      hctx.save(); hctx.fillStyle = hl ? C.magenta : "rgba(93,255,176,.6)"; if (hl) { hctx.shadowColor = C.magenta; hctx.shadowBlur = 10; } hctx.fillRect(bx0 + i * bw + 1, 390 - hh, bw - 2, hh); hctx.restore();
+    }
+    text("← 監看的譜線", bx0 + 10 * bw + 2, 330, { size: 11, c: C.magenta, w: 700 });
+    text("波長 →", PX + PW - 14, 398, { size: 10, c: C.dim, w: 500, a: "right" });
+    bottomChips("為什麼要 over-etch：各處蝕穿時間不同", "開口率太低 → 訊號弱、endpoint 不好抓");
+  },
+});
+
+// =====================================================================
+// 輪廓缺陷：bowing、microtrenching、notching、footing
+// =====================================================================
+addScene("profile-defects", {
+  dur: 12, fps: 15,
+  setup(g) {
+    this.B = [["bowing", -6.3], ["micro", -2.1], ["notch", 2.1], ["foot", 6.3]].map(([k, c]) => {
+      mbox(g, M.oxide, { emissive: 0x1a2a44, ei: 0.5 }).set(c - 1.7, -0.4, -1, c + 1.7, 0, 1);
+      const sol = profileSolid(g, M.si, { yBottom: 0, z0: -1, z1: 1 });
+      [[c - 1.7, c - 0.42], [c + 0.42, c + 1.7]].forEach(([a, b]) => mbox(g, M.mask, { opacity: 0.9 }).set(a, 2.2, -1, b, 2.5, 1));
+      const ideal = new THREE.Line(new THREE.BufferGeometry().setFromPoints([[c - 0.42, 2.2], [c - 0.42, 0], [c + 0.42, 0], [c + 0.42, 2.2]].map(([x, y]) => new THREE.Vector3(x, y, 1.02))), new THREE.LineDashedMaterial({ color: 0xffffff, dashSize: 0.12, gapSize: 0.1, transparent: true, opacity: 0.6 }));
+      ideal.computeLineDistances(); g.add(ideal);
+      return { k, c, sol };
+    });
+    this.ions = particles(g, 60, COL.ion, 0.07); this.spec = particles(g, 30, 0xffa04d, 0.09); this.poly = particles(g, 30, 0xffb36b, 0.08);
+    this.plus = particles(g, 12, 0xff4d5e, 0.09); this.minus = particles(g, 16, 0x4fb0ff, 0.08);
+  },
+  render(t) {
+    camOrbit(t, this.dur, { r: 21, h: 4.5, a0: 0, amp: 0.04, look: [0, 0.6, 0] });
+    camera.clearViewOffset();
+    const p = seg(t, 0.4, 7.5) * (1 - seg(t, 11.3, 11.9)), a = 0.42, top = 2.2, N = 12;
+    const ions = [], sp = [], po = [], pl = [], mi = [], info = {};
+    this.B.forEach(({ k, c, sol }) => {
+      let d, bulge = () => 0, corner = 0, notch = 0, foot = 0;
+      if (k === "bowing") { d = 2.0 * p; bulge = (s) => 0.3 * p * Math.sin(Math.PI * s) ** 1.5; }
+      if (k === "micro") { d = 1.7 * p; bulge = (s) => -0.07 * s; corner = 0.3 * p; }
+      if (k === "notch") { d = top * Math.min(1, p / 0.7); notch = seg(p, 0.7, 1); bulge = (s) => (s > 0.86 ? 0.32 * notch * ((s - 0.86) / 0.14) : 0); }
+      if (k === "foot") { d = top * Math.min(1, p / 0.8); foot = seg(p, 0.4, 1); bulge = (s) => -0.3 * foot * clamp((s - 0.78) / 0.22) ** 1.3; }
+      const L = [], R = [];
+      for (let i = 0; i <= N; i++) { const s = i / N; L.push([c - a - bulge(s), top - s * d]); R.push([c + a + bulge(s), top - s * d]); }
+      const bot = corner > 0 ? [[c - a + 0.07 + 0.04, top - d - corner], [c - a + 0.32, top - d], [c + a - 0.32, top - d], [c + a - 0.11, top - d - corner]] : [];
+      sol.update(d < 0.01 ? [[c - 1.7, top], [c + 1.7, top]] : [[c - 1.7, top], ...L, ...bot, ...R.reverse(), [c + 1.7, top]]);
+      info[k] = { c, d, bulge };
+      // 一般離子：垂直往下
+      for (let i = 0; i < 12; i++) { const ph = fract(rnd(i + c * 7) + t * 0.7), x = c + (rnd(i + c * 3) - 0.5) * 0.6; ions.push([x, lerp(3.5, top - d + 0.05, ph), 1.0 * (rnd(i + c) - 0.5)]); }
+      // 說明機制的軌跡（橘色）
+      const path = k === "bowing" ? [[c + 0.25, 3.5], [c - a - bulge(0.45), top - 0.45 * d]] : k === "micro" ? [[c - a + 0.14, 3.5], [c - a + 0.08, top - 0.4 * d], [c - a + 0.1, top - d - corner]] : k === "notch" ? [[c, 3.5], [c, top - d + 0.4], [c - a - 0.3 * notch, top - d + 0.08]] : null;
+      if (path && d > 0.3) for (let i = 0; i < 6; i++) { const [x, y] = along(path.map(([x, y]) => [x + (k === "micro" && i % 2 ? 2 * c - 2 * x : 0), y]), fract(i / 6 + t * 0.5)); sp.push([x, y, 1.02]); }
+      if (k === "foot" && d > 0.5) for (let i = 0; i < 12; i++) { const side = i % 2 ? 1 : -1, ph = fract(i / 12 + t * 0.4), [x, y] = along([[c + side * 0.1, 3.5], [c + side * (a - 0.1), top - d + 0.08]], ph); po.push([x, y, 1.02 * (rnd(i) - 0.5)]); }
+      if (k === "notch" && notch > 0) { for (let i = 0; i < 6; i++) pl.push([c - 0.3 + i * 0.12, 0.08, 1.02 * (rnd(i) - 0.5) * 0.8, notch]); for (let i = 0; i < 8; i++) mi.push([c + (i % 2 ? 1 : -1) * (a + 0.03), top - 0.1 - Math.floor(i / 2) * 0.22, 1.02, notch]); }
+    });
+    place(this.ions, ions); place(this.spec, sp); place(this.poly, po); place(this.plus, pl); place(this.minus, mi);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("常見的輪廓缺陷", TAG);
+    chip("白色虛線 = 理想的垂直輪廓", 772, 40, C.grey, { a: "right", size: 12 });
+    const names = { bowing: ["Bowing 側壁中段被挖大", "離子散射打到側壁", "加強側壁保護"], micro: ["Microtrenching 溝底兩角較深", "離子被側壁反射到角落", "調側壁角度、離子能量"], notch: ["Notching 底部側向缺口", "電荷累積讓離子轉向", "脈衝電漿、少 over-etch"], foot: ["Footing 底部殘留", "底角聚合物多、蝕刻不足", "調聚合物、加 over-etch"] };
+    this.B.forEach(({ k, c }) => {
+      const [n, why, fix] = names[k], pt = proj(c, 3.9, 0), pb = proj(c, -0.4, 1);
+      text(n.split(" ")[0], pt[0], pt[1] - 22, { size: 15, c: C.yellow, w: 700, a: "center" });
+      text(n.split(" ")[1], pt[0], pt[1] - 4, { size: 12, c: C.text, w: 600, a: "center" });
+      text(why, pb[0], pb[1] + 26, { size: 10.5, c: C.orange, w: 600, a: "center" });
+      text(fix, pb[0], pb[1] + 44, { size: 10.5, c: C.lime, w: 600, a: "center" });
+    });
+    legend([["紅 = 離子", C.red], ["橘 = 造成缺陷的離子軌跡", C.orange], ["＋ / − = 累積的電荷", C.blue], ["橘字 = 原因、綠字 = 對策", C.lime]], 32, 348);
+  },
+});
+
+// ---------- 匯出 ----------
+for (const k of Object.keys(SCENES)) SCENES[k].fps = SCENES[k].fps || 15;
+window.SCENES = SCENES;
+window.renderAt = (name, t) => {
+  for (const k of Object.keys(SCENES)) SCENES[k].group.visible = false;
+  SCENES[name].group.visible = true;
+  SCENES[name].render(t);
+  octx.drawImage(glCanvas, 0, 0);
+  octx.drawImage(hud, 0, 0);
+  return out.toDataURL("image/png");
+};
+const name = location.hash.slice(1);
+if (name && SCENES[name]) {
+  const t0 = performance.now();
+  (function loop() { renderAt(name, ((performance.now() - t0) / 1000) % SCENES[name].dur); requestAnimationFrame(loop); })();
+}
+</script>
+</body>
+</html>

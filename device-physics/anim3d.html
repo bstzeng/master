@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<title>Device physics 3D GIF renderer</title>
+<style>
+  body { margin: 0; background: #05070d; }
+  canvas { display: block; }
+</style>
+<script type="importmap">
+  { "imports": { "three": "../nanosheet/vendor/three/three.module.min.js", "three/addons/": "../nanosheet/vendor/three/addons/" } }
+</script>
+</head>
+<body>
+<canvas id="out" width="800" height="450"></canvas>
+<script type="module">
+// 元件物理（FinFET 術語視覺化）課的 3D 場景：與 nanosheet/anim3d.html 共用同一套繪製核心與 three.js（../nanosheet/vendor）。
+// 需要用 http 伺服器開啟（ES module 不能用 file://）。預覽：device-physics/anim3d.html#15-dibl
+import * as THREE from "three";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+
+const W = 800, H = 450; // 版面座標（所有位置都用這個尺寸寫）
+// 輸出倍率：?scale=1.6 → 1280×720（720P）、2.4 → 1920×1080（1080P）；預設 1 → 800×450 預覽
+const S = parseFloat(new URLSearchParams(location.search).get("scale") || "1");
+const FONT = '"Noto Sans TC", "Noto Sans CJK TC", sans-serif';
+const MONO = '"DejaVu Sans Mono", "DM Mono", monospace';
+const C = { cyan: "#22e5ff", magenta: "#ff3df2", lime: "#b6ff3d", red: "#ff4d5e", amber: "#ffb340", orange: "#ffa04d", green: "#5dffb0", blue: "#5aa0ff", yellow: "#ffd23d", grey: "#c8ced8", text: "#e8f6ff", dim: "rgba(232,246,255,.62)" };
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const ease = (k) => { k = clamp(k); return k * k * (3 - 2 * k); };
+const seg = (v, a, b) => ease((v - a) / (b - a)); // v 在 a..b 之間的平滑進度
+const fract = (v) => v - Math.floor(v);
+const rnd = (i) => fract(Math.sin(i * 127.1 + 311.7) * 43758.5453);
+const lerp = (a, b, k) => a + (b - a) * k;
+const tri = (v) => 1 - 4 * Math.abs(fract(v) - 0.5); // -1..1 三角波（彈跳用）
+
+// ---------- three.js ----------
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(S);
+renderer.setSize(W, H);
+renderer.setClearColor(0x05070d, 1);
+const glCanvas = renderer.domElement;
+const hud = document.createElement("canvas");
+hud.width = W * S; hud.height = H * S;
+const hctx = hud.getContext("2d");
+hctx.setTransform(S, 0, 0, S, 0, 0);
+const out = document.getElementById("out");
+out.width = W * S; out.height = H * S;
+const octx = out.getContext("2d");
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x05070d, 24, 44);
+const camera = new THREE.PerspectiveCamera(36, W / H, 0.1, 100);
+scene.add(new THREE.AmbientLight(0x8fb4ff, 0.9));
+const key = new THREE.DirectionalLight(0xffffff, 1.6);
+key.position.set(6, 12, 8);
+scene.add(key);
+const rim = new THREE.DirectionalLight(0xff3df2, 0.6);
+rim.position.set(-8, 4, -6);
+scene.add(rim);
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.9, 0.45, 0.55));
+composer.addPass(new OutputPass());
+composer.setPixelRatio(S);
+const grid = new THREE.GridHelper(60, 60, 0x0e3a4a, 0x0a2230);
+grid.position.y = -2.01;
+scene.add(grid);
+
+// 材料顏色（面, 邊）
+const M = {
+  sub: [0x0f1a2c, 0x2c4a6e], sti: [0x2a3a55, 0x4a6a95], si: [0x1d78c0, 0x4fc3ff], sige: [0xd9822b, 0xffa04d],
+  poly: [0x7c828c, 0xc8ced8], spacer: [0x1f9e6a, 0x5dffb0], inner: [0x14c88a, 0x8dffd0], sd: [0x2a5fd0, 0x5aa0ff],
+  hik: [0xffd23d, 0xffe680], gate: [0xb02cc0, 0xff3df2],
+};
+
+// 單位方塊：用 set(x0,y0,z0,x1,y1,z1) 改尺寸位置，任何一邊為 0 就隱藏
+function mbox(parent, [face, edge], { opacity = 1, emissive = 0x000000, ei = 0, edges = true } = {}) {
+  const g = new THREE.BoxGeometry(1, 1, 1);
+  const mat = new THREE.MeshStandardMaterial({ color: face, transparent: opacity < 1, opacity, roughness: 0.45, metalness: 0.1, emissive, emissiveIntensity: ei, depthWrite: opacity >= 1 });
+  const mesh = new THREE.Mesh(g, mat);
+  parent.add(mesh);
+  let lines = null;
+  if (edges) { lines = new THREE.LineSegments(new THREE.EdgesGeometry(g), new THREE.LineBasicMaterial({ color: edge, transparent: true, opacity: 0.95 })); mesh.add(lines); }
+  const base = { opacity, line: 0.95 };
+  const api = {
+    mesh, mat, lines,
+    set(x0, y0, z0, x1, y1, z1) {
+      const sx = x1 - x0, sy = y1 - y0, sz = z1 - z0;
+      if (sx < 1e-3 || sy < 1e-3 || sz < 1e-3) { mesh.visible = false; return api; }
+      mesh.visible = true;
+      mesh.scale.set(sx, sy, sz);
+      mesh.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+      return api;
+    },
+    alpha(a) { // 0..1 淡入淡出
+      mat.transparent = true; mat.opacity = base.opacity * a; mat.depthWrite = a >= 1 && base.opacity >= 1;
+      if (lines) lines.material.opacity = base.line * a;
+      if (a <= 0.001) mesh.visible = false;
+      return api;
+    },
+    hide() { mesh.visible = false; return api; },
+  };
+  return api;
+}
+
+// 發光粒子（電子、自由基）
+function particles(parent, count, color, r = 0.1) {
+  const mesh = new THREE.InstancedMesh(new THREE.SphereGeometry(r, 10, 8), new THREE.MeshBasicMaterial({ color }), count);
+  mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  parent.add(mesh);
+  return mesh;
+}
+const tmp = new THREE.Object3D();
+function place(mesh, list) {
+  const n = Math.min(list.length, mesh.count);
+  for (let i = 0; i < n; i++) { const [x, y, z, s = 1] = list[i]; tmp.position.set(x, y, z); tmp.scale.setScalar(s); tmp.updateMatrix(); mesh.setMatrixAt(i, tmp.matrix); }
+  tmp.scale.setScalar(0); tmp.updateMatrix();
+  for (let i = n; i < mesh.count; i++) mesh.setMatrixAt(i, tmp.matrix);
+  mesh.instanceMatrix.needsUpdate = true;
+}
+
+// 導通電子流：閘極開啟時才進入通道（關閉後已在通道內的電子跑完）
+function stream(list, { n, seed, t, speed, x0, x1, lane, gate = () => true, axis = "x" }) {
+  for (let i = 0; i < n; i++) {
+    const ph = fract(rnd(i + seed) + t * speed);
+    if (!gate(t - ph / speed)) continue;
+    const [a, b] = lane(i + seed);
+    const p = lerp(x0, x1, ph);
+    list.push(axis === "x" ? [p, a, b] : [a, b, p]);
+  }
+}
+
+function camOrbit(t, dur, { r = 20, h = 8.5, a0 = 0.2, amp = 0.1, look = [0, 0.6, 0] } = {}) {
+  const a = Math.sin((t / dur) * Math.PI * 2) * amp + a0;
+  camera.position.set(Math.sin(a) * r + look[0], h, Math.cos(a) * r + look[2]);
+  camera.lookAt(look[0], look[1], look[2]);
+}
+
+// ---------- 2D HUD ----------
+function text(s, x, y, o = {}) {
+  const c = hctx; c.save();
+  c.font = `${o.w || 600} ${o.size || 16}px ${o.mono ? MONO : FONT}`;
+  c.textAlign = o.a || "left"; c.globalAlpha = o.alpha ?? 1;
+  if (o.glow) { c.shadowColor = o.glow; c.shadowBlur = 10; }
+  c.fillStyle = o.c || C.text; c.fillText(s, x, y); c.restore();
+}
+function chip(s, x, y, color, o = {}) {
+  const c = hctx; c.save();
+  c.font = `700 ${o.size || 14}px ${o.mono ? MONO : FONT}`;
+  const w = c.measureText(s).width + 22, h = (o.size || 14) + 14;
+  const bx = o.a === "center" ? x - w / 2 : o.a === "right" ? x - w : x;
+  c.globalAlpha = o.alpha ?? 1;
+  c.fillStyle = "rgba(5,7,13,.84)"; c.fillRect(bx, y - h / 2, w, h);
+  c.strokeStyle = color; c.lineWidth = 1.5; c.shadowColor = color; c.shadowBlur = 8;
+  c.strokeRect(bx + .5, y - h / 2 + .5, w - 1, h - 1);
+  c.shadowBlur = 0; c.fillStyle = color; c.textBaseline = "middle"; c.fillText(s, bx + 11, y + 1);
+  c.restore();
+  return { x: bx, y: y - h / 2, w, h };
+}
+function frame(title, tag) {
+  const c = hctx; c.save(); c.strokeStyle = C.cyan; c.lineWidth = 2; c.globalAlpha = .8;
+  const L = 18;
+  [[12, 12, 1, 1], [W - 12, 12, -1, 1], [12, H - 12, 1, -1], [W - 12, H - 12, -1, -1]].forEach(([x, y, sx, sy]) => {
+    c.beginPath(); c.moveTo(x, y + sy * L); c.lineTo(x, y); c.lineTo(x + sx * L, y); c.stroke();
+  });
+  c.restore();
+  text(tag, 28, 40, { size: 12, mono: true, c: C.cyan, w: 500 });
+  text(title, 28, 64, { size: 22, w: 700 });
+}
+const proj = (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return [(v.x + 1) / 2 * W, (1 - v.y) / 2 * H]; };
+// 3D 點拉一條引線到標籤
+function callout(p3, x, y, s, color, o = {}) {
+  const a = o.alpha ?? 1;
+  if (a <= 0.01) return;
+  const p = proj(...p3);
+  const box = chip(s, x, y, color, { ...o, alpha: a });
+  const tx = clamp(p[0], box.x, box.x + box.w), ty = p[1] < box.y ? box.y : box.y + box.h;
+  const c = hctx; c.save(); c.globalAlpha = a; c.strokeStyle = color; c.fillStyle = color; c.lineWidth = 1.5;
+  c.beginPath(); c.moveTo(p[0], p[1]); c.lineTo(tx, ty); c.stroke();
+  c.beginPath(); c.arc(p[0], p[1], 3, 0, Math.PI * 2); c.fill(); c.restore();
+}
+function meter(x, y, label, value, color, valueText = "") {
+  text(label, x, y, { size: 12, c: C.dim, w: 500 });
+  if (valueText) text(valueText, x + 150, y, { size: 12, c: color, w: 700, a: "right", mono: true });
+  const c = hctx; c.save();
+  c.strokeStyle = "rgba(232,246,255,.35)"; c.strokeRect(x + .5, y + 6.5, 150, 10);
+  c.fillStyle = color; c.shadowColor = color; c.shadowBlur = 8; c.fillRect(x + 2, y + 8, 146 * clamp(value), 7);
+  c.restore();
+}
+function bitBox(on) {
+  const col = on ? C.lime : C.red, c = hctx;
+  c.save(); c.strokeStyle = col; c.lineWidth = 2; c.shadowColor = col; c.shadowBlur = 14; c.strokeRect(650, 28, 120, 66); c.restore();
+  text(on ? "1" : "0", 690, 80, { size: 50, mono: true, c: col, glow: col, a: "center", w: 700 });
+  text(on ? "ON" : "OFF", 742, 68, { size: 15, mono: true, c: col, a: "center" });
+}
+
+const SCENES = {};
+function addScene(name, def) {
+  const group = new THREE.Group();
+  group.visible = false;
+  scene.add(group);
+  def.setup(group);
+  SCENES[name] = { ...def, group };
+}
+
+const COL = { e: 0xfff27a };
+
+// =====================================================================
+// 本課共用：示意用的元件模型（EKV 型公式：次臨界是指數、強反轉是平方律，中間平滑接起來）
+// =====================================================================
+const VT = 0.0259, VDD = 0.75, VDLIN = 0.05, ICRIT = 1e-6; // kT/q（300 K）、電壓（V）、定電流法的 Icrit（A/μm）
+function makeDev({ vt0 = 0.33, n = 1.2, eta = 0.03, theta = 1.2, ion = 8e-4 } = {}) {
+  const F = (v) => { const u = v / (2 * VT), l = u > 30 ? u : Math.log1p(Math.exp(u)); return l * l; };
+  const raw = (vg, vd) => { const vp = (vg - vt0 + eta * vd) / n; return (F(vp) - F(vp - vd)) / (1 + theta * Math.max(0, vg - vt0)); };
+  const k = ion / raw(VDD, VDD);
+  const id = (vg, vd) => Math.max(1e-14, k * raw(vg, vd));
+  const vtcc = (vd) => { let a = -0.4, b = 1.2; for (let i = 0; i < 50; i++) { const m = (a + b) / 2; if (id(m, vd) < ICRIT) a = m; else b = m; } return (a + b) / 2; };
+  // 源端能障高度（eV，從源極 Ef 量起）：次臨界時 Vg 每升 n·60 mV、能障降 60 meV；強反轉後能障幾乎消失
+  const phiB = (vg, vd) => { const r = 0.12 + (vt0 - vg - eta * vd) / n - 0.02; return 0.02 + (r > 0.3 ? r : 0.03 * Math.log1p(Math.exp(r / 0.03))); };
+  return { id, vtcc, phiB, eta, n, vt0 };
+}
+// 通道上的電子數（對數對應，讓 Ioff 也看得到幾顆）
+const eCount = (id, max = 36) => Math.round(max * clamp((Math.log10(id) + 10) / 7));
+
+// ---------- 3D FinFET：x 是源 → 汲方向，鰭沿 x ----------
+M.sti = [0x22324d, 0x4a6a95];
+function finfet(g, { lg = 1.8 } = {}) {
+  const L = lg / 2, sp = 0.32, o = { L, sp };
+  mbox(g, M.sub).set(-4.2, -1.8, -1.8, 4.2, -0.7, 1.8);
+  o.fin = mbox(g, M.si, { emissive: 0x0a3a66, ei: 0.45 }).set(-3.9, -0.7, -0.28, 3.9, 1.6, 0.28);
+  o.sti = mbox(g, M.sti, { opacity: 0.5 }).set(-4.2, -0.7, -1.8, 4.2, 0, 1.8);
+  o.src = mbox(g, M.sd, { opacity: 0.35, emissive: 0x1a3a99, ei: 0.4 }).set(-3.9, 0, -0.62, -L - sp, 2.0, 0.62);
+  o.drn = mbox(g, M.sd, { opacity: 0.35, emissive: 0x1a3a99, ei: 0.4 }).set(L + sp, 0, -0.62, 3.9, 2.0, 0.62);
+  [[-L - sp, -L], [L, L + sp]].forEach(([a, b]) => mbox(g, M.spacer, { opacity: 0.3 }).set(a, 0, -1.2, b, 2.45, 1.2));
+  o.hik = mbox(g, M.hik, { opacity: 0.45 }).set(-L, 0, -0.36, L, 1.68, 0.36);
+  o.gate = mbox(g, M.gate, { opacity: 0.16, emissive: 0x6a1070, ei: 0.5 }).set(-L, 0, -1.2, L, 2.45, 1.2);
+  // 能帶圖的取線：沿鰭頂、源 → 汲（穿透顯示）
+  const cut = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 7.4, 8), new THREE.MeshBasicMaterial({ color: 0xffd23d, depthTest: false, transparent: true, opacity: 0.85 }));
+  cut.rotation.z = Math.PI / 2; cut.position.set(0, 1.66, 0); cut.renderOrder = 5; g.add(cut);
+  o.ch = particles(g, 40, COL.e, 0.07);
+  o.sea = particles(g, 90, COL.e, 0.06);
+  return o;
+}
+// 通道電子（沿鰭的頂面與兩側面）＋源汲極裡的電子海
+function finElectrons(o, t, id, { speed = 0.5 } = {}) {
+  const n = eCount(id, 40), x0 = -o.L - o.sp - 0.2, x1 = o.L + o.sp + 0.2, ch = [];
+  for (let i = 0; i < n; i++) {
+    const ph = fract(rnd(i + 7) + t * speed), side = Math.floor(rnd(i + 8) * 3), u = rnd(i + 9);
+    const x = lerp(x0, x1, ph);
+    ch.push(side === 0 ? [x, 1.65, lerp(-0.24, 0.24, u)] : [x, lerp(0.15, 1.55, u), side === 1 ? -0.33 : 0.33]);
+  }
+  place(o.ch, ch);
+  const sea = [];
+  for (let i = 0; i < 90; i++) {
+    const left = i < 45, a = left ? -3.8 : o.L + o.sp + 0.1, b = left ? -o.L - o.sp - 0.1 : 3.8;
+    sea.push([lerp(a, b, rnd(i + 30)) + Math.sin(t * 3 + i) * 0.04, lerp(0.15, 1.85, rnd(i + 31)), lerp(-0.5, 0.5, rnd(i + 32))]);
+  }
+  place(o.sea, sea);
+}
+// 3D 模型放在畫面左半邊（右半邊給曲線與能帶圖）
+function camLeft(t, dur, o) { camOrbit(t, dur, o); camera.setViewOffset(W, H, W * 0.235, -H * 0.02, W, H); }
+
+// ---------- HUD：面板、Id–Vg 圖、能帶圖 ----------
+const PX = 452, PW = 334;
+function panel(x, y, w, h, title, color = C.cyan) {
+  const c = hctx; c.save();
+  c.fillStyle = "rgba(4,8,16,.9)"; c.fillRect(x, y, w, h);
+  c.strokeStyle = color; c.globalAlpha = 0.55; c.lineWidth = 1; c.strokeRect(x + .5, y + .5, w - 1, h - 1); c.restore();
+  text(title, x + 10, y + 18, { size: 13, c: color, w: 700 });
+}
+function line(pts, color, { w = 2, dash = null, alpha = 1, glow = 6 } = {}) {
+  if (pts.length < 2) return;
+  const c = hctx; c.save(); c.globalAlpha = alpha; c.strokeStyle = color; c.lineWidth = w; c.shadowColor = color; c.shadowBlur = glow;
+  if (dash) c.setLineDash(dash);
+  c.beginPath(); pts.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke(); c.restore();
+}
+function dot(x, y, color, r = 4, alpha = 1) {
+  const c = hctx; c.save(); c.globalAlpha = alpha; c.fillStyle = color; c.shadowColor = color; c.shadowBlur = 10; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill(); c.restore();
+}
+function arrow2(x, y0, y1, color, s, o = {}) { // 垂直雙箭頭 + 標字
+  if (Math.abs(y1 - y0) < 2) return;
+  line([[x, y0], [x, y1]], color, { w: 1.5, glow: 0 });
+  const c = hctx; c.save(); c.fillStyle = color;
+  [[y0, y1 > y0 ? 1 : -1], [y1, y1 > y0 ? -1 : 1]].forEach(([y, d]) => { c.beginPath(); c.moveTo(x, y); c.lineTo(x - 4, y + d * 7); c.lineTo(x + 4, y + d * 7); c.fill(); });
+  c.restore();
+  if (s) text(s, x + (o.left ? -6 : 6), (y0 + y1) / 2 + 4, { size: 12, c: color, w: 700, mono: true, a: o.left ? "right" : "left" });
+}
+// Id–Vg（對數座標）
+function idvgPanel(y, h, dev, curves, pt) {
+  panel(PX, y, PW, h, "Id–Vg（對數座標）", C.cyan);
+  const x0 = PX + 52, x1 = PX + PW - 14, y0 = y + h - 26, y1 = y + 30, lo = -11, hi = -2;
+  const X = (vg) => lerp(x0, x1, vg / 0.8), Y = (id) => lerp(y0, y1, (Math.log10(id) - lo) / (hi - lo));
+  const c = hctx; c.save(); c.strokeStyle = "rgba(232,246,255,.08)"; c.lineWidth = 1;
+  for (let d = lo; d <= hi; d++) { c.beginPath(); c.moveTo(x0, Y(10 ** d)); c.lineTo(x1, Y(10 ** d)); c.stroke(); }
+  c.strokeStyle = "rgba(232,246,255,.4)"; c.beginPath(); c.moveTo(x0, y1); c.lineTo(x0, y0); c.lineTo(x1, y0); c.stroke(); c.restore();
+  for (let d = lo + 1; d <= hi; d += 2) text(`1e${d}`, x0 - 5, Y(10 ** d) + 4, { size: 10, c: C.dim, mono: true, w: 500, a: "right" });
+  [0, 0.4, 0.8].forEach((v) => text(v.toFixed(1), X(v), y0 + 14, { size: 10, c: C.dim, mono: true, w: 500, a: "center" }));
+  text("Vg (V)", X(0.6), y0 + 14, { size: 10, c: C.dim, mono: true, w: 500, a: "center" });
+  text("Id (A/μm)", PX + PW - 10, y + 18, { size: 10, c: C.dim, mono: true, w: 500, a: "right" });
+  curves.forEach(({ vd, color, to = 0.8, alpha = 1, label }) => {
+    if (alpha <= 0.01 || to <= 0) return;
+    const pts = [];
+    for (let i = 0; i <= 80; i++) { const vg = (to * i) / 80; pts.push([X(vg), Y(dev.id(vg, vd))]); }
+    line(pts, color, { alpha });
+    if (label && to > 0.75) text(label, X(0.8) - 2, Y(dev.id(0.8, vd)) + (vd > 0.3 ? -8 : 16), { size: 11, c: color, w: 700, mono: true, a: "right", alpha });
+  });
+  if (pt) dot(X(pt.vg), Y(dev.id(pt.vg, pt.vd)), pt.color || C.yellow, 5);
+  return { X, Y, x0, x1, y0, y1 };
+}
+// 沿通道（源 → 汲）的導帶 Ec：源端 n+、通道能障、汲端被 Vd 往下拉
+function ecProfile(dev, vg, vd, { xs = 0.3, xd = 0.7, w = 0.03, wd = 0.07 } = {}) {
+  const sig = (u) => 1 / (1 + Math.exp(-u)), phi = dev.phiB(vg, vd), Ecs = -0.06;
+  return (x) => Ecs + (phi - Ecs) * sig((x - xs) / w) * (1 - sig((x - xd) / w)) - vd * sig((x - xd) / wd);
+}
+function bandPanel(y, h, { dev, vg, vd, t, geo, title = "能帶圖：沿通道 源 → 汲", scale = 90, top = 0.55, ev = false, ghost = null, cap = null, move = {} }) {
+  panel(PX, y, PW, h, title, C.yellow);
+  const x0 = PX + 18, x1 = PX + PW - 18, yz = y + 64 + top * scale;
+  const XB = (u) => lerp(x0, x1, u), YE = (E) => yz - E * scale;
+  const Ec = ecProfile(dev, vg, vd, geo), N = 120, us = [...Array(N + 1).keys()].map((i) => i / N);
+  // 區域底色：源 / 通道（閘極下）/ 汲
+  const xs = geo?.xs ?? 0.3, xd = geo?.xd ?? 0.7, c = hctx;
+  c.save(); c.fillStyle = "rgba(255,61,242,.07)"; c.fillRect(XB(xs), y + 26, XB(xd) - XB(xs), h - 30); c.restore();
+  text("源 S", XB(xs / 2), y + h - 8, { size: 11, c: C.blue, w: 700, a: "center" });
+  text("閘極下（通道）", XB((xs + xd) / 2), y + h - 8, { size: 11, c: C.magenta, w: 700, a: "center" });
+  text("汲 D", XB((1 + xd) / 2), y + h - 8, { size: 11, c: C.blue, w: 700, a: "center" });
+  if (ghost) line(us.map((u) => [XB(u), YE(ecProfile(dev, vg, ghost, geo)(u))]), C.grey, { w: 1.5, dash: [4, 4], alpha: 0.7, glow: 0 });
+  line(us.map((u) => [XB(u), YE(Ec(u))]), C.cyan, { w: 2.5 });
+  const lg = [["Ec", C.cyan, false], ...(ev ? [["Ev", C.orange, false]] : []), ["Ef", C.green, true], ...(ghost ? [[`Vd ${ghost} V 時`, C.grey, true]] : [])];
+  let lx = PX + PW - 10;
+  [...lg].reverse().forEach(([s, col, dsh]) => { text(s, lx, y + 18, { size: 10, c: col, w: 700, mono: true, a: "right" }); hctx.font = `700 10px ${MONO}`; lx -= hctx.measureText(s).width + 24; line([[lx + 4, y + 14], [lx + 18, y + 14]], col, { w: 2, dash: dsh ? [3, 2] : null, glow: 0 }); lx -= 6; });
+  if (ev) { // 價帶：能隙壓縮顯示（實際 Eg = 1.12 eV）
+    line(us.map((u) => [XB(u), YE(Ec(u) - ev)]), C.orange, { w: 2 });
+    text("Eg = 1.12 eV（能隙縮小顯示）", XB(0.02), YE(Ec(0) - ev / 2) + 4, { size: 10, c: C.dim, w: 500 });
+  }
+  // 費米能階：源 0、汲 −qVd
+  line([[XB(0), YE(0)], [XB(xs), YE(0)]], C.green, { w: 1.2, dash: [3, 3], glow: 0 });
+  line([[XB(xd), YE(-vd)], [XB(1), YE(-vd)]], C.green, { w: 1.2, dash: [3, 3], glow: 0 });
+  // 能障頂
+  let um = xs, top0 = -9;
+  us.forEach((u) => { const e = Ec(u); if (u > xs - 0.05 && u < xd + 0.05 && e > top0) { top0 = e; um = u; } });
+  // 電子：源極電子海（越高能量越少），能量夠的翻過能障流向汲極
+  const kTv = 0.05, id = dev.id(vg, vd);
+  for (let i = 0; i < 26; i++) { const u = lerp(0.02, xs - 0.04, rnd(i + 3)), e = Ec(u) + 0.015 - kTv * Math.log(1 - 0.92 * rnd(i + 5)); dot(XB(u) + Math.sin(t * 4 + i) * 1.5, YE(e), "#fff27a", 2.2, 0.85); }
+  for (let i = 0; i < 18; i++) { const u = lerp(xd + 0.05, 0.98, rnd(i + 40)), e = Ec(u) + 0.015 - kTv * Math.log(1 - 0.92 * rnd(i + 41)); dot(XB(u) + Math.sin(t * 4 + i) * 1.5, YE(e), "#fff27a", 2.2, 0.6); }
+  const nc = eCount(id, 10);
+  for (let i = 0; i < nc; i++) {
+    const ph = fract(rnd(i + 70) + t * 0.45), u = lerp(xs - 0.08, 0.97, ph), e0 = top0 + 0.02 + 0.03 * rnd(i + 71);
+    const e = Math.max(Ec(u) + 0.02, u < um ? e0 : lerp(e0, Ec(u) + 0.02, clamp((u - um) / 0.2)));
+    dot(XB(u), YE(e), "#fff27a", 3, 1);
+  }
+  // 這一段在做什麼（步驟說明）
+  if (cap) { const c2 = hctx; c2.save(); c2.fillStyle = "rgba(255,210,61,.08)"; c2.fillRect(PX + 6, y + 26, PW - 12, 34); c2.restore(); cap.forEach((s, i) => text(s, PX + 12, y + 40 + i * 15, { size: 11.5, c: i ? C.text : C.yellow, w: i ? 500 : 700 })); }
+  // 正在改變的電壓：在能帶上畫箭頭，標出被推的方向
+  const push = (u, sgn, s, col, left = false) => { if (!sgn) return; const xx = XB(u), ye = YE(Ec(u)), ya = sgn > 0 ? ye - 30 : ye - 8, yb = sgn > 0 ? ye - 8 : ye - 30; line([[xx, ya], [xx, yb]], col, { w: 2.5 }); const c3 = hctx; c3.save(); c3.fillStyle = col; c3.beginPath(); c3.moveTo(xx, yb + (sgn > 0 ? 4 : -4)); c3.lineTo(xx - 6, yb + (sgn > 0 ? -6 : 6)); c3.lineTo(xx + 6, yb + (sgn > 0 ? -6 : 6)); c3.fill(); c3.restore(); text(s, xx + (left ? -9 : 9), (ya + yb) / 2 + 4, { size: 11, c: col, w: 700, mono: true, a: left ? "right" : "left" }); };
+  push((xs + xd) / 2, move.g, move.g > 0 ? "Vg↑ 往下壓" : "Vg↓ 升回來", C.magenta);
+  push(xd + 0.13, move.d, move.d > 0 ? "Vd↑ 往下拉" : "Vd↓", C.green, true);
+  return { XB, YE, Ec, um, top: top0, x1 };
+}
+const fmtV = (v) => `${v.toFixed(2)} V`;
+function biasChip(vg, vd) { chip(`Vg = ${fmtV(vg)}   Vd = ${fmtV(vd)}`, 772, 40, C.yellow, { a: "right", mono: true, size: 13 }); }
+function formula(s, y, color = C.lime, o = {}) { return chip(s, 28, y, color, { mono: true, size: 13, ...o }); }
+
+// =====================================================================
+// GIF B6：源 → 汲方向的能帶（能障模型）
+// =====================================================================
+addScene("b6-barrier", {
+  dur: 10, fps: 10,
+  setup(g) { this.dev = makeDev({ eta: 0.03 }); this.f = finfet(g, { lg: 1.9 }); },
+  render(t) {
+    camLeft(t, this.dur, { r: 14.5, h: 7.2, a0: 0.62, amp: 0.05, look: [0, 0.4, 0] });
+    const VG = (t) => VDD * (seg(t, 0.3, 4) - seg(t, 7, 9)), VD = (t) => VDLIN + (VDD - VDLIN) * (seg(t, 4.3, 5.5) - seg(t, 9, 9.8));
+    const dev = this.dev, vg = VG(t), vd = VD(t), id = dev.id(vg, vd), dir = (F) => Math.sign(Math.round((F(t + 0.1) - F(t)) * 200));
+    const cap = t < 0.3 ? ["① Vg = 0（關閉）", "源端有一座能障 φB，電子翻不過去"]
+      : t < 4.3 ? ["② 只把 Vg 往上加（Vd 固定 0.05 V）", "閘極把通道的能帶往下壓 → φB 變低，翻過去的電子變多"]
+      : t < 5.5 ? ["③ Vg 不動，把 Vd 拉到 0.75 V", "汲極的能帶和 Ef 往下拉 qVd → 電子一路「下坡」到汲極"]
+      : t < 7 ? ["④ 導通 + 飽和", "電流由源端能障決定，Vd 再大 Id 也只多一點"]
+      : t < 9 ? ["⑤ 把 Vg 降回 0", "通道能帶升回來，能障重新擋住電子 → Id 指數下降"]
+      : ["⑥ 把 Vd 降回 0.05 V", "回到起點，重新循環"];
+    const f = this.f, on = clamp((vg - 0.1) / 0.5);
+    f.gate.mat.emissiveIntensity = 0.3 + 1.2 * on;
+    f.drn.mat.emissiveIntensity = 0.3 + 1.0 * (vd - VDLIN) / (VDD - VDLIN);
+    finElectrons(f, t, id);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("能帶看 MOS：電子要翻過源端的能障", "DEVICE PHYSICS / B6");
+    biasChip(vg, vd);
+    callout([-2.6, 1.9, 0.5], 40, 104, "源極 S（n+）：電子很多", C.blue);
+    callout([0, 2.45, 0.9], 250, 104, "閘極 G 包住鰭三面", C.magenta);
+    callout([2.6, 1.9, 0.5], 430, 150, "汲極 D", C.blue, { a: "right" });
+    callout([-1.6, 1.66, 0], 40, 330, "黃線 = 右下能帶圖的取線（鰭頂，源 → 汲）", C.yellow);
+    const sat = seg(t, 4.3, 5.5);
+    idvgPanel(80, 146, dev, [{ vd: VDLIN, color: C.cyan, to: t < 4 ? vg : 0.8, label: "Vd 0.05 V" }, { vd: VDD, color: C.magenta, alpha: sat, label: "Vd 0.75 V" }], { vg, vd });
+    const b = bandPanel(232, 208, { dev, vg, vd, t, ev: 0.42, scale: 64, top: 0.45, title: "能帶圖：源 → 汲", cap, move: { g: dir(VG), d: dir(VD) } });
+    if (b.top > 0.05) arrow2(b.XB(b.um) + 16, b.YE(0), b.YE(b.top), C.red, `φB ${b.top.toFixed(2)} eV`);
+    if (vd > 0.15 && !dir(VD)) arrow2(b.XB(0.95), b.YE(0), b.YE(-vd), C.green, "qVd", { left: true });
+    formula("Id ∝ exp(−qφB / kT)", 378, C.lime);
+    formula("φB 每降 60 meV → Id × 10（300 K）", 410, C.lime, { size: 12 });
+  },
+});
+
+// =====================================================================
+// GIF 15：DIBL（汲極引致能障降低）
+// =====================================================================
+addScene("15-dibl", {
+  dur: 10, fps: 10,
+  setup(g) {
+    this.dev = makeDev({ eta: 0.12 });
+    this.f = finfet(g, { lg: 1.1 });
+    this.vtl = this.dev.vtcc(VDLIN); this.vts = this.dev.vtcc(VDD);
+    // 汲極電場：從汲極伸進通道、往源端延伸（穿透顯示）
+    this.field = [0.35, 0.75, 1.15, 1.5].map((y) => {
+      const L = this.f.L + this.f.sp, cv = new THREE.QuadraticBezierCurve3(new THREE.Vector3(L + 0.3, y, 0), new THREE.Vector3(0.2, y - 0.25, 0), new THREE.Vector3(-L + 0.1, y - 0.05, 0));
+      const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(cv.getPoints(30)), new THREE.LineBasicMaterial({ color: 0xffa04d, transparent: true, depthTest: false }));
+      l.renderOrder = 6; g.add(l);
+      const a = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.24, 8), new THREE.MeshBasicMaterial({ color: 0xffa04d, transparent: true, depthTest: false }));
+      a.renderOrder = 6; a.position.copy(cv.getPoint(1)); a.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), cv.getTangent(1)); g.add(a);
+      return [l, a];
+    });
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 14.5, h: 7.2, a0: 0.62, amp: 0.05, look: [0, 0.4, 0] });
+    const dev = this.dev;
+    const VG = (t) => VDD * (seg(t, 0.3, 3) - seg(t, 3, 3.8) + seg(t, 5, 7.6) - seg(t, 8.2, 9)), UP = (t) => seg(t, 4, 4.8) - seg(t, 9.1, 9.8);
+    const vg = VG(t), up = UP(t), vd = VDLIN + (VDD - VDLIN) * up, id = dev.id(vg, vd), dir = (F) => Math.sign(Math.round((F(t + 0.1) - F(t)) * 200));
+    const cap = t < 3 ? ["① 先在 Vd = 0.05 V 量 Id–Vg（藍線）", "Vg↑ 把通道能帶往下壓，能障變低、電流變大"]
+      : t < 4 ? ["① 量完，Vg 降回 0", "能障升回原本高度（關閉狀態）"]
+      : t < 5 ? ["② Vg 不動（= 0），只把 Vd 拉到 0.75 V", "短通道：汲極一拉，源端能障也降 ΔφB（灰虛線＝原本）"]
+      : t < 7.6 ? ["③ 在 Vd = 0.75 V 再量一次（紫線）", "能障一開始就低一截 → 同樣 Vg 下電流更大，曲線左移"]
+      : t < 9.1 ? ["④ 在同一個 Icrit 比較兩條線", "Vt 差了 ΔVt → DIBL = ΔVt / ΔVd"]
+      : ["⑤ 把 Vd 降回 0.05 V", "能障回到原本高度，重新循環"];
+    const f = this.f;
+    f.gate.mat.emissiveIntensity = 0.3 + 1.2 * clamp((vg - 0.1) / 0.5);
+    f.drn.mat.emissiveIntensity = 0.3 + 1.0 * up;
+    this.field.forEach(([l, a]) => { l.material.opacity = up; a.material.opacity = up; l.visible = a.visible = up > 0.01; });
+    finElectrons(f, t, id);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("DIBL：汲極電壓把源端能障壓低", "DEVICE PHYSICS / 15");
+    biasChip(vg, vd);
+    callout([0, 2.45, 0.9], 40, 104, "短通道：Lg 小，汲極離源極很近", C.magenta);
+    callout([0.6, 0.75, 0], 40, 330, "Vd ↑：汲極電場伸進通道（橘線）", C.orange, { alpha: up });
+    // Id–Vg：先量 Vd = 0.05 V，再量 Vd = 0.75 V
+    const linTo = t < 3 ? vg : 0.8, satTo = t < 5 ? 0 : t < 7.6 ? vg : 0.8;
+    const P = idvgPanel(80, 146, dev, [{ vd: VDLIN, color: C.cyan, to: linTo, label: "Vd 0.05 V" }, { vd: VDD, color: C.magenta, to: satTo, label: "Vd 0.75 V" }], { vg, vd });
+    const k = seg(t, 7.6, 8.2);
+    if (k > 0) {
+      const yc = P.Y(ICRIT), a = P.X(this.vts), b = P.X(this.vtl);
+      line([[P.x0, yc], [P.x1, yc]], C.grey, { w: 1, dash: [3, 3], alpha: k, glow: 0 });
+      text("Icrit", P.x0 + 4, yc - 5, { size: 10, c: C.grey, mono: true, alpha: k });
+      [a, b].forEach((x) => dot(x, yc, C.yellow, 4, k));
+      line([[a, yc + 12], [b, yc + 12]], C.yellow, { w: 1.5, alpha: k, glow: 0 });
+      text("ΔVt", (a + b) / 2, yc + 26, { size: 11, c: C.yellow, w: 700, mono: true, a: "center", alpha: k });
+    }
+    const b = bandPanel(232, 208, { dev, vg, vd, t, geo: { xs: 0.38, xd: 0.62, w: 0.025, wd: 0.12 }, scale: 86, top: 0.42, ghost: up > 0.05 ? VDLIN : null, title: "能帶圖：源 → 汲", cap, move: { g: dir(VG), d: dir(UP) } });
+    if (up > 0.05 && b.top > 0.05) {
+      const g0 = Math.max(...[...Array(61).keys()].map((i) => ecProfile(dev, vg, VDLIN, { xs: 0.38, xd: 0.62, w: 0.025, wd: 0.12 })(0.3 + i * 0.006)));
+      arrow2(b.XB(b.um) - 10, b.YE(g0), b.YE(b.top), C.red, "ΔφB", { left: true });
+    }
+    formula("DIBL = (Vtlin − Vtsat) / (Vdsat − Vdlin)", 378, C.lime);
+    const val = ((this.vtl - this.vts) / (VDD - VDLIN)) * 1000;
+    formula(`= (${this.vtl.toFixed(3)} − ${this.vts.toFixed(3)}) / 0.70 ≈ ${Math.round(val)} mV/V（示意值）`, 410, C.yellow, { size: 12, alpha: 0.25 + 0.75 * k });
+  },
+});
+// ---------- 匯出 ----------
+for (const k of Object.keys(SCENES)) SCENES[k].fps = SCENES[k].fps || 15;
+window.SCENES = SCENES;
+window.renderAt = (name, t) => {
+  for (const k of Object.keys(SCENES)) SCENES[k].group.visible = false;
+  SCENES[name].group.visible = true;
+  SCENES[name].render(t);
+  octx.drawImage(glCanvas, 0, 0);
+  octx.drawImage(hud, 0, 0);
+  return out.toDataURL("image/png");
+};
+const name = location.hash.slice(1);
+if (name && SCENES[name]) {
+  const t0 = performance.now();
+  (function loop() { renderAt(name, ((performance.now() - t0) / 1000) % SCENES[name].dur); requestAnimationFrame(loop); })();
+}
+</script>
+</body>
+</html>
