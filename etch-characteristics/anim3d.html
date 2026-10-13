@@ -1255,7 +1255,6 @@ addScene("takeaways", {
   render(t) {
     camera.position.set(Math.sin(t * 0.5) * 0.6, 7.5, 27); camera.lookAt(0, 0.8, 0);
     camera.setViewOffset(W, H, 0, H * 0.15, W, H);
-    const cyc = (t % 4) / 4, act = Math.floor(t / 4) % 3;
     // 1：SiGe 從兩側被吃進去
     const r = lerp(0.1, 0.75, seg(fract(t / 6), 0.05, 0.85));
     this.sige.forEach(([m, y0]) => m.set(-2.0 + r, y0, -1.2, 2.0 - r, y0 + 0.4, 1.2));
@@ -1287,13 +1286,13 @@ addScene("takeaways", {
       [C.cyan, "3", "顧好腔體狀態，均勻度才穩", "實務：chamber condition", ["腔壁沉積、耗材磨耗 → 中心 / 邊緣不同", "Season / WAC / PM：讓每片條件一致", "SPC、均勻度地圖、APC（Hydra）補償"]],
     ];
     cards.forEach(([col, n, title, src, lines], i) => {
-      const x = 22 + i * 256, y = 268, w = 244, h = 152, c = hctx, on = i === act, glow = on ? 10 + 8 * Math.sin(cyc * Math.PI) : 4;
-      c.save(); c.fillStyle = "rgba(4,8,16,.9)"; c.fillRect(x, y, w, h); c.strokeStyle = col; c.globalAlpha = on ? 1 : 0.5; c.lineWidth = on ? 2.5 : 1.2; c.shadowColor = col; c.shadowBlur = glow; c.strokeRect(x + .5, y + .5, w - 1, h - 1); c.shadowBlur = 0; c.fillStyle = col; c.fillRect(x, y, w, on ? 5 : 3); c.restore();
-      text(n, x + 14, y + 40, { size: 30, c: col, w: 700, mono: true, glow: on ? col : null });
+      const x = 22 + i * 256, y = 268, w = 244, h = 152, c = hctx, on = true, glow = 10; // 不做輪流 highlight，講者自己講
+      c.save(); c.fillStyle = "rgba(4,8,16,.9)"; c.fillRect(x, y, w, h); c.strokeStyle = col; c.lineWidth = 1.5; c.shadowColor = col; c.shadowBlur = glow; c.strokeRect(x + .5, y + .5, w - 1, h - 1); c.shadowBlur = 0; c.fillStyle = col; c.fillRect(x, y, w, 4); c.restore();
+      text(n, x + 14, y + 40, { size: 30, c: col, w: 700, mono: true, glow: col });
       text(title, x + 44, y + 28, { size: 13.5, c: col, w: 700 });
       text(`來自：${src}`, x + 44, y + 46, { size: 10.5, c: C.dim, w: 600 });
-      lines.forEach((s, k) => { const yy = y + 76 + k * 26; c.save(); c.fillStyle = col; c.fillRect(x + 14, yy - 5, 4, 4); c.restore(); text(s, x + 24, yy, { size: 11, c: on ? C.text : "rgba(232,246,255,.7)", w: on ? 600 : 500 }); });
-      chip(["SiGe 被側向、選擇性移除", "深度 / 角度都能調", "腔壁沉積 → 中心 / 邊緣不同"][i], x + w / 2, 250, col, { a: "center", size: 11, alpha: on ? 1 : 0.6 });
+      lines.forEach((s, k) => { const yy = y + 76 + k * 26; c.save(); c.fillStyle = col; c.fillRect(x + 14, yy - 5, 4, 4); c.restore(); text(s, x + 24, yy, { size: 11, c: C.text, w: 500 }); });
+      chip(["SiGe 被側向、選擇性移除", "深度 / 角度都能調", "腔壁沉積 → 中心 / 邊緣不同"][i], x + w / 2, 250, col, { a: "center", size: 11 });
     });
     text("Etch PE：選對機型、調出需要的結果，再把腔體狀態顧穩", 400, 440, { size: 12.5, c: C.yellow, w: 700, a: "center" });
   },
