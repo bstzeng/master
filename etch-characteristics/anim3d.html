@@ -1219,6 +1219,86 @@ addScene("macro-loading", {
   },
 });
 
+// =====================================================================
+// 三個 Take Away（課程總結）
+// =====================================================================
+addScene("takeaways", {
+  dur: 12, fps: 15,
+  setup(g) {
+    const G = [-10.3, 0, 10.3].map((x) => { const s = new THREE.Group(); s.position.x = x; g.add(s); return s; });
+    this.G = G;
+    // 1：nanosheet 疊層，SiGe 被側向、選擇性移除
+    const b = (c, e) => mbox(G[0], c, { emissive: e, ei: 0.5 });
+    b(M.si, 0x0a3a66).set(-2.6, -2.4, -1.2, 2.6, -1.6, 1.2);
+    this.sige = [0, 1, 2].map((k) => { const y0 = -1.6 + k * 0.8; b(M.si, 0x0a3a66).set(-2.0, y0 + 0.4, -1.2, 2.0, y0 + 0.8, 1.2); return [b(M.sige, 0x6a3a10), y0]; });
+    mbox(G[0], M.mask, { opacity: 0.9 }).set(-2.0, 0.8, -1.2, 2.0, 1.15, 1.2);
+    this.rad1 = particles(G[0], 90, COL.rad, 0.1);
+    // 2：不同深度與側壁角度（會慢慢往下蝕刻）
+    G[1].position.y = 0.9; G[1].rotation.x = 0.12;
+    const si = () => mbox(G[1], M.si, { edges: false, emissive: 0x0a3a66, ei: 0.4 });
+    si().set(-3, -2.4, -1.2, 3, -2.0, 1.2);
+    this.tr = [[-1.9, 0.32, 1.0, 0], [0, 0.32, 1.95, 0], [1.9, 0.38, 1.95, 0.2]];
+    const edges = [-3, ...this.tr.flatMap(([c, a]) => [c - a, c + a]), 3];
+    for (let i = 0; i < edges.length; i += 2) { si().set(edges[i], -2.0, -1.2, edges[i + 1], 0, 1.2); mbox(G[1], M.mask, { opacity: 0.9 }).set(edges[i], 0, -1.2, edges[i + 1], 0.3, 1.2); }
+    this.trB = this.tr.map(([, , , tp]) => ({ bot: si(), steps: tp > 0 ? [0, 1, 2, 3, 4].map(() => [si(), si()]) : [] }));
+    this.ion2 = particles(G[1], 18, COL.ion, 0.11); this.tr2 = particles(G[1], 54, COL.ion, 0.06);
+    // 3：腔體狀態（腔壁沉積 → 清潔 → 再累積）
+    const g3 = G[2];
+    cyl(g3, 2.6, -0.4, 3.6, [0x3a4658, 0x8fa8d0], { opacity: 0.14, open: true });
+    this.coat = cyl(g3, 2.5, -0.3, 3.5, [0x8a5a2a, 0xffb36b], { opacity: 0.45, open: true, emissive: 0x6a3a10, ei: 0.6 }); this.coat.lines.visible = false;
+    cyl(g3, 2.2, -1.0, -0.4, [0x0f1a2c, 0x2c4a6e]);
+    cyl(g3, 2.0, -0.4, -0.28, M.si, { emissive: 0x0a3a66, ei: 0.6 });
+    const pl = cyl(g3, 2.3, 0.2, 3.3, [0x5a1a8a, 0xc77dff], { opacity: 0.1, emissive: 0x9a3ce0, ei: 0.8 }); pl.lines.visible = false;
+    this.edge = ring(g3, 1.85, -0.25, 0xff4d5e, 0.12); this.ctr = ring(g3, 0.9, -0.25, 0x5dffb0, 0.1);
+    this.rad3 = particles(g3, 50, COL.rad, 0.09);
+  },
+  render(t) {
+    camera.position.set(Math.sin(t * 0.5) * 0.6, 7.5, 27); camera.lookAt(0, 0.8, 0);
+    camera.setViewOffset(W, H, 0, H * 0.15, W, H);
+    const cyc = (t % 4) / 4, act = Math.floor(t / 4) % 3;
+    // 1：SiGe 從兩側被吃進去
+    const r = lerp(0.1, 0.75, seg(fract(t / 6), 0.05, 0.85));
+    this.sige.forEach(([m, y0]) => m.set(-2.0 + r, y0, -1.2, 2.0 - r, y0 + 0.4, 1.2));
+    const rl = [];
+    for (let i = 0; i < 70; i++) { const side = i % 2 ? 1 : -1, k = i % 3, ph = fract(rnd(i + 3) + t * 0.3); rl.push([side * lerp(2.9, 2.0 - r + 0.1, ph), -1.4 + k * 0.8 + 0.2 * rnd(i + 7), (rnd(i + 9) - 0.5) * 2.2]); }
+    drift(rl, { t, n: 20, seed: 30, x0: -2.7, x1: 2.7, y0: 1.4, y1: 3.2, z0: -1.1, z1: 1.1, sp: 0.1 });
+    place(this.rad1, rl);
+    // 2：三條溝槽往下蝕刻（深度、角度不同）
+    const p = seg(fract(t / 6), 0.05, 0.85), il = [], tll = [];
+    this.tr.forEach(([c, a, d, tp], k) => {
+      const dd = d * p, B = this.trB[k];
+      B.bot.set(c - a, -2.0, -1.2, c + a, -Math.max(dd, 0.001), 1.2); if (dd > 1.999) B.bot.hide();
+      B.steps.forEach(([l, rr], j) => { const n = 5, w = tp * (j + 1) / n, y1 = -dd * j / n, y0 = -dd * (j + 1) / n; if (dd < 0.05) { l.hide(); rr.hide(); return; } l.set(c - a, y0, -1.2, c - a + w, y1, 1.2); rr.set(c + a - w, y0, -1.2, c + a, y1, 1.2); });
+      ionRain(il, tll, [], { t: t + k, n: 6, seed: 3 + k * 9, x0: c - 0.12, x1: c + 0.12, z0: -1, z1: 1, top: 3.0, bottom: -dd, speed: 0.7 });
+    });
+    place(this.ion2, il); place(this.tr2, tll);
+    // 3：腔壁沉積慢慢變厚，邊緣與中心差異跟著變大；清潔後回到起點
+    const ct = seg(fract(t / 6), 0.0, 0.8) * (1 - seg(fract(t / 6), 0.85, 0.98));
+    this.coat.mat.opacity = 0.08 + 0.5 * ct;
+    this.edge.material.opacity = 0.3 + 0.7 * ct; this.ctr.material.opacity = 0.8;
+    const r3 = []; drift(r3, { t, n: 50, seed: 8, x0: -2.2, x1: 2.2, y0: 0.2, y1: 3.2, z0: -2.2, z1: 2.2, sp: 0.1, ok: ([x, , z]) => x * x + z * z < 4.6 }); place(this.rad3, r3);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("蝕刻課程：三個 Take Away", TAG);
+    text("原理 → 種類 → 機型 → 實務", 772, 64, { size: 14, c: C.cyan, w: 700, a: "right" });
+    const cards = [
+      [C.lime, "1", "機型多，化學蝕刻越來越重要", "機型 / 種類", ["ICP / CCP / Remote / 無電漿…各有擅長", "GAA / 3D 結構要側向、選擇性地移除", "低損傷、高選擇比的化學蝕刻用量變多"]],
+      [C.magenta, "2", "可調性高，常被要求幫忙調", "原理 / 實務", ["深度、CD、側壁角度、profile 都能調", "常被要求調電性，配合 device 需求", "也常要 cover 前後站或別家的 issue"]],
+      [C.cyan, "3", "顧好腔體狀態，均勻度才穩", "實務：chamber condition", ["腔壁沉積、耗材磨耗 → 中心 / 邊緣不同", "Season / WAC / PM：讓每片條件一致", "SPC、均勻度地圖、APC（Hydra）補償"]],
+    ];
+    cards.forEach(([col, n, title, src, lines], i) => {
+      const x = 22 + i * 256, y = 268, w = 244, h = 152, c = hctx, on = i === act, glow = on ? 10 + 8 * Math.sin(cyc * Math.PI) : 4;
+      c.save(); c.fillStyle = "rgba(4,8,16,.9)"; c.fillRect(x, y, w, h); c.strokeStyle = col; c.globalAlpha = on ? 1 : 0.5; c.lineWidth = on ? 2.5 : 1.2; c.shadowColor = col; c.shadowBlur = glow; c.strokeRect(x + .5, y + .5, w - 1, h - 1); c.shadowBlur = 0; c.fillStyle = col; c.fillRect(x, y, w, on ? 5 : 3); c.restore();
+      text(n, x + 14, y + 40, { size: 30, c: col, w: 700, mono: true, glow: on ? col : null });
+      text(title, x + 44, y + 28, { size: 13.5, c: col, w: 700 });
+      text(`來自：${src}`, x + 44, y + 46, { size: 10.5, c: C.dim, w: 600 });
+      lines.forEach((s, k) => { const yy = y + 76 + k * 26; c.save(); c.fillStyle = col; c.fillRect(x + 14, yy - 5, 4, 4); c.restore(); text(s, x + 24, yy, { size: 11, c: on ? C.text : "rgba(232,246,255,.7)", w: on ? 600 : 500 }); });
+      chip(["SiGe 被側向、選擇性移除", "深度 / 角度都能調", "腔壁沉積 → 中心 / 邊緣不同"][i], x + w / 2, 250, col, { a: "center", size: 11, alpha: on ? 1 : 0.6 });
+    });
+    text("Etch PE：選對機型、調出需要的結果，再把腔體狀態顧穩", 400, 440, { size: 12.5, c: C.yellow, w: 700, a: "center" });
+  },
+});
+
 // ---------- 匯出 ----------
 for (const k of Object.keys(SCENES)) SCENES[k].fps = SCENES[k].fps || 15;
 window.SCENES = SCENES;
