@@ -1298,6 +1298,70 @@ addScene("takeaways", {
   },
 });
 
+// =====================================================================
+// Coupon test：在載片上貼小塊樣品（膜 / 零件材料），腔壁也貼 coupon，跑完量前後差異
+// =====================================================================
+addScene("coupon-test", {
+  dur: 12, fps: 15,
+  setup(g) {
+    this.wall = cyl(g, 3.2, 0, 3.4, [0x3a4658, 0x8fa8d0], { opacity: 0.14, open: true, emissive: 0x1a2433, ei: 0.4 });
+    cyl(g, 2.7, -0.8, 0, [0x0f1a2c, 0x2c4a6e]);
+    this.carrier = cyl(g, 2.3, 0, 0.1, [0x3a4a66, 0x8fa8d0], { emissive: 0x1a2a44, ei: 0.5 }); // 長了 oxide 的載片
+    this.plasma = cyl(g, 2.9, 0.6, 3.1, [0x5a1a8a, 0xc77dff], { opacity: 0.1, emissive: 0x9a3ce0, ei: 0.8 }); this.plasma.lines.visible = false;
+    // [名稱, x, z, 材料顏色, 蝕刻速率（相對）]
+    this.C = [["Center", 0, 0.2, M.oxide, 1.0], ["Mid", 1.15, -0.55, M.oxide, 0.93], ["Edge", 1.75, 0.75, M.oxide, 0.82], ["Y₂O₃", -1.25, -0.7, [0xd8dde6, 0xffffff], 0.05], ["Quartz", -1.1, 0.95, [0x8fd3ff, 0xbfe9ff], 0.25]].map(([n, x, z, col, er]) => ({ n, x, z, er, paste: mbox(g, [0x8a5a2a, 0xffb36b], { emissive: 0x6a3a10, ei: 0.4 }), body: mbox(g, col, { emissive: 0x1a2a44, ei: 0.4 }) }));
+    // 腔壁 coupon：貼在 liner 內側，上面有沉積
+    this.wc = mbox(g, [0x6c7480, 0xc8ced8], { emissive: 0x2a2f38, ei: 0.3 }).set(-3.12, 1.2, -0.45, -3.0, 2.1, 0.45);
+    this.wdep = mbox(g, [0x8a5a2a, 0xffb36b], { emissive: 0x6a3a10, ei: 0.6 });
+    this.rad = particles(g, 90, COL.rad, 0.08); this.ions = particles(g, 30, COL.ion, 0.09); this.trail = particles(g, 90, COL.ion, 0.05);
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 13.5, h: 9, a0: 0.5, amp: 0.04, look: [-0.3, 1.9, 0] });
+    const drop = seg(t, 0.2, 2.4), run = seg(t, 3.4, 8.0), on = t > 3.2 && t < 8.2 ? 1 : 0, reset = seg(t, 11.4, 11.95);
+    const h0 = 0.22, eroded = run * (1 - reset);
+    this.C.forEach((c, i) => {
+      const d = clamp(drop * 5 - i * 0.8), y = lerp(2.6, 0.1, ease(d)) + (d < 1 ? 0.2 : 0), h = h0 * (1 - 0.6 * c.er * eroded);
+      c.paste.set(c.x - 0.4, y, c.z - 0.4, c.x + 0.4, y + 0.04, c.z + 0.4);
+      c.body.set(c.x - 0.37, y + 0.04, c.z - 0.37, c.x + 0.37, y + 0.04 + h, c.z + 0.37);
+      c.top = y + 0.04 + h;
+    });
+    const dep = 0.14 * (1 - eroded * 0.9);
+    this.wdep.set(-3.0, 1.25, -0.4, -3.0 + Math.max(0.005, dep), 2.05, 0.4);
+    this.plasma.mat.opacity = 0.1 * on; this.plasma.mat.emissiveIntensity = 0.8 * on;
+    const rad = [], ions = [], tr = [];
+    if (on) { drift(rad, { t, n: 50, seed: 3, x0: -2.8, x1: 2.8, y0: 0.4, y1: 3.0, z0: -2.8, z1: 2.8, sp: 0.1, ok: ([x, , z]) => x * x + z * z < 7.8 }); ionRain(ions, tr, [], { t, n: 30, seed: 5, x0: -2, x1: 2, z0: -2, z1: 2, top: 3.0, bottom: 0.3, speed: 0.8 }); }
+    place(this.rad, rad); place(this.ions, ions.filter(([x, , z]) => x * x + z * z < 4.4)); place(this.trail, tr.filter(([x, , z]) => x * x + z * z < 4.4));
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("Coupon test：用小塊樣品做 PQ / study", TAG);
+    const st = t < 2.6 ? 0 : t < 3.4 ? 1 : t < 8.2 ? 2 : 3;
+    chip(["貼 coupon", "進腔體", "跑製程 / WAC", "量測、比較"][st], 772, 40, [C.amber, C.grey, C.magenta, C.lime][st], { a: "right", size: 13 });
+    caption([
+      ["① 在整片載片上貼 coupon（下面墊導熱膏）", "膜的 coupon 放中心 / 中段 / 邊緣；也可貼零件材料"],
+      ["② 載片放上 ESC、送進腔體", "腔壁 liner 上也貼一片 coupon，看腔壁沉積"],
+      ["③ 跑要驗證的條件（製程或 WAC）", "各 coupon 被蝕刻的量不同；腔壁 coupon 的沉積被清掉"],
+      ["④ 取出量前後厚度 / 重量 / 成分", "比較位置差異、零件侵蝕、腔壁有沒有清乾淨"],
+    ][st]);
+    this.C.forEach((c) => { const p = proj(c.x, c.top + 0.25, c.z); chip(c.n, p[0], p[1] - 6, c.er > 0.5 ? C.blue : C.grey, { a: "center", size: 10 }); });
+    callout([-3.0, 2.05, 0.4], 40, 158, "腔壁 coupon：上面的沉積（橘）", C.amber);
+    // 右上：量測結果
+    const k = seg(t, 8.2, 9.2) * (1 - reset);
+    panel(PX, 80, PW, 210, "量測結果（示意）", C.cyan);
+    const rows = [["Center ER", 1.0, C.blue], ["Mid ER", 0.93, C.blue], ["Edge ER", 0.82, C.blue], ["Y₂O₃ 侵蝕", 0.05, C.grey], ["Quartz 侵蝕", 0.25, C.cyan], ["腔壁沉積（後 / 前）", 0.1, C.amber]];
+    rows.forEach(([s, v, col], i) => {
+      const yy = 116 + i * 28;
+      text(s, PX + 14, yy + 4, { size: 12, c: col, w: 600 });
+      hctx.save(); hctx.fillStyle = col; hctx.globalAlpha = 0.85; hctx.fillRect(PX + 150, yy - 6, 140 * v * k, 12); hctx.restore();
+      if (k > 0.5) text(`${Math.round(v * 100)}%`, PX + PW - 12, yy + 4, { size: 11, c: col, w: 700, mono: true, a: "right", alpha: k });
+    });
+    text("ER 以 Center 為 100%；侵蝕以膜的 ER 為比較基準", PX + 14, 282, { size: 10.5, c: C.dim, w: 500 });
+    // 右下：注意事項
+    panel(PX, 300, PW, 136, "Coupon 結果要注意", C.amber);
+    ["散熱：沒墊好導熱膏 → coupon 比晶圓熱", "高度差：邊緣電場變形 → 只量 coupon 中間", "載片 loading：用長 oxide 的載片較接近", "膠材 / 導熱膏：可能釋氣、污染腔體"].forEach((s, i) => text(`• ${s}`, PX + 14, 338 + i * 24, { size: 11.5, c: C.text, w: 500 }));
+    chip("Coupon 適合看趨勢，最後仍要整片晶圓確認", 28, 410, C.lime, { size: 13 });
+  },
+});
+
 // ---------- 匯出 ----------
 for (const k of Object.keys(SCENES)) SCENES[k].fps = SCENES[k].fps || 15;
 window.SCENES = SCENES;
