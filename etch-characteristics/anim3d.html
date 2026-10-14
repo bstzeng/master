@@ -1083,80 +1083,62 @@ addScene("pulsing", {
 });
 
 // =====================================================================
-// BT / ME / OE：一個蝕刻 recipe 常見的三個步驟
+// BT / ME / OE：三個步驟各畫一個圖，各自重複播放（簡化版）
 // =====================================================================
 addScene("bt-me-oe", {
-  dur: 14, fps: 15,
+  dur: 12, fps: 15,
   setup(g) {
-    this.cs = [-2.4, 0, 2.4]; this.a = 0.45; this.d = 2.0; this.k = [0.92, 1, 0.85];
-    const yb = -this.d, si = () => mbox(g, M.si, { emissive: 0x0a3a66, ei: 0.4, edges: false });
-    this.ox = mbox(g, M.oxide, { emissive: 0x1a2a44, ei: 0.6 }).set(-4, yb - 0.4, -1.4, 4, yb - 0.01, 1.4);
-    mbox(g, M.sub).set(-4, yb - 1.0, -1.4, 4, yb - 0.4, 1.4);
-    const edges = [-4, ...this.cs.flatMap((c) => [c - this.a, c + this.a]), 4];
-    for (let i = 0; i < edges.length; i += 2) { si().set(edges[i], yb, -1.4, edges[i + 1], 0, 1.4); mbox(g, M.mask, { opacity: 0.92 }).set(edges[i], 0, -1.4, edges[i + 1], 0.35, 1.4); }
-    this.T = this.cs.map(() => ({ bot: si(), fl: si(), fr: si(), nat: mbox(g, [0x9aa3b0, 0xe8eef6], { emissive: 0x3a4250, ei: 0.5 }) }));
-    this.plasma = mbox(g, [0x5a1a8a, 0xc77dff], { opacity: 0.12, emissive: 0x9a3ce0, ei: 0.8 }); this.plasma.lines.visible = false;
-    this.ions = particles(g, 45, COL.ion, 0.08); this.trail = particles(g, 135, COL.ion, 0.05); this.flash = particles(g, 30, 0xffffff, 0.1);
+    this.a = 0.7; this.d = 2.0;
+    const a = this.a, d = this.d;
+    this.P = [["BT", -9.3, 0xff7ad9], ["ME", 0, 0xc77dff], ["OE", 9.3, 0x7fb0ff]].map(([k, x, col]) => {
+      const s = new THREE.Group(); s.position.x = x; g.add(s);
+      const si = () => mbox(s, M.si, { emissive: 0x0a3a66, ei: 0.4, edges: false });
+      mbox(s, M.oxide, { emissive: 0x1a2a44, ei: 0.6 }).set(-2.6, -d - 0.4, -1.3, 2.6, -d - 0.01, 1.3);
+      [[-2.6, -a], [a, 2.6]].forEach(([x0, x1]) => { si().set(x0, -d, -1.3, x1, 0, 1.3); mbox(s, M.mask, { opacity: 0.92 }).set(x0, 0, -1.3, x1, 0.35, 1.3); });
+      const pl = mbox(s, [0x5a1a8a, col], { opacity: 0.12, emissive: col, ei: 0.5 }); pl.set(-2.6, 0.7, -1.3, 2.6, 1.5, 1.3); pl.lines.visible = false;
+      return { k, s, bot: si(), fl: si(), fr: si(), nat: mbox(s, [0xd8dde6, 0xffffff], { emissive: 0x8a909a, ei: 0.8 }), ions: particles(s, 14, COL.ion, 0.09), trail: particles(s, 42, COL.ion, 0.05), flash: particles(s, 14, 0xffffff, 0.1) };
+    });
   },
   render(t) {
-    this.group.position.y = 1.0; // 整組抬高，避免背景格線穿過結構
-    camLeft(t, this.dur, { r: 17.5, h: 4.2, a0: 0.18, amp: 0.04, look: [0, 1.3, 0] });
-    const a = this.a, d = this.d, yb = -d, reset = seg(t, 13.4, 13.9);
-    const tBT = 0.5, tME = 2.5, tEP = 7.3, tOE = 7.8, tEnd = 10.6;
-    const step = t < tBT ? 0 : t < tME ? 1 : t < tEP ? 2 : t < tOE ? 3 : t < tEnd ? 4 : 5;
-    const r = d / (tEP - tME), nat = 0.07 * (1 - seg(t, tBT + 0.2, tME - 0.2)) * 1 + 0.07 * reset;
-    const oe = seg(t, tOE, tEnd - 0.4);
-    this.cs.forEach((c, i) => {
-      const k = this.k[i], me = Math.max(0, Math.min(t, tOE) - tME), dp = Math.min(d, r * k * me + 0.6 * r * k * Math.max(0, t - tOE)) * (1 - reset);
-      const T = this.T[i];
-      T.nat.set(c - a, 0, -1.4, c + a, Math.max(0.001, nat), 1.4); if (nat < 0.004) T.nat.hide();
-      if (dp < d - 0.003) { T.bot.set(c - a, yb, -1.4, c + a, -dp, 1.4); T.fl.hide(); T.fr.hide(); }
-      else { T.bot.hide(); const f = 0.24 * (1 - oe); if (f > 0.01) { T.fl.set(c - a, yb, -1.4, c - a + f, yb + f, 1.4); T.fr.set(c + a - f, yb, -1.4, c + a, yb + f, 1.4); } else { T.fl.hide(); T.fr.hide(); } }
-      T.dp = dp;
+    this.group.position.y = 0.6;
+    camera.position.set(Math.sin(t * 0.5) * 0.4, 4.6, 25.5); camera.lookAt(0, -0.2, 0);
+    camera.setViewOffset(W, H, 0, -H * 0.1, W, H);
+    const a = this.a, d = this.d, yb = -d;
+    this.P.forEach((p) => {
+      let bottom = 0, speed = 0.9;
+      if (p.k === "BT") { // 原生氧化層被打穿，4 秒一循環
+        const u = seg((t % 4) / 4, 0.1, 0.75), th = 0.22 * (1 - u);
+        if (th > 0.004) p.nat.set(-a, 0, -1.3, a, th, 1.3); else p.nat.hide();
+        p.bot.set(-a, yb, -1.3, a, 0, 1.3); p.fl.hide(); p.fr.hide(); bottom = th; speed = 1.3;
+      } else if (p.k === "ME") { // 主蝕刻往下吃，6 秒一循環
+        p.nat.hide(); const dp = d * seg((t % 6) / 6, 0.05, 0.85);
+        if (dp < d - 0.003) p.bot.set(-a, yb, -1.3, a, -dp, 1.3); else p.bot.hide();
+        p.fl.hide(); p.fr.hide(); bottom = -dp;
+      } else { // OE：清掉底角殘留，4 秒一循環
+        p.nat.hide(); p.bot.hide(); const f = 0.32 * (1 - seg((t % 4) / 4, 0.1, 0.8));
+        if (f > 0.01) { p.fl.set(-a, yb, -1.3, -a + f, yb + f, 1.3); p.fr.set(a - f, yb, -1.3, a, yb + f, 1.3); } else { p.fl.hide(); p.fr.hide(); }
+        bottom = yb; speed = 0.6;
+      }
+      const ions = [], tr = [], fl = [];
+      ionRain(ions, tr, fl, { t, n: 12, seed: 7 + p.s.position.x, x0: -a + 0.1, x1: a - 0.1, z0: -1.1, z1: 1.1, top: 1.5, bottom, speed });
+      place(p.ions, ions); place(p.trail, tr); place(p.flash, fl);
     });
-    const col = [0xc77dff, 0xff7ad9, 0xc77dff, 0xc77dff, 0x7fb0ff, 0x7fb0ff][step], on = step >= 1 && step <= 4 && reset < 0.01;
-    this.plasma.set(-4, 1.2, -1.4, 4, 2.0, 1.4); this.plasma.mat.opacity = on ? 0.13 : 0.02; this.plasma.mat.color.set(col); this.plasma.mat.emissive.set(col).multiplyScalar(0.7);
-    const ions = [], tr = [], fl = [];
-    if (on) { const sp = step === 1 ? 1.4 : step === 4 ? 0.55 : 0.9; this.cs.forEach((c, i) => ionRain(ions, tr, fl, { t, n: 15, seed: 7 + i * 30, x0: c - a + 0.08, x1: c + a - 0.08, z0: -1.2, z1: 1.2, top: 2.0, bottom: step === 1 ? nat : -this.T[i].dp, speed: sp })); }
-    place(this.ions, ions); place(this.trail, tr); place(this.flash, fl);
     composer.render();
     hctx.clearRect(0, 0, W, H);
-    frame("BT / ME / OE：一個蝕刻 recipe 的三個步驟", TAG);
-    chip(["準備", "BT：Breakthrough", "ME：Main Etch", "Endpoint！", "OE：Over Etch", "完成"][step], 772, 40, [C.grey, C.magenta, C.cyan, C.yellow, C.blue, C.lime][step], { a: "right", size: 13 });
-    caption([
-      ["開始前：表面有一層很薄的原生氧化層", "要蝕刻的是 Poly-Si，下面是停止層（閘極氧化層）"],
-      ["BT（Breakthrough）：先打穿原生氧化層", "時間短、離子能量高、幾乎沒有選擇比 → 先把「硬皮」打開"],
-      ["ME（Main Etch）：蝕刻主體", "速率高，側壁輪廓在這一步決定；用 OES 監看 endpoint"],
-      ["Endpoint：最快的地方已經碰到停止層", "訊號掉下來 → ME 結束，換到 OE"],
-      ["OE（Over Etch）：清掉較慢處的殘留與底角", "離子能量低、對停止層選擇比高 → 不打穿閘極氧化層"],
-      ["完成：各處都乾淨，停止層還在", "OE 時間常用 ME 時間的百分比設定（示意）"],
-    ][step]);
-    callout([this.cs[0] - a - 0.6, 0.35 + 1.0, 1.4], 40, 150, "硬遮罩", C.grey);
-    callout([-3.6, -1.0 + 1.0, 1.4], 40, 196, "Poly-Si（要蝕刻的層）", C.blue);
-    callout([3.6, yb - 0.2 + 1.0, 1.4], 434, 336, "停止層（閘極氧化層）", C.cyan, { a: "right" });
-    if (nat > 0.01) callout([this.cs[2], 0.05 + 1.0, 1.4], 434, 150, "原生氧化層（灰）", C.grey, { a: "right" });
-    // 右上：三個步驟的比較表（目前步驟亮起）
-    panel(PX, 80, PW, 196, "Recipe 步驟（示意）", C.cyan);
-    const cols = [["BT", C.magenta], ["ME", C.cyan], ["OE", C.blue]], cur = step === 1 ? 0 : step === 2 || step === 3 ? 1 : step === 4 ? 2 : -1;
-    const cx = (j) => PX + 128 + j * 70;
-    cols.forEach(([s, col], j) => {
-      if (j === cur) { hctx.save(); hctx.fillStyle = col; hctx.globalAlpha = 0.16; hctx.fillRect(cx(j) - 33, 100, 66, 170); hctx.restore(); }
-      text(s, cx(j), 118, { size: 14, c: col, w: 700, a: "center", mono: true });
+    frame("BT / ME / OE：蝕刻 recipe 的三個步驟", TAG);
+    const heads = [["BT", "Breakthrough", "打穿表面的原生氧化層", C.magenta], ["ME", "Main Etch", "蝕刻主體", C.cyan], ["OE", "Over Etch", "清掉殘留與底角", C.blue]];
+    this.P.forEach((p, i) => {
+      const q = proj(p.s.position.x, 2.3 + 0.6, 0), [k, full, what, col] = heads[i];
+      text(k, q[0], q[1] - 34, { size: 30, c: col, w: 700, a: "center", mono: true, glow: col });
+      text(full, q[0], q[1] - 10, { size: 15, c: C.text, w: 700, a: "center" });
+      text(what, q[0], q[1] + 10, { size: 12, c: C.dim, w: 600, a: "center" });
+      if (i < 2) { const r = proj(p.s.position.x + 4.65, 2.3 + 0.6, 0); text("→", r[0], r[1] - 14, { size: 26, c: C.dim, w: 700, a: "center" }); }
     });
-    [["目的", "打開表皮", "蝕刻主體", "清殘留"], ["離子能量", "高", "中", "低"], ["選擇比", "低", "中", "高"], ["怎麼結束", "固定時間", "endpoint", "ME 的 %"], ["氣體（例）", "CF₄", "Cl₂/HBr", "HBr/O₂"]].forEach((row, r) => {
-      const y = 146 + r * 25;
-      text(row[0], PX + 14, y, { size: 11.5, c: C.dim, w: 600 });
-      row.slice(1).forEach((s, j) => text(s, cx(j), y, { size: 11.5, c: j === cur ? C.text : "rgba(232,246,255,.55)", w: j === cur ? 700 : 500, a: "center" }));
-    });
-    // 右下：OES 訊號
-    const P = chart(284, 118, "OES 訊號（ME 監看的譜線）", C.magenta, { xa: 0, xb: 12, ya: 0, yb: 1.2, xt: [[0, "0"], [12, "時間"]], yt: [] });
-    const S = (v) => (v < tBT ? 0.1 : v < tME ? 0.45 : v < tOE + 0.6 ? 0.3 + 0.7 / (1 + Math.exp((v - (tEP + 0.25)) / 0.12)) : v < tEnd ? 0.3 : 0.1);
-    [[tBT, tME, "BT", C.magenta], [tME, tOE, "ME", C.cyan], [tOE, tEnd, "OE", C.blue]].forEach(([x0, x1, s, col]) => { hctx.save(); hctx.fillStyle = col; hctx.globalAlpha = 0.08; hctx.fillRect(P.X(x0), P.y1 - 8, P.X(x1) - P.X(x0), P.y0 - P.y1 + 8); hctx.restore(); text(s, (P.X(x0) + P.X(x1)) / 2, P.y1 + 2, { size: 10, c: col, w: 700, a: "center" }); });
-    if (reset < 0.01) { const pts = []; for (let i = 0; i <= 200; i++) { const v = (Math.min(t, 12) * i) / 200; pts.push([P.X(v), P.Y(S(v) + 0.02 * Math.sin(v * 41))]); } line(pts, C.magenta, { w: 1.6 }); }
-    if (t > tEP + 0.3 && reset < 0.01) { line([[P.X(tEP + 0.3), P.y1], [P.X(tEP + 0.3), P.y0]], C.yellow, { w: 1.2, glow: 0 }); text("endpoint", P.X(tEP + 0.3) - 3, P.y0 - 6, { size: 10, c: C.yellow, w: 700, a: "right" }); }
-    bottomChips("OE 太少 → 殘留、底角 footing", "OE 太多 → 傷停止層、側壁被吃");
+    text("灰 = 原生氧化層　　藍 = Poly-Si（要蝕刻的層）　　淺藍 = 停止層　　白框 = 硬遮罩", W / 2, 420, { size: 12.5, c: C.dim, w: 600, a: "center" });
   },
 });
+
+// =====================================================================
 
 // =====================================================================
 // Loading effect：左邊以自由基為主、右邊以離子為主，iso 與 long width 的趨勢相反
