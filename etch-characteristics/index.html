@@ -128,13 +128,13 @@
 
       <section class="block" aria-labelledby="bt-me-oe-title">
         <p class="section-index">RECIPE STEPS</p>
-        <h2 id="bt-me-oe-title">BT / ME / OE <span class="en">一個蝕刻 recipe 的三個步驟</span></h2>
+        <h2 id="bt-me-oe-title">BT / ME / OE <span class="en">蝕刻 recipe 的三個步驟</span></h2>
         <div class="step">
           <figure><img src="gifs/preview/bt-me-oe.gif" alt="BT / ME / OE 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
           <div class="card-body">
-            <p>一個蝕刻 recipe 通常分成三步。BT（Breakthrough）先用高離子能量、幾乎沒有選擇比的條件，在很短的時間內打穿表面的原生氧化層。ME（Main Etch）是蝕刻主體，速率高，側壁輪廓在這一步決定，並用 OES 監看 endpoint。抓到 endpoint 後換到 OE（Over Etch），用低離子能量、對停止層選擇比高的條件，把較慢處的殘留和底角 footing 清乾淨，又不打穿停止層。</p>
-            <table class="facts"><tr><th>BT</th><td>打開原生氧化層：時間短、離子能量高、選擇比低</td></tr><tr><th>ME</th><td>蝕刻主體、決定輪廓：用 endpoint 結束</td></tr><tr><th>OE</th><td>清殘留與 footing：離子能量低、選擇比高，時間常用 ME 的 %</td></tr><tr><th>OE 的取捨</th><td>太少 → 殘留、footing；太多 → 傷停止層、側壁被吃</td></tr></table>
-            <a class="dl" href="gifs/bt-me-oe.gif" download="etch-bt-me-oe.gif">下載 1080P GIF（7.1 MB）</a>
+            <p>一個蝕刻 recipe 通常分成三步。BT（Breakthrough）先打穿表面的原生氧化層；ME（Main Etch）是蝕刻主體，把要蝕刻的膜往下吃到停止層；OE（Over Etch）再把較慢處的殘留和底角清乾淨。動畫三個步驟各畫一個圖，各自重複播放。</p>
+            <table class="facts"><tr><th>BT</th><td>Breakthrough：打穿表面的原生氧化層</td></tr><tr><th>ME</th><td>Main Etch：蝕刻主體</td></tr><tr><th>OE</th><td>Over Etch：清掉殘留與底角</td></tr></table>
+            <a class="dl" href="gifs/bt-me-oe.gif" download="etch-bt-me-oe.gif">下載 1080P GIF（5.7 MB）</a>
           </div>
         </div>
       </section>
@@ -144,9 +144,9 @@
         <div class="step">
           <figure><img src="gifs/preview/first-wafer.gif" alt="First wafer effect 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
           <div class="card-body">
-            <p>腔體閒置或 PM 後，腔壁是乾淨的。乾淨的壁面會吃掉較多自由基，壁溫也還沒爬到穩定值，所以前幾片的蝕刻率和 CD 會偏離。跑過幾片、腔壁長出一層塗層之後，結果才會收斂到穩定值。</p>
+            <p>動畫比較兩個狀態：Wafer #1 時腔壁是乾淨的，自由基撞壁就被吃掉（白光），到晶圓的自由基變少，ER 偏低；跑到 Wafer #6 時腔壁已經長出一層塗層，被吃掉的自由基變少，ER 回到穩定值。右邊用淺色畫出所有晶圓的 ER 趨勢，目前這片用實點標出。</p>
             <table class="facts"><tr><th>原因</th><td>乾淨腔壁吃掉自由基、壁溫未穩定</td></tr><tr><th>怎麼看</th><td>首片 ER / CD、SPC 趨勢圖</td></tr><tr><th>怎麼處理</th><td>Season、閒置後先跑 dummy wafer</td></tr></table>
-            <a class="dl" href="gifs/first-wafer.gif" download="etch-first-wafer.gif">下載 1080P GIF（8.0 MB）</a>
+            <a class="dl" href="gifs/first-wafer.gif" download="etch-first-wafer.gif">下載 1080P GIF（15.9 MB）</a>
           </div>
         </div>
       </section>
@@ -156,9 +156,9 @@
         <div class="step">
           <figure><img src="gifs/preview/season.gif" alt="Season 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
           <div class="card-body">
-            <p>正式跑產品之前，先用 dummy wafer 或 season recipe 在腔壁長出塗層，把腔體「養」到和穩定生產時一樣的狀態。這樣第一片產品晶圓就不會有 first wafer effect。片數越多越穩，但會花時間和 dummy wafer，所以要找出夠用的最少片數。</p>
+            <p>PM 或閒置後，先從左邊的 FOUP 抽 season（dummy）wafer 進腔體，把腔壁養到穩態，再換右邊 FOUP 的產品晶圓。右邊同一張 ER 圖中，綠框框起來的前幾片就是交給 season wafer 跑掉的部分，產品從穩定值開始。動畫示範 2 片 season、4 片產品，實際片數依機台與 recipe 而定。</p>
             <table class="facts"><tr><th>時機</th><td>PM、長時間閒置、換 recipe 之後</td></tr><tr><th>確認方式</th><td>OES、測試片蝕刻率</td></tr><tr><th>取捨</th><td>穩定度 vs. 時間與 dummy wafer 成本</td></tr></table>
-            <a class="dl" href="gifs/season.gif" download="etch-season.gif">下載 1080P GIF（7.3 MB）</a>
+            <a class="dl" href="gifs/season.gif" download="etch-season.gif">下載 1080P GIF（8.7 MB）</a>
           </div>
         </div>
       </section>
