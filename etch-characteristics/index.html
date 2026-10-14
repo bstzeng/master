@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="用 15 張 3D 動畫 GIF 看懂蝕刻實務：BT / ME / OE 步驟、first wafer effect、season、腔壁漂移、WAC、微粒與記憶效應、RF tool shift、loading effect、ESC 溫度與 Hydra、pulsing、endpoint、輪廓缺陷。" />
+    <meta name="description" content="用 16 張 3D 動畫 GIF 看懂蝕刻實務：BT / ME / OE 步驟、first wafer effect、season、腔壁漂移、WAC、微粒與記憶效應、RF tool shift、loading effect、ESC 溫度與 Hydra、pulsing、endpoint、輪廓缺陷。" />
     <meta name="theme-color" content="#05070d" />
     <title>蝕刻實務介紹｜MASTER</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -111,7 +111,7 @@
           <p class="eyebrow">ETCH IN PRACTICE / 3D GIF</p>
           <h1 id="page-title">蝕刻實務<br /><em>介紹</em></h1>
         </div>
-        <p>同一個 recipe，為什麼今天跑出來和昨天不一樣？答案常常不在 recipe，而在腔壁、RF 零件、晶圓上的圖形和 ESC 溫度。這一頁用 15 張 3D 動畫 GIF，先看一個 recipe 的 BT / ME / OE 三個步驟，再把蝕刻常見的特性一個一個拆開看：左邊看機制，右邊看工程師平常盯的趨勢圖。GIF 沒有編號，可以依課程需要自由穿插使用。</p>
+        <p>同一個 recipe，為什麼今天跑出來和昨天不一樣？答案常常不在 recipe，而在腔壁、RF 零件、晶圓上的圖形和 ESC 溫度。這一頁用 16 張 3D 動畫 GIF，先看一個 recipe 的 BT / ME / OE 三個步驟，再把蝕刻常見的特性一個一個拆開看：左邊看機制，右邊看工程師平常盯的趨勢圖。GIF 沒有編號，可以依課程需要自由穿插使用。</p>
       </section>
 
       <section class="block" aria-labelledby="map-title">
@@ -120,7 +120,7 @@
         <div class="table-wrap">
           <table class="compare">
             <tbody>
-              <tr><th>蝕刻步驟</th><td><a href="#bt-me-oe-title">BT / ME / OE</a></td></tr><tr><th>腔體狀態</th><td><a href="#first-wafer-title">First wafer effect</a>、<a href="#season-title">Season</a>、<a href="#wall-drift-title">腔壁沉積與漂移</a>、<a href="#wac-title">WAC（Waferless Auto Clean）</a>、<a href="#flaking-title">剝落微粒與記憶效應</a></td></tr><tr><th>RF 效應（tool shift）</th><td><a href="#rf-match-title">RF 傳輸、匹配與老化</a></td></tr><tr><th>Loading effect</th><td><a href="#macro-loading-title">Loading effect</a>、<a href="#micro-loading-title">Micro loading（iso / dense）</a></td></tr><tr><th>ESC 溫度控制</th><td><a href="#esc-temp-title">ESC 溫度效應</a>、<a href="#hydra-title">Hydra 多區溫控</a></td></tr><tr><th>脈衝電漿</th><td><a href="#pulsing-title">Pulsing</a></td></tr><tr><th>製程監控與輪廓</th><td><a href="#endpoint-title">Endpoint 偵測（OES）</a>、<a href="#profile-defects-title">常見的輪廓缺陷</a></td></tr><tr><th>課程總結</th><td><a href="#takeaways-title">三個 Take Away</a></td></tr>
+              <tr><th>蝕刻步驟</th><td><a href="#bt-me-oe-title">BT / ME / OE</a></td></tr><tr><th>腔體狀態</th><td><a href="#first-wafer-title">First wafer effect</a>、<a href="#season-title">Season</a>、<a href="#wall-drift-title">腔壁沉積與漂移</a>、<a href="#wac-title">WAC（Waferless Auto Clean）</a>、<a href="#coupon-test-title">Coupon test</a>、<a href="#flaking-title">剝落微粒與記憶效應</a></td></tr><tr><th>RF 效應（tool shift）</th><td><a href="#rf-match-title">RF 傳輸、匹配與老化</a></td></tr><tr><th>Loading effect</th><td><a href="#macro-loading-title">Loading effect</a>、<a href="#micro-loading-title">Micro loading（iso / dense）</a></td></tr><tr><th>ESC 溫度控制</th><td><a href="#esc-temp-title">ESC 溫度效應</a>、<a href="#hydra-title">Hydra 多區溫控</a></td></tr><tr><th>脈衝電漿</th><td><a href="#pulsing-title">Pulsing</a></td></tr><tr><th>製程監控與輪廓</th><td><a href="#endpoint-title">Endpoint 偵測（OES）</a>、<a href="#profile-defects-title">常見的輪廓缺陷</a></td></tr><tr><th>課程總結</th><td><a href="#takeaways-title">三個 Take Away</a></td></tr>
             </tbody>
           </table>
         </div>
@@ -183,6 +183,18 @@
             <p>出片後不放晶圓，直接點 O₂ 或 NF₃ 等電漿，把腔壁沉積吃掉、產物抽走，接著下一片進腔再 etch，也就是 Etch → WAC → Etch 的循環。每一片開始時腔壁都在同一個乾淨的狀態，蝕刻率就不會一路漂移。沒有晶圓時 ESC 是裸露的，WAC recipe 要避免傷到 ESC。</p>
             <table class="facts"><tr><th>做什麼</th><td>每片之間插一次無晶圓電漿清潔</td></tr><tr><th>效果</th><td>每片從同一個腔壁條件開始</td></tr><tr><th>要點</th><td>太強傷 ESC / 零件，太弱清不乾淨</td></tr></table>
             <a class="dl" href="gifs/wac.gif" download="etch-wac.gif">下載 1080P GIF（9.2 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="coupon-test-title">
+        <p class="section-index">CHAMBER CONDITION</p>
+        <h2 id="coupon-test-title">Coupon test <span class="en">用小塊樣品做 PQ / study</span></h2>
+        <div class="step">
+          <figure><img src="gifs/preview/coupon-test.gif" alt="Coupon test 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>做 WAC 或製程 study 時，常在一片完整的載片上貼小塊樣品（coupon），下面墊導熱膏。膜的 coupon 放在中心、中段、邊緣，看位置差異；也可以貼 Y₂O₃、石英等零件材料，看會不會被侵蝕；腔壁 liner 上再貼一片 coupon，直接看沉積有沒有被清掉。跑完取出量前後的厚度、重量或成分。要注意 coupon 的溫度、高度差、載片 loading 和膠材污染都和真正的晶圓不同，所以適合看趨勢，最後仍要用整片晶圓確認。</p>
+            <table class="facts"><tr><th>貼在載片上</th><td>膜：中心 / 中段 / 邊緣；零件材料：Y₂O₃、石英等</td></tr><tr><th>貼在腔壁上</th><td>看 WAC 有沒有把沉積清乾淨</td></tr><tr><th>量什麼</th><td>前後厚度、重量、成分（XPS / EDX）</td></tr><tr><th>要注意</th><td>導熱膏、只量中間、用長 oxide 的載片、膠材污染</td></tr></table>
+            <a class="dl" href="gifs/coupon-test.gif" download="etch-coupon-test.gif">下載 1080P GIF（11.3 MB）</a>
           </div>
         </div>
       </section>
