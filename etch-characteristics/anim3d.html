@@ -541,41 +541,78 @@ function bottomChips(a, b) { chip(a, 28, 376, C.cyan, { size: 13 }); chip(b, 28,
 // Season：用 dummy wafer 先把腔壁養到穩定
 // =====================================================================
 addScene("season", {
-  dur: 10, fps: 15,
-  setup(g) { this.o = rig(g); this.ready = ring(g, 2.95, -0.4, 0x5dffb0, 0.06); },
+  dur: 12, fps: 15,
+  setup(g) {
+    this.o = rig(g);
+    // 兩個 FOUP：左前 = season（dummy）wafer，右前 = 產品 wafer
+    const foup = (x, col, edge) => {
+      mbox(g, [0x1a2233, edge], { opacity: 0.35, emissive: 0x0a1a2a, ei: 0.3 }).set(x - 1.5, -0.8, 3.6, x + 1.5, 1.4, 6.4);
+      return [0, 1, 2, 3, 4, 5].map((k) => { const w = cyl(g, 1.2, 0, 0.05, col, { emissive: 0x0a2a44, ei: 0.5 }); w.mesh.position.set(x, -0.6 + k * 0.32, 5.0); return w; });
+    };
+    this.FL = foup(-4.6, [0x5a606a, 0xc8ced8], 0xc8ced8);
+    this.FR = foup(4.6, [0x1d78c0, 0x4fc3ff], 0x4fc3ff);
+    this.mv = cyl(g, 1.2, 0, 0.06, [0x5a606a, 0xc8ced8], { emissive: 0x0a2a44, ei: 0.8 });
+    this.loss = particles(g, 40, 0xffffff, 0.12);
+  },
   render(t) {
-    camLeft(t, this.dur, RIGCAM);
-    const o = this.o, cyc = 0.76, D = 5, tD = 0.4, tR = tD + D * cyc, tP = tR + 0.6, P = 6, tE = tP + P * cyc;
-    const dummy = t >= tD && t < tR, prod = t >= tP && t < tE, ready = t >= tR && t < tP;
-    const u = dummy ? (t - tD) / cyc : prod ? (t - tP) / cyc : 0, k = Math.floor(u) + 1, ph = fract(u);
-    const on = (dummy || prod) && ph > 0.12 && ph < 0.92 ? 1 : 0;
-    const coat = (1 - Math.exp(-clamp((t - tD) / cyc, 0, D) / 1.3)) * (1 - seg(t, 9.55, 9.95));
+    camLeft(t, this.dur, { r: 26, h: 12, a0: 0.0, amp: 0.04, look: [0, 2.6, 1.8] });
+    const o = this.o, T0 = 0.5, CY = 1.75, idx = Math.floor((t - T0) / CY), u = (t - T0) / CY - idx;
+    const act = t >= T0 && idx >= 0 && idx < 6, seas = act && idx < 2, k = act ? (seas ? idx : idx - 2) : -1;
+    const proc = act && u > 0.25 && u < 0.78;
+    const reset = seg(t, 11.5, 11.95), sDone = clamp((t - T0) / CY, 0, 2);
+    const coat = lerp(0.04, 0.9, clamp(sDone / 2)) * (1 - reset) + 0.04 * reset;
     o.coat.mat.opacity = 0.03 + 0.55 * coat;
-    o.wafer.mat.color.set(prod ? PROD : DUMMY);
-    o.wafer.mat.emissiveIntensity = 0.4 + ((dummy || prod) && ph < 0.12 ? 1.2 * (1 - ph / 0.12) : 0);
-    this.ready.material.opacity = t >= tR && t < tE ? 0.5 + 0.4 * Math.abs(Math.sin(t * 4)) : 0.06;
-    rigPlasma(o, t, on);
+    o.wafer.mesh.visible = proc;
+    o.wafer.mat.color.set(seas ? 0x5a606a : 0x1d78c0);
+    rigPlasma(o, t, proc ? 1 : 0);
+    // 抽片：FOUP 槽位 → 腔體 → 放回
+    const F = seas ? this.FL : this.FR, slot = act ? F[k] : null;
+    [...this.FL, ...this.FR].forEach((w) => (w.mesh.visible = true));
+    this.mv.mesh.visible = false;
+    if (act && !proc) {
+      slot.mesh.visible = false;
+      const a = slot.mesh.position.clone(), b = new THREE.Vector3(0, 0.2, 0), f = u < 0.25 ? u / 0.25 : 1 - (u - 0.78) / 0.22;
+      const p = new THREE.Vector3().lerpVectors(a, b, ease(f)); p.y += Math.sin(Math.PI * f) * 1.2;
+      this.mv.mesh.visible = true; this.mv.mesh.position.copy(p); this.mv.mat.color.set(seas ? 0x5a606a : 0x1d78c0);
+    } else if (proc) slot.mesh.visible = false;
+    const loss = [], nl = proc ? Math.round(40 * (1 - coat)) : 0;
+    for (let i = 0; i < nl; i++) { const th = rnd(i + Math.floor(t * 8) * 13) * Math.PI * 2, y = 0.4 + rnd(i * 3 + Math.floor(t * 8)) * 4.2; loss.push([Math.cos(th) * 3.05, y, Math.sin(th) * 3.05, 0.6 + 0.6 * rnd(i + t)]); }
+    place(this.loss, loss);
     composer.render();
     hctx.clearRect(0, 0, W, H);
     frame("Season：先把腔壁養到穩定再跑貨", TAG);
-    chip(dummy ? `Dummy #${k}` : prod ? `Product #${k}` : ready ? "Ready" : "PM 後：腔壁乾淨", 772, 40, ready ? C.green : prod ? C.cyan : C.grey, { a: "right", size: 13 });
-    caption(dummy ? [`Season：跑 dummy wafer #${k}`, "用 dummy wafer 或 season recipe 在腔壁長出塗層"]
-      : ready ? ["腔壁狀態到達目標 → Ready", "可用 OES、測試片蝕刻率確認腔體已經穩定"]
-      : prod ? [`產品晶圓 #${k}`, "第一片就和穩定生產時一樣，不會有 first wafer effect"]
-      : ["PM 後：腔壁乾淨", "直接跑產品的話，前幾片會偏（first wafer effect）"]);
-    callout([2.0, 0.12, 1.0], 40, 336, "灰色 = dummy wafer、藍色 = 產品晶圓", C.grey);
-    const Pc = chart(80, 226, "產品晶圓的蝕刻率（相對穩定值）", C.cyan, { xa: 1, xb: 6, ya: 88, yb: 102, xt: [[1, "#1"], [3, "#3"], [6, "#6"]], yt: [[90, "90%"], [95, "95%"], [100, "100%"]], foot: 20 });
-    hline(Pc, 100, C.green, "穩定值");
-    plot(Pc, (v) => 100 - 9 * Math.exp(-(v - 1) / 1.3), 1, 6, C.grey, { dash: [4, 3], w: 1.5, glow: 0 });
-    const done = prod ? (ph > 0.5 ? k : k - 1) : t >= tE ? P : 0, pts = [];
-    for (let i = 1; i <= done; i++) pts.push([Pc.X(i), Pc.Y(100 - 0.4 * (rnd(i) - 0.5))]);
-    line(pts, C.lime); pts.forEach(([x, y]) => dot(x, y, C.lime, 3.5));
-    legendRow(Pc.x0 + 6, 296, [["沒有 season", C.grey, true], ["有 season", C.lime, false]]);
-    panel(PX, 316, PW, 86, "腔壁狀態", C.amber);
-    meter(PX + 14, 352, "塗層覆蓋", coat, C.amber, coat > 0.95 ? "到達目標" : "累積中");
-    text("Dummy wafer 片數（示意）", PX + 176, 352, { size: 12, c: C.dim, w: 500 });
-    text(`${dummy ? k : t >= tR ? D : 0} / ${D}`, PX + PW - 14, 372, { size: 16, c: C.grey, w: 700, mono: true, a: "right" });
-    bottomChips("時機：PM、長時間閒置、換 recipe 之後", "取捨：片數越多越穩，但耗時間和 dummy wafer");
+    chip(!act ? (t < T0 ? "PM / 閒置後" : "完成") : seas ? `Season #${k + 1}` : `Prod #${k + 1}`, 772, 40, !act ? C.grey : seas ? C.green : C.cyan, { a: "right", size: 13 });
+    caption(!act ? ["PM / 閒置後：腔壁乾淨", "先抽 season wafer 把腔壁養好，再跑產品"]
+      : seas ? [`Season #${k + 1}：從左邊 FOUP 抽 dummy wafer`, "跑完腔壁長出一層塗層 → 腔體往穩態走"]
+      : [`Prod #${k + 1}：換右邊 FOUP 的產品晶圓`, "腔壁已經在穩態 → 第一片產品就在穩定值"]);
+    const pl = proj(-4.6, 1.8, 5.0), pr = proj(4.6, 1.8, 5.0);
+    chip("Season wafer（dummy）", pl[0], pl[1], C.green, { a: "center", size: 11 });
+    chip("Product wafer", pr[0], pr[1], C.cyan, { a: "center", size: 11 });
+    // 右邊：和 first wafer 同一張 ER profile，前 5 片用綠框框起來（交給 season wafer 跑掉）
+    const N = 12, py = 80, ph1 = 330;
+    panel(PX, py, PW, ph1, "蝕刻率 vs. 片號（相對穩定值）", C.cyan);
+    const x0 = PX + 46, x1 = PX + PW - 16, y0 = py + ph1 - 28, y1 = py + 34;
+    const X = (n) => lerp(x0, x1, (n - 1) / (N - 1)), Y = (v) => lerp(y0, y1, (v - 88) / 14);
+    const c = hctx; c.save(); c.fillStyle = "rgba(93,255,176,.08)"; c.fillRect(x0, Y(101), x1 - x0, Y(99) - Y(101)); c.restore();
+    line([[x0, Y(100)], [x1, Y(100)]], C.green, { w: 1, dash: [4, 3], glow: 0 });
+    line([[x0, y1], [x0, y0], [x1, y0]], "rgba(232,246,255,.4)", { w: 1, glow: 0 });
+    [90, 95, 100].forEach((v) => text(`${v}%`, x0 - 5, Y(v) + 4, { size: 10, c: C.dim, mono: true, w: 500, a: "right" }));
+    [1, 5, 6, 12].forEach((n) => text(`#${n}`, X(n), y0 + 15, { size: 10, c: C.dim, mono: true, w: 500, a: "center" }));
+    const er = (n) => 100 - 9 * Math.exp(-(n - 1) / 1.6), pts = [];
+    for (let n = 1; n <= N; n++) pts.push([X(n), Y(er(n))]);
+    line(pts, "rgba(34,229,255,.35)", { w: 2, glow: 0 });
+    pts.forEach(([x, y]) => dot(x, y, "rgba(34,229,255,.4)", 3.5));
+    // 綠框：#1～#5
+    const bx0 = X(0.6), bx1 = X(5.45), by0 = y1 + 4, by1 = y0 - 4;
+    c.save(); c.strokeStyle = C.green; c.lineWidth = 2; c.shadowColor = C.green; c.shadowBlur = 8; c.setLineDash([6, 4]); c.strokeRect(bx0, by0, bx1 - bx0, by1 - by0); c.restore();
+    chip("Season", (bx0 + bx1) / 2, by0, C.green, { a: "center", size: 13 });
+    text("用 season wafer 跑掉這段", (bx0 + bx1) / 2, by1 - 10, { size: 11, c: C.green, w: 700, a: "center" });
+    text("產品從這裡開始 →", X(6) + 6, Y(er(6)) + 30, { size: 11, c: C.cyan, w: 700 });
+    if (act) {
+      const n = seas ? k + 1 : 6 + k, col = seas ? C.green : C.cyan;
+      dot(X(n), Y(er(n)), col, 7);
+      text(seas ? `Season #${k + 1}` : `Prod #${k + 1}`, X(n), Y(er(n)) - 12, { size: 12, c: col, w: 700, a: "center", mono: true });
+    }
   },
 });
 
