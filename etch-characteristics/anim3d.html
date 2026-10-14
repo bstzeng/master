@@ -278,7 +278,7 @@ function caption(lines, y = 96) {
 // First wafer effect：腔壁從乾淨到被塗層覆蓋，前幾片的蝕刻率偏離
 // =====================================================================
 addScene("first-wafer", {
-  dur: 10, fps: 15,
+  dur: 12, fps: 15,
   setup(g) {
     this.wall = cyl(g, 3.2, 0, 5, [0x3a4658, 0x8fa8d0], { opacity: 0.16, open: true, emissive: 0x1a2433, ei: 0.4 });
     this.coat = cyl(g, 3.12, 0.15, 4.85, [0x8a5a2a, 0xffb36b], { opacity: 0.5, open: true, emissive: 0x6a3a10, ei: 0.5 });
@@ -293,56 +293,43 @@ addScene("first-wafer", {
   },
   render(t) {
     camLeft(t, this.dur, { r: 23, h: 10.5, a0: 0.35, amp: 0.05, look: [0, 3.0, 0] });
-    const N = 12, t0 = 0.4, cyc = 0.76, tw = (t - t0) / cyc, n = clamp(Math.floor(tw) + 1, 1, N), ph = fract(tw);
-    const run = t >= t0 && t < t0 + N * cyc, on = run && ph > 0.12 && ph < 0.92 ? 1 : 0;
-    const reset = 1 - seg(t, 9.6, 9.95), nEff = clamp(tw, 0, N);
-    const coat = (1 - Math.exp(-nEff / 2.2)) * reset, Tw = (1 - Math.exp(-nEff / 3)) * reset;
+    // 只比較兩個狀態：Wafer #1（腔壁乾淨）↔ Wafer #6（穩態），來回切換
+    const k = seg(t, 5.4, 6.0) - seg(t, 11.4, 12.0), B = k > 0.5, coat = lerp(0.03, 0.9, k);
     this.coat.mat.opacity = 0.03 + 0.55 * coat;
-    this.wall.mat.emissiveIntensity = 0.3 + 0.6 * Tw;
-    this.plasma.mat.opacity = 0.11 * on; this.plasma.mat.emissiveIntensity = 0.8 * on;
-    this.wafer.mat.emissiveIntensity = 0.4 + (run && ph < 0.12 ? 1.2 * (1 - ph / 0.12) : 0);
-    // 自由基：在電漿裡亂飄
+    this.wall.mat.emissiveIntensity = 0.3 + 0.6 * k;
+    this.plasma.mat.opacity = 0.11; this.plasma.mat.emissiveIntensity = 0.8;
+    this.wafer.mat.emissiveIntensity = 0.5;
     const rad = [];
-    if (on) drift(rad, { t, n: 110, seed: 3, x0: -2.9, x1: 2.9, y0: 0.3, y1: 4.6, z0: -2.9, z1: 2.9, sp: 0.1, ok: ([x, , z]) => x * x + z * z < 2.9 ** 2 });
+    drift(rad, { t, n: 110, seed: 3, x0: -2.9, x1: 2.9, y0: 0.3, y1: 4.6, z0: -2.9, z1: 2.9, sp: 0.1, ok: ([x, , z]) => x * x + z * z < 2.9 ** 2 });
     place(this.rad, rad);
-    // 腔壁乾淨時：自由基撞壁就被吃掉（白色閃光）；塗層長好後就少了
-    const loss = [], nl = Math.round(40 * (1 - coat) * on);
+    // 腔壁乾淨時：自由基撞壁就被吃掉（白色閃光）；有塗層後就少了
+    const loss = [], nl = Math.round(40 * (1 - coat));
     for (let i = 0; i < nl; i++) { const th = rnd(i + Math.floor(t * 8) * 13) * Math.PI * 2, y = 0.4 + rnd(i * 3 + Math.floor(t * 8)) * 4.2; loss.push([Math.cos(th) * 3.05, y, Math.sin(th) * 3.05, 0.6 + 0.6 * rnd(i + t)]); }
     place(this.loss, loss);
     composer.render();
     hctx.clearRect(0, 0, W, H);
     frame("First wafer effect：前幾片為什麼跑不準", TAG);
-    const idle = !run;
-    chip(idle ? "閒置 / PM 後" : `Wafer #${n}`, 772, 40, idle ? C.grey : C.yellow, { a: "right", mono: !idle, size: 13 });
-    if (idle) caption(["腔壁回到乾淨狀態", "閒置或 PM 後，腔壁上的塗層不見了"]);
-    else if (n <= 3) caption([`第 ${n} 片：腔壁還很乾淨`, "自由基撞壁就被吃掉 → 到晶圓的變少", "壁溫也還沒穩定 → 蝕刻率偏低"]);
-    else if (n <= 6) caption([`第 ${n} 片：腔壁慢慢長出一層塗層`, "壁面吃掉的自由基變少，壁溫往穩定值爬"]);
-    else caption([`第 ${n} 片：腔壁狀態穩定`, "每片的蝕刻率一致 → 進入穩定生產"]);
-    callout([-3.1, 3.4, 0.8], 40, 336, "白光 = 自由基撞到乾淨腔壁被吃掉（塗層長好後變少）", C.grey);
-    // 右上：蝕刻率對片號
-    const py = 80, ph1 = 226;
+    chip(B ? "Wafer #6（穩態）" : "Wafer #1", 772, 40, B ? C.cyan : C.yellow, { a: "right", size: 13 });
+    caption(B ? ["Wafer #6：腔壁已有一層塗層（穩態）", "被腔壁吃掉的自由基變少 → ER 回到穩定值"] : ["Wafer #1：腔壁乾淨（閒置 / PM 後）", "自由基撞壁被吃掉（白光）→ 到晶圓的變少 → ER 偏低"]);
+    callout([-3.1, 3.4, 0.8], 40, 336, "白光 = 自由基撞到乾淨腔壁被吃掉", C.grey);
+    // 右邊：所有 wafer 的趨勢先用淺色畫好，目前這片用實點標出
+    const N = 12, py = 80, ph1 = 330;
     panel(PX, py, PW, ph1, "蝕刻率 vs. 片號（相對穩定值）", C.cyan);
     const x0 = PX + 46, x1 = PX + PW - 16, y0 = py + ph1 - 28, y1 = py + 34;
-    const X = (k) => lerp(x0, x1, (k - 1) / (N - 1)), Y = (v) => lerp(y0, y1, (v - 88) / 14);
+    const X = (n) => lerp(x0, x1, (n - 1) / (N - 1)), Y = (v) => lerp(y0, y1, (v - 88) / 14);
     const c = hctx; c.save(); c.fillStyle = "rgba(93,255,176,.08)"; c.fillRect(x0, Y(101), x1 - x0, Y(99) - Y(101)); c.restore();
     line([[x0, Y(100)], [x1, Y(100)]], C.green, { w: 1, dash: [4, 3], glow: 0 });
     text("穩定值", x1, Y(100) - 5, { size: 10, c: C.green, w: 700, a: "right" });
     line([[x0, y1], [x0, y0], [x1, y0]], "rgba(232,246,255,.4)", { w: 1, glow: 0 });
     [90, 95, 100].forEach((v) => text(`${v}%`, x0 - 5, Y(v) + 4, { size: 10, c: C.dim, mono: true, w: 500, a: "right" }));
-    [1, 4, 8, 12].forEach((k) => text(`#${k}`, X(k), y0 + 15, { size: 10, c: C.dim, mono: true, w: 500, a: "center" }));
-    const er = (k) => 100 - 9 * Math.exp(-(k - 1) / 1.6);
-    const done = idle ? (t < t0 ? 0 : N) : ph > 0.5 ? n : n - 1, pts = [];
-    for (let k = 1; k <= done; k++) pts.push([X(k), Y(er(k))]);
-    line(pts, C.cyan, { w: 2 });
-    pts.forEach(([x, y], i) => dot(x, y, i + 1 === done && !idle ? C.yellow : C.cyan, i + 1 === done && !idle ? 5 : 3.5));
-    // 右下：腔壁狀態
-    panel(PX, 316, PW, 86, "腔壁狀態", C.amber);
-    meter(PX + 14, 352, "塗層覆蓋", coat, C.amber, coat > 0.85 ? "穩定" : "累積中");
-    meter(PX + 176, 352, "腔壁溫度", Tw, C.red, Tw > 0.85 ? "穩定" : "上升中");
-    text("自由基在壁上被吃掉的比例", PX + 14, 390, { size: 11, c: C.dim, w: 500 });
-    text(`${Math.round(100 * (0.55 - 0.4 * coat))}%（示意）`, PX + PW - 14, 390, { size: 11, c: C.grey, w: 700, mono: true, a: "right" });
-    chip("監控：首片 ER / CD、SPC 趨勢圖", 28, 376, C.cyan, { size: 13 });
-    chip("對策：Season、閒置後先跑 dummy wafer", 28, 410, C.lime, { size: 13 });
+    [1, 4, 6, 8, 12].forEach((n) => text(`#${n}`, X(n), y0 + 15, { size: 10, c: C.dim, mono: true, w: 500, a: "center" }));
+    const er = (n) => 100 - 9 * Math.exp(-(n - 1) / 1.6), pts = [];
+    for (let n = 1; n <= N; n++) pts.push([X(n), Y(er(n))]);
+    line(pts, "rgba(34,229,255,.35)", { w: 2, glow: 0 });
+    pts.forEach(([x, y]) => dot(x, y, "rgba(34,229,255,.4)", 3.5));
+    const cur = B ? 6 : 1, [cx, cy] = [X(cur), Y(er(cur))], col = B ? C.cyan : C.yellow;
+    dot(cx, cy, col, 7);
+    text(`#${cur}：ER ${er(cur).toFixed(0)}%`, cx + (B ? 0 : 12), cy + (B ? 26 : 5), { size: 13, c: col, w: 700, a: B ? "center" : "left", mono: true });
   },
 });
 
