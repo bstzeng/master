@@ -678,10 +678,10 @@ addScene("wac", {
     place(this.prod, pr);
     composer.render();
     hctx.clearRect(0, 0, W, H);
-    frame("WAC：每片之間把腔壁清回原點", TAG);
+    frame("WAC：用來調整 wafer to wafer 的 chamber condition", TAG);
     const st = etch || u < 0.3 ? 0 : u < 3.0 ? 1 : wac ? 2 : 3;
     chip(["Etch：蝕刻產品晶圓", "出片", "WAC（無晶圓）", "下一片進腔"][st], 772, 40, [C.cyan, C.grey, C.blue, C.grey][st], { a: "right", size: 13 });
-    caption([["Etch：蝕刻產品晶圓", "產物和聚合物沉積在腔壁上"], ["出片：腔壁上多了一層沉積", "不清的話，下一片的腔壁條件就不一樣"], ["WAC：不放晶圓，點 O₂ / NF₃ 等電漿", "把腔壁沉積吃掉，產物被抽走"], ["下一片進腔 → 再 etch", "每片都從同一個乾淨的腔壁開始 → 結果穩定"]][st]);
+    caption([["Etch：蝕刻產品晶圓", "產物和聚合物沉積在腔壁上"], ["出片：腔壁上多了一層沉積", "不清的話，下一片的腔壁條件就不一樣"], ["WAC：不放晶圓，直接點電漿", "把腔壁沉積吃掉，產物被抽走"], ["下一片進腔 → 再 etch", "每片都從同一個乾淨的腔壁開始 → 結果穩定"]][st]);
     callout([2.0, 0.05, 1.2], 40, 336, "沒有晶圓：ESC 裸露，WAC recipe 要避免傷到 ESC", C.red, { alpha: wac ? 1 : 0 });
     const P = chart(80, 214, "蝕刻率 vs. 片號", C.cyan, { xa: 1, xb: 20, ya: 90, yb: 102, xt: [[1, "#1"], [10, "#10"], [20, "#20"]], yt: [[92, "92%"], [96, "96%"], [100, "100%"]], foot: 20 });
     hline(P, 100, C.green, "");
@@ -702,7 +702,7 @@ addScene("wac", {
     line([[bx(u), 326], [bx(u), 366]], C.yellow, { w: 2 });
     text("每片之間都插一次 WAC：Etch → WAC → Etch", PX + 14, 378, { size: 11, c: C.text, w: 600 });
     text("WAC 加長每片時間，但換到穩定的腔壁條件", PX + 14, 396, { size: 11, c: C.dim, w: 500 });
-    bottomChips("監控：WAC 後的 OES、蝕刻率趨勢", "要點：WAC 太強傷 ESC / 零件，太弱清不乾淨");
+    chip("要點：WAC 太強傷 ESC / 零件，太弱清不乾淨", 28, 410, C.lime, { size: 13 });
   },
 });
 
