@@ -1182,20 +1182,22 @@ addScene("bt-me-oe", {
 addScene("macro-loading", {
   dur: 10, fps: 15,
   setup(g) {
-    const si = () => mbox(g, M.si, { emissive: 0x0a3a66, ei: 0.4, edges: false });
-    this.S = [[-4.3, "rad"], [4.3, "ion"]].map(([c, k]) => {
-      const iso = [c - 1.7, 0.24], wide = [c - 0.3, c + 2.4];
-      [[c - 3, iso[0] - iso[1]], [iso[0] + iso[1], wide[0]], [wide[1], c + 3]].forEach(([x0, x1]) => { si().set(x0, -2.4, -1.3, x1, 0, 1.3); mbox(g, M.mask, { opacity: 0.9 }).set(x0, 0, -1.3, x1, 0.32, 1.3); });
-      return { c, k, iso, wide, bI: si(), bW: si(), rad: particles(g, 70, COL.rad, 0.08), ions: particles(g, 30, COL.ion, 0.08), trail: particles(g, 90, COL.ion, 0.05), fl: particles(g, 30, 0xffffff, 0.09), hit: particles(g, 10, 0xffa04d, 0.1) };
+    // 每一邊包成一個可旋轉的群組（左邊微轉，讓 iso 窄溝看得清楚）
+    this.S = [[-4.3, "rad", -0.22], [4.3, "ion", 0]].map(([c, k, ry]) => {
+      const sub = new THREE.Group(), q = new THREE.Group(); sub.position.x = c; sub.rotation.y = ry; q.position.x = -c; sub.add(q); g.add(sub);
+      const si = () => mbox(q, M.si, { emissive: 0x0a3a66, ei: 0.4, edges: false });
+      const iso = [c - 1.7, 0.34], wide = [c - 0.3, c + 2.4];
+      [[c - 3, iso[0] - iso[1]], [iso[0] + iso[1], wide[0]], [wide[1], c + 3]].forEach(([x0, x1]) => { si().set(x0, -2.4, -1.3, x1, 0, 1.3); mbox(q, M.mask, { opacity: 0.9 }).set(x0, 0, -1.3, x1, 0.32, 1.3); });
+      return { c, k, q, iso, wide, bI: si(), bW: si(), rad: particles(q, 70, COL.rad, 0.08), ions: particles(q, 30, COL.ion, 0.08), trail: particles(q, 90, COL.ion, 0.05), fl: particles(q, 30, 0xffffff, 0.09), hit: particles(q, 10, 0xffa04d, 0.1) };
     });
   },
   render(t) {
     this.group.position.y = 0.9;
-    camOrbit(t, this.dur, { r: 23, h: 4.2, a0: 0.08, amp: 0.03, look: [0, -0.4, 0] });
+    camOrbit(t, this.dur, { r: 23, h: 7.5, a0: 0.0, amp: 0.02, look: [0, -0.9, 0] });
     camera.setViewOffset(W, H, 0, -H * 0.035, W, H);
     const rs = 1 - seg(t, 9.3, 9.9), p = seg(t, 0.4, 8.0) * rs, yb = -2.4, vals = [];
     this.S.forEach((s) => {
-      const fast = 2.2 * seg(t, 0.4, 4.0) * rs, slow = 0.72 * seg(t, 0.4, 8.0) * rs, dI = s.k === "rad" ? fast : slow, dW = s.k === "rad" ? slow : fast;
+      const fast = 2.25 * seg(t, 0.4, 7.0) * rs, slow = 1.5 * seg(t, 0.4, 7.0) * rs, dI = s.k === "rad" ? fast : slow, dW = s.k === "rad" ? slow : fast;
       s.bI.set(s.iso[0] - s.iso[1], yb, -1.3, s.iso[0] + s.iso[1], -dI, 1.3);
       s.bW.set(s.wide[0], yb, -1.3, s.wide[1], -dW, 1.3);
       const rad = [], ions = [], tr = [], fl = [], hit = [];
@@ -1224,7 +1226,10 @@ addScene("macro-loading", {
     chip("以自由基為主（chemical / radical）", W / 4, 136, C.lime, { a: "center", size: 14 });
     chip("以離子為主（ion-driven）", (3 * W) / 4, 136, C.red, { a: "center", size: 14 });
     this.S.forEach((s, j) => {
-      const pi = proj(s.iso[0], 0.32 + 0.9 + 0.35, 1.3), pw = proj((s.wide[0] + s.wide[1]) / 2, 0.32 + 0.9 + 0.35, 1.3);
+      const wp = (x, y, z) => { const v = s.q.localToWorld(new THREE.Vector3(x, y, z)); return proj(v.x, v.y, v.z); }, pi = wp(s.iso[0], 0.32 + 0.35, 1.3), pw = wp((s.wide[0] + s.wide[1]) / 2, 0.32 + 0.35, 1.3);
+      // 在正面描出兩條溝的輪廓，深淺一眼看得出來
+      const v = vals[j], prof = (x0, x1, d, col) => line([wp(x0, 0, 1.31), wp(x0, -d, 1.31), wp(x1, -d, 1.31), wp(x1, 0, 1.31)], col, { w: 2.5, glow: 8 });
+      prof(s.iso[0] - s.iso[1], s.iso[0] + s.iso[1], v.dI, C.cyan); prof(s.wide[0], s.wide[1], v.dW, C.orange);
       text("iso", pi[0], pi[1] - 4, { size: 12, c: C.cyan, w: 700, a: "center" });
       text("long width", pw[0], pw[1] - 4, { size: 12, c: C.orange, w: 700, a: "center" });
     });
