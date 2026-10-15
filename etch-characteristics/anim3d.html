@@ -1015,7 +1015,7 @@ addScene("pulsing", {
     camOrbit(t, this.dur, { r: 16, h: 4.5, a0: 0.1, amp: 0.03, look: [0, 0.3, 0] });
     camera.setViewOffset(W, H, 0, H * 0.02, W, H);
     const T = 2, Ton = 1.2, a = this.a, d = this.d, hn = this.hn, t0 = 0.5, MAIN = 4.5, OE = 2.0;
-    const reset = seg(t, 14.4, 14.9), tt = Math.max(0, t - t0), tau = tt % T;
+    const reset = 0, tt = Math.max(0, t - t0), tau = tt % T;
     const onTime = (pulse) => (pulse ? Math.floor(tt / T) * Ton + Math.min(tau, Ton) : tt);
     const vals = [];
     this.S.forEach((s) => {
@@ -1032,7 +1032,7 @@ addScene("pulsing", {
       if (split) { s.Ll.set(c - 2.6, yb, -1.2, c - a - notch, yb + hn, 1.2); s.Rl.set(c + a + notch, yb, -1.2, c + 2.6, yb + hn, 1.2); } else { s.Ll.hide(); s.Rl.hide(); }
       if (depth < d - 0.005) s.B.set(c - a, yb, -1.2, c + a, -depth, 1.2); else s.B.hide();
       s.sheath.set(c - 2.6, 0.35, -1.2, c + 2.6, 0.35 + 0.6 * Math.max(sh, 0.02), 1.2).alpha(Math.max(0.02, sh));
-      s.plasma.set(c - 2.6, 1.0, -1.2, c + 2.6, 1.8, 1.2); s.plasma.mat.opacity = 0.02 + 0.12 * te; s.plasma.mat.emissiveIntensity = 0.1 + 0.9 * te;
+      s.plasma.set(c - 2.6, 1.0, -1.2, c + 2.6, 1.8, 1.2); s.plasma.mat.opacity = on ? 0.14 : 0; s.plasma.visible = on; s.plasma.mat.emissiveIntensity = 0.1 + 0.9 * te;
       const ions = [], tr = [], ok = ([x, y]) => y > 0.4 || Math.abs(x - c) < a - 0.06;
       if (on) ionRain(ions, tr, [], { t, n: 24, seed: 5 + c, x0: c - 1.2, x1: c + 1.2, z0: -1, z1: 1, top: 1.8, bottom: -depth, speed: 0.9 });
       place(s.ions, ions.filter(ok)); place(s.trail, tr.filter(ok));
@@ -1070,6 +1070,7 @@ addScene("pulsing", {
     const c2 = hctx; c2.save(); c2.fillStyle = "rgba(4,8,16,.82)"; c2.fillRect(24, 82, W - 48, 26); c2.restore();
     text(cap, W / 2, 100, { size: 13, c: C.yellow, w: 700, a: "center" });
     this.S.forEach((s) => { if (s.notch > 0.0005 && (s.pulse ? R.done : true) && (L.done || !s.pulse)) callout([s.c - a - s.notch * 0.5, -2.4 + 0.2 + 0.9, 1.2], s.c < 0 ? 300 : 700, 318, s.pulse ? "幾乎沒有 notch" : "Notch：溝底側向被挖", s.pulse ? C.lime : C.orange, { a: "center" }); });
+    if (t >= t0 && !R.done && !R.on) { hctx.save(); hctx.fillStyle = "rgba(0,0,0,.45)"; hctx.fillRect(W / 2 + 4, 116, W / 2 - 28, 230); hctx.restore(); text("RF OFF", (3 * W) / 4, 250, { size: 42, c: C.blue, w: 700, a: "center", mono: true, glow: C.blue }); text("沒有電漿、沒有離子 → 暫停蝕刻；電子中和溝底正電荷", (3 * W) / 4, 278, { size: 12.5, c: C.text, w: 600, a: "center" }); }
     line([[W / 2, 116], [W / 2, 436]], "rgba(232,246,255,.35)", { w: 1.5, dash: [6, 5], glow: 0 });
     chip("沒有 pulsing（RF 連續開）", W / 4, 136, C.red, { a: "center", size: 15 });
     chip("有 pulsing（RF 開 / 關）", (3 * W) / 4 - 30, 136, C.lime, { a: "center", size: 15 });
@@ -1079,11 +1080,8 @@ addScene("pulsing", {
     // 下方比較
     this.S.forEach((s, j) => {
       const v = vals[j], x0 = 40 + j * 400;
-      meter(x0, 350, "溝底正電荷（＋）", v.q, C.red); meter(x0 + 175, 350, "Notching", v.notch, C.orange);
-      meter(x0, 382, "溝內產物", v.prod, C.grey); meter(x0 + 175, 382, "電子溫度 Te（損傷）", v.te, C.magenta);
-      meter(x0, 414, "平均蝕刻率", v.er, C.cyan, `${Math.round(v.er * 100)}%`);
-      text("累積 ON 時間", x0 + 175, 414, { size: 12, c: C.dim, w: 500 });
-      text(`${s.ot.toFixed(1)} s`, x0 + 325, 430, { size: 14, c: C.text, w: 700, mono: true, a: "right" });
+      text("溝底正電荷（＋）", x0 + 160, 376, { size: 15, c: C.red, w: 700, a: "center" });
+      hctx.save(); hctx.strokeStyle = "rgba(232,246,255,.35)"; hctx.strokeRect(x0 + 10.5, 388.5, 300, 18); hctx.fillStyle = C.red; hctx.shadowColor = C.red; hctx.shadowBlur = 10; hctx.fillRect(x0 + 13, 391, 295 * clamp(v.q), 13); hctx.restore();
     });
   },
 });
