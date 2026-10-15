@@ -1191,11 +1191,11 @@ addScene("macro-loading", {
   },
   render(t) {
     this.group.position.y = 0.9;
-    camOrbit(t, this.dur, { r: 17, h: 4.6, a0: 0.08, amp: 0.03, look: [0, 0.4, 0] });
-    camera.setViewOffset(W, H, 0, H * 0.03, W, H);
-    const p = seg(t, 0.4, 8.0) * (1 - seg(t, 9.3, 9.9)), yb = -2.4, vals = [];
+    camOrbit(t, this.dur, { r: 23, h: 4.2, a0: 0.08, amp: 0.03, look: [0, -0.4, 0] });
+    camera.setViewOffset(W, H, 0, -H * 0.035, W, H);
+    const rs = 1 - seg(t, 9.3, 9.9), p = seg(t, 0.4, 8.0) * rs, yb = -2.4, vals = [];
     this.S.forEach((s) => {
-      const fast = 2.1 * p, slow = 1.25 * p, dI = s.k === "rad" ? fast : slow, dW = s.k === "rad" ? slow : fast;
+      const fast = 2.2 * seg(t, 0.4, 4.0) * rs, slow = 0.72 * seg(t, 0.4, 8.0) * rs, dI = s.k === "rad" ? fast : slow, dW = s.k === "rad" ? slow : fast;
       s.bI.set(s.iso[0] - s.iso[1], yb, -1.3, s.iso[0] + s.iso[1], -dI, 1.3);
       s.bW.set(s.wide[0], yb, -1.3, s.wide[1], -dW, 1.3);
       const rad = [], ions = [], tr = [], fl = [], hit = [];
@@ -1227,13 +1227,35 @@ addScene("macro-loading", {
       const pi = proj(s.iso[0], 0.32 + 0.9 + 0.35, 1.3), pw = proj((s.wide[0] + s.wide[1]) / 2, 0.32 + 0.9 + 0.35, 1.3);
       text("iso", pi[0], pi[1] - 4, { size: 12, c: C.cyan, w: 700, a: "center" });
       text("long width", pw[0], pw[1] - 4, { size: 12, c: C.orange, w: 700, a: "center" });
-      const v = vals[j], x0 = 40 + j * 400;
-      meter(x0, 350, "iso 深度", v.dI / 2.1, C.cyan); meter(x0 + 175, 350, "long width 深度", v.dW / 2.1, C.orange);
-      const msg = s.k === "rad" ? ["long width 較慢", "大開口一次吃掉大量自由基 → 濃度變低"] : ["long width 較快", "窄的 iso：離子被側壁擋住、斜射的打不到底（ARDE）"];
-      text(msg[0], x0 + 162, 392, { size: 13, c: s.k === "rad" ? C.lime : C.red, w: 700, a: "center" });
-      text(msg[1], x0 + 162, 412, { size: 11.5, c: C.text, w: 500, a: "center" });
     });
-    text("實際製程多半兩者混合：自由基不夠 → loading；離子到不了底 → ARDE", W / 2, 438, { size: 11.5, c: C.dim, w: 600, a: "center" });
+    // 左下：表面自由基濃度（長條比較）
+    panel(30, 312, 340, 122, "表面自由基濃度（示意）", C.lime);
+    const gb = seg(t, 0.4, 1.6);
+    [["iso 上方", 1.0, C.lime], ["long width 上方", 0.4, C.orange]].forEach(([s, v, col], i) => {
+      const yy = 348 + i * 30; text(s, 44, yy + 4, { size: 12, c: col, w: 700 });
+      hctx.save(); hctx.fillStyle = "rgba(232,246,255,.08)"; hctx.fillRect(160, yy - 8, 150, 16); hctx.fillStyle = col; hctx.shadowColor = col; hctx.shadowBlur = 8; hctx.fillRect(160, yy - 8, 150 * v * gb, 16); hctx.restore();
+      text(`${Math.round(v * 100)}%`, 356, yy + 4, { size: 12, c: col, w: 700, mono: true, a: "right" });
+    });
+    text("大開口一次吃掉大量自由基 → long width 較慢", 44, 422, { size: 11.5, c: C.text, w: 500 });
+    // 右下：離子斜打、被窄開口的側壁擋住
+    panel(430, 312, 340, 122, "窄開口：斜射的離子被側壁擋住", C.red);
+    const top = 356, bot = 414, tr = [[505, 14], [665, 46]]; // [中心, 半寬]
+    hctx.save(); hctx.fillStyle = "rgba(29,120,192,.55)"; hctx.fillRect(444, top, 312, bot + 8 - top);
+    hctx.fillStyle = "#05070d"; tr.forEach(([c, a]) => hctx.fillRect(c - a, top, 2 * a, bot - top)); hctx.restore();
+    tr.forEach(([c, a], j) => {
+      for (let i = 0; i < 9; i++) {
+        const ph = fract(rnd(i + j * 20) + t * 0.55), th = (rnd(i + j * 20 + 3) - 0.5) * 0.9, xt = c + (rnd(i + j * 20 + 5) - 0.5) * 2 * a * 0.9;
+        const k = Math.tan(th), yStart = top - 4, xStart = xt - k * (top - yStart);
+        let yEnd = bot, hitWall = false;
+        if (k !== 0) { const xw = k > 0 ? c + a : c - a, yw = top + (xw - xt) / k; if (yw < bot) { yEnd = yw; hitWall = true; } }
+        const y = lerp(yStart, yEnd, ph), x = xStart + k * (y - yStart);
+        if (y - 10 > top - 6) line([[x - k * 10, y - 10], [x, y]], C.red, { w: 2, glow: 4, alpha: 0.9 });
+        if (ph > 0.9) dot(x, y, hitWall ? C.orange : "#ffffff", 3.5);
+      }
+    });
+    text("窄（iso）", 505, top - 8, { size: 11, c: C.cyan, w: 700, a: "center" });
+    text("寬（long width）", 665, top - 8, { size: 11, c: C.orange, w: 700, a: "center" });
+    text("橘點 = 撞到側壁、到不了底", 600, 430, { size: 11, c: C.orange, w: 600, a: "center" });
   },
 });
 
