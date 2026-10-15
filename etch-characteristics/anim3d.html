@@ -365,8 +365,9 @@ addScene("hydra", {
     this.rp = grid(0.4, 2.3); this.rT = tiles(this.R, this.rp, 0.36, 0.06);
     this.wp = grid(0.32, 2.2); this.inc = this.wp.map(([x, z], i) => cdDev(x, z, i));
     this.wg = new THREE.Group(); this.R.add(this.wg);
-    cyl(this.wg, 2.35, 0, 0.06, M.si, { emissive: 0x0a3a66, ei: 0.3, opacity: 0.9 });
+    cyl(this.wg, 2.35, 0, 0.06, M.si, { emissive: 0x0a3a66, ei: 0.3, opacity: 0.25 });
     this.wT = tiles(this.wg, this.wp, 0.29, 0.03);
+    Object.assign(this.wT.material, { transparent: true, opacity: 0.4, depthWrite: false }); // 晶圓半透明：貼上後仍看得到下面 ESC 的溫度
     this.rp.forEach(([x, z], i) => { tmp.position.set(x, 0.03, z); tmp.updateMatrix(); this.rT.setMatrixAt(i, tmp.matrix); });
     this.wp.forEach(([x, z], i) => { tmp.position.set(x, 0.08, z); tmp.updateMatrix(); this.wT.setMatrixAt(i, tmp.matrix); });
     // ESC 每一區的目標溫度：CD 偏大的地方溫度調高

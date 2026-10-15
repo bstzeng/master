@@ -262,11 +262,11 @@
         <p class="section-index">ESC TEMPERATURE</p>
         <h2 id="hydra-title">Hydra 多區溫控 <span class="en">依量測做 by-site 補償</span></h2>
         <div class="step">
-          <figure><img src="gifs/preview/hydra.gif?v=e2959100" alt="Hydra 多區溫控 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
+          <figure><img src="gifs/preview/hydra.gif?v=191bebb1" alt="Hydra 多區溫控 3D 動畫" width="800" height="450" loading="lazy" decoding="async" /></figure>
           <div class="card-body">
-            <p>一般 ESC 只有幾個同心圓溫區，只能修徑向（中心到邊緣）的差異。Hydra 把 ESC 分成很多個可獨立控制的加熱小區，拿前段量到的 CD 地圖（例如微影後）算出每一區該設多少溫度：CD 偏大的地方調高溫度，讓那裡被吃小一點。蝕刻後再量一次、回饋給下一批，晶圓內的 CDU 3σ 就能明顯縮小。</p>
-            <table class="facts"><tr><th>一般 ESC</th><td>少數同心圓溫區，只修徑向</td></tr><tr><th>Hydra</th><td>很多個獨立加熱小區，修不對稱的局部偏差</td></tr><tr><th>流程</th><td>量測 CD 地圖 → 算每區溫度 → 蝕刻補償 → 回饋（APC）</td></tr></table>
-            <a class="dl" href="gifs/hydra.gif?v=b5a189e5" download="etch-hydra.gif">下載 1080P GIF（7.2 MB）</a>
+            <p>左邊是一般 ESC，只有 4 個同心圓溫區，只能修中心到邊緣的差異。中間是 Hydra ESC，分成很多個可以獨立設定溫度的加熱小區。右邊示範補償流程：進來的晶圓 CD 地圖不均（黃光），ESC 先依 CD 地圖把每一區設成不同溫度，晶圓放上去貼合後，CD 偏大的地方比較熱、被吃小一點，CD 地圖就變均勻。</p>
+            <table class="facts"><tr><th>一般 ESC</th><td>4 個同心圓溫區，只修徑向</td></tr><tr><th>Hydra</th><td>很多個獨立加熱小區，修不對稱的局部偏差</td></tr><tr><th>流程</th><td>量測 CD 地圖 → ESC 依地圖變溫 → 晶圓貼上蝕刻 → CD 變均勻</td></tr></table>
+            <a class="dl" href="gifs/hydra.gif?v=ee9ace23" download="etch-hydra.gif">下載 1080P GIF（0.6 MB）</a>
           </div>
         </div>
       </section>
