@@ -342,104 +342,74 @@ function cdDev(x, z, i) { // 進來的 CD 偏差（nm）：有徑向、也有左
   return 1.6 * (1.0 * Math.exp(-((x - 0.9) ** 2 + (z + 0.7) ** 2) / 1.1) - 0.9 * Math.exp(-((x + 1.0) ** 2 + (z - 0.9) ** 2) / 0.9) + 1.5 * ((x * x + z * z) / 5.3 - 0.45) + 0.18 * (rnd(i + 5) - 0.5));
 }
 const sigma3 = (a) => { const m = a.reduce((s, v) => s + v, 0) / a.length; return 3 * Math.sqrt(a.reduce((s, v) => s + (v - m) ** 2, 0) / a.length); };
+// =====================================================================
+// Hydra：左 = 一般 4 區 ESC、中 = Hydra 多區 ESC、右 = 進來的 CD 地圖 + 依地圖變溫的 ESC（晶圓貼上去後被補償）
+// =====================================================================
+const TCOL = (k) => { k = clamp(k); const a = new THREE.Color(0x2a6aff), b = new THREE.Color(0xffd23d), c = new THREE.Color(0xff3a2a); return k < 0.5 ? a.lerp(b, k * 2) : b.clone().lerp(c, (k - 0.5) * 2); };
 addScene("hydra", {
   dur: 12, fps: 15,
   setup(g) {
-    cyl(g, 2.75, -1.0, -0.02, [0x2a3040, 0x6c7a90]);
-    // 晶圓上的量測點
-    const sites = [], st = 0.34;
-    for (let x = -2.2; x <= 2.21; x += st) for (let z = -2.2; z <= 2.21; z += st) if (x * x + z * z < 2.25 ** 2) sites.push([x, z]);
-    this.sites = sites;
-    this.inc = sites.map(([x, z], i) => cdDev(x, z, i));
-    // 一般 ESC：4 個同心圓溫區，只能修各圈的平均值
-    const ringOf = (x, z) => Math.min(3, Math.floor(Math.hypot(x, z) / 0.6));
-    const sum = [0, 0, 0, 0], cnt = [0, 0, 0, 0];
-    sites.forEach(([x, z], i) => { const r = ringOf(x, z); sum[r] += this.inc[i]; cnt[r]++; });
-    this.ringAvg = sum.map((s, i) => s / cnt[i]);
-    this.radRes = sites.map(([x, z], i) => this.inc[i] - this.ringAvg[ringOf(x, z)]);
-    this.hydRes = sites.map((_, i) => 0.28 * (rnd(i + 91) - 0.5));
-    this.s3 = [sigma3(this.inc), sigma3(this.radRes), sigma3(this.hydRes)];
-    this.wafer = cyl(g, 2.4, 0, 0.08, M.si, { emissive: 0x0a3a66, ei: 0.3, opacity: 0.9 });
-    this.tiles = new THREE.InstancedMesh(new THREE.BoxGeometry(st * 0.86, 0.03, st * 0.86), new THREE.MeshBasicMaterial({ transparent: true }), sites.length);
-    g.add(this.tiles);
-    // ESC 加熱小區
-    const zones = [], zs = 0.46;
-    for (let x = -2.3; x <= 2.31; x += zs) for (let z = -2.3; z <= 2.31; z += zs) if (x * x + z * z < 2.45 ** 2) zones.push([x, z]);
-    this.zones = zones;
-    const near = (x, z) => { let s = 0, w = 0; sites.forEach(([a, b], i) => { const d = Math.exp(-((a - x) ** 2 + (b - z) ** 2) / 0.12); s += d * this.inc[i]; w += d; }); return s / w; };
-    this.zHyd = zones.map(([x, z]) => near(x, z));
-    this.zRad = zones.map(([x, z]) => this.ringAvg[ringOf(x, z)]);
-    this.ztiles = new THREE.InstancedMesh(new THREE.BoxGeometry(zs * 0.9, 0.05, zs * 0.9), new THREE.MeshBasicMaterial({ transparent: true }), zones.length);
-    g.add(this.ztiles);
-    this.plasma = cyl(g, 2.5, 0.4, 3.4, [0x5a1a8a, 0xc77dff], { opacity: 0.1, emissive: 0x9a3ce0, ei: 0.7 });
-    this.plasma.lines.visible = false;
-    this.ions = particles(g, 40, COL.ion, 0.08); this.trail = particles(g, 120, COL.ion, 0.05); this.flash = particles(g, 30, 0xffffff, 0.1);
+    const tmp = new THREE.Object3D(), grid = (st, R) => { const p = []; for (let x = -R; x <= R + 1e-3; x += st) for (let z = -R; z <= R + 1e-3; z += st) if (x * x + z * z < (R + 0.05) ** 2) p.push([x, z]); return p; };
+    const tiles = (parent, pts, sz, h) => { const m = new THREE.InstancedMesh(new THREE.BoxGeometry(sz, h, sz), new THREE.MeshBasicMaterial(), pts.length); parent.add(m); return m; };
+    const col = (x) => { const s = new THREE.Group(); s.position.x = x; g.add(s); return s; };
+    this.L = col(-6.6); this.Mi = col(0); this.R = col(6.6);
+    // 左：一般 4 區 ESC（同心圓溫區）
+    cyl(this.L, 2.6, -0.5, 0, [0x2a3040, 0x6c7a90]);
+    this.rings = [2.4, 1.8, 1.2, 0.6].map((r, i) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.06 + i * 0.002, 48), new THREE.MeshBasicMaterial()); m.position.y = 0.03 + i * 0.002; this.L.add(m); return m; });
+    // 中：Hydra 多區 ESC
+    cyl(this.Mi, 2.6, -0.5, 0, [0x2a3040, 0x6c7a90]);
+    this.hp = grid(0.4, 2.3); this.hT = tiles(this.Mi, this.hp, 0.36, 0.06);
+    this.hp.forEach(([x, z], i) => { tmp.position.set(x, 0.03, z); tmp.updateMatrix(); this.hT.setMatrixAt(i, tmp.matrix); this.hT.setColorAt(i, TCOL(0.5 + 0.45 * Math.sin(x * 1.7 + z * 0.9) * Math.cos(z * 1.3 - x * 0.4)).multiplyScalar(0.42)); });
+    // 右：ESC（下）+ 進來的晶圓 CD 地圖（上）
+    cyl(this.R, 2.6, -0.5, 0, [0x2a3040, 0x6c7a90]);
+    this.rp = grid(0.4, 2.3); this.rT = tiles(this.R, this.rp, 0.36, 0.06);
+    this.wp = grid(0.32, 2.2); this.inc = this.wp.map(([x, z], i) => cdDev(x, z, i));
+    this.wg = new THREE.Group(); this.R.add(this.wg);
+    cyl(this.wg, 2.35, 0, 0.06, M.si, { emissive: 0x0a3a66, ei: 0.3, opacity: 0.25 });
+    this.wT = tiles(this.wg, this.wp, 0.29, 0.03);
+    Object.assign(this.wT.material, { transparent: true, opacity: 0.4, depthWrite: false }); // 晶圓半透明：貼上後仍看得到下面 ESC 的溫度
+    this.rp.forEach(([x, z], i) => { tmp.position.set(x, 0.03, z); tmp.updateMatrix(); this.rT.setMatrixAt(i, tmp.matrix); });
+    this.wp.forEach(([x, z], i) => { tmp.position.set(x, 0.08, z); tmp.updateMatrix(); this.wT.setMatrixAt(i, tmp.matrix); });
+    // ESC 每一區的目標溫度：CD 偏大的地方溫度調高
+    this.rk = this.rp.map(([x, z]) => { let s = 0, w = 0; this.wp.forEach(([a, b], i) => { const d = Math.exp(-((a - x) ** 2 + (b - z) ** 2) / 0.12); s += d * this.inc[i]; w += d; }); return clamp(0.5 + 0.22 * s / w); });
   },
   render(t) {
-    camLeft(t, this.dur, { r: 12.5, h: 9.5, a0: 0.3, amp: 0.05, look: [0, 1.1, 0] });
-    const lift = seg(t, 2.6, 3.4) - seg(t, 7.0, 7.6), wy = 1.6 * lift;
-    const radial = seg(t, 3.4, 3.9) * (1 - seg(t, 5.2, 5.6)), hyd = seg(t, 5.2, 5.8), escOn = Math.max(radial, hyd) * (1 - seg(t, 11.4, 12));
-    const etch = seg(t, 7.8, 10), back = seg(t, 11.4, 12);
-    this.wafer.mesh.position.y = 0.04 + wy;
-    // 晶圓上的 CD：蝕刻中逐步被補償，最後一段換下一片（新的 CD 地圖）
-    const cd = this.inc.map((v, i) => lerp(lerp(v, this.hydRes[i], etch), v, back));
-    const tmp = new THREE.Object3D();
-    this.sites.forEach(([x, z], i) => { tmp.position.set(x, 0.1 + wy, z); tmp.updateMatrix(); this.tiles.setMatrixAt(i, tmp.matrix); this.tiles.setColorAt(i, CDC(cd[i])); });
-    this.tiles.instanceMatrix.needsUpdate = true; this.tiles.instanceColor.needsUpdate = true;
-    // ESC 溫區：CD 偏大的地方調高溫度（聚合物少 → CD 被吃小）
-    this.zones.forEach(([x, z], i) => {
-      tmp.position.set(x, 0.0, z); tmp.scale.setScalar(escOn > 0.01 ? 1 : 0); tmp.updateMatrix(); this.ztiles.setMatrixAt(i, tmp.matrix);
-      const v = lerp(this.zRad[i], this.zHyd[i], hyd);
-      this.ztiles.setColorAt(i, HOT(0.42 + 0.2 * v * escOn).multiplyScalar(0.7).lerp(new THREE.Color(0x2a3040), 1 - escOn));
-    });
-    tmp.scale.setScalar(1);
-    this.ztiles.instanceMatrix.needsUpdate = true; this.ztiles.instanceColor.needsUpdate = true;
-    const on = t > 7.7 && t < 10.2 ? 1 : 0;
-    this.plasma.mat.opacity = 0.1 * on;
-    const ions = [], tr = [], fl = [];
-    if (on) ionRain(ions, tr, fl, { t, n: 40, seed: 5, x0: -2.2, x1: 2.2, z0: -2.2, z1: 2.2, top: 3.2, bottom: 0.12, speed: 0.7 });
-    const keep = ([x, , z]) => x * x + z * z < 4.8;
-    place(this.ions, ions.filter(keep)); place(this.trail, tr.filter(keep)); place(this.flash, fl.filter(keep));
+    camera.position.set(0, 11, 19.5); camera.lookAt(0, -0.2, 0);
+    camera.setViewOffset(W, H, 0, -H * 0.06, W, H);
+    // 左：4 區 ESC 溫度輕微變化
+    this.rings.forEach((m, i) => m.material.color.copy(TCOL([0.85, 0.6, 0.35, 0.1][i] + 0.04 * Math.sin(t * 2 + i)).multiplyScalar(0.42)));
+    // 右：時間軸
+    const heat = seg(t, 1.5, 3.5), drop = seg(t, 4.0, 6.0), comp = seg(t, 6.5, 9.0), rst = seg(t, 11.4, 11.95);
+    const h = 0.5 + 0.2 * Math.sin(t * 2.2);
+    this.rp.forEach((_, i) => this.rT.setColorAt(i, new THREE.Color(0x2a303c).lerp(TCOL(this.rk[i]).multiplyScalar(0.42), heat * (1 - rst))));
+    this.rT.instanceColor.needsUpdate = true;
+    this.wg.position.y = lerp(2.6, 0.08, ease(drop * (1 - rst)));
+    this.wp.forEach((_, i) => this.wT.setColorAt(i, CDC(lerp(this.inc[i], 0.12 * (rnd(i + 91) - 0.5), comp * (1 - rst))).multiplyScalar(0.6)));
+    this.wT.instanceColor.needsUpdate = true;
     composer.render();
     hctx.clearRect(0, 0, W, H);
     frame("Hydra：多區溫控 ESC 的 by-site 補償", TAG);
-    const step = t < 2.6 ? 0 : t < 5.2 ? 1 : t < 7.6 ? 2 : t < 10.2 ? 3 : t < 11.4 ? 4 : 5;
-    caption([
-      ["① 先量進來的 CD 地圖（例如微影後）", "紫 = CD 偏大、青 = CD 偏小，有些偏差是左右不對稱的"],
-      ["② 一般 ESC：只有幾個同心圓溫區", "只能修徑向（中心 ↔ 邊緣），不對稱的偏差修不到"],
-      ["③ Hydra：ESC 分成很多個獨立加熱小區", "依 CD 地圖算出每一區的溫度：CD 偏大的地方調高溫度"],
-      ["④ 蝕刻：各區溫度不同 → 局部 CD 被修正", "溫度高 → 側壁聚合物少 → CD 被吃小（反之亦然）"],
-      ["⑤ 蝕刻後再量一次 → 回饋給下一批", "CD 地圖變均勻，晶圓內 CDU 3σ 變小"],
-      ["下一片：新的 CD 地圖", "每片 / 每批依自己的量測結果重新計算"],
-    ][step]);
-    chip(["量測", "一般 ESC", "Hydra 溫度地圖", "蝕刻中", "量測回饋", "下一片"][step], 772, 40, C.yellow, { a: "right", size: 13 });
-    if (escOn > 0.3) callout([1.6, 0, 1.6], 40, 372, hyd > 0.5 ? "ESC 加熱小區（亮 = 溫度高；區數為示意）" : "一般 ESC：4 個同心圓溫區", C.orange);
-    // 右上：CD 偏差分布
-    const py = 80, ph1 = 196;
-    panel(PX, py, PW, ph1, "晶圓內 CD 偏差分布（每個量測點）", C.magenta);
-    const x0 = PX + 20, x1 = PX + PW - 20, y0 = py + ph1 - 28, bins = 15, lo = -3, hi = 3, hist = new Array(bins).fill(0);
-    cd.forEach((v) => { hist[clamp(Math.floor(((v - lo) / (hi - lo)) * bins), 0, bins - 1)]++; });
-    const bw = (x1 - x0) / bins, hmax = Math.max(40, ...hist);
-    hist.forEach((cnt, i) => {
-      const hgt = (cnt / hmax) * (ph1 - 70), mid = lo + ((i + 0.5) / bins) * (hi - lo);
-      hctx.save(); hctx.fillStyle = `#${CDC(mid).getHexString()}`; hctx.globalAlpha = 0.9; hctx.fillRect(x0 + i * bw + 1, y0 - hgt, bw - 2, hgt); hctx.restore();
-    });
-    line([[x0, y0], [x1, y0]], "rgba(232,246,255,.4)", { w: 1, glow: 0 });
-    line([[(x0 + x1) / 2, y0], [(x0 + x1) / 2, py + 32]], C.green, { w: 1, dash: [3, 3], glow: 0 });
-    text("目標", (x0 + x1) / 2 + 4, py + 40, { size: 10, c: C.green, w: 700 });
-    [-3, 0, 3].forEach((v) => text(`${v > 0 ? "+" : ""}${v} nm`, lerp(x0, x1, (v - lo) / (hi - lo)), y0 + 15, { size: 10, c: C.dim, mono: true, w: 500, a: "center" }));
-    // 右下：3σ 比較
-    panel(PX, 284, PW, 118, "CDU 3σ（示意值）", C.cyan);
-    const rows = [["進來", this.s3[0], C.grey, true], ["一般 ESC（只修徑向）", this.s3[1], C.orange, step >= 1], ["Hydra by-site", this.s3[2], C.lime, etch > 0.95 && back < 0.5]];
-    rows.forEach(([s, v, col, show], i) => {
-      const yy = 316 + i * 28, a = show ? 1 : 0.15;
-      text(s, PX + 14, yy + 4, { size: 12, c: col, w: 700, alpha: a });
-      hctx.save(); hctx.globalAlpha = a; hctx.fillStyle = col; hctx.shadowColor = col; hctx.shadowBlur = 8; hctx.fillRect(PX + 168, yy - 6, (v / this.s3[0]) * 110, 12); hctx.restore();
-      text(`${v.toFixed(1)} nm`, PX + PW - 12, yy + 4, { size: 11, c: col, w: 700, mono: true, a: "right", alpha: a });
-    });
-    flowChain([["量測 CD 地圖", C.magenta], ["算每區溫度", C.orange], ["蝕刻補償", C.cyan], ["量測回饋（APC）", C.lime]], 418);
+    // 三欄標題
+    const head = (x3, a, b, col) => { const p = proj(x3, 4.6, 0); text(a, p[0], p[1], { size: 16, c: col, w: 700, a: "center" }); text(b, p[0], p[1] + 18, { size: 11.5, c: C.dim, w: 600, a: "center" }); };
+    head(-6.6, "一般 ESC：4 個溫區", "同心圓，只能修中心 ↔ 邊緣", C.orange);
+    head(0, "Hydra ESC：多個獨立加熱區", "每一區都能單獨設定溫度", C.magenta);
+    head(6.6, "依 CD 地圖調溫度", "晶圓貼上 → 局部 CD 被補償", C.cyan);
+    // 右欄的步驟說明
+    const st = t < 1.5 ? "① 進來的晶圓：CD 地圖不均（黃光）" : t < 4.0 ? "② ESC 依 CD 地圖變溫" : t < 6.5 ? "③ 晶圓放上 ESC、兩者相貼" : "④ 蝕刻：CD 偏大處較熱 → 被吃小 → 變均勻";
+    const pr = proj(6.6, -1.2, 2.6); chip(st, pr[0], pr[1] + 16, C.yellow, { a: "center", size: 12 });
+    const pw = proj(6.6 + 2.4, this.wg.position.y + 0.1, 0); if (drop < 0.9) text("晶圓 CD", pw[0] + 6, pw[1], { size: 11, c: C.text, w: 700 });
+    const pe = proj(6.6 + 2.6, -0.25, 0); text("ESC", pe[0] + 6, pe[1] + 4, { size: 11, c: C.text, w: 700 });
+    // 溫度示意圖（色條）
+    const lx = 240, ly = 408, lw = 220; const c = hctx;
+    for (let i = 0; i < lw; i++) { c.fillStyle = `#${TCOL(i / lw).getHexString()}`; c.fillRect(lx + i, ly, 1, 12); }
+    text("ESC 溫度", lx - 8, ly + 10, { size: 12, c: C.text, w: 700, a: "right" });
+    text("低", lx, ly + 28, { size: 11, c: C.blue, w: 700, a: "center" }); text("高", lx + lw, ly + 28, { size: 11, c: C.red, w: 700, a: "center" });
+    const cx = 560; for (let i = 0; i < 120; i++) { c.fillStyle = `#${CDC((i / 120 - 0.5) * 4.8).getHexString()}`; c.fillRect(cx + i, ly, 1, 12); }
+    text("晶圓 CD", cx - 8, ly + 10, { size: 12, c: C.text, w: 700, a: "right" });
+    text("偏小", cx, ly + 28, { size: 11, c: C.cyan, w: 700, a: "center" }); text("偏大", cx + 120, ly + 28, { size: 11, c: C.magenta, w: 700, a: "center" });
   },
 });
+
 
 // =====================================================================
 // 本課共用（其餘頁面）：腔體、趨勢圖、擠出的剖面實體
