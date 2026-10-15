@@ -1070,7 +1070,6 @@ addScene("pulsing", {
     const c2 = hctx; c2.save(); c2.fillStyle = "rgba(4,8,16,.82)"; c2.fillRect(24, 82, W - 48, 26); c2.restore();
     text(cap, W / 2, 100, { size: 13, c: C.yellow, w: 700, a: "center" });
     this.S.forEach((s) => { if (s.notch > 0.0005 && (s.pulse ? R.done : true) && (L.done || !s.pulse)) callout([s.c - a - s.notch * 0.5, -2.4 + 0.2 + 0.9, 1.2], s.c < 0 ? 300 : 700, 318, s.pulse ? "幾乎沒有 notch" : "Notch：溝底側向被挖", s.pulse ? C.lime : C.orange, { a: "center" }); });
-    if (t >= t0 && !R.done && !R.on) { hctx.save(); hctx.fillStyle = "rgba(0,0,0,.45)"; hctx.fillRect(W / 2 + 4, 116, W / 2 - 28, 230); hctx.restore(); text("RF OFF", (3 * W) / 4, 250, { size: 42, c: C.blue, w: 700, a: "center", mono: true, glow: C.blue }); text("沒有電漿、沒有離子 → 暫停蝕刻；電子中和溝底正電荷", (3 * W) / 4, 278, { size: 12.5, c: C.text, w: 600, a: "center" }); }
     line([[W / 2, 116], [W / 2, 436]], "rgba(232,246,255,.35)", { w: 1.5, dash: [6, 5], glow: 0 });
     chip("沒有 pulsing（RF 連續開）", W / 4, 136, C.red, { a: "center", size: 15 });
     chip("有 pulsing（RF 開 / 關）", (3 * W) / 4 - 30, 136, C.lime, { a: "center", size: 15 });
