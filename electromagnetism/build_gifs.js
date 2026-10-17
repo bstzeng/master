@@ -1,6 +1,6 @@
 // 電磁學課：用 Playwright 逐格繪製 electromagnetism/anim3d.html（three.js，共用 nanosheet/vendor）的場景，存成 PNG，再交給 encode_gif.py 合成 GIF
 // 用法：node electromagnetism/build_gifs.js [--preview] [場景名稱...]
-//   預設輸出 1080P（1920×1080）到 gifs/，給下載與簡報用
+//   本課預設輸出 720P（1280×720）到 gifs/，網頁直接顯示這個檔案
 //   --preview 輸出 800×450 到 gifs/preview/，給網頁顯示用（檔案小、載入快）
 const path = require("path"), fs = require("fs"), http = require("http"), os = require("os");
 const { execFileSync } = require("child_process");
@@ -10,7 +10,7 @@ const PAGES = ["electromagnetism/anim3d.html"];
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json" };
 
 (async () => {
-  const args = process.argv.slice(2), preview = args.includes("--preview"), scale = preview ? 1 : 2.4;
+  const args = process.argv.slice(2), preview = args.includes("--preview"), scale = preview ? 1 : 1.6;
   const dir = path.dirname(__dirname), out = path.join(__dirname, "gifs", preview ? "preview" : ""), tmp = fs.mkdtempSync(path.join(os.tmpdir(), "nsgif-"));
   fs.mkdirSync(out, { recursive: true });
   // ES module 不能從 file:// 載入，所以起一個只服務 repo 根目錄的本機伺服器（要讀到 ../nanosheet/vendor）
