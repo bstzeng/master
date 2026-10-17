@@ -1,0 +1,1190 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<title>Electromagnetism 3D GIF renderer</title>
+<style>
+  body { margin: 0; background: #05070d; }
+  canvas { display: block; }
+</style>
+<script type="importmap">
+  { "imports": { "three": "../nanosheet/vendor/three/three.module.min.js", "three/addons/": "../nanosheet/vendor/three/addons/" } }
+</script>
+</head>
+<body>
+<canvas id="out" width="800" height="450"></canvas>
+<script type="module">
+// 電磁學課的 3D 場景：與 nanosheet/anim3d.html 共用同一套繪製核心與 three.js（../nanosheet/vendor）。
+// 需要用 http 伺服器開啟（ES module 不能用 file://）。預覽：electromagnetism/anim3d.html#ampere
+import * as THREE from "three";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+
+const W = 800, H = 450; // 版面座標（所有位置都用這個尺寸寫）
+// 輸出倍率：?scale=2.4 → 1920×1080（1080P）；預設 1 → 800×450 預覽
+const S = parseFloat(new URLSearchParams(location.search).get("scale") || "1");
+const FONT = '"Noto Sans TC", "Noto Sans CJK TC", sans-serif';
+const MONO = '"DejaVu Sans Mono", "DM Mono", monospace';
+const C = { cyan: "#22e5ff", magenta: "#ff3df2", lime: "#b6ff3d", red: "#ff4d5e", amber: "#ffb340", orange: "#ffa04d", green: "#5dffb0", blue: "#5aa0ff", yellow: "#ffd23d", grey: "#c8ced8", text: "#e8f6ff", dim: "rgba(232,246,255,.62)" };
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const ease = (k) => { k = clamp(k); return k * k * (3 - 2 * k); };
+const seg = (v, a, b) => ease((v - a) / (b - a)); // v 在 a..b 之間的平滑進度
+const fract = (v) => v - Math.floor(v);
+const rnd = (i) => fract(Math.sin(i * 127.1 + 311.7) * 43758.5453);
+const lerp = (a, b, k) => a + (b - a) * k;
+const tri = (v) => 1 - 4 * Math.abs(fract(v) - 0.5); // -1..1 三角波（彈跳用）
+
+// ---------- three.js ----------
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(S);
+renderer.setSize(W, H);
+renderer.setClearColor(0x05070d, 1);
+const glCanvas = renderer.domElement;
+const hud = document.createElement("canvas");
+hud.width = W * S; hud.height = H * S;
+const hctx = hud.getContext("2d");
+hctx.setTransform(S, 0, 0, S, 0, 0);
+const out = document.getElementById("out");
+out.width = W * S; out.height = H * S;
+const octx = out.getContext("2d");
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x05070d, 24, 44);
+const camera = new THREE.PerspectiveCamera(36, W / H, 0.1, 100);
+scene.add(new THREE.AmbientLight(0x8fb4ff, 0.9));
+const key = new THREE.DirectionalLight(0xffffff, 1.6);
+key.position.set(6, 12, 8);
+scene.add(key);
+const rim = new THREE.DirectionalLight(0xff3df2, 0.6);
+rim.position.set(-8, 4, -6);
+scene.add(rim);
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.9, 0.45, 0.55));
+composer.addPass(new OutputPass());
+composer.setPixelRatio(S);
+const grid = new THREE.GridHelper(60, 60, 0x0e3a4a, 0x0a2230);
+grid.position.y = -2.01;
+scene.add(grid);
+
+// 材料顏色（面, 邊）
+const M = {
+  sub: [0x0f1a2c, 0x2c4a6e], sti: [0x2a3a55, 0x4a6a95], si: [0x1d78c0, 0x4fc3ff], sige: [0xd9822b, 0xffa04d],
+  poly: [0x7c828c, 0xc8ced8], spacer: [0x1f9e6a, 0x5dffb0], inner: [0x14c88a, 0x8dffd0], sd: [0x2a5fd0, 0x5aa0ff],
+  hik: [0xffd23d, 0xffe680], gate: [0xb02cc0, 0xff3df2],
+};
+
+// 單位方塊：用 set(x0,y0,z0,x1,y1,z1) 改尺寸位置，任何一邊為 0 就隱藏
+function mbox(parent, [face, edge], { opacity = 1, emissive = 0x000000, ei = 0, edges = true } = {}) {
+  const g = new THREE.BoxGeometry(1, 1, 1);
+  const mat = new THREE.MeshStandardMaterial({ color: face, transparent: opacity < 1, opacity, roughness: 0.45, metalness: 0.1, emissive, emissiveIntensity: ei, depthWrite: opacity >= 1 });
+  const mesh = new THREE.Mesh(g, mat);
+  parent.add(mesh);
+  let lines = null;
+  if (edges) { lines = new THREE.LineSegments(new THREE.EdgesGeometry(g), new THREE.LineBasicMaterial({ color: edge, transparent: true, opacity: 0.95 })); mesh.add(lines); }
+  const base = { opacity, line: 0.95 };
+  const api = {
+    mesh, mat, lines,
+    set(x0, y0, z0, x1, y1, z1) {
+      const sx = x1 - x0, sy = y1 - y0, sz = z1 - z0;
+      if (sx < 1e-3 || sy < 1e-3 || sz < 1e-3) { mesh.visible = false; return api; }
+      mesh.visible = true;
+      mesh.scale.set(sx, sy, sz);
+      mesh.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+      return api;
+    },
+    alpha(a) { // 0..1 淡入淡出
+      mat.transparent = true; mat.opacity = base.opacity * a; mat.depthWrite = a >= 1 && base.opacity >= 1;
+      if (lines) lines.material.opacity = base.line * a;
+      if (a <= 0.001) mesh.visible = false;
+      return api;
+    },
+    hide() { mesh.visible = false; return api; },
+  };
+  return api;
+}
+
+// 發光粒子（電子、自由基）
+function particles(parent, count, color, r = 0.1) {
+  const mesh = new THREE.InstancedMesh(new THREE.SphereGeometry(r, 10, 8), new THREE.MeshBasicMaterial({ color }), count);
+  mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  parent.add(mesh);
+  return mesh;
+}
+const tmp = new THREE.Object3D();
+function place(mesh, list) {
+  const n = Math.min(list.length, mesh.count);
+  for (let i = 0; i < n; i++) { const [x, y, z, s = 1] = list[i]; tmp.position.set(x, y, z); tmp.scale.setScalar(s); tmp.updateMatrix(); mesh.setMatrixAt(i, tmp.matrix); }
+  tmp.scale.setScalar(0); tmp.updateMatrix();
+  for (let i = n; i < mesh.count; i++) mesh.setMatrixAt(i, tmp.matrix);
+  mesh.instanceMatrix.needsUpdate = true;
+}
+
+// 導通電子流：閘極開啟時才進入通道（關閉後已在通道內的電子跑完）
+function stream(list, { n, seed, t, speed, x0, x1, lane, gate = () => true, axis = "x" }) {
+  for (let i = 0; i < n; i++) {
+    const ph = fract(rnd(i + seed) + t * speed);
+    if (!gate(t - ph / speed)) continue;
+    const [a, b] = lane(i + seed);
+    const p = lerp(x0, x1, ph);
+    list.push(axis === "x" ? [p, a, b] : [a, b, p]);
+  }
+}
+
+function camOrbit(t, dur, { r = 20, h = 8.5, a0 = 0.2, amp = 0.1, look = [0, 0.6, 0] } = {}) {
+  const a = Math.sin((t / dur) * Math.PI * 2) * amp + a0;
+  camera.position.set(Math.sin(a) * r + look[0], h, Math.cos(a) * r + look[2]);
+  camera.lookAt(look[0], look[1], look[2]);
+}
+
+// ---------- 2D HUD ----------
+function text(s, x, y, o = {}) {
+  const c = hctx; c.save();
+  c.font = `${o.w || 600} ${o.size || 16}px ${o.mono ? MONO : FONT}`;
+  c.textAlign = o.a || "left"; c.globalAlpha = o.alpha ?? 1;
+  if (o.glow) { c.shadowColor = o.glow; c.shadowBlur = 10; }
+  c.fillStyle = o.c || C.text; c.fillText(s, x, y); c.restore();
+}
+function chip(s, x, y, color, o = {}) {
+  const c = hctx; c.save();
+  c.font = `700 ${o.size || 14}px ${o.mono ? MONO : FONT}`;
+  const w = c.measureText(s).width + 22, h = (o.size || 14) + 14;
+  const bx = o.a === "center" ? x - w / 2 : o.a === "right" ? x - w : x;
+  c.globalAlpha = o.alpha ?? 1;
+  c.fillStyle = "rgba(5,7,13,.84)"; c.fillRect(bx, y - h / 2, w, h);
+  c.strokeStyle = color; c.lineWidth = 1.5; c.shadowColor = color; c.shadowBlur = 8;
+  c.strokeRect(bx + .5, y - h / 2 + .5, w - 1, h - 1);
+  c.shadowBlur = 0; c.fillStyle = color; c.textBaseline = "middle"; c.fillText(s, bx + 11, y + 1);
+  c.restore();
+  return { x: bx, y: y - h / 2, w, h };
+}
+function frame(title, tag) {
+  const c = hctx; c.save(); c.strokeStyle = C.cyan; c.lineWidth = 2; c.globalAlpha = .8;
+  const L = 18;
+  [[12, 12, 1, 1], [W - 12, 12, -1, 1], [12, H - 12, 1, -1], [W - 12, H - 12, -1, -1]].forEach(([x, y, sx, sy]) => {
+    c.beginPath(); c.moveTo(x, y + sy * L); c.lineTo(x, y); c.lineTo(x + sx * L, y); c.stroke();
+  });
+  c.restore();
+  text(tag, 28, 40, { size: 12, mono: true, c: C.cyan, w: 500 });
+  text(title, 28, 64, { size: 22, w: 700 });
+}
+const proj = (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return [(v.x + 1) / 2 * W, (1 - v.y) / 2 * H]; };
+// 3D 點拉一條引線到標籤
+function callout(p3, x, y, s, color, o = {}) {
+  const a = o.alpha ?? 1;
+  if (a <= 0.01) return;
+  const p = proj(...p3);
+  const box = chip(s, x, y, color, { ...o, alpha: a });
+  const tx = clamp(p[0], box.x, box.x + box.w), ty = p[1] < box.y ? box.y : box.y + box.h;
+  const c = hctx; c.save(); c.globalAlpha = a; c.strokeStyle = color; c.fillStyle = color; c.lineWidth = 1.5;
+  c.beginPath(); c.moveTo(p[0], p[1]); c.lineTo(tx, ty); c.stroke();
+  c.beginPath(); c.arc(p[0], p[1], 3, 0, Math.PI * 2); c.fill(); c.restore();
+}
+function meter(x, y, label, value, color, valueText = "") {
+  text(label, x, y, { size: 12, c: C.dim, w: 500 });
+  if (valueText) text(valueText, x + 150, y, { size: 12, c: color, w: 700, a: "right", mono: true });
+  const c = hctx; c.save();
+  c.strokeStyle = "rgba(232,246,255,.35)"; c.strokeRect(x + .5, y + 6.5, 150, 10);
+  c.fillStyle = color; c.shadowColor = color; c.shadowBlur = 8; c.fillRect(x + 2, y + 8, 146 * clamp(value), 7);
+  c.restore();
+}
+function bitBox(on) {
+  const col = on ? C.lime : C.red, c = hctx;
+  c.save(); c.strokeStyle = col; c.lineWidth = 2; c.shadowColor = col; c.shadowBlur = 14; c.strokeRect(650, 28, 120, 66); c.restore();
+  text(on ? "1" : "0", 690, 80, { size: 50, mono: true, c: col, glow: col, a: "center", w: 700 });
+  text(on ? "ON" : "OFF", 742, 68, { size: 15, mono: true, c: col, a: "center" });
+}
+
+const SCENES = {};
+function addScene(name, def) {
+  const group = new THREE.Group();
+  group.visible = false;
+  scene.add(group);
+  def.setup(group);
+  SCENES[name] = { ...def, group };
+}
+
+const COL = { e: 0xfff27a, ion: 0xff4d5e, rad: 0x6dff6a, s: 0xd8dde6, f: 0x8fd3ff, photon: 0xc77dff };
+// 離子雨：垂直落下（拖尾）+ 撞擊閃光
+function ionRain(list, trail, flash, { t, n, seed, x0, x1, z0, z1, top, bottom, speed = 0.9 }) {
+  for (let i = 0; i < n; i++) {
+    const ph = fract(rnd(i + seed) + t * speed * (0.8 + 0.4 * rnd(i + seed + 1)));
+    const x = lerp(x0, x1, rnd(i + seed + 2)), z = lerp(z0, z1, rnd(i + seed + 3)), yb = typeof bottom === "function" ? bottom(x) : bottom;
+    const y = lerp(top, yb, ph * ph);
+    list.push([x, y, z]);
+    for (let j = 1; j <= 3; j++) { const pp = Math.max(0, ph - j * 0.05); trail.push([x, lerp(top, yb, pp * pp), z, 1 - j / 4]); }
+    if (ph > 0.94) flash.push([x, yb, z, 1.1]);
+  }
+}
+// 隨機亂飄的粒子（自由基等）
+function drift(list, { t, n, seed, x0, x1, y0, y1, z0, z1, sp = 0.08, ok = null }) {
+  for (let i = 0; i < n; i++) {
+    const p = [lerp(x0, x1, 0.5 + 0.5 * tri(rnd(i + seed) + t * sp * (0.5 + rnd(i + seed + 1)))), lerp(y0, y1, 0.5 + 0.5 * tri(rnd(i + seed + 2) + t * sp * 1.3 * (0.5 + rnd(i + seed + 3)))), lerp(z0, z1, 0.5 + 0.5 * tri(rnd(i + seed + 4) + t * sp * 0.9))];
+    if (!ok || ok(p)) list.push(p);
+  }
+}
+// 產物 SiF₄：從表面往上飄走
+// ---------- 本課共用：左下流程圖 ----------
+function flowChain(items, y = 372) {
+  let x = 40;
+  items.forEach(([s, c], i) => { const b = chip(s, x, y, c, { size: 13 }); x = b.x + b.w + 6; if (i < items.length - 1) { text("→", x + 4, y + 5, { size: 15, c: C.dim, w: 700 }); x += 22; } });
+}
+// ---------- 本課共用：圓柱腔體 ----------
+function cyl(parent, r, y0, y1, [face, edge], { opacity = 1, emissive = 0, ei = 0, seg = 48, open = false } = {}) {
+  const g = new THREE.CylinderGeometry(r, r, y1 - y0, seg, 1, open);
+  const mat = new THREE.MeshStandardMaterial({ color: face, transparent: opacity < 1, opacity, roughness: 0.45, metalness: 0.1, emissive, emissiveIntensity: ei, depthWrite: opacity >= 1, side: open ? THREE.DoubleSide : THREE.FrontSide });
+  const m = new THREE.Mesh(g, mat);
+  m.position.y = (y0 + y1) / 2;
+  parent.add(m);
+  const lines = new THREE.LineSegments(new THREE.EdgesGeometry(g, 30), new THREE.LineBasicMaterial({ color: edge, transparent: true, opacity: 0.8 }));
+  m.add(lines);
+  return { mesh: m, mat, lines };
+}
+const ring = (parent, r, y, color, tube = 0.04) => {
+  const m = new THREE.Mesh(new THREE.TorusGeometry(r, tube, 8, 96), new THREE.MeshBasicMaterial({ color, transparent: true }));
+  m.rotation.x = Math.PI / 2; m.position.y = y; parent.add(m); return m;
+};
+// =====================================================================
+const TAG = "ELECTROMAGNETISM";
+const PX = 452, PW = 334;
+function panel(x, y, w, h, title, color = C.cyan) {
+  const c = hctx; c.save();
+  c.fillStyle = "rgba(4,8,16,.9)"; c.fillRect(x, y, w, h);
+  c.strokeStyle = color; c.globalAlpha = 0.55; c.lineWidth = 1; c.strokeRect(x + .5, y + .5, w - 1, h - 1); c.restore();
+  text(title, x + 10, y + 18, { size: 13, c: color, w: 700 });
+}
+function line(pts, color, { w = 2, dash = null, alpha = 1, glow = 6 } = {}) {
+  if (pts.length < 2) return;
+  const c = hctx; c.save(); c.globalAlpha = alpha; c.strokeStyle = color; c.lineWidth = w; c.shadowColor = color; c.shadowBlur = glow;
+  if (dash) c.setLineDash(dash);
+  c.beginPath(); pts.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke(); c.restore();
+}
+function dot(x, y, color, r = 4, alpha = 1) {
+  const c = hctx; c.save(); c.globalAlpha = alpha; c.fillStyle = color; c.shadowColor = color; c.shadowBlur = 10; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill(); c.restore();
+}
+function camLeft(t, dur, o) { camOrbit(t, dur, o); camera.setViewOffset(W, H, W * 0.235, -H * 0.02, W, H); }
+// 步驟說明條（左上，標題下方）
+function caption(lines, y = 96) {
+  const c = hctx; c.save(); c.fillStyle = "rgba(4,8,16,.82)"; c.fillRect(24, y - 14, 410, lines.length * 18 + 10); c.restore();
+  lines.forEach((s, i) => text(s, 32, y + 2 + i * 18, { size: i ? 12.5 : 14, c: i ? C.text : C.yellow, w: i ? 500 : 700 }));
+}
+
+function chart(py, ph, title, color, { xa, xb, ya, yb, xt = [], yt = [], xl = "", foot = 0 }) {
+  panel(PX, py, PW, ph, title, color);
+  const x0 = PX + 46, x1 = PX + PW - 16, y0 = py + ph - 28 - foot, y1 = py + 34;
+  const X = (v) => lerp(x0, x1, (v - xa) / (xb - xa)), Y = (v) => lerp(y0, y1, (v - ya) / (yb - ya));
+  line([[x0, y1], [x0, y0], [x1, y0]], "rgba(232,246,255,.4)", { w: 1, glow: 0 });
+  yt.forEach(([v, s]) => text(s, x0 - 5, Y(v) + 4, { size: 10, c: C.dim, mono: true, w: 500, a: "right" }));
+  xt.forEach(([v, s]) => text(s, X(v), y0 + 15, { size: 10, c: C.dim, mono: true, w: 500, a: "center" }));
+  if (xl) text(xl, x1, y0 - 6, { size: 10, c: C.dim, w: 500, a: "right" });
+  return { X, Y, x0, x1, y0, y1 };
+}
+function plot(P, f, a, b, color, o = {}) { const n = o.n || 60, pts = []; for (let i = 0; i <= n; i++) { const v = lerp(a, b, i / n); pts.push([P.X(v), P.Y(f(v))]); } line(pts, color, o); }
+function hline(P, v, color, s, o = {}) { line([[P.x0, P.Y(v)], [P.x1, P.Y(v)]], color, { w: 1, dash: [4, 3], glow: 0 }); if (s) text(s, o.left ? P.x0 + 4 : P.x1, P.Y(v) - 5, { size: 10, c: color, w: 700, a: o.left ? "left" : "right" }); }
+function legendRow(x, y, items) { let xx = x; items.forEach(([s, col, dsh]) => { line([[xx, y - 4], [xx + 16, y - 4]], col, { w: 2, dash: dsh ? [3, 2] : null, glow: 0 }); text(s, xx + 20, y, { size: 11, c: col, w: 700 }); hctx.font = `700 11px ${FONT}`; xx += hctx.measureText(s).width + 34; }); }
+
+// =====================================================================
+// 本課共用
+// =====================================================================
+M.copper = [0xb8692e, 0xffb36b];
+const coneTo = (mesh, dir) => mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+function formula(s, y, color = C.lime, o = {}) { return chip(s, 28, y, color, { mono: true, size: 14, ...o }); }
+
+// =====================================================================
+// 電流產生磁場：直導線周圍的同心圓磁場（安培右手定則）
+// =====================================================================
+addScene("ampere", {
+  dur: 12, fps: 15,
+  setup(g) {
+    mbox(g, [0x1a2233, 0x4a6a95], { opacity: 0.45 }).set(-4.2, -0.62, -4.2, 4.2, -0.5, 4.2);
+    this.wire = cyl(g, 0.13, -2.4, 3.6, M.copper, { emissive: 0x6a3a10, ei: 0.5 });
+    this.flow = particles(g, 26, COL.e, 0.09);
+    this.R = [0.9, 1.7, 2.6, 3.5];
+    this.rings = this.R.map((r) => ring(g, r, 0.9, 0x5aa0ff, 0.035));
+    this.arrows = this.R.flatMap((r, k) => [0, 1, 2, 3].map((j) => { const m = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.3, 10), new THREE.MeshBasicMaterial({ color: 0x5aa0ff, transparent: true })); g.add(m); return { m, r, th0: (j / 4) * Math.PI * 2 + k * 0.4 }; }));
+    // 指南針：一圈小磁針（紅 = N）
+    this.needles = [0, 1, 2, 3, 4, 5, 6, 7].map((j) => {
+      const th = (j / 8) * Math.PI * 2, n = new THREE.Group(); n.position.set(Math.cos(th) * 2.2, -0.35, Math.sin(th) * 2.2); g.add(n);
+      const N = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.42, 8), new THREE.MeshBasicMaterial({ color: 0xff4d5e })); N.position.x = 0.21; N.rotation.z = -Math.PI / 2;
+      const S = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.42, 8), new THREE.MeshBasicMaterial({ color: 0xe8eef6 })); S.position.x = -0.21; S.rotation.z = Math.PI / 2;
+      n.add(N); n.add(S); cyl(g, 0.3, -0.5, -0.42, [0x2a3040, 0x6c7a90]).mesh.position.set(n.position.x, 0, n.position.z);
+      return { n, th };
+    });
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 14.5, h: 7.5, a0: 0.45, amp: 0.05, look: [0, 0.6, 0] });
+    const I = seg(t, 0.8, 1.8) - 2 * seg(t, 5.2, 6.6) + seg(t, 9.8, 11.0), a = Math.abs(I), sg = Math.sign(I);
+    this.wire.mat.emissiveIntensity = 0.3 + 0.9 * a;
+    const fl = []; for (let i = 0; i < 26; i++) fl.push([0, -2.4 + 6 * fract(i / 26 + sg * t * 0.35 * a), 0, a > 0.05 ? 1 : 0]); place(this.flow, fl);
+    this.rings.forEach((m, k) => (m.material.opacity = a * (1.1 - k * 0.2)));
+    this.arrows.forEach(({ m, r, th0 }) => {
+      const th = th0 - sg * t * 0.9 / r; m.position.set(Math.cos(th) * r, 0.9, Math.sin(th) * r);
+      coneTo(m, new THREE.Vector3(-Math.sin(th), 0, Math.cos(th)).multiplyScalar(-sg || 1)); m.material.opacity = a * (1.1 - this.R.indexOf(r) * 0.2);
+    });
+    // 磁針：沒電流時指北（-z），有電流時轉到磁場切線方向
+    this.needles.forEach(({ n, th }) => { const north = Math.PI / 2, fb = Math.atan2(Math.cos(th) * (sg || 1), Math.sin(th) * (sg || 1)); let d = fb - north; d = Math.atan2(Math.sin(d), Math.cos(d)); n.rotation.y = north + d * a; });
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("電流產生磁場：安培右手定則", TAG);
+    chip(`I = ${(5 * I).toFixed(1)} A`, 772, 40, a < 0.05 ? C.grey : C.yellow, { a: "right", mono: true, size: 13 });
+    caption(a < 0.05 && t < 2 ? ["沒有電流：小磁針都指向北方", "導線周圍沒有磁場"]
+      : t < 5.4 ? ["通電流（向上）：導線周圍出現一圈圈磁場", "右手拇指 = 電流方向，四指彎曲 = 磁場方向"]
+      : t < 10 ? ["電流反向：磁場方向跟著反過來", "小磁針全部轉向；離導線越遠磁場越弱"]
+      : ["電流關掉：磁場消失", "磁場是電流造成的，不是導線本身"]);
+    callout([0.13, 3.0, 0], 434, 160, "電流 I（黃點 = 電子流的反方向示意）", C.yellow, { a: "right" });
+    callout([this.R[3], 0.9, 0.3], 40, 316, "磁力線：同心圓，繞著導線", C.blue);
+    // 右：B 對 r
+    const P = chart(80, 250, "磁場強度 B vs. 距離 r", C.blue, { xa: 0.5, xb: 5, ya: 0, yb: 220, xt: [[1, "1"], [3, "3"], [5, "5 cm"]], yt: [[0, "0"], [100, "100"], [200, "200 μT"]], xl: "r" });
+    plot(P, (r) => (2e-7 * 5 * a / (r / 100)) * 1e6, 0.5, 5, C.blue, { n: 80 });
+    [1, 2, 3, 4].forEach((r) => dot(P.X(r), P.Y((2e-7 * 5 * a / (r / 100)) * 1e6), C.blue, 3.5, a));
+    text("I = 5 A 時（示意）", P.x1, P.y1 + 10, { size: 10.5, c: C.dim, w: 500, a: "right" });
+    formula("B = μ₀ I / (2π r)", 372, C.lime);
+    formula("μ₀ = 4π × 10⁻⁷ T·m/A", 406, C.cyan, { size: 12 });
+    text("距離加倍 → B 剩一半", PX + 14, 362, { size: 12.5, c: C.text, w: 600 });
+    text("電流加倍 → B 也加倍", PX + 14, 386, { size: 12.5, c: C.text, w: 600 });
+    text("電流反向 → 磁場方向反過來", PX + 14, 410, { size: 12.5, c: C.text, w: 600 });
+  },
+});
+
+// =====================================================================
+// 電磁感應：磁鐵進出線圈 → 磁通量變化 → 感應電動勢（法拉第 + 冷次）
+// =====================================================================
+addScene("faraday", {
+  dur: 12, fps: 15,
+  setup(g) {
+    mbox(g, [0x1a2233, 0x4a6a95], { opacity: 0.45 }).set(-4, -2.3, -3, 4, -2.18, 3);
+    const pts = []; for (let i = 0; i <= 600; i++) { const k = i / 600, a = k * Math.PI * 2 * 7; pts.push(new THREE.Vector3(Math.cos(a) * 1.25, -1.6 + k * 3.0, Math.sin(a) * 1.25)); }
+    this.curve = new THREE.CatmullRomCurve3(pts);
+    this.coil = new THREE.Mesh(new THREE.TubeGeometry(this.curve, 900, 0.07, 8, false), new THREE.MeshStandardMaterial({ color: 0xb8692e, emissive: 0x6a3a10, emissiveIntensity: 0.4, metalness: 0.6, roughness: 0.3 }));
+    g.add(this.coil);
+    this.cur = particles(g, 40, COL.e, 0.08);
+    // 磁鐵：上 N（紅）、下 S（藍）
+    this.mag = new THREE.Group(); g.add(this.mag);
+    const nb = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.1, 0.7), new THREE.MeshStandardMaterial({ color: 0xd8344a, emissive: 0x5a1020, emissiveIntensity: 0.5 })); nb.position.y = 0.55;
+    const sb = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.1, 0.7), new THREE.MeshStandardMaterial({ color: 0x2a6ad8, emissive: 0x102a5a, emissiveIntensity: 0.5 })); sb.position.y = -0.55;
+    this.mag.add(nb); this.mag.add(sb);
+    // 磁鐵的磁力線（跟著磁鐵移動）
+    [0, 1, 2, 3].forEach((j) => [0.9, 1.5].forEach((w) => {
+      const c = new THREE.EllipseCurve(0, 0, w, 1.6 + w * 0.5, 0, Math.PI * 2), p = c.getPoints(64).map((v) => new THREE.Vector3(v.x, v.y, 0));
+      const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(p), new THREE.LineBasicMaterial({ color: 0x5aa0ff, transparent: true, opacity: 0.35 }));
+      l.rotation.y = (j / 4) * Math.PI; this.mag.add(l);
+    }));
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 20, h: 6, a0: 0.35, amp: 0.05, look: [0, 1.9, 0] });
+    const Y = (tt) => 3.6 - 3.6 * seg(tt, 1.0, 3.0) + 3.6 * seg(tt, 5.0, 7.0) - 3.6 * seg(tt, 8.6, 9.3) + 3.6 * seg(tt, 9.9, 10.6);
+    const Phi = (tt) => 1 / (1 + (Y(tt) / 1.4) ** 2) ** 1.5, emf = (tt) => -(Phi(tt + 0.02) - Phi(tt - 0.02)) / 0.04;
+    const y = Y(t), e = emf(t), ea = clamp(Math.abs(e) / 2.2);
+    this.mag.position.y = y;
+    this.coil.material.emissiveIntensity = 0.3 + 1.2 * ea;
+    const cl = []; for (let i = 0; i < 40; i++) cl.push([...this.curve.getPointAt(fract(i / 40 + Math.sign(e) * t * 0.25)).toArray(), ea > 0.04 ? 1 : 0]); place(this.cur, cl);
+    composer.render();
+    hctx.clearRect(0, 0, W, H);
+    frame("電磁感應：磁通量變化才會產生電", TAG);
+    const st = t < 1 ? 0 : t < 3 ? 1 : t < 5 ? 2 : t < 7 ? 3 : t < 8.6 ? 4 : 5;
+    chip(["靜止", "磁鐵靠近", "磁鐵不動", "磁鐵拿出", "靜止", "快速進出"][st], 772, 40, [C.grey, C.yellow, C.grey, C.magenta, C.grey, C.orange][st], { a: "right", size: 13 });
+    caption([["磁鐵在線圈外、不動", "通過線圈的磁通量 Φ 不變 → 沒有電流"], ["磁鐵靠近：Φ 增加", "感應電流產生反向磁場，抵抗 Φ 增加（冷次定律）"], ["磁鐵停在線圈裡", "Φ 很大但不變 → dΦ/dt = 0 → 沒有電流"], ["磁鐵拿出：Φ 減少", "感應電流反向，想把 Φ 留住"], ["磁鐵又不動了", "沒有變化就沒有電"], ["快速進出：Φ 變化得更快", "電動勢更大 → 發電機轉越快，電壓越高"]][st]);
+    callout([1.25, 0.2, 0.6], 40, 336, `線圈 N 圈（亮度 = 感應電流大小）`, C.orange);
+    // 右：Φ(t) 與 ε(t)
+    const P1 = chart(80, 150, "通過線圈的磁通量 Φ", C.blue, { xa: 0, xb: 12, ya: 0, yb: 1.15, xt: [], yt: [[0, "0"], [1, "大"]] });
+    const p1 = []; for (let i = 0; i <= 240; i++) { const tt = (t * i) / 240; p1.push([P1.X(tt), P1.Y(Phi(tt))]); } line(p1, C.blue, { w: 1.8 });
+    const P2 = chart(236, 168, "感應電動勢 ε = −N dΦ/dt", C.orange, { xa: 0, xb: 12, ya: -3.2, yb: 3.2, xt: [[0, "0"], [6, "6"], [12, "12 s"]], yt: [[-3, "−"], [0, "0"], [3, "+"]] });
+    hline(P2, 0, C.grey, "");
+    const p2 = []; for (let i = 0; i <= 240; i++) { const tt = (t * i) / 240; p2.push([P2.X(tt), P2.Y(clamp(emf(tt), -3.1, 3.1))]); } line(p2, C.orange, { w: 1.8 });
+    dot(P2.X(t), P2.Y(clamp(e, -3.1, 3.1)), C.yellow, 4.5);
+    formula("ε = −N · dΦ/dt", 372, C.lime);
+    formula("Φ = B · A", 406, C.cyan, { size: 12 });
+    // 檢流計
+    const gx = 300, gy = 412, c = hctx; c.save(); c.strokeStyle = C.grey; c.lineWidth = 1.5; c.beginPath(); c.arc(gx, gy, 34, Math.PI, 2 * Math.PI); c.stroke();
+    const ang = -Math.PI / 2 + clamp(e / 3, -1, 1) * 1.2; c.strokeStyle = C.yellow; c.lineWidth = 2.5; c.beginPath(); c.moveTo(gx, gy); c.lineTo(gx + Math.cos(ang) * 30, gy + Math.sin(ang) * 30); c.stroke(); c.restore();
+    text("檢流計", gx, gy + 14, { size: 10.5, c: C.dim, w: 600, a: "center" });
+  },
+});
+
+// =====================================================================
+// 本課共用工具：箭頭、動態折線、小球、場線追蹤、HUD 箭頭
+// =====================================================================
+function ball(parent, r, color, ei = 0.6) { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: ei, roughness: 0.35 })); parent.add(m); return m; }
+function arrow3(parent, color, r = 0.05) {
+  const mat = new THREE.MeshBasicMaterial({ color, transparent: true }), g = new THREE.Group();
+  g.sh = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 1, 8), mat); g.hd = new THREE.Mesh(new THREE.ConeGeometry(r * 2.8, r * 7, 12), mat); g.mat = mat; g.hl = r * 7;
+  g.add(g.sh); g.add(g.hd); parent.add(g); return g;
+}
+function setArrow(a, p0, p1, alpha = 1) {
+  const v = new THREE.Vector3(...p1).sub(new THREE.Vector3(...p0)), L = v.length();
+  if (L < 1e-3 || alpha <= 0.01) { a.visible = false; return; }
+  a.visible = true; const hl = Math.min(a.hl, L * 0.6);
+  a.position.set(...p0); a.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), v.normalize());
+  a.sh.scale.y = Math.max(0.001, L - hl); a.sh.position.y = (L - hl) / 2; a.hd.scale.setScalar(hl / a.hl); a.hd.position.y = L - hl / 2; a.mat.opacity = alpha;
+}
+function sline(parent, pts, color, opacity = 1) { const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts.map((p) => new THREE.Vector3(...p))), new THREE.LineBasicMaterial({ color, transparent: true, opacity })); parent.add(l); return l; }
+function dline(parent, color, n = 300, opacity = 1) {
+  const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+  const l = new THREE.Line(geo, new THREE.LineBasicMaterial({ color, transparent: true, opacity })); l.frustumCulled = false; parent.add(l);
+  l.setPts = (pts) => { const a = geo.attributes.position.array, m = Math.min(pts.length, n); for (let i = 0; i < m; i++) { a[i * 3] = pts[i][0]; a[i * 3 + 1] = pts[i][1]; a[i * 3 + 2] = pts[i][2]; } geo.setDrawRange(0, m); geo.attributes.position.needsUpdate = true; };
+  return l;
+}
+// 2D（xy 平面）點電荷的場線追蹤
+function eField(Q, x, y) { let ex = 0, ey = 0; Q.forEach(([qx, qy, q]) => { const dx = x - qx, dy = y - qy, r3 = Math.max(0.02, (dx * dx + dy * dy) ** 1.5); ex += (q * dx) / r3; ey += (q * dy) / r3; }); return [ex, ey]; }
+function traceLine(Q, x, y, dir = 1, { h = 0.04, n = 400, lim = 6 } = {}) {
+  const pts = [[x, y, 0]];
+  for (let i = 0; i < n; i++) {
+    const [ex, ey] = eField(Q, x, y), m = Math.hypot(ex, ey) || 1; x += (dir * h * ex) / m; y += (dir * h * ey) / m; pts.push([x, y, 0]);
+    if (Math.abs(x) > lim || Math.abs(y) > lim * 0.75 || Q.some(([qx, qy, q]) => q * dir < 0 && Math.hypot(x - qx, y - qy) < 0.18)) break;
+  }
+  return pts;
+}
+function hArrow(x0, y0, x1, y1, color, w = 2, alpha = 1) {
+  const c = hctx, a = Math.atan2(y1 - y0, x1 - x0); c.save(); c.globalAlpha = alpha; c.strokeStyle = color; c.fillStyle = color; c.lineWidth = w; c.shadowColor = color; c.shadowBlur = 6;
+  c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke(); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x1 - 9 * Math.cos(a - 0.4), y1 - 9 * Math.sin(a - 0.4)); c.lineTo(x1 - 9 * Math.cos(a + 0.4), y1 - 9 * Math.sin(a + 0.4)); c.fill(); c.restore();
+}
+function hWave(x0, y0, w, amp, f, ph, color, o = {}) { const pts = []; for (let i = 0; i <= 120; i++) { const u = i / 120; pts.push([x0 + u * w, y0 - amp * Math.sin(2 * Math.PI * f * u + ph)]); } line(pts, color, o); }
+const ground = (g, y = -1.6, s = 5) => mbox(g, [0x1a2233, 0x4a6a95], { opacity: 0.45 }).set(-s, y - 0.1, -s * 0.8, s, y, s * 0.8);
+const pm = (q) => (q > 0 ? 0xff4d5e : 0x4fb0ff);
+function signTag(p3, q) { const p = proj(...p3); text(q > 0 ? "+" : "−", p[0], p[1] + 6, { size: 18, c: "#ffffff", w: 700, a: "center" }); }
+
+// =====================================================================
+// Part 1｜靜電
+// =====================================================================
+addScene("coulomb", {
+  dur: 12, fps: 15,
+  setup(g) { ground(g); this.A = ball(g, 0.42, pm(1)); this.B = ball(g, 0.42, pm(1)); this.fA = arrow3(g, 0xffd23d, 0.07); this.fB = arrow3(g, 0xffd23d, 0.07); },
+  render(t) {
+    camLeft(t, this.dur, { r: 13, h: 5, a0: 0.25, amp: 0.04, look: [0, 0, 0] });
+    const att = t >= 6, qB = att ? -1 : 1, d = lerp(1.6, 4.6, 0.5 - 0.5 * Math.cos((2 * Math.PI * (t % 6)) / 6)), F = clamp(5.2 / (d * d), 0.25, 2.4);
+    this.A.position.set(-d / 2, 0, 0); this.B.position.set(d / 2, 0, 0); this.B.material.color.set(pm(qB)); this.B.material.emissive.set(pm(qB));
+    const dA = att ? 1 : -1;
+    setArrow(this.fA, [-d / 2 + dA * 0.45, 0, 0], [-d / 2 + dA * (0.45 + F), 0, 0]);
+    setArrow(this.fB, [d / 2 - dA * 0.45, 0, 0], [d / 2 - dA * (0.45 + F), 0, 0]);
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("庫侖定律：電荷之間的力", TAG);
+    signTag([-d / 2, 0, 0], 1); signTag([d / 2, 0, 0], qB);
+    caption(att ? ["異性電荷：互相吸引", "距離越近，力越大（平方反比）"] : ["同性電荷：互相排斥", "距離拉遠一倍，力剩四分之一"]);
+    chip(`r = ${(d * 2).toFixed(1)} cm`, 772, 40, C.yellow, { a: "right", mono: true, size: 13 });
+    const P = chart(80, 250, "力的大小 F vs. 距離 r", C.yellow, { xa: 1.4, xb: 4.8, ya: 0, yb: 2.8, xt: [[2, "2"], [3, "3"], [4, "4"]], yt: [[0, "0"], [2.6, "大"]], xl: "r" });
+    plot(P, (r) => 5.2 / (r * r), 1.4, 4.8, C.yellow, { n: 80 }); dot(P.X(d), P.Y(5.2 / (d * d)), C.yellow, 5);
+    formula("F = k · q₁q₂ / r²", 372); formula("k = 8.99 × 10⁹ N·m²/C²", 406, C.cyan, { size: 12 });
+    text("黃箭頭 = 每顆電荷受的力", PX + 14, 372, { size: 12.5, c: C.text, w: 600 }); text("兩顆受力大小相同、方向相反", PX + 14, 396, { size: 12.5, c: C.text, w: 600 });
+  },
+});
+
+addScene("efield", {
+  dur: 12, fps: 15,
+  setup(g) {
+    this.Q = [[-1.7, 0, 1], [1.7, 0, -1]];
+    ball(g, 0.3, pm(1)).position.set(-1.7, 0, 0); ball(g, 0.3, pm(-1)).position.set(1.7, 0, 0);
+    this.lines = [];
+    [0, 1, 2].forEach((k) => { const grp = new THREE.Group(); grp.rotation.x = (k * Math.PI) / 3; g.add(grp); for (let i = 0; i < 14; i++) { const a = (i / 14) * Math.PI * 2 + 0.11; const pts = traceLine(this.Q, -1.7 + 0.32 * Math.cos(a), 0.32 * Math.sin(a), 1); if (k === 0 && i === 2) this.path = pts; sline(grp, pts, 0x5aa0ff, k ? 0.25 : 0.7); } });
+    this.test = ball(g, 0.13, 0xffd23d, 1.2);
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 12, h: 3.5, a0: 0.2, amp: 0.06, look: [0, 0, 0] });
+    const u = fract(t / 4), P0 = this.path, i = Math.min(P0.length - 1, Math.floor(u * P0.length)); this.test.position.set(...P0[i]);
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("電場與電場線", TAG); signTag([-1.7, 0, 0], 1); signTag([1.7, 0, 0], -1);
+    caption(["電場線：從 + 出發、回到 −", "線越密 → 電場越強；黃色試探電荷沿著電場線被推著走"]);
+    const P = chart(80, 250, "單一點電荷：E vs. r", C.blue, { xa: 0.5, xb: 4, ya: 0, yb: 4.2, xt: [[1, "1"], [2, "2"], [3, "3"], [4, "4"]], yt: [[0, "0"], [4, "強"]], xl: "r" });
+    plot(P, (r) => 1 / (r * r), 0.5, 4, C.blue, { n: 80 });
+    formula("E = F / q", 372); formula("E = k q / r²（單位 N/C 或 V/m）", 406, C.cyan, { size: 12 });
+    text("電場 = 每單位電荷受的力", PX + 14, 372, { size: 12.5, c: C.text, w: 600 }); text("切線方向 = 正電荷受力方向", PX + 14, 396, { size: 12.5, c: C.text, w: 600 });
+  },
+});
+
+addScene("gauss", {
+  dur: 12, fps: 15,
+  setup(g) {
+    ball(g, 0.3, pm(1));
+    this.sph = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 20), new THREE.MeshStandardMaterial({ color: 0x22e5ff, transparent: true, opacity: 0.12, emissive: 0x0a3a4a, emissiveIntensity: 0.6, depthWrite: false })); g.add(this.sph);
+    this.wire = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(1, 2)), new THREE.LineBasicMaterial({ color: 0x22e5ff, transparent: true, opacity: 0.35 })); g.add(this.wire);
+    this.dirs = []; for (let i = 0; i < 26; i++) { const z = 1 - (2 * (i + 0.5)) / 26, r = Math.sqrt(1 - z * z), a = i * 2.4; this.dirs.push([r * Math.cos(a), z, r * Math.sin(a)]); }
+    this.dirs.forEach((d) => sline(g, [[d[0] * 0.3, d[1] * 0.3, d[2] * 0.3], [d[0] * 4.2, d[1] * 4.2, d[2] * 4.2]], 0x5aa0ff, 0.35));
+    this.ar = this.dirs.map(() => arrow3(g, 0xffd23d, 0.035));
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 13, h: 5, a0: 0.3, amp: 0.1, look: [0, 0, 0] });
+    const R = lerp(1.1, 3.2, 0.5 - 0.5 * Math.cos((2 * Math.PI * t) / 12));
+    this.sph.scale.setScalar(R); this.wire.scale.setScalar(R);
+    const L = 0.9 / (R * R) + 0.15; this.dirs.forEach((d, i) => setArrow(this.ar[i], d.map((v) => v * R), d.map((v) => v * (R + L))));
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("高斯定律：穿出封閉曲面的電通量", TAG);
+    caption(["把電荷包在任意封閉曲面裡（青色球面）", "球變大：E 變弱、面積變大 → 穿出的電通量不變"]);
+    chip(`R = ${R.toFixed(1)}`, 772, 40, C.cyan, { a: "right", mono: true, size: 13 });
+    const P = chart(80, 250, "球面上的 E 與總通量 Φ_E", C.cyan, { xa: 1, xb: 3.4, ya: 0, yb: 1.2, xt: [[1, "1"], [2, "2"], [3, "3 R"]], yt: [[0, "0"], [1, "1"]] });
+    plot(P, (r) => 1 / (r * r), 1, 3.4, C.yellow, { n: 60 }); plot(P, () => 1, 1, 3.4, C.cyan, { n: 2 });
+    dot(P.X(R), P.Y(1 / (R * R)), C.yellow, 4.5); dot(P.X(R), P.Y(1), C.cyan, 4.5);
+    legendRow(P.x0 + 6, P.y0 - 12, [["E（黃）", C.yellow], ["Φ_E = E·4πR²（青）", C.cyan]]);
+    formula("∮ E · dA = Q_enc / ε₀", 372); formula("ε₀ = 8.85 × 10⁻¹² F/m", 406, C.cyan, { size: 12 });
+    text("只看「包在裡面」的電荷", PX + 14, 372, { size: 12.5, c: C.text, w: 600 }); text("曲面形狀、大小都不影響總通量", PX + 14, 396, { size: 12.5, c: C.text, w: 600 });
+  },
+});
+
+addScene("potential", {
+  dur: 12, fps: 15,
+  setup(g) {
+    const geo = new THREE.PlaneGeometry(9, 6, 90, 60); geo.rotateX(-Math.PI / 2);
+    const pos = geo.attributes.position, col = [];
+    this.V = (x, z) => clamp(1.6 / Math.hypot(x + 1.8, z, 0.35) - 1.6 / Math.hypot(x - 1.8, z, 0.35), -3, 3);
+    for (let i = 0; i < pos.count; i++) { const v = this.V(pos.getX(i), pos.getZ(i)); pos.setY(i, v * 0.6); const c = v > 0 ? new THREE.Color(0xff4d5e).lerp(new THREE.Color(0x2a3040), 1 - clamp(v / 3)) : new THREE.Color(0x4fb0ff).lerp(new THREE.Color(0x2a3040), 1 - clamp(-v / 3)); col.push(c.r, c.g, c.b); }
+    geo.setAttribute("color", new THREE.Float32BufferAttribute(col, 3)); geo.computeVertexNormals();
+    g.add(new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.6, transparent: true, opacity: 0.85, side: THREE.DoubleSide })));
+    g.add(new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.PlaneGeometry(9, 6, 18, 12).rotateX(-Math.PI / 2)), new THREE.LineBasicMaterial({ color: 0x4a6a95, transparent: true, opacity: 0.0 })));
+    [0.6, 1.0, 1.6].forEach((r) => { [-1.8, 1.8].forEach((cx) => { const m = ring(g, r, -1.9, cx < 0 ? 0xff4d5e : 0x4fb0ff, 0.025); m.position.x = cx; m.material.opacity = 0.6; }); });
+    this.ball = ball(g, 0.18, 0xffd23d, 1.2);
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 12, h: 6.5, a0: 0.15, amp: 0.05, look: [0, -0.3, 0] });
+    const x = lerp(-1.25, 1.25, seg(fract(t / 6), 0.1, 0.9)), z = 0.25; this.ball.position.set(x, this.V(x, z) * 0.6 + 0.2, z);
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("電位：電荷的「地形高度」", TAG);
+    caption(["+ 電荷周圍電位高（紅色山丘），− 電荷周圍電位低（藍色凹谷）", "正電荷像球一樣從高電位「滾」到低電位；底下的圓圈 = 等位線"]);
+    const P = chart(80, 250, "沿兩電荷連線的電位 V", C.red, { xa: -4, xb: 4, ya: -3.2, yb: 3.2, xt: [[-1.8, "+"], [0, "0"], [1.8, "−"]], yt: [[-3, "低"], [0, "0"], [3, "高"]] });
+    plot(P, (xx) => this.V(xx, 0.25), -4, 4, C.red, { n: 160 }); hline(P, 0, C.grey, ""); dot(P.X(x), P.Y(this.V(x, 0.25)), C.yellow, 5);
+    formula("V = k q / r", 372); formula("E = −dV/dx（電場指向電位下降最快的方向）", 406, C.cyan, { size: 12 });
+    text("電壓 = 兩點的電位差", PX + 14, 372, { size: 12.5, c: C.text, w: 600 }); text("W = qΔV：電荷在電位差中得到的能量", PX + 14, 396, { size: 12.5, c: C.text, w: 600 });
+  },
+});
+
+addScene("shield", {
+  dur: 12, fps: 15,
+  setup(g) {
+    this.box = mbox(g, [0x8a8f98, 0xe8eef6], { opacity: 0.25, emissive: 0x2a2f38, ei: 0.4 }).set(-1.3, -1.3, -1.3, 1.3, 1.3, 1.3);
+    this.L = []; for (let i = 0; i < 5; i++) for (let j = 0; j < 3; j++) { const y = -1.0 + i * 0.5, z = -0.8 + j * 0.8; this.L.push({ y, z, l: dline(g, 0x5aa0ff, 4, 0.8), r: dline(g, 0x5aa0ff, 4, 0.8) }); }
+    this.neg = particles(g, 40, 0x4fb0ff, 0.08); this.pos = particles(g, 40, 0xff4d5e, 0.08); this.phone = mbox(g, [0x1a1a1a, 0x22e5ff], { emissive: 0x0a3a4a, ei: 0.8 }).set(-0.25, -0.5, -0.12, 0.25, 0.5, 0.12);
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 12, h: 4.5, a0: 0.5, amp: 0.05, look: [0, 0, 0] });
+    const on = seg(t, 0.5, 3) * (1 - seg(t, 10.5, 11.8));
+    this.L.forEach(({ y, z, l, r }) => { l.setPts([[-5, y, z], [-5 + 3.7 * on, y, z]]); r.setPts([[1.3, y, z], [1.3 + 3.7 * on, y, z]]); });
+    const n = Math.round(40 * on), ng = [], ps = []; for (let i = 0; i < n; i++) { ng.push([-1.33, lerp(-1.2, 1.2, rnd(i)), lerp(-1.2, 1.2, rnd(i + 5))]); ps.push([1.33, lerp(-1.2, 1.2, rnd(i + 9)), lerp(-1.2, 1.2, rnd(i + 13))]); }
+    place(this.neg, ng); place(this.pos, ps);
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("導體的靜電屏蔽（法拉第籠）", TAG);
+    caption(on < 0.5 ? ["外加電場慢慢打開", "金屬殼裡的自由電子開始移動"] : ["自由電子跑到左面（−）、右面留下 +", "它們產生的電場剛好抵消外加電場 → 殼內 E = 0"]);
+    callout([0, 0.5, 0.12], 434, 330, "殼裡的手機：收不到外面的電場", C.cyan, { a: "right" });
+    panel(PX, 80, PW, 250, "生活中的例子", C.cyan);
+    ["電梯、地下室訊號差", "微波爐門上的金屬網", "同軸電纜的外層編織網", "儀器的金屬屏蔽外殼", "被雷打到的汽車，乘客沒事"].forEach((s, i) => text(`• ${s}`, PX + 16, 124 + i * 36, { size: 13, c: C.text, w: 600 }));
+    formula("導體內部：E = 0", 372); formula("電荷只分布在導體表面", 406, C.cyan, { size: 12 });
+  },
+});
+
+// =====================================================================
+// Part 2｜電容
+// =====================================================================
+addScene("capacitor", {
+  dur: 12, fps: 15,
+  setup(g) { this.top = mbox(g, [0x8a8f98, 0xe8eef6], { emissive: 0x3a1a1a, ei: 0.4 }); this.bot = mbox(g, [0x8a8f98, 0xe8eef6], { emissive: 0x1a2a3a, ei: 0.4 }); this.pp = particles(g, 60, 0xff4d5e, 0.09); this.nn = particles(g, 60, 0x4fb0ff, 0.09); this.E = Array.from({ length: 16 }, () => arrow3(g, 0xffd23d, 0.022)); },
+  render(t) {
+    camLeft(t, this.dur, { r: 12, h: 5, a0: 0.35, amp: 0.04, look: [0, 0, 0] });
+    const q = seg(t, 0.3, 3), d = t < 5 ? 1.6 : lerp(1.6, 3.2, 0.5 - 0.5 * Math.cos((2 * Math.PI * (t - 5)) / 7)), h = d / 2;
+    this.top.set(-2, h, -1.5, 2, h + 0.15, 1.5); this.bot.set(-2, -h - 0.15, -1.5, 2, -h, 1.5);
+    const n = Math.round(60 * q), a = [], b = []; for (let i = 0; i < n; i++) { const x = lerp(-1.8, 1.8, rnd(i)), z = lerp(-1.3, 1.3, rnd(i + 3)); a.push([x, h + 0.2, z]); b.push([x, -h - 0.2, z]); } place(this.pp, a); place(this.nn, b);
+    this.E.forEach((ar, i) => { const x = -1.5 + (i % 4), z = -1.1 + Math.floor(i / 4) * 0.75; setArrow(ar, [x, h - 0.1, z], [x, -h + 0.1, z], q); });
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("電容器：用電場儲存能量", TAG);
+    caption(t < 5 ? ["接上電壓 V：上板累積 +Q、下板 −Q", "兩板之間是均勻電場（黃箭頭）"] : ["固定電壓，改變間距 d", "d 越小 → 電容 C 越大 → 能存更多電荷"]);
+    chip(`d = ${d.toFixed(1)} mm（示意）`, 772, 40, C.yellow, { a: "right", mono: true, size: 13 });
+    const P = chart(80, 250, "電容 C vs. 間距 d", C.cyan, { xa: 1.2, xb: 3.4, ya: 0, yb: 1.4, xt: [[1.6, "1.6"], [3.2, "3.2"]], yt: [[0, "0"], [1.25, "大"]], xl: "d" });
+    plot(P, (x) => 2 / x, 1.4, 3.4, C.cyan); dot(P.X(d), P.Y(2 / d), C.yellow, 5);
+    formula("C = ε₀ A / d", 372); formula("Q = C V　　U = ½ C V²", 406, C.cyan, { size: 12 });
+    text("A：極板面積　d：間距", PX + 14, 372, { size: 12.5, c: C.text, w: 600 }); text("E = V / d（板間電場）", PX + 14, 396, { size: 12.5, c: C.text, w: 600 });
+  },
+});
+
+addScene("dielectric", {
+  dur: 12, fps: 15,
+  setup(g) {
+    mbox(g, [0x8a8f98, 0xe8eef6], { emissive: 0x3a1a1a, ei: 0.4 }).set(-2, 0.9, -1.4, 2, 1.05, 1.4); mbox(g, [0x8a8f98, 0xe8eef6], { emissive: 0x1a2a3a, ei: 0.4 }).set(-2, -1.05, -1.4, 2, -0.9, 1.4);
+    this.slab = mbox(g, [0x1f9e6a, 0x5dffb0], { opacity: 0.35, emissive: 0x0a3a2a, ei: 0.5 });
+    this.dip = []; for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) { const gg = new THREE.Group(); gg.add(ball(gg, 0.09, 0xff4d5e)); gg.add(ball(gg, 0.09, 0x4fb0ff)); gg.children[0].position.y = -0.22; gg.children[1].position.y = 0.22; g.add(gg); this.dip.push({ gg, x: -1.4 + i * 0.95, z: -0.9 + j * 0.9, a0: rnd(i * 7 + j) * 6.28 }); }
+    this.E = Array.from({ length: 8 }, () => arrow3(g, 0xffd23d, 0.04));
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 12, h: 4.5, a0: 0.35, amp: 0.04, look: [0, 0, 0] });
+    const ins = seg(t, 1, 4) * (1 - seg(t, 10.5, 11.8)), al = seg(t, 3.5, 6) * (1 - seg(t, 10.5, 11.8)), off = lerp(5.5, 0, ins);
+    this.slab.set(-2 + off, -0.85, -1.3, 2 + off, 0.85, 1.3);
+    this.dip.forEach(({ gg, x, z, a0 }) => { gg.position.set(x + off, 0, z); gg.rotation.z = lerp(a0, 0, al); gg.visible = ins > 0.02; });
+    this.E.forEach((ar, i) => { const x = -1.6 + (i % 4) * 1.05, z = i < 4 ? -0.6 : 0.6, L = lerp(1.6, 0.7, al); setArrow(ar, [x, 0.8, z], [x, 0.8 - L, z]); });
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("介電質：讓電容變大", TAG);
+    caption(al < 0.5 ? ["把介電質（綠）推進兩板之間", "裡面的分子是一個個小偶極（紅 + / 藍 −）"] : ["偶極轉向排列 → 產生反向電場", "板間淨電場變弱 E = E₀/κ → 同樣電壓能存更多電荷"]);
+    panel(PX, 80, PW, 250, "常見材料的介電常數 κ（示意）", C.green);
+    [["真空", 1], ["SiO₂", 3.9], ["Si₃N₄", 7.5], ["HfO₂（high-k）", 25]].forEach(([s, k], i) => { const y = 132 + i * 46; text(s, PX + 16, y + 4, { size: 13, c: C.text, w: 700 }); hctx.save(); hctx.fillStyle = C.green; hctx.globalAlpha = 0.85; hctx.fillRect(PX + 150, y - 8, 160 * (k / 25), 16); hctx.restore(); text(`${k}`, PX + PW - 12, y + 4, { size: 12, c: C.green, w: 700, mono: true, a: "right" }); });
+    formula("C = κ ε₀ A / d", 372); formula("E = E₀ / κ", 406, C.cyan, { size: 12 });
+  },
+});
+
+addScene("rc", {
+  dur: 12, fps: 15,
+  setup(g) {
+    mbox(g, [0x8a8f98, 0xe8eef6], { emissive: 0x3a1a1a, ei: 0.4 }).set(0.6, 0.6, -1.2, 3.0, 0.72, 1.2); mbox(g, [0x8a8f98, 0xe8eef6], { emissive: 0x1a2a3a, ei: 0.4 }).set(0.6, -0.72, -1.2, 3.0, -0.6, 1.2);
+    this.res = mbox(g, [0x5a4a3a, 0xffb36b], { emissive: 0xff5a10, ei: 0 }).set(-2.8, -0.35, -0.35, -1.2, 0.35, 0.35);
+    sline(g, [[-1.2, 0, 0], [0, 0, 0], [0, 0.66, 0], [0.6, 0.66, 0]], 0xc8ced8); sline(g, [[-2.8, 0, 0], [-3.4, 0, 0], [-3.4, -1.6, 0], [1.8, -1.6, 0], [1.8, -0.66, 0]], 0xc8ced8);
+    this.pp = particles(g, 50, 0xff4d5e, 0.08); this.nn = particles(g, 50, 0x4fb0ff, 0.08); this.flow = particles(g, 20, COL.e, 0.07);
+    this.path = new THREE.CatmullRomCurve3([[-1.2, 0, 0], [0, 0, 0], [0, 0.66, 0]].map((p) => new THREE.Vector3(...p)), false, "catmullrom", 0);
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 12, h: 4, a0: 0.15, amp: 0.04, look: [-0.2, -0.3, 0] });
+    const ch = t < 6, tt = ch ? t : t - 6, Vc = ch ? 1 - Math.exp(-tt / 1.2) : Math.exp(-tt / 1.2), I = Math.exp(-tt / 1.2);
+    const n = Math.round(50 * Vc), a = [], b = []; for (let i = 0; i < n; i++) { const x = lerp(0.8, 2.8, rnd(i)), z = lerp(-1, 1, rnd(i + 3)); a.push([x, 0.8, z]); b.push([x, -0.8, z]); } place(this.pp, a); place(this.nn, b);
+    this.res.mat.emissiveIntensity = 1.4 * I; const f = []; for (let i = 0; i < 20; i++) f.push([...this.path.getPointAt(fract(i / 20 + (ch ? 1 : -1) * t * 0.4)).toArray(), I > 0.05 ? 1 : 0]); place(this.flow, f);
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("RC 電路：充電與放電", TAG);
+    caption(ch ? ["充電：電流一開始最大，越充越慢", "τ = RC 之後充到約 63%，5τ 後幾乎充滿"] : ["放電：電容的電荷經過電阻放掉", "電阻發熱（亮度 = 電流）"]);
+    callout([-2, 0.35, 0.35], 40, 336, "電阻 R（亮度 = 電流）", C.orange); callout([1.8, 0.75, 1.2], 434, 336, "電容 C", C.grey, { a: "right" });
+    const P = chart(80, 250, "電容電壓 V_C（時間）", C.cyan, { xa: 0, xb: 12, ya: 0, yb: 1.15, xt: [[0, "0"], [6, "6"], [12, "12 s"]], yt: [[0, "0"], [1, "V₀"]] });
+    const VC = (s) => (s < 6 ? 1 - Math.exp(-s / 1.2) : Math.exp(-(s - 6) / 1.2)), pts = []; for (let i = 0; i <= 200; i++) { const s = (t * i) / 200; pts.push([P.X(s), P.Y(VC(s))]); } line(pts, C.cyan);
+    hline(P, 0.632, C.grey, "63%", { left: true }); dot(P.X(t), P.Y(Vc), C.yellow, 4.5);
+    formula("τ = R C", 372); formula("V_C = V₀ (1 − e^(−t/RC))", 406, C.cyan, { size: 12 });
+  },
+});
+
+// =====================================================================
+// Part 3｜電流與電路
+// =====================================================================
+addScene("drift", {
+  dur: 12, fps: 15,
+  setup(g) { this.w = cyl(g, 1.1, -4, 4, [0x8a8f98, 0xe8eef6], { opacity: 0.18 }); this.w.mesh.rotation.z = Math.PI / 2; this.w.mesh.position.set(0, 0, 0); this.el = particles(g, 90, COL.e, 0.045); this.ions = particles(g, 60, 0xff4d5e, 0.07); this.E = arrow3(g, 0xffd23d, 0.06); },
+  render(t) {
+    camLeft(t, this.dur, { r: 11, h: 3.5, a0: 0.35, amp: 0.04, look: [0, 0, 0] });
+    const on = seg(t, 3, 4), el = [], io = [];
+    for (let i = 0; i < 60; i++) io.push([-3.6 + (i % 15) * 0.52, -0.6 + Math.floor(i / 15) * 0.4, ((i * 7) % 5) * 0.3 - 0.6]); place(this.ions, io);
+    for (let i = 0; i < 90; i++) { const x0 = lerp(-3.8, 3.8, rnd(i)), y = lerp(-0.8, 0.8, rnd(i + 1)), z = lerp(-0.8, 0.8, rnd(i + 2)), j = 0.25; const x = ((x0 - on * (t - 3) * 0.35 + 3.8) % 7.6 + 7.6) % 7.6 - 3.8; el.push([x + j * Math.sin(t * 7 + i), y + j * Math.sin(t * 8.3 + i * 2), z + j * Math.cos(t * 6.1 + i)]); }
+    place(this.el, el); setArrow(this.E, [-2, 1.6, 0], [2, 1.6, 0], on);
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("電流：電子其實走得很慢", TAG);
+    caption(on < 0.5 ? ["沒加電壓：自由電子到處亂跑，但整體沒有往哪邊移動", "→ 沒有電流"] : ["加上電場 E（黃）：電子在亂跑中慢慢往反方向漂移", "漂移速度大約只有 mm/s 等級，但「電場」以接近光速傳過去"]);
+    callout([2, 1.6, 0], 434, 160, "電場 E", C.yellow, { a: "right" });
+    panel(PX, 80, PW, 250, "速度比較（數量級示意）", C.yellow);
+    [["電子亂跑（熱運動）", "~10⁵ m/s", 0.85], ["電子漂移速度 v_d", "~10⁻⁴ m/s", 0.08], ["電訊號傳遞", "~10⁸ m/s", 1]].forEach(([s, v, k], i) => { const y = 130 + i * 62; text(s, PX + 16, y, { size: 13, c: C.text, w: 700 }); text(v, PX + PW - 14, y, { size: 12, c: C.yellow, w: 700, mono: true, a: "right" }); hctx.save(); hctx.fillStyle = C.yellow; hctx.globalAlpha = 0.8; hctx.fillRect(PX + 16, y + 10, 290 * k, 10); hctx.restore(); });
+    formula("I = n q v_d A", 372); formula("I = dQ / dt（單位 A = C/s）", 406, C.cyan, { size: 12 });
+  },
+});
+
+addScene("ohm", {
+  dur: 12, fps: 15,
+  setup(g) { this.r = mbox(g, [0x5a4a3a, 0xffb36b], { emissive: 0x3a2010, ei: 0.4 }); this.el = particles(g, 70, COL.e, 0.06); },
+  render(t) {
+    camLeft(t, this.dur, { r: 11, h: 4, a0: 0.4, amp: 0.04, look: [0, 0, 0] });
+    const ph = t < 6 ? 0 : 1, L = ph ? 4 : lerp(2.4, 5, 0.5 - 0.5 * Math.cos((2 * Math.PI * t) / 6)), A = ph ? lerp(0.5, 1.4, 0.5 - 0.5 * Math.cos((2 * Math.PI * (t - 6)) / 6)) : 0.8;
+    const s = Math.sqrt(A); this.r.set(-L / 2, -s / 2, -s / 2, L / 2, s / 2, s / 2); const R = L / A / 5;
+    const el = []; for (let i = 0; i < 70; i++) el.push([fract(rnd(i) - t * 0.25 / R) * L - L / 2, lerp(-s / 2, s / 2, rnd(i + 1)) * 0.9, lerp(-s / 2, s / 2, rnd(i + 2)) * 0.9]); place(this.el, el);
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("歐姆定律與電阻率", TAG);
+    caption(ph ? ["固定長度，改變截面積 A", "越粗 → 電阻越小 → 同樣電壓電流越大"] : ["固定截面積，改變長度 L", "越長 → 電阻越大 → 電流越小"]);
+    chip(`R = ${R.toFixed(2)} Ω（示意）`, 772, 40, C.orange, { a: "right", mono: true, size: 13 });
+    const P = chart(80, 250, "I–V 曲線（斜率 = 1/R）", C.orange, { xa: 0, xb: 5, ya: 0, yb: 5, xt: [[0, "0"], [5, "V"]], yt: [[0, "0"], [5, "I"]] });
+    plot(P, (v) => clamp(v / R, 0, 5), 0, 5, C.orange, { n: 2 }); [0.6, 0.9, 2.0].forEach((r) => plot(P, (v) => clamp(v / r, 0, 5), 0, 5, "rgba(255,160,77,.25)", { n: 2, glow: 0, w: 1 }));
+    formula("V = I R", 372); formula("R = ρ L / A（ρ：電阻率，材料決定）", 406, C.cyan, { size: 12 });
+  },
+});
+
+addScene("joule", {
+  dur: 12, fps: 15,
+  setup(g) { this.r = mbox(g, [0x5a4a3a, 0xffb36b], { emissive: 0xff3a10, ei: 0 }).set(-2.2, -0.45, -0.45, 2.2, 0.45, 0.45); this.el = particles(g, 70, COL.e, 0.06); this.heat = particles(g, 40, 0xff7a3d, 0.07); },
+  render(t) {
+    camLeft(t, this.dur, { r: 10, h: 4, a0: 0.4, amp: 0.04, look: [0, 0.4, 0] });
+    const I = 0.5 - 0.5 * Math.cos((2 * Math.PI * t) / 12), Pw = I * I;
+    this.r.mat.emissiveIntensity = 1.6 * Pw; this.r.mat.color.set(new THREE.Color(0x5a4a3a).lerp(new THREE.Color(0xff6a2a), Pw));
+    const el = []; for (let i = 0; i < 70; i++) el.push([fract(rnd(i) - t * 0.35 * I) * 4.4 - 2.2, lerp(-0.4, 0.4, rnd(i + 1)), lerp(-0.4, 0.4, rnd(i + 2))]); place(this.el, el);
+    const ht = []; for (let i = 0; i < Math.round(40 * Pw); i++) { const ph = fract(rnd(i + 9) + t * 0.5); ht.push([lerp(-2, 2, rnd(i + 3)), 0.5 + ph * 2, lerp(-0.4, 0.4, rnd(i + 4)), 1 - ph]); } place(this.heat, ht);
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("電功率與焦耳熱", TAG);
+    caption(["電流通過電阻：電子一直撞到原子，把能量變成熱", "電流加倍 → 發熱變四倍（P = I²R）"]);
+    chip(`I = ${(I * 2).toFixed(2)} A`, 772, 40, C.orange, { a: "right", mono: true, size: 13 });
+    const P = chart(80, 250, "發熱功率 P vs. 電流 I", C.red, { xa: 0, xb: 1, ya: 0, yb: 1.1, xt: [[0, "0"], [0.5, "1"], [1, "2 A"]], yt: [[0, "0"], [1, "大"]] });
+    plot(P, (x) => x * x, 0, 1, C.red); dot(P.X(I), P.Y(Pw), C.yellow, 5);
+    formula("P = I V = I² R = V² / R", 372); formula("能量 E = P · t（單位 J；1 度電 = 1 kWh）", 406, C.cyan, { size: 12 });
+  },
+});
+
+addScene("kirchhoff", {
+  dur: 12, fps: 15,
+  setup(g) { ground(g, -2.2, 6); },
+  render(t) {
+    camera.position.set(0, 9, 16); camera.lookAt(0, 0, 0); camera.clearViewOffset();
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("克希荷夫定律：電流守恆、電壓守恆", TAG);
+    // 左：KCL 節點
+    panel(30, 90, 360, 270, "KCL：流進節點 = 流出節點", C.cyan);
+    const nx = 200, ny = 220, c = hctx; [[60, 220], [340, 150], [340, 290]].forEach(([x, y]) => line([[nx, ny], [x, y]], C.grey, { w: 3, glow: 0 }));
+    dot(nx, ny, C.yellow, 7);
+    const flow = (x0, y0, x1, y1, n, sp, col) => { for (let i = 0; i < n; i++) { const u = fract(i / n + t * sp); dot(lerp(x0, x1, u), lerp(y0, y1, u), col, 3.5); } };
+    flow(60, 220, nx, ny, 9, 0.35, C.yellow); flow(nx, ny, 340, 150, 6, 0.35, C.cyan); flow(nx, ny, 340, 290, 3, 0.35, C.magenta);
+    text("I₁ = 3 A", 70, 205, { size: 14, c: C.yellow, w: 700, mono: true }); text("I₂ = 2 A", 300, 140, { size: 14, c: C.cyan, w: 700, mono: true }); text("I₃ = 1 A", 300, 315, { size: 14, c: C.magenta, w: 700, mono: true });
+    text("I₁ = I₂ + I₃", 210, 345, { size: 15, c: C.text, w: 700, mono: true, a: "center" });
+    // 右：KVL 迴路
+    panel(410, 90, 360, 270, "KVL：繞迴路一圈，電壓總和 = 0", C.orange);
+    const x0 = 470, x1 = 710, y0 = 140, y1 = 310; line([[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]], C.grey, { w: 3, glow: 0 });
+    c.save(); c.fillStyle = "#05070d"; c.fillRect(x0 - 14, 200, 28, 50); c.restore(); text("+", x0, 212, { size: 14, c: C.red, w: 700, a: "center" }); text("10 V", x0 - 22, 230, { size: 13, c: C.yellow, w: 700, mono: true, a: "right" }); line([[x0 - 12, 220], [x0 + 12, 220]], C.yellow, { w: 3 }); line([[x0 - 7, 230], [x0 + 7, 230]], C.yellow, { w: 3 });
+    [[x0 + 60, x0 + 120, "R₁：−6 V"], [x0 + 150, x0 + 210, "R₂：−4 V"]].forEach(([a, b, s]) => { c.save(); c.fillStyle = "#3a2a1a"; c.strokeStyle = C.orange; c.lineWidth = 2; c.fillRect(a, y0 - 10, b - a, 20); c.strokeRect(a, y0 - 10, b - a, 20); c.restore(); text(s, (a + b) / 2, y0 - 18, { size: 12, c: C.orange, w: 700, a: "center", mono: true }); });
+    const per = 2 * (x1 - x0) + 2 * (y1 - y0); for (let i = 0; i < 14; i++) { let d = fract(i / 14 + t * 0.12) * per, x, y; if (d < x1 - x0) { x = x0 + d; y = y0; } else if ((d -= x1 - x0) < y1 - y0) { x = x1; y = y0 + d; } else if ((d -= y1 - y0) < x1 - x0) { x = x1 - d; y = y1; } else { d -= x1 - x0; x = x0; y = y1 - d; } dot(x, y, C.yellow, 3); }
+    text("+10 − 6 − 4 = 0", 590, 345, { size: 15, c: C.text, w: 700, mono: true, a: "center" });
+    chip("KCL：Σ I = 0", 30, 400, C.cyan, { mono: true, size: 14 });
+    chip("KVL：Σ V = 0", 410, 400, C.orange, { mono: true, size: 14 });
+    text("一個是電荷守恆、一個是能量守恆", 600, 432, { size: 12, c: C.dim, w: 600, a: "center" });
+  },
+});
+
+// =====================================================================
+// Part 4｜靜磁
+// =====================================================================
+function barMagnet(parent, len = 2.4, w = 0.6, axis = "x") {
+  const g = new THREE.Group(), mk = (col, e) => new THREE.Mesh(new THREE.BoxGeometry(...(axis === "x" ? [len / 2, w, w] : [w, len / 2, w])), new THREE.MeshStandardMaterial({ color: col, emissive: e, emissiveIntensity: 0.5 }));
+  const N = mk(0xd8344a, 0x5a1020), S = mk(0x2a6ad8, 0x102a5a);
+  if (axis === "x") { N.position.x = len / 4; S.position.x = -len / 4; } else { N.position.y = len / 4; S.position.y = -len / 4; }
+  g.add(N); g.add(S); parent.add(g); return g;
+}
+addScene("magnet", {
+  dur: 12, fps: 15,
+  setup(g) {
+    ground(g, -0.4, 5);
+    barMagnet(g, 2.4, 0.6, "x");
+    this.Q = [[1.15, 0, 1], [-1.15, 0, -1]];
+    [0, 1].forEach((k) => { const grp = new THREE.Group(); grp.rotation.x = k ? Math.PI / 2 : 0; g.add(grp); for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2 + 0.13; sline(grp, traceLine(this.Q, 1.15 + 0.25 * Math.cos(a), 0.25 * Math.sin(a), 1, { lim: 5 }), 0x5aa0ff, k ? 0.6 : 0.3); } });
+    // 鐵粉：桌面上沿磁場排列的小棒
+    this.fil = []; for (let i = 0; i < 180; i++) { const x = lerp(-4.5, 4.5, rnd(i)), z = lerp(-3.4, 3.4, rnd(i + 1)); if (Math.abs(x) < 1.5 && Math.abs(z) < 0.5) continue; const m = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.03, 0.04), new THREE.MeshBasicMaterial({ color: 0xc8ced8 })); m.position.set(x, -0.38, z); g.add(m); const [ex, ez] = eField(this.Q, x, z); this.fil.push({ m, a0: rnd(i + 2) * 6.28, a1: -Math.atan2(ez, ex) }); }
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 11, h: 7, a0: 0.3, amp: 0.06, look: [0, 0, 0] });
+    const k = seg(t, 1, 5) * (1 - seg(t, 11, 11.9)); this.fil.forEach(({ m, a0, a1 }) => (m.rotation.y = lerp(a0, a1, k)));
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("磁鐵與磁力線", TAG);
+    const pn = proj(0.6, 0.5, 0), ps = proj(-0.6, 0.5, 0); text("N", pn[0], pn[1], { size: 18, c: "#ffffff", w: 700, a: "center" }); text("S", ps[0], ps[1], { size: 18, c: "#ffffff", w: 700, a: "center" });
+    caption(["磁力線在磁鐵外從 N 出來、繞回 S；在磁鐵內從 S 回到 N", "灑鐵粉：每粒鐵粉都轉成磁力線的方向"]);
+    panel(PX, 80, PW, 250, "磁場的單位與大小（示意）", C.blue);
+    [["地球磁場", "~50 μT"], ["冰箱磁鐵", "~5 mT"], ["強力釹磁鐵表面", "~1 T"], ["MRI", "1.5～3 T"], ["ECR 共振磁場", "0.0875 T"]].forEach(([s, v], i) => { text(s, PX + 16, 128 + i * 38, { size: 13, c: C.text, w: 700 }); text(v, PX + PW - 14, 128 + i * 38, { size: 13, c: C.blue, w: 700, mono: true, a: "right" }); });
+    formula("∮ B · dA = 0（沒有單獨的磁荷）", 372); formula("單位：特斯拉 T（1 T = 10⁴ G）", 406, C.cyan, { size: 12 });
+  },
+});
+
+addScene("lorentz", {
+  dur: 12, fps: 15,
+  setup(g) {
+    this.B = []; for (let i = 0; i < 5; i++) for (let j = 0; j < 4; j++) { const a = arrow3(g, 0x5aa0ff, 0.03); setArrow(a, [-3 + i * 1.5, -2, -2.2 + j * 1.5], [-3 + i * 1.5, 2.2, -2.2 + j * 1.5], 0.22); }
+    this.p = ball(g, 0.16, 0xff4d5e, 1.2); this.tr = dline(g, 0xff4d5e, 260); this.F = arrow3(g, 0xffd23d, 0.045); this.v = arrow3(g, 0x5dffb0, 0.04);
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 12, h: 6, a0: 0.4, amp: 0.05, look: [0, 0, 0] });
+    const R = 1.6, w = 1.6, hel = t >= 6, pos = (s) => { const a = w * s; return [R * Math.sin(a), hel ? -1.6 + 0.28 * (s - 6) : 0, R * Math.cos(a) - R + 1.6]; };
+    const p = pos(t); this.p.position.set(...p);
+    const pts = []; for (let i = 0; i < 160; i++) { const s = t - i * 0.025; if (s < (hel ? 6 : 0)) break; pts.push(pos(s)); } this.tr.setPts(pts);
+    const a = w * t, vx = Math.cos(a), vz = -Math.sin(a); setArrow(this.v, p, [p[0] + vx * 0.9, p[1] + (hel ? 0.25 : 0), p[2] + vz * 0.9]);
+    const cx = 0, cz = 1.6 - R; setArrow(this.F, p, [p[0] + (cx - p[0]) * 0.55, p[1], p[2] + (cz - p[2]) * 0.55]);
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("勞倫茲力：帶電粒子在磁場中繞圈", TAG);
+    caption(hel ? ["速度有一部分沿著磁場 → 繞圈同時前進 = 螺旋", "電漿裡的電子就是這樣被磁場「綁」住（ECR、磁控）"] : ["磁場向上（藍）、正電荷水平運動（綠 = 速度）", "力（黃）永遠垂直速度 → 不改變速率，只改變方向 → 繞圈"]);
+    panel(PX, 80, PW, 250, "迴旋運動", C.magenta);
+    [["迴旋半徑", "r = m v / (q B)"], ["迴旋頻率", "f = q B / (2π m)"], ["B 越強", "圈越小、轉越快"], ["電子在 875 G", "f = 2.45 GHz（ECR）"]].forEach(([s, v], i) => { text(s, PX + 16, 130 + i * 46, { size: 13, c: C.text, w: 700 }); text(v, PX + PW - 14, 130 + i * 46, { size: 13, c: C.magenta, w: 700, mono: true, a: "right" }); });
+    formula("F = q v × B", 372); formula("F ⊥ v、F ⊥ B（右手定則）", 406, C.cyan, { size: 12 });
+  },
+});
+
+addScene("solenoid", {
+  dur: 12, fps: 15,
+  setup(g) {
+    const pts = []; for (let i = 0; i <= 700; i++) { const k = i / 700, a = k * Math.PI * 2 * 12; pts.push(new THREE.Vector3(-3 + k * 6, Math.cos(a) * 1.1, Math.sin(a) * 1.1)); }
+    this.curve = new THREE.CatmullRomCurve3(pts); this.coil = new THREE.Mesh(new THREE.TubeGeometry(this.curve, 1200, 0.05, 6, false), new THREE.MeshStandardMaterial({ color: 0xb8692e, emissive: 0x6a3a10, emissiveIntensity: 0.4, metalness: 0.6, roughness: 0.3 })); g.add(this.coil);
+    this.cur = particles(g, 60, COL.e, 0.06);
+    this.inL = [-0.6, 0, 0.6].flatMap((y) => [-0.6, 0.6].map((z) => dline(g, 0x5aa0ff, 4, 0.9)));
+    this.inP = [-0.6, 0, 0.6].flatMap((y) => [-0.6, 0.6].map((z) => [y, z]));
+    this.out = [-1, 1].map((sg) => { const c = new THREE.EllipseCurve(0, 0, 4.2, 2.6, 0, Math.PI, false), p = c.getPoints(60).map((v) => new THREE.Vector3(v.x, sg * (0.4 + v.y * 0.9), 0)); return sline(g, p, 0x5aa0ff, 0.4); });
+    this.ar = Array.from({ length: 6 }, () => arrow3(g, 0x5aa0ff, 0.04));
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 12, h: 4, a0: 0.45, amp: 0.05, look: [0, 0, 0] });
+    const I = seg(t, 0.5, 2.5) * (1 - seg(t, 10.5, 11.8)) * (t > 6 && t < 10.5 ? 1.8 : 1), k = clamp(I / 1.8);
+    this.coil.material.emissiveIntensity = 0.3 + 0.8 * k;
+    const cu = []; for (let i = 0; i < 60; i++) cu.push([...this.curve.getPointAt(fract(i / 60 + t * 0.05)).toArray(), I > 0.05 ? 1 : 0]); place(this.cur, cu);
+    this.inL.forEach((l, i) => { const [y, z] = this.inP[i]; l.setPts([[-4, y, z], [4, y, z]]); l.material.opacity = 0.9 * k; });
+    this.out.forEach((l) => (l.material.opacity = 0.4 * k)); this.ar.forEach((a, i) => { const [y, z] = this.inP[i]; setArrow(a, [0.6, y, z], [1.6, y, z], k); });
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("螺線管：線圈裡的均勻磁場", TAG);
+    caption(t > 6 && t < 10.5 ? ["電流加大 → 磁場跟著變強", "線圈裡的磁場又直又均勻；外面像一根條形磁鐵"] : ["導線繞成線圈，每一圈的磁場疊加", "裡面的磁力線平行、等距 → 均勻磁場"]);
+    chip(`I = ${(I * 2).toFixed(1)} A`, 772, 40, C.yellow, { a: "right", mono: true, size: 13 });
+    const P = chart(80, 250, "線圈內 B vs. 電流 I", C.blue, { xa: 0, xb: 4, ya: 0, yb: 4, xt: [[0, "0"], [2, "2"], [4, "4 A"]], yt: [[0, "0"], [4, "強"]] });
+    plot(P, (x) => x, 0, 4, C.blue, { n: 2 }); dot(P.X(I * 2), P.Y(I * 2), C.yellow, 5);
+    formula("B = μ₀ n I", 372); formula("n = 每公尺圈數；加鐵芯 → B × μ_r", 406, C.cyan, { size: 12 });
+  },
+});
+
+addScene("motor", {
+  dur: 12, fps: 15,
+  setup(g) {
+    mbox(g, [0xd8344a, 0xff8a9a], { emissive: 0x5a1020, ei: 0.5 }).set(-3.4, -1.4, -1.2, -2.4, 1.4, 1.2); mbox(g, [0x2a6ad8, 0x8ab8ff], { emissive: 0x102a5a, ei: 0.5 }).set(2.4, -1.4, -1.2, 3.4, 1.4, 1.2);
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) sline(g, [[-2.4, -0.9 + i * 0.9, -0.6 + j * 1.2], [2.4, -0.9 + i * 0.9, -0.6 + j * 1.2]], 0x5aa0ff, 0.35);
+    this.loop = new THREE.Group(); g.add(this.loop);
+    const sq = [[0, -1, -1.4], [0, 1, -1.4], [0, 1, 1.4], [0, -1, 1.4], [0, -1, -1.4]].map(([x, y, z]) => new THREE.Vector3(y * 1.6, 0, z * 0.7));
+    this.loop.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(sq, false, "catmullrom", 0), 80, 0.07, 8, false), new THREE.MeshStandardMaterial({ color: 0xb8692e, emissive: 0x6a3a10, emissiveIntensity: 0.7, metalness: 0.6 })));
+    sline(g, [[0, 0, -2.4], [0, 0, 2.4]], 0xc8ced8, 0.6);
+    this.F = [arrow3(g, 0xffd23d, 0.06), arrow3(g, 0xffd23d, 0.06)];
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 12, h: 4.5, a0: 0.6, amp: 0.05, look: [0, 0, 0] });
+    const th = t * 1.3; this.loop.rotation.z = th;
+    const s1 = [Math.cos(th) * 1.6, Math.sin(th) * 1.6, 0], s2 = s1.map((v) => -v);
+    setArrow(this.F[0], s1, [s1[0], s1[1] + 1.1, 0]); setArrow(this.F[1], s2, [s2[0], s2[1] - 1.1, 0]);
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("磁場對電流的力：馬達原理", TAG);
+    const pn = proj(-2.9, 1.6, 0), ps = proj(2.9, 1.6, 0); text("N", pn[0], pn[1], { size: 18, c: C.red, w: 700, a: "center" }); text("S", ps[0], ps[1], { size: 18, c: C.blue, w: 700, a: "center" });
+    caption(["通電線圈放在磁場中：兩邊導線受力方向相反（黃）", "形成力矩 → 線圈轉動；換向器讓電流每半圈反向 → 一直轉"]);
+    const P = chart(80, 250, "力矩 τ vs. 線圈角度", C.yellow, { xa: 0, xb: 6.28, ya: -1.2, yb: 1.2, xt: [[0, "0°"], [3.14, "180°"], [6.28, "360°"]], yt: [[-1, "−"], [0, "0"], [1, "+"]] });
+    plot(P, (a) => Math.abs(Math.cos(a)), 0, 6.28, C.yellow, { n: 120 }); hline(P, 0, C.grey, ""); dot(P.X(th % 6.28), P.Y(Math.abs(Math.cos(th))), C.yellow, 5);
+    text("（有換向器：力矩一直同方向）", P.x1, P.y1 + 8, { size: 10.5, c: C.dim, w: 500, a: "right" });
+    formula("F = I L × B", 372); formula("τ = N I A B sin θ", 406, C.cyan, { size: 12 });
+  },
+});
+
+addScene("domains", {
+  dur: 12, fps: 15,
+  setup(g) {
+    mbox(g, [0x5a606a, 0xc8ced8], { opacity: 0.25 }).set(-3, -0.3, -2, 3, 0.3, 2);
+    this.d = []; for (let i = 0; i < 8; i++) for (let j = 0; j < 5; j++) { const a = arrow3(g, 0xff8a9a, 0.05); this.d.push({ a, x: -2.6 + i * 0.75, z: -1.6 + j * 0.8, a0: rnd(i * 13 + j) * 6.28 }); }
+    this.H = arrow3(g, 0x5aa0ff, 0.08);
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 11, h: 8, a0: 0.25, amp: 0.04, look: [0, 0, 0] });
+    const Hs = Math.sin((2 * Math.PI * t) / 12), up = Math.cos((2 * Math.PI * t) / 12) >= 0;
+    const M = Math.tanh(3 * (Hs + (up ? -0.35 : 0.35))) * 0.98;
+    this.d.forEach(({ a, x, z, a0 }, i) => { const aligned = M > 0 ? rnd(i + 50) < M : rnd(i + 50) < -M, ang = aligned ? (M > 0 ? 0 : Math.PI) : a0; setArrow(a, [x - 0.3 * Math.cos(ang), 0.35, z + 0.3 * Math.sin(ang)], [x + 0.3 * Math.cos(ang), 0.35, z - 0.3 * Math.sin(ang)]); });
+    setArrow(this.H, [-1.5 * Hs * 2, 1.4, 0], [1.5 * Hs * 2, 1.4, 0], Math.abs(Hs) > 0.05 ? 1 : 0);
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("磁性材料：磁區與磁滯曲線", TAG);
+    caption(["鐵磁材料裡有很多「磁區」（紅箭頭），平常方向亂 → 整體不帶磁", "外加磁場 H（藍）→ 磁區轉向排齊 → 拿掉 H 後還留一些 = 變成磁鐵"]);
+    const P = chart(80, 250, "B–H 磁滯曲線", C.red, { xa: -1.1, xb: 1.1, ya: -1.15, yb: 1.15, xt: [[-1, "−H"], [0, "0"], [1, "+H"]], yt: [[-1, "−B"], [0, "0"], [1, "+B"]] });
+    const br = (h, u) => Math.tanh(3 * (h + (u ? -0.35 : 0.35))) * 0.98;
+    plot(P, (h) => br(h, true), -1, 1, "rgba(255,138,154,.35)", { n: 80, glow: 0 }); plot(P, (h) => br(h, false), -1, 1, "rgba(255,138,154,.35)", { n: 80, glow: 0 });
+    hline(P, 0, C.grey, ""); dot(P.X(Hs), P.Y(M), C.yellow, 5);
+    text("殘磁 B_r", P.X(0) + 6, P.Y(0.88) , { size: 10.5, c: C.red, w: 700 });
+    formula("B = μ H = μ₀ (H + M)", 372); formula("軟磁（變壓器鐵芯）：曲線瘦；硬磁（磁鐵）：曲線胖", 406, C.cyan, { size: 12 });
+  },
+});
+
+// =====================================================================
+// Part 5｜電磁感應
+// =====================================================================
+addScene("eddy", {
+  dur: 12, fps: 15,
+  setup(g) {
+    this.cu = cyl(g, 0.75, -2.6, 3, [0xb8692e, 0xffb36b], { opacity: 0.35, open: true, emissive: 0x6a3a10, ei: 0.4 }); this.cu.mesh.position.x = -1.8;
+    this.pl = cyl(g, 0.75, -2.6, 3, [0xd8dde6, 0xffffff], { opacity: 0.18, open: true }); this.pl.mesh.position.x = 1.8;
+    this.m1 = barMagnet(g, 0.8, 0.5, "y"); this.m2 = barMagnet(g, 0.8, 0.5, "y");
+    this.rings = [0, 1].map(() => { const r = ring(g, 0.8, 0, 0xffd23d, 0.05); r.position.x = -1.8; return r; });
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 15, h: 3.5, a0: 0.15, amp: 0.04, look: [0, 0.9, 0] });
+    const y2 = 3.6 - 6.5 * seg(t, 0.5, 1.6) ** 2, y1 = lerp(3.6, -2.9, seg(t, 0.5, 10.5)); this.m1.position.set(-1.8, Math.max(-2.9, y1), 0); this.m2.position.set(1.8, Math.max(-2.9, y2), 0);
+    const inside = y1 < 3 && y1 > -2.6; this.rings.forEach((r, i) => { r.position.y = y1 + (i ? -0.55 : 0.55); r.material.opacity = inside ? 0.9 : 0; });
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("冷次定律與渦電流", TAG);
+    const a = proj(-1.8, 3.4, 0), b = proj(1.8, 3.4, 0); text("銅管", a[0], a[1], { size: 15, c: C.orange, w: 700, a: "center" }); text("塑膠管", b[0], b[1], { size: 15, c: C.grey, w: 700, a: "center" });
+    caption(["同一顆磁鐵：塑膠管一下就掉下去，銅管裡卻慢慢落下", "銅管感應出渦電流（黃環），它的磁場會阻止磁鐵運動"]);
+    panel(PX, 80, PW, 250, "渦電流的應用與問題", C.yellow);
+    ["✓ 電磁煞車（高鐵、雲霄飛車）", "✓ 電磁爐、感應加熱", "✓ 金屬探測器", "✗ 變壓器鐵芯發熱 → 用矽鋼片疊層", "✗ RF 腔體零件發熱"].forEach((s, i) => text(s, PX + 16, 126 + i * 38, { size: 13, c: s[0] === "✓" ? C.lime : C.red, w: 600 }));
+    formula("冷次定律：感應電流抵抗磁通量的變化", 372, C.lime, { size: 13 }); formula("ε = −N dΦ/dt（負號 = 冷次定律）", 406, C.cyan, { size: 12 });
+  },
+});
+
+addScene("generator", {
+  dur: 12, fps: 15,
+  setup(g) {
+    mbox(g, [0xd8344a, 0xff8a9a], { emissive: 0x5a1020, ei: 0.5 }).set(-3.4, -1.4, -1.2, -2.4, 1.4, 1.2); mbox(g, [0x2a6ad8, 0x8ab8ff], { emissive: 0x102a5a, ei: 0.5 }).set(2.4, -1.4, -1.2, 3.4, 1.4, 1.2);
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) sline(g, [[-2.4, -0.9 + i * 0.9, -0.6 + j * 1.2], [2.4, -0.9 + i * 0.9, -0.6 + j * 1.2]], 0x5aa0ff, 0.35);
+    this.loop = new THREE.Group(); g.add(this.loop);
+    const sq = [[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]].map(([y, z]) => new THREE.Vector3(y * 1.6, 0, z * 1.0));
+    this.mat = new THREE.MeshStandardMaterial({ color: 0xb8692e, emissive: 0xff8a2a, emissiveIntensity: 0.2, metalness: 0.6 });
+    this.loop.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(sq, false, "catmullrom", 0), 80, 0.07, 8, false), this.mat));
+    sline(g, [[0, 0, -2.4], [0, 0, 2.4]], 0xc8ced8, 0.6);
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 12, h: 4.5, a0: 0.6, amp: 0.05, look: [0, 0, 0] });
+    const w = (2 * Math.PI) / 4, th = w * t, e = Math.sin(th); this.loop.rotation.z = th; this.mat.emissiveIntensity = 0.15 + 1.2 * Math.abs(e);
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("發電機：轉動線圈產生交流電", TAG);
+    caption(["線圈在磁場中轉動 → 穿過線圈的磁通量一直變化", "感應電動勢是正弦波：線圈平面和磁場平行時最大（亮度 = 電動勢）"]);
+    const P = chart(80, 250, "輸出電壓 ε(t)", C.orange, { xa: 0, xb: 12, ya: -1.2, yb: 1.2, xt: [[0, "0"], [6, "6"], [12, "12 s"]], yt: [[-1, "−"], [0, "0"], [1, "+"]] });
+    hline(P, 0, C.grey, ""); plot(P, (s) => Math.sin(w * s), 0, t, C.orange, { n: 240 }); dot(P.X(t), P.Y(e), C.yellow, 5);
+    formula("ε = N B A ω sin(ωt)", 372); formula("台灣市電：60 Hz、110 V（有效值）", 406, C.cyan, { size: 12 });
+  },
+});
+
+addScene("inductor", {
+  dur: 12, fps: 15,
+  setup(g) {
+    const pts = []; for (let i = 0; i <= 500; i++) { const k = i / 500, a = k * Math.PI * 2 * 9; pts.push(new THREE.Vector3(0.4 + k * 3, Math.cos(a) * 0.8, Math.sin(a) * 0.8)); }
+    this.curve = new THREE.CatmullRomCurve3(pts); this.mat = new THREE.MeshStandardMaterial({ color: 0xb8692e, emissive: 0x6a3a10, emissiveIntensity: 0.3, metalness: 0.6 });
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(this.curve, 900, 0.05, 6, false), this.mat));
+    this.res = mbox(g, [0x5a4a3a, 0xffb36b], { emissive: 0xff5a10, ei: 0 }).set(-3, -0.3, -0.3, -1.6, 0.3, 0.3);
+    sline(g, [[-1.6, 0, 0], [0.4, 0, 0]], 0xc8ced8); this.cur = particles(g, 40, COL.e, 0.06);
+    this.inL = [-0.3, 0.3].map((y) => dline(g, 0x5aa0ff, 4, 0.9));
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 11, h: 4, a0: 0.35, amp: 0.04, look: [0, 0, 0] });
+    const on = t < 6, tt = on ? t : t - 6, I = on ? 1 - Math.exp(-tt / 1.3) : Math.exp(-tt / 1.3);
+    this.mat.emissiveIntensity = 0.2 + I; this.res.mat.emissiveIntensity = 1.1 * I;
+    const cu = []; for (let i = 0; i < 40; i++) cu.push([...this.curve.getPointAt(fract(i / 40 + t * 0.12 * I)).toArray(), I > 0.05 ? 1 : 0]); place(this.cur, cu);
+    this.inL.forEach((l, i) => { l.setPts([[0, i ? 0.3 : -0.3, 0], [3.8, i ? 0.3 : -0.3, 0]]); l.material.opacity = 0.9 * I; });
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("電感與 RL 電路：電流不能瞬間改變", TAG);
+    caption(on ? ["接上電壓：電流一變大，線圈就感應出反向電動勢", "所以電流是慢慢爬上去，τ = L/R"] : ["切斷電源：電感把磁場能量放出來，電流慢慢下降", "（真實開關瞬間切斷會產生高電壓火花）"]);
+    const P = chart(80, 250, "電流 I(t)", C.cyan, { xa: 0, xb: 12, ya: 0, yb: 1.15, xt: [[0, "0"], [6, "6"], [12, "12 s"]], yt: [[0, "0"], [1, "V/R"]] });
+    const IC = (s) => (s < 6 ? 1 - Math.exp(-s / 1.3) : Math.exp(-(s - 6) / 1.3)), pts = []; for (let i = 0; i <= 200; i++) { const s = (t * i) / 200; pts.push([P.X(s), P.Y(IC(s))]); } line(pts, C.cyan); dot(P.X(t), P.Y(I), C.yellow, 5);
+    formula("V_L = L · dI/dt", 372); formula("τ = L / R　　U = ½ L I²", 406, C.cyan, { size: 12 });
+  },
+});
+
+addScene("transformer", {
+  dur: 12, fps: 15,
+  setup(g) {
+    const core = (x0, y0, x1, y1) => mbox(g, [0x5a606a, 0xc8ced8], { emissive: 0x1a1d22, ei: 0.4 }).set(x0, y0, -0.4, x1, y1, 0.4);
+    core(-2.6, 1.6, 2.6, 2.2); core(-2.6, -2.2, 2.6, -1.6); core(-2.6, -1.6, -1.8, 1.6); core(1.8, -1.6, 2.6, 1.6);
+    const coil = (x, n, col) => { const pts = []; for (let i = 0; i <= n * 40; i++) { const k = i / (n * 40), a = k * Math.PI * 2 * n; pts.push(new THREE.Vector3(x + Math.cos(a) * 0.7, -1.3 + k * 2.6, Math.sin(a) * 0.7)); } const m = new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.3, metalness: 0.5 }); g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), n * 60, 0.05, 6, false), m)); return m; };
+    this.p = coil(-2.2, 4, 0xb8692e); this.s = coil(2.2, 10, 0xd8a03e);
+    this.flux = particles(g, 40, 0x5aa0ff, 0.08);
+    this.path = new THREE.CatmullRomCurve3([[-2.2, 1.9, 0], [2.2, 1.9, 0], [2.2, -1.9, 0], [-2.2, -1.9, 0]].map((p) => new THREE.Vector3(...p)), true, "catmullrom", 0);
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 11, h: 3, a0: 0.3, amp: 0.04, look: [0, 0, 0] });
+    const w = (2 * Math.PI) / 3, v = Math.sin(w * t); this.p.emissiveIntensity = 0.2 + 0.8 * Math.abs(v); this.s.emissiveIntensity = 0.2 + 0.8 * Math.abs(v);
+    const f = []; for (let i = 0; i < 40; i++) f.push([...this.path.getPointAt(fract(i / 40 + 0.06 * Math.sin(w * t - Math.PI / 2))).toArray(), 0.4 + 0.8 * Math.abs(v)]); place(this.flux, f);
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("變壓器：用圈數比改變電壓", TAG);
+    const a = proj(-2.2, -1.6, 0.7), b = proj(2.2, -1.6, 0.7); text("一次側 N₁ = 4", a[0], a[1] - 4, { size: 13, c: C.orange, w: 700, a: "center" }); text("二次側 N₂ = 10", b[0], b[1] - 4, { size: 13, c: C.yellow, w: 700, a: "center" });
+    caption(["一次側的交流電在鐵芯裡產生變化的磁通量（藍）", "同一個磁通量穿過兩邊，每圈電壓一樣 → 電壓和圈數成正比"]);
+    const P = chart(80, 250, "一次側 / 二次側電壓", C.yellow, { xa: 0, xb: 12, ya: -2.8, yb: 2.8, xt: [[0, "0"], [12, "12 s"]], yt: [[-2.5, "−"], [0, "0"], [2.5, "+"]] });
+    hline(P, 0, C.grey, ""); plot(P, (s) => Math.sin(w * s), 0, t, C.orange, { n: 240 }); plot(P, (s) => 2.5 * Math.sin(w * s), 0, t, C.yellow, { n: 240 });
+    legendRow(P.x0 + 6, P.y0 - 10, [["V₁", C.orange], ["V₂ = 2.5 V₁", C.yellow]]);
+    formula("V₂ / V₁ = N₂ / N₁", 372); formula("I₂ / I₁ = N₁ / N₂（功率守恆，理想）", 406, C.cyan, { size: 12 });
+  },
+});
+
+// =====================================================================
+// Part 6｜交流電路
+// =====================================================================
+addScene("impedance", {
+  dur: 12, fps: 15,
+  setup(g) { ground(g, -2.2, 6); },
+  render(t) {
+    camera.position.set(0, 9, 16); camera.lookAt(0, 0, 0); camera.clearViewOffset();
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("交流電路的阻抗：R、L、C 的相位", TAG);
+    const wt = (2 * Math.PI * t) / 4, cols = [["電阻 R", 0, "電壓、電流同相", "Z = R"], ["電感 L", Math.PI / 2, "電壓領先電流 90°", "Z = jωL"], ["電容 C", -Math.PI / 2, "電流領先電壓 90°", "Z = 1 / (jωC)"]];
+    cols.forEach(([name, phi, desc, z], i) => {
+      const x0 = 30 + i * 250, y0 = 86; panel(x0, y0, 238, 300, name, [C.orange, C.cyan, C.magenta][i]);
+      const cx = x0 + 70, cy = y0 + 110, R = 46; hctx.save(); hctx.strokeStyle = "rgba(232,246,255,.25)"; hctx.beginPath(); hctx.arc(cx, cy, R, 0, Math.PI * 2); hctx.stroke(); hctx.restore();
+      hArrow(cx, cy, cx + R * Math.cos(wt + phi), cy - R * Math.sin(wt + phi), C.yellow, 2.5); hArrow(cx, cy, cx + R * 0.7 * Math.cos(wt), cy - R * 0.7 * Math.sin(wt), C.cyan, 2.5);
+      const wx = x0 + 128, ww = 100; line([[wx, cy], [wx + ww, cy]], "rgba(232,246,255,.25)", { w: 1, glow: 0 });
+      hWave(wx, cy, ww, 40, 1.5, -wt + Math.PI / 2 - phi, C.yellow, { w: 2 }); hWave(wx, cy, ww, 28, 1.5, -wt + Math.PI / 2, C.cyan, { w: 2 });
+      text(desc, x0 + 119, y0 + 200, { size: 13, c: C.text, w: 700, a: "center" }); chip(z, x0 + 119, y0 + 240, [C.orange, C.cyan, C.magenta][i], { a: "center", mono: true, size: 14 });
+      text(["不隨頻率改變", "頻率越高，阻抗越大", "頻率越高，阻抗越小"][i], x0 + 119, y0 + 278, { size: 12, c: C.dim, w: 600, a: "center" });
+    });
+    legendRow(40, 412, [["電壓 V", C.yellow], ["電流 I", C.cyan]]);
+    chip("ω = 2πf　　|Z| = V / I", 772, 412, C.lime, { a: "right", mono: true, size: 14 });
+  },
+});
+
+addScene("rlc", {
+  dur: 12, fps: 15,
+  setup(g) {
+    this.top = mbox(g, [0x8a8f98, 0xe8eef6], { emissive: 0xff2a2a, ei: 0 }).set(-3, 0.6, -1, -1.2, 0.72, 1); this.bot = mbox(g, [0x8a8f98, 0xe8eef6], { emissive: 0x2a6aff, ei: 0 }).set(-3, -0.72, -1, -1.2, -0.6, 1);
+    const pts = []; for (let i = 0; i <= 500; i++) { const k = i / 500, a = k * Math.PI * 2 * 8; pts.push(new THREE.Vector3(0.8 + Math.cos(a) * 0.8, -1.2 + k * 2.4, Math.sin(a) * 0.8)); }
+    this.cm = new THREE.MeshStandardMaterial({ color: 0xb8692e, emissive: 0x5aa0ff, emissiveIntensity: 0, metalness: 0.5 }); g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 900, 0.05, 6, false), this.cm));
+    sline(g, [[-2.1, 0.72, 0], [-2.1, 1.8, 0], [0.8, 1.8, 0], [0.8, 1.2, 0]], 0xc8ced8); sline(g, [[-2.1, -0.72, 0], [-2.1, -1.8, 0], [0.8, -1.8, 0], [0.8, -1.2, 0]], 0xc8ced8);
+    this.B = [-0.3, 0.3].map(() => dline(g, 0x5aa0ff, 4, 0.9));
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 11, h: 3.5, a0: 0.3, amp: 0.04, look: [-0.8, 0, 0] });
+    const w = (2 * Math.PI) / 3, q = Math.cos(w * t), i = Math.sin(w * t);
+    this.top.mat.emissiveIntensity = q > 0 ? 1.2 * q : 0; this.top.mat.emissive.set(q > 0 ? 0xff2a2a : 0x2a6aff); this.top.mat.emissiveIntensity = 1.2 * Math.abs(q);
+    this.bot.mat.emissive.set(q > 0 ? 0x2a6aff : 0xff2a2a); this.bot.mat.emissiveIntensity = 1.2 * Math.abs(q); this.cm.emissiveIntensity = 1.2 * Math.abs(i);
+    this.B.forEach((l, k) => { l.setPts([[0.8 + (k ? 0.3 : -0.3), -1.8, 0], [0.8 + (k ? 0.3 : -0.3), 1.8, 0]]); l.material.opacity = Math.abs(i); });
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("RLC 共振：能量在 L 和 C 之間來回", TAG);
+    caption(["電容放電 → 電流流進電感、建立磁場；磁場消失時又把電容充回去（反向）", "來回擺盪的頻率就是共振頻率 f₀（像盪鞦韆）"]);
+    const P = chart(80, 250, "電流振幅 vs. 驅動頻率", C.magenta, { xa: 0.2, xb: 2, ya: 0, yb: 1.15, xt: [[0.5, "低"], [1, "f₀"], [1.7, "高"]], yt: [[0, "0"], [1, "大"]] });
+    const A = (f, Q) => 1 / Math.sqrt(1 + Q * Q * (f - 1 / f) ** 2); plot(P, (f) => A(f, 5), 0.2, 2, C.magenta, { n: 160 }); plot(P, (f) => A(f, 1.5), 0.2, 2, "rgba(255,61,242,.35)", { n: 120, glow: 0 });
+    const fs = 1 + 0.75 * Math.sin((2 * Math.PI * t) / 12); dot(P.X(fs), P.Y(A(fs, 5)), C.yellow, 5);
+    legendRow(P.x0 + 6, P.y0 - 10, [["電阻小（Q 高）", C.magenta], ["電阻大", "rgba(255,61,242,.5)"]]);
+    formula("f₀ = 1 / (2π √(L C))", 372); formula("共振時 Z_L = Z_C 互相抵消 → |Z| 最小、電流最大", 406, C.cyan, { size: 12 });
+  },
+});
+
+addScene("match", {
+  dur: 12, fps: 15,
+  setup(g) { ground(g, -2.2, 6); },
+  render(t) {
+    camera.position.set(0, 9, 16); camera.lookAt(0, 0, 0); camera.clearViewOffset();
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("阻抗匹配：讓功率全部送到負載", TAG);
+    const m = seg(t, 5.5, 7.5) * (1 - seg(t, 11.3, 11.9)), G = 0.6 * (1 - m);
+    caption(m < 0.5 ? ["負載阻抗 ≠ 傳輸線阻抗 → 一部分功率被反射回來（紅）", "反射功率變成熱、甚至傷到 RF 產生器"] : ["加上匹配網路，把負載「轉換」成 50 Ω", "反射 ≈ 0 → 功率全部送進負載（電漿）"]);
+    const y = 220, xs = 110, xe = 600; panel(30, 140, 740, 170, "", C.grey);
+    hctx.save(); hctx.fillStyle = "#1a2233"; hctx.strokeStyle = C.blue; hctx.lineWidth = 2; hctx.fillRect(50, y - 40, 70, 80); hctx.strokeRect(50, y - 40, 70, 80); hctx.restore(); text("RF 源", 85, y + 4, { size: 13, c: C.blue, w: 700, a: "center" }); text("50 Ω", 85, y + 22, { size: 11, c: C.dim, w: 600, a: "center", mono: true });
+    line([[xs + 10, y - 10], [xe, y - 10]], C.grey, { w: 2, glow: 0 }); line([[xs + 10, y + 10], [xe, y + 10]], C.grey, { w: 2, glow: 0 }); text("傳輸線 Z₀ = 50 Ω", (xs + xe) / 2, y + 40, { size: 12, c: C.dim, w: 600, a: "center" });
+    hctx.save(); hctx.globalAlpha = m; hctx.fillStyle = "#2a2010"; hctx.strokeStyle = C.amber; hctx.lineWidth = 2; hctx.fillRect(xe, y - 36, 70, 72); hctx.strokeRect(xe, y - 36, 70, 72); hctx.restore(); text("匹配網路", xe + 35, y + 4, { size: 12, c: C.amber, w: 700, a: "center", alpha: Math.max(0.2, m) });
+    hctx.save(); hctx.fillStyle = "#2a1030"; hctx.strokeStyle = C.magenta; hctx.lineWidth = 2; hctx.fillRect(xe + 90, y - 40, 70, 80); hctx.strokeRect(xe + 90, y - 40, 70, 80); hctx.restore(); text("負載", xe + 125, y + 4, { size: 13, c: C.magenta, w: 700, a: "center" }); text("（電漿）", xe + 125, y + 22, { size: 11, c: C.dim, w: 600, a: "center" });
+    for (let i = 0; i < 6; i++) { const u = fract(i / 6 + t * 0.35); hctx.save(); hctx.globalAlpha = 0.9; hctx.fillStyle = C.yellow; hctx.shadowColor = C.yellow; hctx.shadowBlur = 8; hctx.fillRect(lerp(xs + 12, xe - 10, u) - 10, y - 6, 20, 5); hctx.restore(); }
+    for (let i = 0; i < 6; i++) { const u = fract(i / 6 + t * 0.35); hctx.save(); hctx.globalAlpha = G / 0.6; hctx.fillStyle = C.red; hctx.shadowColor = C.red; hctx.shadowBlur = 8; hctx.fillRect(lerp(xe - 10, xs + 12, u) - 10, y + 2, 20, 5); hctx.restore(); }
+    panel(30, 320, 360, 100, "功率", C.yellow);
+    meter(46, 356, "正向功率", 1, C.yellow, "1000 W"); meter(210, 356, "反射功率", G * G / 0.36 * 0.36, C.red, `${Math.round(1000 * G * G)} W`);
+    text(`Γ = ${G.toFixed(2)}`, 46, 404, { size: 14, c: C.red, w: 700, mono: true });
+    chip("Γ = (Z_L − Z₀) / (Z_L + Z₀)", 772, 350, C.lime, { a: "right", mono: true, size: 14 }); chip("反射功率 = Γ² × 正向功率", 772, 392, C.cyan, { a: "right", mono: true, size: 12 });
+  },
+});
+
+// =====================================================================
+// Part 7｜電磁波
+// =====================================================================
+addScene("displacement", {
+  dur: 12, fps: 15,
+  setup(g) {
+    mbox(g, [0x8a8f98, 0xe8eef6], { emissive: 0x3a1a1a, ei: 0.4 }).set(-0.7, -1.5, -1.5, -0.6, 1.5, 1.5); mbox(g, [0x8a8f98, 0xe8eef6], { emissive: 0x1a2a3a, ei: 0.4 }).set(0.6, -1.5, -1.5, 0.7, 1.5, 1.5);
+    cyl(g, 0.06, 0, 1, M.copper).mesh.rotation.z = Math.PI / 2; const w1 = cyl(g, 0.06, -4, -0.7, M.copper); w1.mesh.rotation.z = Math.PI / 2; w1.mesh.position.set(-2.35, 0, 0); const w2 = cyl(g, 0.06, 0.7, 4, M.copper); w2.mesh.rotation.z = Math.PI / 2; w2.mesh.position.set(2.35, 0, 0);
+    this.cur = particles(g, 30, COL.e, 0.07); this.E = Array.from({ length: 9 }, () => arrow3(g, 0xffd23d, 0.035));
+    this.rings = [[-2.6, 0.6], [-2.6, 1.1], [0, 0.9], [0, 1.6], [2.6, 0.6], [2.6, 1.1]].map(([x, r]) => { const m = new THREE.Mesh(new THREE.TorusGeometry(r, 0.03, 8, 64), new THREE.MeshBasicMaterial({ color: 0x5aa0ff, transparent: true })); m.rotation.y = Math.PI / 2; m.position.x = x; g.add(m); return m; });
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 12, h: 4, a0: 0.6, amp: 0.05, look: [0, 0, 0] });
+    const ch = seg(t, 0.5, 8), I = Math.max(0, Math.sin(Math.PI * clamp((t - 0.5) / 7.5))), Em = ch;
+    const cu = []; for (let i = 0; i < 30; i++) { const u = fract(i / 30 + t * 0.4); cu.push([i % 2 ? lerp(-4, -0.75, u) : lerp(0.75, 4, u), 0, 0, I > 0.05 ? 1 : 0]); } place(this.cur, cu);
+    this.E.forEach((a, i) => { const y = -1 + (i % 3), z = -1 + Math.floor(i / 3); setArrow(a, [-0.55, y, z], [-0.55 + 1.1 * Em, y, z], Em); });
+    this.rings.forEach((m) => (m.material.opacity = 0.9 * I));
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("位移電流：變化的電場也會產生磁場", TAG);
+    caption(["電容充電時，導線有電流 → 周圍有磁場（藍環）", "兩板之間沒有電荷流過，但電場（黃）在變化 → 那裡一樣有磁場"]);
+    const P = chart(80, 250, "充電電流 I 與板間電場 E", C.blue, { xa: 0, xb: 12, ya: 0, yb: 1.15, xt: [[0, "0"], [12, "12 s"]], yt: [[0, "0"], [1, "大"]] });
+    const If = (s) => Math.max(0, Math.sin(Math.PI * clamp((s - 0.5) / 7.5))); plot(P, If, 0, t, C.blue, { n: 200 }); plot(P, (s) => seg(s, 0.5, 8), 0, t, C.yellow, { n: 200 });
+    legendRow(P.x0 + 6, P.y0 - 10, [["I（= 磁場強度）", C.blue], ["E", C.yellow]]);
+    formula("∮ B · dl = μ₀ ( I + ε₀ dΦ_E/dt )", 372, C.lime, { size: 13 }); formula("ε₀ dΦ_E/dt = 位移電流（馬克士威補上的項）", 406, C.cyan, { size: 12 });
+  },
+});
+
+addScene("emwave", {
+  dur: 12, fps: 15,
+  setup(g) { sline(g, [[-5, 0, 0], [5, 0, 0]], 0xc8ced8, 0.6); this.E = Array.from({ length: 34 }, () => arrow3(g, 0xff4d5e, 0.03)); this.B = Array.from({ length: 34 }, () => arrow3(g, 0x5aa0ff, 0.03)); this.eL = dline(g, 0xff4d5e, 200); this.bL = dline(g, 0x5aa0ff, 200); },
+  render(t) {
+    camLeft(t, this.dur, { r: 11, h: 3.5, a0: 0.7, amp: 0.05, look: [0, 0, 0] });
+    const k = (2 * Math.PI) / 3.2, w = (2 * Math.PI) / 2.4, f = (x) => Math.sin(k * x - w * t), ep = [], bp = [];
+    this.E.forEach((a, i) => { const x = -4.8 + i * 0.29; setArrow(a, [x, 0, 0], [x, 1.5 * f(x), 0], 0.8); setArrow(this.B[i], [x, 0, 0], [x, 0, 1.5 * f(x)], 0.8); });
+    for (let i = 0; i <= 199; i++) { const x = -4.8 + (i / 199) * 9.6; ep.push([x, 1.5 * f(x), 0]); bp.push([x, 0, 1.5 * f(x)]); } this.eL.setPts(ep); this.bL.setPts(bp);
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("電磁波：電場和磁場互相推著前進", TAG);
+    caption(["變化的電場產生磁場、變化的磁場又產生電場 → 一路往前傳", "電場（紅）⊥ 磁場（藍）⊥ 前進方向；不需要介質，真空也能傳"]);
+    panel(PX, 80, PW, 250, "電磁波的關係式", C.lime);
+    [["光速", "c = 1/√(μ₀ε₀) ≈ 3×10⁸ m/s"], ["波長與頻率", "c = f λ"], ["電場與磁場", "E = c B"], ["能量流（坡印廷向量）", "S = E × B / μ₀"]].forEach(([s, v], i) => { text(s, PX + 16, 128 + i * 52, { size: 13, c: C.text, w: 700 }); text(v, PX + 16, 150 + i * 52, { size: 13, c: C.lime, w: 700, mono: true }); });
+    formula("馬克士威從方程式算出 c，發現「光就是電磁波」", 380, C.lime, { size: 12 });
+  },
+});
+
+addScene("spectrum", {
+  dur: 12, fps: 15,
+  setup(g) { ground(g, -2.2, 6); },
+  render(t) {
+    camera.position.set(0, 9, 16); camera.lookAt(0, 0, 0); camera.clearViewOffset();
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("電磁波譜：同一種波，波長不同", TAG);
+    const bands = [["無線電", "> 1 m", "#5a6a8a", "廣播、手機、RF 13.56 MHz"], ["微波", "1 mm～1 m", "#4a7aa8", "微波爐、Wi-Fi、ECR 2.45 GHz"], ["紅外線", "700 nm～1 mm", "#a8443a", "熱像儀、遙控器"], ["可見光", "400～700 nm", "rainbow", "眼睛、電漿發光（OES）"], ["紫外線", "10～400 nm", "#8a4ad8", "曝光、殺菌、電漿 UV 損傷"], ["X 光 / γ", "< 10 nm", "#d8d8f0", "醫療影像、EUV（13.5 nm）"]];
+    const x0 = 40, wB = 120, y0 = 250; bands.forEach(([n, r, col, use], i) => {
+      const x = x0 + i * wB, c = hctx; c.save();
+      if (col === "rainbow") { const gr = c.createLinearGradient(x, 0, x + wB, 0); ["#ff3030", "#ff9a30", "#ffe030", "#40e040", "#3080ff", "#8040ff"].forEach((cc, k) => gr.addColorStop(k / 5, cc)); c.fillStyle = gr; } else c.fillStyle = col;
+      c.globalAlpha = 0.85; c.fillRect(x + 2, y0, wB - 4, 34); c.restore();
+      text(n, x + wB / 2, y0 + 22, { size: 13, c: "#05070d", w: 700, a: "center" }); text(r, x + wB / 2, y0 + 54, { size: 11, c: C.text, w: 600, a: "center", mono: true });
+      use.split("、").forEach((u, k) => text(u, x + wB / 2, y0 + 78 + k * 17, { size: 11, c: C.dim, w: 600, a: "center" }));
+    });
+    const u = 0.5 - 0.5 * Math.cos((2 * Math.PI * t) / 12), px = x0 + u * 6 * wB, lam = lerp(130, 7, u);
+    line([[px, y0 - 6], [px, y0 + 40]], C.yellow, { w: 2 });
+    const pts = []; for (let i = 0; i <= 400; i++) { const xx = 60 + i * 1.7; pts.push([xx, 192 - 34 * Math.sin((2 * Math.PI * (xx - 60)) / lam - t * 4)]); } line(pts, C.yellow, { w: 2 });
+    caption(["左到右：波長越來越短、頻率越來越高、每顆光子能量越大", "全部都以光速前進，只是 λ 不同"], 96);
+    text("長波長 · 低頻 · 低能量", 40, 438, { size: 12, c: C.dim, w: 600 }); text("短波長 · 高頻 · 高能量", 760, 438, { size: 12, c: C.dim, w: 600, a: "right" });
+    chip("c = f λ　　E = h f", 400, 432, C.lime, { a: "center", mono: true, size: 14 });
+  },
+});
+
+addScene("antenna", {
+  dur: 12, fps: 15,
+  setup(g) {
+    this.r1 = cyl(g, 0.08, 0.2, 2.4, M.copper, { emissive: 0x6a3a10, ei: 0.4 }); this.r2 = cyl(g, 0.08, -2.4, -0.2, M.copper, { emissive: 0x6a3a10, ei: 0.4 });
+    this.q1 = ball(g, 0.2, 0xff4d5e, 1); this.q2 = ball(g, 0.2, 0x4fb0ff, 1);
+    this.waves = Array.from({ length: 5 }, () => { const m = new THREE.Mesh(new THREE.TorusGeometry(1, 0.05, 8, 80), new THREE.MeshBasicMaterial({ color: 0xffd23d, transparent: true })); m.rotation.x = Math.PI / 2; m.scale.set(1, 1, 1); g.add(m); return m; });
+    this.lobes = Array.from({ length: 5 }, () => { const m = new THREE.Mesh(new THREE.TorusGeometry(1, 0.03, 8, 80), new THREE.MeshBasicMaterial({ color: 0xffd23d, transparent: true })); g.add(m); return m; });
+  },
+  render(t) {
+    camLeft(t, this.dur, { r: 13, h: 5, a0: 0.4, amp: 0.1, look: [0, 0, 0] });
+    const w = (2 * Math.PI) / 2, s = Math.sin(w * t); this.q1.position.y = 1.3 * s; this.q2.position.y = -1.3 * s;
+    [this.q1, this.q2].forEach((q, i) => { const c = (i ? -s : s) > 0 ? 0xff4d5e : 0x4fb0ff; q.material.color.set(c); q.material.emissive.set(c); });
+    this.waves.forEach((m, i) => { const r = 0.6 + fract(i / 5 + t / 5) * 5; m.scale.setScalar(r); m.material.opacity = 0.8 * (1 - r / 5.6); });
+    this.lobes.forEach((m, i) => { const r = 0.6 + fract(i / 5 + t / 5) * 5; m.scale.set(r, r * 0.6, r); m.rotation.y = 0; m.material.opacity = 0.35 * (1 - r / 5.6); });
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("天線：讓電荷振盪，把電磁波送出去", TAG);
+    caption(["偶極天線：交流電讓電荷在兩根導體間來回跑（紅 +／藍 −）", "加速的電荷向外輻射電磁波（黃）：側面最強、正上下方幾乎沒有"]);
+    panel(PX, 80, PW, 250, "天線長度與波長", C.yellow);
+    [["半波偶極天線", "L ≈ λ / 2"], ["2.45 GHz Wi-Fi", "λ ≈ 12 cm → L ≈ 6 cm"], ["100 MHz FM 廣播", "λ ≈ 3 m → L ≈ 1.5 m"], ["13.56 MHz RF", "λ ≈ 22 m（遠大於腔體）"]].forEach(([a, b], i) => { text(a, PX + 16, 128 + i * 52, { size: 13, c: C.text, w: 700 }); text(b, PX + 16, 150 + i * 52, { size: 13, c: C.yellow, w: 700, mono: true }); });
+    formula("輻射功率 ∝ (加速度)² ∝ f⁴（同振幅）", 372, C.lime, { size: 12 }); formula("λ = c / f", 406, C.cyan, { size: 12 });
+  },
+});
+
+addScene("skin", {
+  dur: 12, fps: 15,
+  setup(g) { this.disc = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.2, 0.3, 64, 12), new THREE.MeshBasicMaterial({ vertexColors: true })); this.disc.rotation.x = Math.PI / 2; g.add(this.disc); this.len = cyl(g, 2.2, -4, -0.16, M.copper, { opacity: 0.25 }); this.len.mesh.rotation.x = Math.PI / 2; this.len.mesh.position.set(0, 0, -2.1); this.rs = new THREE.CylinderGeometry(2.2, 2.2, 0.3, 64, 12); },
+  render(t) {
+    camLeft(t, this.dur, { r: 14, h: 2.5, a0: 0.5, amp: 0.05, look: [0, -0.3, 0] });
+    const u = 0.5 - 0.5 * Math.cos((2 * Math.PI * t) / 12), delta = lerp(3, 0.25, u), J = (r) => Math.exp(-(2.2 - r) / delta);
+    const pos = this.disc.geometry.attributes.position, col = []; for (let i = 0; i < pos.count; i++) { const r = Math.hypot(pos.getX(i), pos.getZ(i)), k = J(r); const c = new THREE.Color(0x1a2233).lerp(new THREE.Color(0xffa04d), k); col.push(c.r, c.g, c.b); }
+    this.disc.geometry.setAttribute("color", new THREE.Float32BufferAttribute(col, 3));
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("集膚效應：高頻電流只走表面", TAG);
+    const f = Math.round(lerp(0.06, 60, u ** 3) * 10) / 10;
+    caption(u < 0.3 ? ["低頻（直流附近）：電流平均流過整個截面", "亮度 = 電流密度"] : ["頻率升高：渦電流把電流擠到表面", "電流只在表面一層 δ 內流 → 有效截面變小 → 電阻變大"]);
+    chip(`f ≈ ${f} MHz（示意）`, 772, 40, C.orange, { a: "right", mono: true, size: 13 });
+    const P = chart(80, 250, "電流密度 J vs. 半徑位置", C.orange, { xa: 0, xb: 2.2, ya: 0, yb: 1.15, xt: [[0, "中心"], [2.2, "表面"]], yt: [[0, "0"], [1, "大"]] });
+    plot(P, J, 0, 2.2, C.orange, { n: 100 });
+    formula("δ = √( 2ρ / (ω μ) )", 372); formula("銅：60 Hz δ ≈ 8.4 mm；13.56 MHz δ ≈ 18 μm", 406, C.cyan, { size: 12 });
+    text("所以 RF 導線常用鍍銀、", PX + 14, 372, { size: 12.5, c: C.text, w: 600 }); text("空心管或多股細線（Litz wire）", PX + 14, 396, { size: 12.5, c: C.text, w: 600 });
+  },
+});
+
+// =====================================================================
+// Part 8｜總結：馬克士威方程組
+// =====================================================================
+addScene("maxwell", {
+  dur: 12, fps: 15,
+  setup(g) { ground(g, -2.2, 6); },
+  render(t) {
+    camera.position.set(0, 9, 16); camera.lookAt(0, 0, 0); camera.clearViewOffset();
+    composer.render(); hctx.clearRect(0, 0, W, H);
+    frame("馬克士威方程組：四句話說完電磁學", TAG);
+    const cards = [["高斯定律（電）", "∮ E·dA = Q / ε₀", "電荷產生電場，電場線從 + 出、到 − 止", C.red], ["高斯定律（磁）", "∮ B·dA = 0", "沒有單獨的磁荷，磁力線都是封閉的", C.blue], ["法拉第定律", "∮ E·dl = −dΦ_B/dt", "變化的磁場產生電場（發電機、變壓器）", C.orange], ["安培–馬克士威定律", "∮ B·dl = μ₀(I + ε₀ dΦ_E/dt)", "電流和變化的電場產生磁場", C.cyan]];
+    cards.forEach(([name, eq, desc, col], i) => {
+      const x = 30 + (i % 2) * 375, y = 90 + Math.floor(i / 2) * 160, c = hctx;
+      c.save(); c.fillStyle = "rgba(4,8,16,.9)"; c.fillRect(x, y, 365, 148); c.strokeStyle = col; c.lineWidth = 1.5; c.shadowColor = col; c.shadowBlur = 8; c.strokeRect(x + .5, y + .5, 364, 147); c.restore();
+      text(name, x + 16, y + 26, { size: 15, c: col, w: 700 }); text(eq, x + 16, y + 66, { size: 19, c: C.text, w: 700, mono: true }); text(desc, x + 16, y + 102, { size: 12.5, c: C.dim, w: 600 });
+      const ix = x + 300, iy = y + 104, ph = t * 2;
+      if (i === 0) { dot(ix, iy, C.red, 7); for (let k = 0; k < 8; k++) { const a = (k / 8) * Math.PI * 2; hArrow(ix + 10 * Math.cos(a), iy + 10 * Math.sin(a), ix + (24 + 4 * Math.sin(ph)) * Math.cos(a), iy + (24 + 4 * Math.sin(ph)) * Math.sin(a), C.red, 1.5); } }
+      if (i === 1) { hctx.save(); hctx.strokeStyle = C.blue; hctx.lineWidth = 1.5; [12, 22].forEach((r) => { hctx.beginPath(); hctx.ellipse(ix, iy, r * 1.4, r, 0, 0, Math.PI * 2); hctx.stroke(); }); hctx.restore(); }
+      if (i === 2) { hArrow(ix - 24, iy + 14, ix - 24, iy - 14 - 6 * Math.sin(ph), C.blue, 2); hctx.save(); hctx.strokeStyle = C.orange; hctx.lineWidth = 2; hctx.beginPath(); hctx.ellipse(ix + 6, iy, 20, 12, 0, 0, Math.PI * 2); hctx.stroke(); hctx.restore(); }
+      if (i === 3) { hArrow(ix - 24, iy + 14, ix - 24, iy - 14, C.yellow, 2); hctx.save(); hctx.strokeStyle = C.cyan; hctx.lineWidth = 2; hctx.globalAlpha = 0.6 + 0.4 * Math.sin(ph); hctx.beginPath(); hctx.ellipse(ix + 6, iy, 20, 12, 0, 0, Math.PI * 2); hctx.stroke(); hctx.restore(); }
+    });
+    chip("後兩條互相推動 → 電磁波，速度 c = 1/√(μ₀ε₀)", 400, 425, C.lime, { a: "center", size: 14 });
+  },
+});
+
+// ---------- 匯出 ----------
+for (const k of Object.keys(SCENES)) SCENES[k].fps = SCENES[k].fps || 15;
+window.SCENES = SCENES;
+window.renderAt = (name, t) => {
+  for (const k of Object.keys(SCENES)) SCENES[k].group.visible = false;
+  SCENES[name].group.visible = true;
+  SCENES[name].render(t);
+  octx.drawImage(glCanvas, 0, 0);
+  octx.drawImage(hud, 0, 0);
+  return out.toDataURL("image/png");
+};
+const name = location.hash.slice(1);
+if (name && SCENES[name]) {
+  const t0 = performance.now();
+  (function loop() { renderAt(name, ((performance.now() - t0) / 1000) % SCENES[name].dur); requestAnimationFrame(loop); })();
+}
+</script>
+</body>
+</html>
