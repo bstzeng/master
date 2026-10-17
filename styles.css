@@ -117,6 +117,18 @@ h1 em { color: var(--orange); font-style: italic; }
 .placeholder .topic-content > p:not(.topic-label) { color: var(--muted); }
 .topic-plus { position: absolute; top: 34px; right: 34px; font-size: 44px; font-weight: 300; }
 
+/* 首頁主題卡片：三欄、精簡資訊（只留編號、類型、標題、標籤） */
+.topic-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.topic-grid .topic-card { grid-column: auto; min-height: 300px; padding: 30px; }
+.topic-grid .topic-card.featured { display: flex; flex-direction: column; }
+.topic-grid .topic-card .topic-number { font-size: 30px; }
+.topic-grid .topic-card .topic-content { align-self: stretch; margin-top: auto; }
+.topic-grid .topic-card .topic-content h3 { margin-bottom: 14px; font-size: clamp(26px, 2.2vw, 34px); line-height: 1.2; letter-spacing: -.02em; }
+.topic-grid .topic-card .topic-content > p:not(.topic-label) { display: none; }
+.topic-grid .topic-card .topic-tags span:nth-child(n+4) { display: none; }
+.topic-grid .topic-card .topic-arrow { position: absolute; top: 26px; right: 26px; width: 46px; height: 46px; font-size: 20px; }
+@media (max-width: 1100px) { .topic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
 .purpose { display: grid; grid-template-columns: .4fr 1fr .75fr; gap: 70px; padding: 110px max(28px, calc((100% - 1240px) / 2)); color: var(--paper); background: var(--ink); }
 .purpose h2 { color: var(--acid); }
 .purpose > div > p { max-width: 650px; margin: 28px 0 0; color: rgba(241,239,231,.65); font-size: 16px; line-height: 1.9; }
@@ -161,6 +173,7 @@ footer > span:last-child { justify-self: end; }
   .hero-art { grid-column: 2; min-height: 480px; margin: 0 0 56px 5vw; }
   .section-head, .purpose, .topic-hero, .route { grid-template-columns: 1fr; }
   .topic-grid { grid-template-columns: 1fr; }
+  .topic-grid .topic-card { min-height: 260px; }
   .topic-card.placeholder { grid-column: auto; }
   .topic-card.japanese-featured { grid-column: auto; }
   .topic-card.placeholder { min-height: 300px; }
