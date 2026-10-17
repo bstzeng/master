@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="用 32 張 3D 動畫 GIF 認識電磁學（工程版）：靜電、電容、電路、靜磁、電磁感應、交流電路、電磁波，最後用馬克士威方程組串起來。" />
+    <meta name="theme-color" content="#05070d" />
+    <title>電磁學（工程版）｜MASTER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #05070d;
+        --bg-2: #0b1220;
+        --paper: #e8f6ff;
+        --muted: rgba(232, 246, 255, 0.62);
+        --line: rgba(34, 229, 255, 0.18);
+        --cyan: #22e5ff;
+        --magenta: #ff3df2;
+        --lime: #b6ff3d;
+        --amber: #ffb340;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body { margin: 0; overflow-x: hidden; color: var(--paper); background: var(--bg); font-family: "Noto Sans TC", sans-serif; -webkit-font-smoothing: antialiased;
+        background-image: linear-gradient(rgba(34,229,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(34,229,255,.045) 1px, transparent 1px); background-size: 40px 40px; }
+      a { color: inherit; text-decoration: none; }
+      h1, h2, h3, p { margin-top: 0; }
+
+      .site-header { display: flex; justify-content: space-between; align-items: center; width: min(1240px, calc(100% - 32px)); min-height: 76px; margin: 0 auto; border-bottom: 1px solid var(--line); }
+      .brand { display: inline-flex; align-items: center; gap: 11px; font-family: "DM Mono", monospace; font-size: 16px; font-weight: 500; letter-spacing: .18em; }
+      .brand-dot { width: 11px; height: 11px; background: var(--cyan); border-radius: 50%; box-shadow: 12px 0 0 var(--magenta), 0 0 12px var(--cyan); }
+      .header-back { padding-bottom: 3px; border-bottom: 1px solid var(--paper); font-family: "DM Mono", monospace; font-size: 11px; letter-spacing: .12em; }
+
+      main { width: min(1240px, calc(100% - 32px)); margin: 0 auto; }
+      .intro { display: grid; grid-template-columns: 1fr .75fr; gap: 60px; align-items: end; padding: 70px 0 30px; }
+      .eyebrow { margin-bottom: 18px; color: var(--cyan); font-family: "DM Mono", monospace; font-size: 12px; letter-spacing: .14em; }
+      h1 { margin-bottom: 0; font-size: clamp(38px, 5.6vw, 74px); line-height: 1.1; letter-spacing: -.02em; }
+      h1 em { color: var(--cyan); font-style: normal; text-shadow: 0 0 24px rgba(34,229,255,.45); }
+      .intro > p { margin-bottom: 6px; color: var(--muted); font-size: 16px; line-height: 1.9; }
+      .hero-gif { margin: 20px 0 0; padding: 10px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 0 40px rgba(34,229,255,.08); }
+      .hero-gif img { display: block; width: 100%; height: auto; border-radius: 8px; }
+      .hero-gif figcaption { padding: 10px 4px 2px; color: var(--muted); font-size: 14px; }
+
+      section.block { padding: 80px 0 10px; }
+      .section-index { margin-bottom: 12px; color: var(--magenta); font: 12px "DM Mono", monospace; letter-spacing: .14em; }
+      section.block h2 { margin-bottom: 14px; font-size: clamp(28px, 3.6vw, 44px); letter-spacing: -.01em; }
+      .lead { max-width: 780px; margin-bottom: 30px; color: var(--muted); font-size: 16px; line-height: 1.85; }
+
+      .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+      .card, .step { background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+      .card figure, .step figure { margin: 0; background: #05070d; }
+      .card img, .step img { display: block; width: 100%; height: auto; }
+      .card-body { padding: 20px 22px 22px; }
+      .tag { margin-bottom: 8px; color: var(--cyan); font: 11px "DM Mono", monospace; letter-spacing: .1em; }
+      .card h3, .step h3 { margin-bottom: 10px; font-size: 21px; }
+      .card h3 span, .step h3 span { color: var(--muted); font-size: 15px; font-weight: 500; }
+      .card-body > p:not(.tag) { margin-bottom: 14px; color: var(--muted); font-size: 15px; line-height: 1.85; }
+      .link-note a { color: var(--lime); border-bottom: 1px solid var(--lime); }
+      .dl { display: inline-block; padding: 8px 14px; color: #05070d; background: var(--cyan); border-radius: 8px; font-size: 14px; font-weight: 700; box-shadow: 0 0 14px rgba(34,229,255,.35); }
+
+      .compare { width: 100%; margin-top: 26px; border-collapse: collapse; font-size: 15px; }
+      .compare th, .compare td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--line); }
+      .compare thead th { color: var(--cyan); font: 12px "DM Mono", monospace; letter-spacing: .1em; }
+      
+      .compare tbody th { color: var(--muted); font-weight: 500; }
+      .table-wrap { overflow-x: auto; }
+
+      h2 .en { color: var(--muted); font-size: .55em; font-weight: 500; }
+      .facts { width: 100%; margin: 4px 0 18px; border-collapse: collapse; font-size: 14px; }
+      .facts th, .facts td { padding: 9px 10px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+      .facts th { width: 6.5em; color: var(--cyan); font-weight: 500; white-space: nowrap; }
+      .facts td { color: var(--paper); }
+      .step { grid-template-columns: 1.15fr 1fr; }
+      .steps { display: grid; gap: 22px; }
+      .step { display: grid; grid-template-columns: 1.15fr 1fr; align-items: center; }
+      .step:nth-child(even) figure { order: 2; }
+      .overview { margin-top: 30px; }
+      .future { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+      .future article { padding: 26px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px; }
+      .future h3 { margin-bottom: 10px; font-size: 20px; }
+      .future p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.85; }
+      .note { margin-top: 26px; color: var(--muted); font-size: 14px; line-height: 1.8; }
+
+      footer { display: flex; justify-content: space-between; width: min(1240px, calc(100% - 32px)); margin: 90px auto 0; padding: 36px 0; color: var(--muted); border-top: 1px solid var(--line); font: 10px "DM Mono", monospace; letter-spacing: .08em; }
+
+      @media (max-width: 880px) {
+        .intro, .cards, .future { grid-template-columns: 1fr; gap: 22px; }
+        .step { grid-template-columns: 1fr; }
+        .step:nth-child(even) figure { order: 0; }
+      }
+      @media (max-width: 560px) {
+        .intro { padding-top: 44px; }
+        .card-body { padding: 16px; }
+        .compare th, .compare td { padding: 10px 8px; font-size: 14px; }
+        footer { flex-direction: column; gap: 8px; }
+      }
+      @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="../index.html" aria-label="回到 MASTER 首頁"><span class="brand-dot" aria-hidden="true"></span><span>MASTER</span></a>
+      <a class="header-back" href="../index.html#topics">← 所有主題</a>
+    </header>
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">ELECTROMAGNETISM / 3D GIF</p>
+          <h1 id="page-title">電磁學<br /><em>工程版</em></h1>
+        </div>
+        <p>從一顆電荷開始：電荷產生電場、電荷流動成為電流、電流產生磁場、變化的磁場又產生電，最後電場和磁場互相推動成為電磁波。這一頁用 32 張 3D 動畫 GIF 走完整門電磁學，每張都附上工程上最常用的公式；和蝕刻、電漿相關的地方（ICP 感應、ECR 迴旋、RF 匹配、集膚效應）也一併標出。</p>
+      </section>
+      <section class="block" aria-labelledby="map-title">
+        <p class="section-index">OVERVIEW</p>
+        <h2 id="map-title">本頁內容</h2>
+        <div class="table-wrap"><table class="compare"><tbody>
+              <tr><th>靜電：電荷與電場</th><td><a href="#coulomb-title">庫侖定律</a>、<a href="#efield-title">電場與電場線</a>、<a href="#gauss-title">高斯定律</a>、<a href="#potential-title">電位與等位線</a>、<a href="#shield-title">導體的靜電屏蔽</a></td></tr><tr><th>電容：儲存電場能量</th><td><a href="#capacitor-title">電容器</a>、<a href="#dielectric-title">介電質</a>、<a href="#rc-title">RC 電路</a></td></tr><tr><th>電流與電路</th><td><a href="#drift-title">電流與漂移速度</a>、<a href="#ohm-title">歐姆定律與電阻率</a>、<a href="#joule-title">電功率與焦耳熱</a>、<a href="#kirchhoff-title">克希荷夫定律</a></td></tr><tr><th>靜磁：磁場從哪裡來</th><td><a href="#magnet-title">磁鐵與磁力線</a>、<a href="#lorentz-title">勞倫茲力</a>、<a href="#ampere-title">電流產生磁場</a>、<a href="#solenoid-title">螺線管</a>、<a href="#motor-title">馬達原理</a>、<a href="#domains-title">磁性材料</a></td></tr><tr><th>電磁感應：磁生電</th><td><a href="#faraday-title">電磁感應</a>、<a href="#eddy-title">冷次定律與渦電流</a>、<a href="#generator-title">發電機</a>、<a href="#inductor-title">電感與 RL 電路</a>、<a href="#transformer-title">變壓器</a></td></tr><tr><th>交流電路</th><td><a href="#impedance-title">阻抗與相位</a>、<a href="#rlc-title">RLC 共振</a>、<a href="#match-title">阻抗匹配</a></td></tr><tr><th>電磁波</th><td><a href="#displacement-title">位移電流</a>、<a href="#emwave-title">電磁波</a>、<a href="#spectrum-title">電磁波譜</a>、<a href="#antenna-title">天線</a>、<a href="#skin-title">集膚效應</a></td></tr><tr><th>總結</th><td><a href="#maxwell-title">馬克士威方程組</a></td></tr>
+        </tbody></table></div>
+      </section>
+
+      <section class="block" aria-labelledby="coulomb-title">
+        <p class="section-index">PART 1</p>
+        <h2 id="coulomb-title">庫侖定律 <span class="en">電荷之間的力</span></h2>
+        <div class="step">
+          <figure><img src="gifs/coulomb.gif?v=153392f7" alt="庫侖定律 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>同性相斥、異性相吸。力和兩電荷電量的乘積成正比，和距離平方成反比：距離拉遠一倍，力剩四分之一。兩顆電荷受的力大小相同、方向相反。</p>
+            <table class="facts"><tr><th>公式</th><td>F = k q₁q₂ / r²</td></tr><tr><th>常數</th><td>k = 8.99 × 10⁹ N·m²/C²</td></tr></table>
+            <a class="dl" href="gifs/coulomb.gif?v=153392f7" download="em-coulomb.gif">下載 720P GIF（5.5 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="efield-title">
+        <p class="section-index">PART 1</p>
+        <h2 id="efield-title">電場與電場線 <span class="en">電荷周圍的「力場」</span></h2>
+        <div class="step">
+          <figure><img src="gifs/efield.gif?v=00216b3d" alt="電場與電場線 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>電場是每單位電荷受到的力。電場線從正電荷出發、回到負電荷，線越密代表電場越強，切線方向就是正電荷受力的方向。</p>
+            <table class="facts"><tr><th>定義</th><td>E = F / q</td></tr><tr><th>點電荷</th><td>E = k q / r²（單位 N/C = V/m）</td></tr></table>
+            <a class="dl" href="gifs/efield.gif?v=00216b3d" download="em-efield.gif">下載 720P GIF（4.7 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="gauss-title">
+        <p class="section-index">PART 1</p>
+        <h2 id="gauss-title">高斯定律 <span class="en">穿出封閉曲面的電通量</span></h2>
+        <div class="step">
+          <figure><img src="gifs/gauss.gif?v=2e8337b2" alt="高斯定律 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>把電荷包在任意封閉曲面裡，曲面變大時電場變弱、面積變大，兩者剛好抵消，穿出的總電通量不變。總通量只由包在裡面的電荷決定。</p>
+            <table class="facts"><tr><th>公式</th><td>∮ E·dA = Q_enc / ε₀</td></tr><tr><th>常數</th><td>ε₀ = 8.85 × 10⁻¹² F/m</td></tr></table>
+            <a class="dl" href="gifs/gauss.gif?v=2e8337b2" download="em-gauss.gif">下載 720P GIF（13.0 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="potential-title">
+        <p class="section-index">PART 1</p>
+        <h2 id="potential-title">電位與等位線 <span class="en">電荷的「地形高度」</span></h2>
+        <div class="step">
+          <figure><img src="gifs/potential.gif?v=7c3e61f3" alt="電位與等位線 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>正電荷周圍電位高、負電荷周圍電位低，像山丘和凹谷。正電荷會從高電位往低電位「滾」，電場指向電位下降最快的方向。電壓就是兩點的電位差。</p>
+            <table class="facts"><tr><th>點電荷電位</th><td>V = k q / r</td></tr><tr><th>電場與電位</th><td>E = −dV/dx</td></tr><tr><th>能量</th><td>W = q ΔV</td></tr></table>
+            <a class="dl" href="gifs/potential.gif?v=7c3e61f3" download="em-potential.gif">下載 720P GIF（4.6 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="shield-title">
+        <p class="section-index">PART 1</p>
+        <h2 id="shield-title">導體的靜電屏蔽 <span class="en">法拉第籠</span></h2>
+        <div class="step">
+          <figure><img src="gifs/shield.gif?v=b7dce2ac" alt="導體的靜電屏蔽 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>外加電場時，金屬裡的自由電子重新分布到表面，產生的電場剛好抵消外加電場，所以導體內部電場為零。電梯、微波爐門網、同軸電纜外層都是應用。</p>
+            <table class="facts"><tr><th>導體內部</th><td>E = 0</td></tr><tr><th>電荷分布</th><td>只在導體表面</td></tr></table>
+            <a class="dl" href="gifs/shield.gif?v=b7dce2ac" download="em-shield.gif">下載 720P GIF（3.2 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="capacitor-title">
+        <p class="section-index">PART 2</p>
+        <h2 id="capacitor-title">電容器 <span class="en">用電場儲存能量</span></h2>
+        <div class="step">
+          <figure><img src="gifs/capacitor.gif?v=74b5e320" alt="電容器 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>兩片平行板接上電壓，上板累積 +Q、下板 −Q，中間是均勻電場。間距越小、面積越大，電容越大，同樣電壓能存越多電荷。</p>
+            <table class="facts"><tr><th>電容</th><td>C = ε₀ A / d</td></tr><tr><th>電荷與能量</th><td>Q = CV、U = ½CV²</td></tr><tr><th>板間電場</th><td>E = V / d</td></tr></table>
+            <a class="dl" href="gifs/capacitor.gif?v=74b5e320" download="em-capacitor.gif">下載 720P GIF（6.5 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="dielectric-title">
+        <p class="section-index">PART 2</p>
+        <h2 id="dielectric-title">介電質 <span class="en">讓電容變大</span></h2>
+        <div class="step">
+          <figure><img src="gifs/dielectric.gif?v=4d572269" alt="介電質 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>在兩板之間放入介電質，裡面的分子偶極會轉向排列，產生反向電場，使淨電場變弱。同樣電壓下能存更多電荷，電容變成 κ 倍。high-k 閘極介電層就是這個道理。</p>
+            <table class="facts"><tr><th>電容</th><td>C = κ ε₀ A / d</td></tr><tr><th>電場</th><td>E = E₀ / κ</td></tr><tr><th>例</th><td>SiO₂ 3.9、HfO₂ ~25</td></tr></table>
+            <a class="dl" href="gifs/dielectric.gif?v=4d572269" download="em-dielectric.gif">下載 720P GIF（5.7 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="rc-title">
+        <p class="section-index">PART 2</p>
+        <h2 id="rc-title">RC 電路 <span class="en">充電與放電</span></h2>
+        <div class="step">
+          <figure><img src="gifs/rc.gif?v=36a6b91b" alt="RC 電路 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>電容經過電阻充電時，電流一開始最大、越充越慢；經過 τ = RC 充到約 63%，約 5τ 幾乎充滿。放電時電壓以同樣的時間常數下降。</p>
+            <table class="facts"><tr><th>時間常數</th><td>τ = RC</td></tr><tr><th>充電</th><td>V_C = V₀(1 − e^(−t/RC))</td></tr><tr><th>放電</th><td>V_C = V₀ e^(−t/RC)</td></tr></table>
+            <a class="dl" href="gifs/rc.gif?v=36a6b91b" download="em-rc.gif">下載 720P GIF（3.7 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="drift-title">
+        <p class="section-index">PART 3</p>
+        <h2 id="drift-title">電流與漂移速度 <span class="en">電子其實走得很慢</span></h2>
+        <div class="step">
+          <figure><img src="gifs/drift.gif?v=3dee90dc" alt="電流與漂移速度 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>沒有電場時自由電子亂跑但沒有淨移動；加上電場後，電子在亂跑中慢慢往電場反方向漂移，漂移速度只有約 mm/s 等級，但電場本身以接近光速傳遞，所以燈一開就亮。</p>
+            <table class="facts"><tr><th>電流</th><td>I = n q v_d A</td></tr><tr><th>定義</th><td>I = dQ / dt（A = C/s）</td></tr></table>
+            <a class="dl" href="gifs/drift.gif?v=3dee90dc" download="em-drift.gif">下載 720P GIF（12.4 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="ohm-title">
+        <p class="section-index">PART 3</p>
+        <h2 id="ohm-title">歐姆定律與電阻率 <span class="en">長度越長、截面越小，電阻越大</span></h2>
+        <div class="step">
+          <figure><img src="gifs/ohm.gif?v=ed61b945" alt="歐姆定律與電阻率 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>電阻由材料（電阻率 ρ）和形狀決定：越長越大、越粗越小。電壓、電流、電阻的關係就是歐姆定律，I–V 曲線的斜率是 1/R。</p>
+            <table class="facts"><tr><th>歐姆定律</th><td>V = IR</td></tr><tr><th>電阻</th><td>R = ρ L / A</td></tr></table>
+            <a class="dl" href="gifs/ohm.gif?v=ed61b945" download="em-ohm.gif">下載 720P GIF（3.5 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="joule-title">
+        <p class="section-index">PART 3</p>
+        <h2 id="joule-title">電功率與焦耳熱 <span class="en">電流通過電阻會發熱</span></h2>
+        <div class="step">
+          <figure><img src="gifs/joule.gif?v=78158d60" alt="電功率與焦耳熱 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>電子在導體中不斷撞擊原子，把電能變成熱。發熱功率和電流平方成正比：電流加倍，發熱變四倍。</p>
+            <table class="facts"><tr><th>功率</th><td>P = IV = I²R = V²/R</td></tr><tr><th>能量</th><td>E = P·t（1 度 = 1 kWh）</td></tr></table>
+            <a class="dl" href="gifs/joule.gif?v=78158d60" download="em-joule.gif">下載 720P GIF（2.7 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="kirchhoff-title">
+        <p class="section-index">PART 3</p>
+        <h2 id="kirchhoff-title">克希荷夫定律 <span class="en">電流守恆、電壓守恆</span></h2>
+        <div class="step">
+          <figure><img src="gifs/kirchhoff.gif?v=1b7261a7" alt="克希荷夫定律 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>KCL：流進一個節點的電流總和等於流出的總和（電荷守恆）。KVL：沿任何封閉迴路繞一圈，所有電壓升降加起來等於零（能量守恆）。分析任何電路都從這兩條開始。</p>
+            <table class="facts"><tr><th>KCL</th><td>Σ I = 0</td></tr><tr><th>KVL</th><td>Σ V = 0</td></tr></table>
+            <a class="dl" href="gifs/kirchhoff.gif?v=1b7261a7" download="em-kirchhoff.gif">下載 720P GIF（2.5 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="magnet-title">
+        <p class="section-index">PART 4</p>
+        <h2 id="magnet-title">磁鐵與磁力線 <span class="en">N 出、S 進</span></h2>
+        <div class="step">
+          <figure><img src="gifs/magnet.gif?v=8794fb28" alt="磁鐵與磁力線 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>磁力線在磁鐵外從 N 極出來、繞回 S 極，在磁鐵內從 S 回到 N，永遠是封閉的。灑上鐵粉，每粒鐵粉都會轉成磁力線的方向。</p>
+            <table class="facts"><tr><th>磁的高斯定律</th><td>∮ B·dA = 0</td></tr><tr><th>單位</th><td>T（1 T = 10⁴ G）</td></tr><tr><th>例</th><td>地磁 ~50 μT、ECR 875 G</td></tr></table>
+            <a class="dl" href="gifs/magnet.gif?v=8794fb28" download="em-magnet.gif">下載 720P GIF（17.3 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="lorentz-title">
+        <p class="section-index">PART 4</p>
+        <h2 id="lorentz-title">勞倫茲力 <span class="en">帶電粒子在磁場中繞圈</span></h2>
+        <div class="step">
+          <figure><img src="gifs/lorentz.gif?v=6a2ca748" alt="勞倫茲力 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>磁場對運動電荷的力永遠垂直於速度，所以只改變方向、不改變速率，粒子在磁場中繞圈；若速度有沿磁場的分量就變成螺旋。這是 ECR、磁控濺鍍把電子「綁住」的原理。</p>
+            <table class="facts"><tr><th>力</th><td>F = q v × B</td></tr><tr><th>迴旋半徑</th><td>r = mv / (qB)</td></tr><tr><th>迴旋頻率</th><td>f = qB / (2πm)</td></tr></table>
+            <a class="dl" href="gifs/lorentz.gif?v=6a2ca748" download="em-lorentz.gif">下載 720P GIF（6.0 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="ampere-title">
+        <p class="section-index">PART 4</p>
+        <h2 id="ampere-title">電流產生磁場 <span class="en">安培右手定則</span></h2>
+        <div class="step">
+          <figure><img src="gifs/ampere.gif?v=f8f96d60" alt="電流產生磁場 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>直導線通電，周圍出現同心圓的磁場：右手拇指指向電流方向，四指彎曲的方向就是磁場方向。磁場和電流成正比、和距離成反比；電流反向，磁場也反向。</p>
+            <table class="facts"><tr><th>直導線</th><td>B = μ₀ I / (2πr)</td></tr><tr><th>常數</th><td>μ₀ = 4π × 10⁻⁷ T·m/A</td></tr></table>
+            <a class="dl" href="gifs/ampere.gif?v=f8f96d60" download="em-ampere.gif">下載 720P GIF（7.4 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="solenoid-title">
+        <p class="section-index">PART 4</p>
+        <h2 id="solenoid-title">螺線管 <span class="en">線圈裡的均勻磁場</span></h2>
+        <div class="step">
+          <figure><img src="gifs/solenoid.gif?v=9a7e5d5d" alt="螺線管 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>導線繞成線圈，每一圈的磁場疊加，線圈裡面的磁力線平行、等距，形成均勻磁場；外面看起來像一根條形磁鐵。加鐵芯可以讓磁場再放大很多倍。</p>
+            <table class="facts"><tr><th>線圈內</th><td>B = μ₀ n I</td></tr><tr><th>加鐵芯</th><td>B × μ_r</td></tr></table>
+            <a class="dl" href="gifs/solenoid.gif?v=9a7e5d5d" download="em-solenoid.gif">下載 720P GIF（12.8 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="motor-title">
+        <p class="section-index">PART 4</p>
+        <h2 id="motor-title">馬達原理 <span class="en">磁場對電流的力</span></h2>
+        <div class="step">
+          <figure><img src="gifs/motor.gif?v=9b8f0c10" alt="馬達原理 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>通電線圈放在磁場中，兩邊導線受力方向相反，形成力矩讓線圈轉動；換向器讓電流每半圈反向，線圈就能一直同方向轉。</p>
+            <table class="facts"><tr><th>導線受力</th><td>F = I L × B</td></tr><tr><th>力矩</th><td>τ = N I A B sin θ</td></tr></table>
+            <a class="dl" href="gifs/motor.gif?v=9b8f0c10" download="em-motor.gif">下載 720P GIF（8.0 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="domains-title">
+        <p class="section-index">PART 4</p>
+        <h2 id="domains-title">磁性材料 <span class="en">磁區與磁滯曲線</span></h2>
+        <div class="step">
+          <figure><img src="gifs/domains.gif?v=3eb9e97f" alt="磁性材料 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>鐵磁材料內有許多磁區，平常方向雜亂所以不帶磁；外加磁場時磁區轉向排齊，拿掉外加磁場後仍留下一部分磁化，形成磁滯曲線。軟磁材料曲線瘦，適合做變壓器鐵芯；硬磁材料曲線胖，適合做磁鐵。</p>
+            <table class="facts"><tr><th>關係</th><td>B = μH = μ₀(H + M)</td></tr><tr><th>殘磁</th><td>B_r：H = 0 時剩下的磁場</td></tr></table>
+            <a class="dl" href="gifs/domains.gif?v=3eb9e97f" download="em-domains.gif">下載 720P GIF（3.1 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="faraday-title">
+        <p class="section-index">PART 5</p>
+        <h2 id="faraday-title">電磁感應 <span class="en">法拉第定律</span></h2>
+        <div class="step">
+          <figure><img src="gifs/faraday.gif?v=4616290b" alt="電磁感應 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>通過線圈的磁通量改變時，線圈會產生感應電動勢；磁通量不變（磁鐵不動）就沒有電。變化越快，電動勢越大；磁鐵進、出的方向相反，電流方向也相反。</p>
+            <table class="facts"><tr><th>法拉第定律</th><td>ε = −N dΦ/dt</td></tr><tr><th>磁通量</th><td>Φ = B·A</td></tr></table>
+            <a class="dl" href="gifs/faraday.gif?v=4616290b" download="em-faraday.gif">下載 720P GIF（4.2 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="eddy-title">
+        <p class="section-index">PART 5</p>
+        <h2 id="eddy-title">冷次定律與渦電流 <span class="en">感應電流抵抗變化</span></h2>
+        <div class="step">
+          <figure><img src="gifs/eddy.gif?v=05d7eb25" alt="冷次定律與渦電流 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>感應電流的方向總是要抵抗磁通量的變化。磁鐵在銅管裡下落時，管壁感應出渦電流，它的磁場阻止磁鐵運動，所以落得很慢；塑膠管沒有導電就一下掉下去。</p>
+            <table class="facts"><tr><th>冷次定律</th><td>ε = −N dΦ/dt 的負號</td></tr><tr><th>應用</th><td>電磁煞車、電磁爐、金屬探測</td></tr><tr><th>問題</th><td>鐵芯發熱 → 用疊片</td></tr></table>
+            <a class="dl" href="gifs/eddy.gif?v=05d7eb25" download="em-eddy.gif">下載 720P GIF（3.7 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="generator-title">
+        <p class="section-index">PART 5</p>
+        <h2 id="generator-title">發電機 <span class="en">轉動線圈產生交流電</span></h2>
+        <div class="step">
+          <figure><img src="gifs/generator.gif?v=258bd420" alt="發電機 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>線圈在磁場中轉動，穿過線圈的磁通量不斷變化，產生正弦波形的感應電動勢；線圈平面和磁場平行時磁通量變化最快、電壓最大。</p>
+            <table class="facts"><tr><th>電動勢</th><td>ε = NBAω sin(ωt)</td></tr><tr><th>台灣市電</th><td>60 Hz、110 V（有效值）</td></tr></table>
+            <a class="dl" href="gifs/generator.gif?v=258bd420" download="em-generator.gif">下載 720P GIF（5.2 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="inductor-title">
+        <p class="section-index">PART 5</p>
+        <h2 id="inductor-title">電感與 RL 電路 <span class="en">電流不能瞬間改變</span></h2>
+        <div class="step">
+          <figure><img src="gifs/inductor.gif?v=5a13fe5c" alt="電感與 RL 電路 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>電感中的電流一改變，就會感應出反向電動勢阻止它變化，所以接上電壓後電流慢慢爬升，切斷時慢慢下降。電感把能量存在磁場裡。</p>
+            <table class="facts"><tr><th>電感電壓</th><td>V_L = L dI/dt</td></tr><tr><th>時間常數</th><td>τ = L / R</td></tr><tr><th>能量</th><td>U = ½ L I²</td></tr></table>
+            <a class="dl" href="gifs/inductor.gif?v=5a13fe5c" download="em-inductor.gif">下載 720P GIF（7.9 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="transformer-title">
+        <p class="section-index">PART 5</p>
+        <h2 id="transformer-title">變壓器 <span class="en">用圈數比改變電壓</span></h2>
+        <div class="step">
+          <figure><img src="gifs/transformer.gif?v=7b2d82a6" alt="變壓器 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>一次側的交流電在鐵芯裡產生變化的磁通量，同一個磁通量穿過二次側，每一圈感應的電壓相同，所以電壓和圈數成正比；理想情況下功率不變，電流則反比。</p>
+            <table class="facts"><tr><th>電壓</th><td>V₂/V₁ = N₂/N₁</td></tr><tr><th>電流</th><td>I₂/I₁ = N₁/N₂</td></tr></table>
+            <a class="dl" href="gifs/transformer.gif?v=7b2d82a6" download="em-transformer.gif">下載 720P GIF（3.9 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="impedance-title">
+        <p class="section-index">PART 6</p>
+        <h2 id="impedance-title">阻抗與相位 <span class="en">R、L、C 的相位差</span></h2>
+        <div class="step">
+          <figure><img src="gifs/impedance.gif?v=8beea8e2" alt="阻抗與相位 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>交流電路裡，電阻的電壓和電流同相；電感的電壓領先電流 90°，頻率越高阻抗越大；電容的電流領先電壓 90°，頻率越高阻抗越小。這三者合起來就是阻抗 Z。</p>
+            <table class="facts"><tr><th>電阻</th><td>Z = R</td></tr><tr><th>電感</th><td>Z = jωL</td></tr><tr><th>電容</th><td>Z = 1/(jωC)</td></tr></table>
+            <a class="dl" href="gifs/impedance.gif?v=8beea8e2" download="em-impedance.gif">下載 720P GIF（4.2 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="rlc-title">
+        <p class="section-index">PART 6</p>
+        <h2 id="rlc-title">RLC 共振 <span class="en">能量在 L 和 C 之間來回</span></h2>
+        <div class="step">
+          <figure><img src="gifs/rlc.gif?v=7ddadf74" alt="RLC 共振 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>電容放電時電流流進電感、建立磁場；磁場消失時又把電容反向充回去，能量來回擺盪。驅動頻率等於共振頻率時，電感和電容的阻抗互相抵消，電流最大；電阻越小，共振峰越尖。</p>
+            <table class="facts"><tr><th>共振頻率</th><td>f₀ = 1/(2π√(LC))</td></tr><tr><th>共振時</th><td>Z_L = Z_C、|Z| 最小</td></tr></table>
+            <a class="dl" href="gifs/rlc.gif?v=7ddadf74" download="em-rlc.gif">下載 720P GIF（4.9 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="match-title">
+        <p class="section-index">PART 6</p>
+        <h2 id="match-title">阻抗匹配 <span class="en">讓功率全部送到負載</span></h2>
+        <div class="step">
+          <figure><img src="gifs/match.gif?v=fb0b51d9" alt="阻抗匹配 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>負載阻抗和傳輸線不一致時，一部分功率會被反射回 RF 源，變成熱甚至損壞產生器。加上匹配網路把負載轉換成 50 Ω，反射趨近於零，功率全部送進負載，這就是蝕刻機台 RF 匹配器在做的事。</p>
+            <table class="facts"><tr><th>反射係數</th><td>Γ = (Z_L − Z₀)/(Z_L + Z₀)</td></tr><tr><th>反射功率</th><td>Γ² × 正向功率</td></tr></table>
+            <a class="dl" href="gifs/match.gif?v=fb0b51d9" download="em-match.gif">下載 720P GIF（0.9 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="displacement-title">
+        <p class="section-index">PART 7</p>
+        <h2 id="displacement-title">位移電流 <span class="en">變化的電場也會產生磁場</span></h2>
+        <div class="step">
+          <figure><img src="gifs/displacement.gif?v=1e56c475" alt="位移電流 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>電容充電時導線周圍有磁場；兩板之間雖然沒有電荷流過，但電場在變化，那裡一樣有磁場。馬克士威補上的這一項，是電磁波能存在的關鍵。</p>
+            <table class="facts"><tr><th>安培–馬克士威</th><td>∮ B·dl = μ₀(I + ε₀ dΦ_E/dt)</td></tr></table>
+            <a class="dl" href="gifs/displacement.gif?v=1e56c475" download="em-displacement.gif">下載 720P GIF（5.7 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="emwave-title">
+        <p class="section-index">PART 7</p>
+        <h2 id="emwave-title">電磁波 <span class="en">電場和磁場互相推著前進</span></h2>
+        <div class="step">
+          <figure><img src="gifs/emwave.gif?v=c76d39ab" alt="電磁波 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>變化的電場產生磁場、變化的磁場又產生電場，兩者互相垂直、也垂直於前進方向，一路往前傳，不需要介質。馬克士威由方程式算出它的速度正好等於光速，發現光就是電磁波。</p>
+            <table class="facts"><tr><th>光速</th><td>c = 1/√(μ₀ε₀) ≈ 3×10⁸ m/s</td></tr><tr><th>關係</th><td>c = fλ、E = cB</td></tr></table>
+            <a class="dl" href="gifs/emwave.gif?v=c76d39ab" download="em-emwave.gif">下載 720P GIF（3.7 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="spectrum-title">
+        <p class="section-index">PART 7</p>
+        <h2 id="spectrum-title">電磁波譜 <span class="en">同一種波，波長不同</span></h2>
+        <div class="step">
+          <figure><img src="gifs/spectrum.gif?v=04344767" alt="電磁波譜 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>無線電、微波、紅外線、可見光、紫外線、X 光都是電磁波，差別只在波長和頻率。波長越短，頻率越高，每顆光子的能量也越大。RF 13.56 MHz、ECR 的 2.45 GHz、OES 看的可見光、EUV 13.5 nm 都在這張譜上。</p>
+            <table class="facts"><tr><th>關係</th><td>c = fλ</td></tr><tr><th>光子能量</th><td>E = hf</td></tr></table>
+            <a class="dl" href="gifs/spectrum.gif?v=04344767" download="em-spectrum.gif">下載 720P GIF（5.4 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="antenna-title">
+        <p class="section-index">PART 7</p>
+        <h2 id="antenna-title">天線 <span class="en">讓電荷振盪，把電磁波送出去</span></h2>
+        <div class="step">
+          <figure><img src="gifs/antenna.gif?v=8db25cab" alt="天線 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>交流電讓電荷在偶極天線的兩根導體之間來回跑，加速的電荷向外輻射電磁波，側面最強、正上下方幾乎沒有。半波偶極天線的長度約為波長的一半。</p>
+            <table class="facts"><tr><th>半波偶極</th><td>L ≈ λ/2</td></tr><tr><th>波長</th><td>λ = c / f</td></tr></table>
+            <a class="dl" href="gifs/antenna.gif?v=8db25cab" download="em-antenna.gif">下載 720P GIF（8.0 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="skin-title">
+        <p class="section-index">PART 7</p>
+        <h2 id="skin-title">集膚效應 <span class="en">高頻電流只走表面</span></h2>
+        <div class="step">
+          <figure><img src="gifs/skin.gif?v=7eee31f1" alt="集膚效應 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>頻率升高時，導體內的渦電流把電流擠到表面，電流只在表面一層 δ 內流動，有效截面變小、電阻變大。所以 RF 導線常用鍍銀、空心管或多股細線。</p>
+            <table class="facts"><tr><th>集膚深度</th><td>δ = √(2ρ/(ωμ))</td></tr><tr><th>銅</th><td>60 Hz ≈ 8.4 mm；13.56 MHz ≈ 18 μm</td></tr></table>
+            <a class="dl" href="gifs/skin.gif?v=7eee31f1" download="em-skin.gif">下載 720P GIF（3.8 MB）</a>
+          </div>
+        </div>
+      </section>
+      <section class="block" aria-labelledby="maxwell-title">
+        <p class="section-index">PART 8</p>
+        <h2 id="maxwell-title">馬克士威方程組 <span class="en">四句話說完電磁學</span></h2>
+        <div class="step">
+          <figure><img src="gifs/maxwell.gif?v=e7a12f64" alt="馬克士威方程組 3D 動畫" width="1280" height="720" loading="lazy" decoding="async" /></figure>
+          <div class="card-body">
+            <p>電荷產生電場；沒有單獨的磁荷；變化的磁場產生電場；電流和變化的電場產生磁場。後兩條互相推動，就是電磁波。整門課的每一張動圖，都是這四條方程式的一部分。</p>
+            <table class="facts"><tr><th>高斯（電）</th><td>∮ E·dA = Q/ε₀</td></tr><tr><th>高斯（磁）</th><td>∮ B·dA = 0</td></tr><tr><th>法拉第</th><td>∮ E·dl = −dΦ_B/dt</td></tr><tr><th>安培–馬克士威</th><td>∮ B·dl = μ₀(I + ε₀ dΦ_E/dt)</td></tr></table>
+            <a class="dl" href="gifs/maxwell.gif?v=e7a12f64" download="em-maxwell.gif">下載 720P GIF（0.7 MB）</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="block" aria-labelledby="more-title">
+        <p class="section-index">RELATED</p>
+        <h2 id="more-title">延伸閱讀</h2>
+        <div class="future">
+          <article><h3><a href="../plasma-sources/index.html">電漿源 ICP / CCP / ECR / Remote →</a></h3><p>感應電場推動電子（ICP）、磁場讓電子迴旋共振（ECR），都是這門課的應用。</p></article>
+          <article><h3><a href="../etch-characteristics/index.html">蝕刻實務介紹 →</a></h3><p>RF 傳輸、匹配與老化：阻抗匹配在機台上的樣子。</p></article>
+        </div>
+        <p class="note">動畫為教學用示意：數值、比例與速度都經過簡化或放慢。GIF 為 1280×720（720P），循環播放、第一格就是完整畫面，可直接放進簡報。</p>
+      </section>
+    </main>
+    <footer>
+      <span>MASTER / ELECTROMAGNETISM</span>
+      <span>3D 動畫為教學示意</span>
+    </footer>
+  </body>
+</html>
